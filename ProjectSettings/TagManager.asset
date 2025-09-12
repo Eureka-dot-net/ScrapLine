@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Conveyor
+  - Shredder
   layers:
   - Default
   - TransparentFX

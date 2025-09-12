@@ -8,7 +8,8 @@ public class GridManager : MonoBehaviour
     public Material conveyorSharedMaterial; // Shared material for conveyors
 
     public GameObject inputSquarePrefab; // Assign in Inspector
-    public GameObject canPrefab;         // Assign in Inspector
+
+    public GameObject[] allPrefabs;
 
     public float canSpawnInterval = 2f;  // Seconds between spawns
 
@@ -48,7 +49,7 @@ public class GridManager : MonoBehaviour
         InputSquare inputSquare = inputSquareObj.GetComponent<InputSquare>();
         if (inputSquare != null)
         {
-            inputSquare.canPrefab = canPrefab;
+            inputSquare.spawnPrefabs = allPrefabs;
             inputSquare.spawnInterval = canSpawnInterval;
             inputSquare.cellSize = cellSize;
         }

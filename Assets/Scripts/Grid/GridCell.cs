@@ -9,7 +9,7 @@ public class GridCell : MonoBehaviour
     {
         if (transform.childCount == 0)
         {
-            
+             
             GameObject conveyor = Instantiate(conveyorPrefab, transform.position, Quaternion.identity, transform);
             conveyor.tag = "Conveyor"; // Set tag to "Conveyor"
             conveyor.transform.localEulerAngles = new Vector3(0, 0, conveyorRotation);
