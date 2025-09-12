@@ -6,7 +6,6 @@ public class UIGridManager : MonoBehaviour
     public RectTransform gridPanel;
     public GameObject cellPrefab;
     public Material conveyorSharedMaterial;
-    public GameObject inputMachinePrefab; // Assign your InputSquare prefab here
 
     public int width = 5, height = 5;
 
@@ -14,6 +13,28 @@ public class UIGridManager : MonoBehaviour
 
     private UICell[,] cellScripts;
     private UICell.MachineType[,] machineTypes; // Track machine type for each cell
+
+    public RectTransform movingItemsContainer;
+
+    public RectTransform GetCellRect(int x, int y)
+    {
+        // Make sure the coordinates are within the grid bounds
+        if (x >= 0 && x < width && y >= 0 && y < height + 2)
+        {
+            return cellScripts[x, y].GetComponent<RectTransform>();
+        }
+        return null; // Return null if the coordinates are out of bounds
+    }
+
+    // NEW METHOD: Get the UICell script at coordinates
+    public UICell GetCell(int x, int y)
+    {
+        if (x >= 0 && x < width && y >= 0 && y < height + 2)
+        {
+            return cellScripts[x, y];
+        }
+        return null;
+    }
 
     void Start()
     {
@@ -52,6 +73,7 @@ public class UIGridManager : MonoBehaviour
                 machineTypes[x, y] = UICell.MachineType.None;
             }
         }
+         movingItemsContainer.SetAsLastSibling();
     }
 
     // Track cellType and machineType for each cell

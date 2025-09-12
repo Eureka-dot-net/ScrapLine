@@ -1,3 +1,4 @@
+// UICell.cs
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,18 +35,29 @@ public class UICell : MonoBehaviour
     [HideInInspector]
     public Direction conveyorDirection = Direction.Up;
 
-    // Input machine settings
-    public GameObject[] spawnPrefabs;
+    public RectTransform[] spawnPrefabs;
     public float spawnInterval = 2f;
     public float cellSize = 1f;
 
     private float inputTimer = 0f;
     private int spawnIndex = 0;
 
+    public RectTransform itemSpawnPoint;
+    public RectTransform topSpawnPoint;
+
     void Awake()
     {
         if (cellButton == null) cellButton = GetComponent<Button>();
         cellButton.onClick.AddListener(OnCellClicked);
+
+        if (topSpawnPoint == null)
+        {
+            GameObject topPoint = new GameObject("TopSpawnPoint");
+            topSpawnPoint = topPoint.AddComponent<RectTransform>();
+            topSpawnPoint.SetParent(transform, false);
+            topSpawnPoint.anchoredPosition = Vector2.zero;
+            topSpawnPoint.sizeDelta = Vector2.zero;
+        }
     }
 
     public void Init(int x, int y, UIGridManager gridManager, Material conveyorMaterial)
@@ -105,7 +117,6 @@ public class UICell : MonoBehaviour
                 innerRawImage.enabled = true;
                 innerRawImage.texture = conveyorInnerTexture;
                 innerRawImage.material = conveyorMaterial;
-                // No prefab spawning needed! Just set machineType
                 break;
         }
     }
@@ -132,10 +143,10 @@ public class UICell : MonoBehaviour
         switch (cellRole)
         {
             case CellRole.Grid:
+                conveyorDirection = gridManager.lastConveyorDirection;
                 HandleGridCellClick();
                 break;
             case CellRole.Top:
-                // Future: Handle top row clicks
                 break;
             case CellRole.Bottom:
                 gridManager.OnCellTypeChanged(x, y, CellType.Machine, MachineType.Input);
@@ -173,29 +184,93 @@ public class UICell : MonoBehaviour
         }
     }
 
-    void Update()
-{
-    if (cellType == CellType.Machine && machineType == MachineType.Input)
+    public RectTransform GetItemSpawnPoint()
     {
-        if (spawnPrefabs == null || spawnPrefabs.Length == 0) return;
-        inputTimer += Time.deltaTime;
-        if (inputTimer >= spawnInterval)
+        if (cellType == CellType.Machine)
         {
-            inputTimer = 0f;
+            return itemSpawnPoint;
+        }
+        else
+        {
+            return topSpawnPoint;
+        }
+    }
 
-            // Get the cell's position in screen space (UI)
-            Vector3 screenPos = borderImage.rectTransform.position; // or transform.position
+    public void OnItemArrived(GameObject item)
+{
+    // Get the item's current world position before changing its parent
+    Vector3 startPos = item.transform.position;
+    
+    // Reparent the item to the appropriate spawn point
+    RectTransform targetSpawnPoint = GetItemSpawnPoint();
+    item.transform.SetParent(targetSpawnPoint, false);
+    
+    // Explicitly set the local position to zero to place it in the center
+    item.transform.localPosition = Vector3.zero;
 
-            // Convert to world space
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(screenPos);
-            worldPos.z = 0; // Set Z to 0 for 2D games
-
-            // Spawn the prefab in world space
-            GameObject prefabToSpawn = spawnPrefabs[spawnIndex];
-            GameObject spawnedObj = Instantiate(prefabToSpawn, worldPos, Quaternion.identity);
-
-            spawnIndex = (spawnIndex + 1) % spawnPrefabs.Length;
+    if (cellType == CellType.Conveyor)
+    {
+        ItemMover mover = item.GetComponent<ItemMover>();
+        if (mover != null)
+        {
+            // Now we pass the correct parameters to the helper method
+            StartItemMovement(mover, item.GetComponent<RectTransform>(), startPos);
         }
     }
 }
+
+    void Update()
+    {
+        if (cellType == CellType.Machine && machineType == MachineType.Input)
+        {
+            if (spawnPrefabs == null || spawnPrefabs.Length == 0) return;
+
+            inputTimer += Time.deltaTime;
+
+            if (inputTimer >= spawnInterval)
+            {
+                inputTimer = 0f;
+
+                RectTransform prefabToSpawn = spawnPrefabs[spawnIndex];
+                
+                // Spawn the item into the central moving items container
+                RectTransform spawnedObj = Instantiate(prefabToSpawn, gridManager.movingItemsContainer);
+                
+                ItemMover mover = spawnedObj.gameObject.AddComponent<ItemMover>();
+                
+                Vector3 startPos = GetItemSpawnPoint().position;
+                
+                StartItemMovement(mover, spawnedObj, startPos);
+
+                spawnIndex = (spawnIndex + 1) % spawnPrefabs.Length;
+            }
+        }
+    }
+
+    private void StartItemMovement(ItemMover mover, RectTransform itemRect, Vector3 startPos)
+    {
+        UICell nextCell = GetNextCell();
+        if (nextCell == null)
+        {
+            Debug.LogWarning("No next cell found, destroying item.");
+            Destroy(mover.gameObject);
+            return;
+        }
+
+        Vector3 nextCellPos = nextCell.GetComponent<RectTransform>().position;
+        mover.StartMovement(nextCell, startPos, nextCellPos);
+    }
+
+    private UICell GetNextCell()
+    {
+        int nextX = x, nextY = y;
+        switch (conveyorDirection)
+        {
+            case Direction.Up: nextY--; break;
+            case Direction.Right: nextX++; break;
+            case Direction.Down: nextY++; break;
+            case Direction.Left: nextX--; break;
+        }
+        return gridManager.GetCell(nextX, nextY);
+    }
 }
