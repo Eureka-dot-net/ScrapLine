@@ -230,6 +230,7 @@ GameObject:
   - component: {fileID: 7347213308601077137}
   - component: {fileID: 5641473144092521196}
   - component: {fileID: 4699644755001240317}
+  - component: {fileID: 8058642213053720437}
   m_Layer: 5
   m_Name: UICell
   m_TagString: Untagged
@@ -354,6 +355,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cda51e5da286b144b259e2e17484056, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UICell
+  itemTimeout: 10
   x: 0
   y: 0
   borderImage: {fileID: 7150813472236907048}
@@ -373,3 +375,16 @@ MonoBehaviour:
   cellSize: 1
   itemSpawnPoint: {fileID: 2489282294217761697}
   topSpawnPoint: {fileID: 7234608998676064572}
+--- !u!114 &8058642213053720437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6365736263334911754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 206c659dee9244740b4ae34a4fcf472f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIItem
+  itemType: 
