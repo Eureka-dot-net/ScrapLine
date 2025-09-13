@@ -132,6 +132,23 @@ public class GameManager : MonoBehaviour
         {
             activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, newMachineType);
         }
+
+        // Only try to move items if the cell is now a conveyor or machine
+        if (cellData.cellType == UICell.CellType.Conveyor || cellData.cellType == UICell.CellType.Machine)
+        {
+            foreach (var item in cellData.items)
+            {
+                item.shouldStopAtTarget = false;
+                item.hasCheckedMiddle = false;
+                item.hasQueuedMovement = false;
+
+                // If not already moving, start movement in the new direction/type
+                if (!item.isMoving)
+                {
+                    TryStartItemMovement(item, cellData, gridData, activeGridManager);
+                }
+            }
+        }
     }
 
     private void Update()
@@ -200,7 +217,7 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    if (cell.cellType != CellType.Blank)
+                    if (cell.cellType != CellType.Blank && !item.shouldStopAtTarget /* && !item.hasStopped */)
                     {
                         // Check if item can start moving
                         TryStartItemMovement(item, cell, gridData, gridManager);
@@ -219,19 +236,17 @@ public class GameManager : MonoBehaviour
         CellData targetCell = GetCellData(gridData, item.targetX, item.targetY);
         if (targetCell == null)
         {
-            Debug.Log($"Item {item.id} moving to invalid cell - will stop at current position");
             item.shouldStopAtTarget = true;
             return;
         }
 
-        // Check what the target cell contains and decide next action
         if (targetCell.cellType == CellType.Blank)
         {
-            // Moving to empty cell - stop there
-            Debug.Log($"Item {item.id} moving to empty cell - will stop");
-            item.isMoving = false;
-           // item.moveProgress = 0f;
-          //  item.shouldStopAtTarget = true;
+            // Stop at blank cell, set progress to complete
+            item.shouldStopAtTarget = true;
+
+            // Optionally set a custom "stopped" flag if needed
+            // item.hasStopped = true;
         }
         else if (targetCell.cellType == CellType.Machine)
         {
