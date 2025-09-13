@@ -42,7 +42,7 @@ public class UIGridManager : MonoBehaviour
     {
         Debug.Log("UIGridManager InitGrid() called.");
         this.gridData = data;
-        
+
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
         if (layout != null)
         {
@@ -63,8 +63,8 @@ public class UIGridManager : MonoBehaviour
             }
         }
 
-        cellScripts = new UICell[gridData.width, gridData.height]; 
-        
+        cellScripts = new UICell[gridData.width, gridData.height];
+
         for (int y = 0; y < gridData.height; ++y)
         {
             for (int x = 0; x < gridData.width; ++x)
@@ -72,9 +72,9 @@ public class UIGridManager : MonoBehaviour
                 GameObject cellObj = Instantiate(cellPrefab, gridPanel);
                 UICell cellScript = cellObj.GetComponent<UICell>();
                 cellScripts[x, y] = cellScript;
-                
+
                 cellScript.Init(x, y, this, conveyorSharedMaterial);
-                
+
                 CellData cellData = GetCellData(x, y);
                 if (cellData != null)
                 {
@@ -83,13 +83,13 @@ public class UIGridManager : MonoBehaviour
                 }
             }
         }
-        
+
         if (movingItemsContainer != null)
         {
             movingItemsContainer.SetAsLastSibling();
         }
     }
-    
+
     private CellData GetCellData(int x, int y)
     {
         foreach (var cell in gridData.cells)
@@ -122,6 +122,25 @@ public class UIGridManager : MonoBehaviour
         foreach (var cell in gridData.cells)
         {
             UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineType);
+        }
+    }
+
+    // Add this new method to your UIGridManager class
+    public void SpawnVisualItem(CellData cellData)
+    {
+        UICell cell = GetCell(cellData.x, cellData.y);
+        if (cell != null)
+        {
+            // Find the spawn point on the cell
+            RectTransform spawnPoint = cell.GetItemSpawnPoint();
+
+            // Create the new item instance
+            GameObject newItem = Instantiate(itemPrefab, spawnPoint);
+            newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+            newItem.GetComponent<Image>().color = Color.cyan; // Placeholder color
+
+            // Add the item to our list of moving items
+            // We'll need to figure out the movement in a later step
         }
     }
 

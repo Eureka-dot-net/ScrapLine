@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour
     private List<GridData> activeGrids = new List<GridData>();
     private const string SAVE_FILE_NAME = "game_data.json";
 
+    public float spawnInterval = 5f;
+    private float spawnTimer;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -124,6 +127,48 @@ public class GameManager : MonoBehaviour
         if (activeGridManager != null)
         {
             activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, newMachineType);
+        }
+    }
+
+    // Add this new Update method to your GameManager class
+    private void Update()
+    {
+        spawnTimer -= Time.deltaTime;
+        if (spawnTimer <= 0)
+        {
+            spawnTimer = spawnInterval;
+
+            // Find all input machines in our data model
+            GridData gridData = activeGrids[0];
+            foreach (var cell in gridData.cells)
+            {
+                if (cell.cellType == UICell.CellType.Machine && cell.machineType == UICell.MachineType.Input)
+                {
+                    // Check if the cell already has an item
+                    if (cell.items.Count == 0)
+                    {
+                        // Spawn a new item if the cell is empty
+                        SpawnItem(cell);
+                    }
+                }
+            }
+        }
+    }
+
+    // Add this new helper method to your GameManager class
+    private void SpawnItem(CellData cellData)
+    {
+        Debug.Log($"Spawning new item at ({cellData.x}, {cellData.y})");
+
+        // 1. Update the data model
+        ItemData newItem = new ItemData { itemType = "Placeholder" }; // "Placeholder" for now
+        cellData.items.Add(newItem);
+
+        // 2. Tell the visual manager to create a visual representation
+        UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
+        if (gridManager != null)
+        {
+            gridManager.SpawnVisualItem(cellData);
         }
     }
 
