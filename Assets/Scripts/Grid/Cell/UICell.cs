@@ -1,10 +1,13 @@
-// UICell.cs
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UICell : MonoBehaviour
 {
+    [Tooltip("Time in seconds before a parked item is destroyed.")]
+    public float itemTimeout = 10f;
+
     [HideInInspector]
     public int x, y;
 
@@ -44,6 +47,8 @@ public class UICell : MonoBehaviour
 
     public RectTransform itemSpawnPoint;
     public RectTransform topSpawnPoint;
+
+   private Dictionary<GameObject, float> parkedItems = new Dictionary<GameObject, float>();
 
     void Awake()
     {
@@ -119,6 +124,19 @@ public class UICell : MonoBehaviour
                 innerRawImage.material = conveyorMaterial;
                 break;
         }
+        // New Logic: If the cell type has changed and items are parked here, restart their movement
+        if (parkedItems.Count > 0)
+        {
+            if (cellType == CellType.Conveyor || cellType == CellType.Machine)
+            {
+                // This cell is no longer blank, so we can trigger the movement of all parked items
+                foreach (var item in parkedItems.Keys)
+                {
+                    OnItemArrived(item);
+                }
+                parkedItems.Clear(); // Clear the dictionary after starting the movement
+            }
+        }
     }
 
     void HandleGridCellClick()
@@ -169,18 +187,14 @@ public class UICell : MonoBehaviour
             case Direction.Down: zRot = -180f; break;
             case Direction.Left: zRot = -270f; break;
         }
-        transform.localEulerAngles = new Vector3(0, 0, zRot);
-    }
-
-    public Vector2 GetDirectionVector()
-    {
-        switch (conveyorDirection)
+        // Apply rotation to the inner and border children instead of the parent
+        if (innerRawImage != null)
         {
-            case Direction.Up: return Vector2.up;
-            case Direction.Right: return Vector2.right;
-            case Direction.Down: return Vector2.down;
-            case Direction.Left: return Vector2.left;
-            default: return Vector2.up;
+            innerRawImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
+        }
+        if (borderImage != null)
+        {
+            borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
         }
     }
 
@@ -197,30 +211,50 @@ public class UICell : MonoBehaviour
     }
 
     public void OnItemArrived(GameObject item)
-{
-    // Get the item's current world position before changing its parent
-    Vector3 startPos = item.transform.position;
-    
-    // Reparent the item to the appropriate spawn point
-    RectTransform targetSpawnPoint = GetItemSpawnPoint();
-    item.transform.SetParent(targetSpawnPoint, false);
-    
-    // Explicitly set the local position to zero to place it in the center
-    item.transform.localPosition = Vector3.zero;
-
-    if (cellType == CellType.Conveyor)
     {
-        ItemMover mover = item.GetComponent<ItemMover>();
-        if (mover != null)
+        if (cellType == CellType.Conveyor || (cellType == CellType.Machine && machineType == MachineType.Input))
         {
-            // Now we pass the correct parameters to the helper method
-            StartItemMovement(mover, item.GetComponent<RectTransform>(), startPos);
+            UICell nextCell = GetNextCell();
+            if (nextCell != null)
+            {
+                gridManager.StartItemMovement(item, this, nextCell);
+            }
+            else
+            {
+                Destroy(item);
+            }
+        }
+        else // Blank cell
+        {
+            parkedItems.Add(item, Time.time);
         }
     }
-}
 
     void Update()
     {
+        if (parkedItems.Count > 0)
+        {
+            // Use a temporary list to hold items that should be destroyed
+            List<GameObject> itemsToDestroy = new List<GameObject>();
+
+            foreach (var kvp in parkedItems)
+            {
+                if (Time.time - kvp.Value > itemTimeout)
+                {
+                    itemsToDestroy.Add(kvp.Key);
+                }
+            }
+            
+            if (itemsToDestroy.Count > 0)
+            {
+                Debug.Log($"Items timed out on cell ({x},{y}), destroying {itemsToDestroy.Count} items.");
+                foreach (var item in itemsToDestroy)
+                {
+                    Destroy(item);
+                    parkedItems.Remove(item);
+                }
+            }
+        }
         if (cellType == CellType.Machine && machineType == MachineType.Input)
         {
             if (spawnPrefabs == null || spawnPrefabs.Length == 0) return;
@@ -232,33 +266,26 @@ public class UICell : MonoBehaviour
                 inputTimer = 0f;
 
                 RectTransform prefabToSpawn = spawnPrefabs[spawnIndex];
-                
-                // Spawn the item into the central moving items container
+
+                Vector3 spawnPos = GetItemSpawnPoint().position;
+
                 RectTransform spawnedObj = Instantiate(prefabToSpawn, gridManager.movingItemsContainer);
-                
-                ItemMover mover = spawnedObj.gameObject.AddComponent<ItemMover>();
-                
-                Vector3 startPos = GetItemSpawnPoint().position;
-                
-                StartItemMovement(mover, spawnedObj, startPos);
+
+                spawnedObj.position = spawnPos;
+
+                UICell nextCell = GetNextCell();
+                if (nextCell != null)
+                {
+                    gridManager.StartItemMovement(spawnedObj.gameObject, this, nextCell);
+                }
+                else
+                {
+                    Destroy(spawnedObj.gameObject);
+                }
 
                 spawnIndex = (spawnIndex + 1) % spawnPrefabs.Length;
             }
         }
-    }
-
-    private void StartItemMovement(ItemMover mover, RectTransform itemRect, Vector3 startPos)
-    {
-        UICell nextCell = GetNextCell();
-        if (nextCell == null)
-        {
-            Debug.LogWarning("No next cell found, destroying item.");
-            Destroy(mover.gameObject);
-            return;
-        }
-
-        Vector3 nextCellPos = nextCell.GetComponent<RectTransform>().position;
-        mover.StartMovement(nextCell, startPos, nextCellPos);
     }
 
     private UICell GetNextCell()
