@@ -21,13 +21,6 @@ public class UICell : MonoBehaviour
     public MachineType machineType = MachineType.None;
     public Direction conveyorDirection = Direction.Up;
 
-    // We no longer need these, as the GameManager will handle them
-    // public float itemTimeout = 10f;
-    // public float spawnInterval = 2f;
-    // private float inputTimer = 0f;
-    // private int spawnIndex = 0;
-    // private Dictionary<GameObject, float> parkedItems = new Dictionary<GameObject, float>();
-
     // These are references to the visual GameObjects
     public RectTransform itemSpawnPoint;
     public RectTransform topSpawnPoint;
@@ -173,30 +166,12 @@ public class UICell : MonoBehaviour
         }
     }
 
-    public void OnItemArrived(GameObject item)
-    {
-        // This is now a notification to the GameManager
-        // GameManager.Instance.OnItemArrived(item, x, y);
-    }
+    // Removed OnItemArrived and GetNextCell methods as they're no longer needed
+    // GameManager now handles all movement logic
 
     // The Update method is now empty, as all logic is handled by the GameManager
     void Update()
     {
-
-    }
-
-    // This helper method is still okay here as it only looks up a visual cell
-    public UICell GetNextCell()
-    {
-        int nextX = x, nextY = y;
-        switch (conveyorDirection)
-        {
-            case Direction.Up: nextY++; break;
-            case Direction.Right: nextX++; break;
-            case Direction.Down: nextY--; break;
-            case Direction.Left: nextX--; break;
-        }
-
-        return gridManager.GetCell(nextX, nextY);
+        // Empty - all logic now handled by GameManager
     }
 }

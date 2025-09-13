@@ -1,11 +1,38 @@
-using UnityEngine;
+// Add these classes to your data model file (or create a new one)
+
 using System.Collections.Generic;
 
-// We must add the [System.Serializable] attribute for Unity's JsonUtility to work
 [System.Serializable]
-public class GameData
+public class ItemData
 {
-    public List<GridData> grids = new List<GridData>();
+    public string id;
+    public string itemType;
+    
+    // Movement state
+    public bool isMoving;
+    public int targetX;
+    public int targetY;
+    public float moveProgress; // 0.0 to 1.0
+    public float moveStartTime;
+    public bool hasCheckedMiddle; // Flag to prevent multiple middle checks per movement
+    
+    // Next movement planning
+    public bool shouldStopAtTarget;
+    public bool hasQueuedMovement;
+    public int queuedTargetX;
+    public int queuedTargetY;
+}
+
+[System.Serializable]
+public class CellData
+{
+    public int x;
+    public int y;
+    public UICell.CellType cellType;
+    public UICell.Direction direction;
+    public UICell.CellRole cellRole;
+    public UICell.MachineType machineType;
+    public List<ItemData> items = new List<ItemData>();
 }
 
 [System.Serializable]
@@ -17,22 +44,7 @@ public class GridData
 }
 
 [System.Serializable]
-public class CellData
+public class GameData
 {
-    public int x;
-    public int y;
-    public UICell.CellType cellType;
-    public UICell.Direction direction;
-
-    public UICell.MachineType machineType;
-
-    public UICell.CellRole cellRole;
-
-    public List<ItemData> items = new List<ItemData>();
-}
-
-[System.Serializable]
-public class ItemData
-{
-    public string itemType;
+    public List<GridData> grids = new List<GridData>();
 }

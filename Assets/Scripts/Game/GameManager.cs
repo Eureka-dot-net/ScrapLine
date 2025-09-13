@@ -13,6 +13,10 @@ public class GameManager : MonoBehaviour
     public float spawnInterval = 5f;
     private float spawnTimer;
 
+    // Movement settings
+    public float itemMoveSpeed = 1f; // cells per second
+    private int nextItemId = 1;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -130,9 +134,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Add this new Update method to your GameManager class
     private void Update()
     {
+        // Handle item spawning
         spawnTimer -= Time.deltaTime;
         if (spawnTimer <= 0)
         {
@@ -153,22 +157,244 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+
+        // Handle item movement
+        ProcessItemMovement();
     }
 
-    // Add this new helper method to your GameManager class
+    private void ProcessItemMovement()
+    {
+        GridData gridData = activeGrids[0];
+        UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
+        if (gridManager == null) return;
+
+        foreach (var cell in gridData.cells)
+        {
+            for (int i = cell.items.Count - 1; i >= 0; i--)
+            {
+                ItemData item = cell.items[i];
+
+                if (item.isMoving)
+                {
+                    // Update movement progress
+                    float timeSinceStart = Time.time - item.moveStartTime;
+                    item.moveProgress = timeSinceStart * itemMoveSpeed;
+
+                    if (item.moveProgress >= 1.0f)
+                    {
+                        // Movement complete - transfer item to target cell
+                        CompleteItemMovement(item, cell, gridData, gridManager);
+                        i--; // Account for item being removed from current cell
+                    }
+                    else
+                    {
+                        // Check if we've reached the middle of movement and need to decide next action
+                        if (item.moveProgress >= 0.5f && !item.hasCheckedMiddle)
+                        {
+                            CheckItemAtCellMiddle(item, gridData);
+                        }
+
+                        // Update visual position with proper parent handover timing
+                        gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                    }
+                }
+                else
+                {
+                    if (cell.cellType != CellType.Blank)
+                    {
+                        // Check if item can start moving
+                        TryStartItemMovement(item, cell, gridData, gridManager);
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void CheckItemAtCellMiddle(ItemData item, GridData gridData)
+    {
+        item.hasCheckedMiddle = true;
+
+        // Find the target cell we're moving towards
+        CellData targetCell = GetCellData(gridData, item.targetX, item.targetY);
+        if (targetCell == null)
+        {
+            Debug.Log($"Item {item.id} moving to invalid cell - will stop at current position");
+            item.shouldStopAtTarget = true;
+            return;
+        }
+
+        // Check what the target cell contains and decide next action
+        if (targetCell.cellType == CellType.Blank)
+        {
+            // Moving to empty cell - stop there
+            Debug.Log($"Item {item.id} moving to empty cell - will stop");
+            item.isMoving = false;
+           // item.moveProgress = 0f;
+          //  item.shouldStopAtTarget = true;
+        }
+        else if (targetCell.cellType == CellType.Machine)
+        {
+            // Moving to machine - will be processed
+            Debug.Log($"Item {item.id} moving to machine - will be processed");
+            // TODO: Process item at machine (crafting, upgrades, etc.)
+
+            // After processing, determine next movement direction
+            int nextX, nextY;
+            GetNextCellCoordinates(targetCell, out nextX, out nextY);
+            CellData nextCell = GetCellData(gridData, nextX, nextY);
+
+            if (nextCell != null)
+            {
+                // Queue up the next movement
+                item.queuedTargetX = nextX;
+                item.queuedTargetY = nextY;
+                item.hasQueuedMovement = true;
+                Debug.Log($"Item {item.id} will continue to ({nextX}, {nextY}) after machine processing");
+            }
+            else
+            {
+                item.shouldStopAtTarget = true;
+            }
+        }
+        else if (targetCell.cellType == CellType.Conveyor)
+        {
+            // Moving to conveyor - determine next movement based on conveyor direction
+            int nextX, nextY;
+            GetNextCellCoordinates(targetCell, out nextX, out nextY);
+            CellData nextCell = GetCellData(gridData, nextX, nextY);
+
+            if (nextCell != null)
+            {
+                // Queue up the next movement
+                item.queuedTargetX = nextX;
+                item.queuedTargetY = nextY;
+                item.hasQueuedMovement = true;
+                Debug.Log($"Item {item.id} will continue to ({nextX}, {nextY}) following conveyor");
+            }
+            else
+            {
+                Debug.Log($"Item {item.id} will stop at conveyor end");
+                item.shouldStopAtTarget = true;
+            }
+        }
+    }
+
+    private void CompleteItemMovement(ItemData item, CellData sourceCell, GridData gridData, UIGridManager gridManager)
+    {
+        // Find target cell
+        CellData targetCell = GetCellData(gridData, item.targetX, item.targetY);
+
+        if (targetCell == null)
+        {
+            Debug.LogError($"Target cell not found at ({item.targetX}, {item.targetY})");
+            return;
+        }
+
+        // Remove from source cell
+        sourceCell.items.Remove(item);
+
+        // Check if target is output machine
+        if (targetCell.cellType == CellType.Machine && targetCell.machineType == MachineType.Output)
+        {
+            // TODO: Replace this with proper output handling (scoring, collection, etc.)
+            Debug.Log($"Item {item.id} reached output machine - destroying");
+            gridManager.DestroyVisualItem(item.id);
+            return;
+        }
+
+        // Add to target cell and reset movement state
+        item.isMoving = false;
+        item.moveProgress = 0f;
+        targetCell.items.Add(item);
+
+        // Update visual position to exact target
+        gridManager.UpdateItemVisualPosition(item.id, 1f, sourceCell.x, sourceCell.y, item.targetX, item.targetY, sourceCell.direction);
+
+        if (item.hasQueuedMovement && !item.shouldStopAtTarget)
+        {
+            // Start the queued movement immediately
+            item.targetX = item.queuedTargetX;
+            item.targetY = item.queuedTargetY;
+            item.isMoving = true;
+            item.moveStartTime = Time.time;
+            item.moveProgress = 0f;
+            item.hasCheckedMiddle = false;
+            item.hasQueuedMovement = false;
+
+            Debug.Log($"Starting queued movement for item {item.id} to ({item.targetX}, {item.targetY})");
+        }
+
+        // Reset flags
+        item.shouldStopAtTarget = false;
+        item.hasQueuedMovement = false;
+    }
+
+    private void TryStartItemMovement(ItemData item, CellData cell, GridData gridData, UIGridManager gridManager)
+    {
+        // Determine next cell based on current cell type and direction
+        int nextX, nextY;
+        GetNextCellCoordinates(cell, out nextX, out nextY);
+
+        // Check if next cell exists
+        CellData nextCell = GetCellData(gridData, nextX, nextY);
+        if (nextCell == null)
+        {
+            return; // No movement possible
+        }
+
+        // Start movement
+        item.isMoving = true;
+        item.targetX = nextX;
+        item.targetY = nextY;
+        item.moveStartTime = Time.time;
+        item.moveProgress = 0f;
+
+        Debug.Log($"Starting movement for item {item.id} from ({cell.x},{cell.y}) to ({nextX},{nextY})");
+    }
+
+    private void GetNextCellCoordinates(CellData cell, out int nextX, out int nextY)
+    {
+        nextX = cell.x;
+        nextY = cell.y;
+
+        // For input machines, items move in the "up" direction (toward the grid)
+        if (cell.cellType == CellType.Machine && cell.machineType == MachineType.Input)
+        {
+            nextY--;
+            return;
+        }
+
+        // For conveyors and other machines, use their direction
+        switch (cell.direction)
+        {
+            case Direction.Up: nextY--; break;
+            case Direction.Right: nextX++; break;
+            case Direction.Down: nextY++; break;
+            case Direction.Left: nextX--; break;
+        }
+    }
+
     private void SpawnItem(CellData cellData)
     {
         Debug.Log($"Spawning new item at ({cellData.x}, {cellData.y})");
 
-        // 1. Update the data model
-        ItemData newItem = new ItemData { itemType = "Placeholder" }; // "Placeholder" for now
+        // Create new item with unique ID
+        ItemData newItem = new ItemData
+        {
+            id = "item_" + nextItemId++,
+            itemType = "Placeholder",
+            isMoving = false,
+            moveProgress = 0f
+        };
+
         cellData.items.Add(newItem);
 
-        // 2. Tell the visual manager to create a visual representation
+        // Tell visual manager to create visual representation
         UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
-            gridManager.SpawnVisualItem(cellData);
+            gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y);
         }
     }
 
@@ -177,15 +403,25 @@ public class GameManager : MonoBehaviour
         Debug.Log("Clearing grid...");
         GridData gridData = activeGrids[0];
 
+        UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+
         foreach (var cell in gridData.cells)
         {
+            // Destroy visual items before clearing data
+            if (activeGridManager != null)
+            {
+                foreach (var item in cell.items)
+                {
+                    activeGridManager.DestroyVisualItem(item.id);
+                }
+            }
+
             cell.cellType = CellType.Blank;
             cell.direction = Direction.Up;
             cell.machineType = MachineType.None;
             cell.items.Clear();
         }
 
-        UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
         if (activeGridManager != null)
         {
             activeGridManager.UpdateAllVisuals();
@@ -220,6 +456,26 @@ public class GameManager : MonoBehaviour
             string json = File.ReadAllText(path);
             GameData data = JsonUtility.FromJson<GameData>(json);
             activeGrids = data.grids;
+
+            // Find highest item ID to continue sequence
+            foreach (var grid in activeGrids)
+            {
+                foreach (var cell in grid.cells)
+                {
+                    foreach (var item in cell.items)
+                    {
+                        if (item.id.StartsWith("item_"))
+                        {
+                            string idStr = item.id.Substring(5);
+                            if (int.TryParse(idStr, out int id))
+                            {
+                                nextItemId = Mathf.Max(nextItemId, id + 1);
+                            }
+                        }
+                    }
+                }
+            }
+
             Debug.Log("Game loaded!");
         }
     }
@@ -233,6 +489,16 @@ public class GameManager : MonoBehaviour
         if (activeGridManager != null)
         {
             activeGridManager.InitGrid(activeGrids[0]);
+
+            // Recreate visual items for loaded data
+            GridData gridData = activeGrids[0];
+            foreach (var cell in gridData.cells)
+            {
+                foreach (var item in cell.items)
+                {
+                    activeGridManager.CreateVisualItem(item.id, cell.x, cell.y);
+                }
+            }
         }
     }
 }
