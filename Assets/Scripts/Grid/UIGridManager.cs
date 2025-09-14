@@ -75,7 +75,7 @@ public class UIGridManager : MonoBehaviour
                 if (cellData != null)
                 {
                     cellScript.SetCellRole(cellData.cellRole);
-                    cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineType);
+                    cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
                     
                     // If this is a machine cell, set up the machine renderer
                     if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
@@ -92,24 +92,14 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
-    private CellData GetCellData(int x, int y)
-    {
-        foreach (var cell in gridData.cells)
-        {
-            if (cell.x == x && cell.y == y)
-            {
-                return cell;
-            }
-        }
-        return null;
-    }
 
-    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, MachineType machineType = MachineType.None, string machineDefId = null)
+
+    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, string machineDefId = null)
     {
         UICell cell = GetCell(x, y);
         if (cell != null)
         {
-            cell.SetCellType(newType, newDirection, machineType);
+            cell.SetCellType(newType, newDirection, machineDefId);
             
             // If this is a machine cell, set up the machine renderer
             if (newType == CellType.Machine && !string.IsNullOrEmpty(machineDefId))
@@ -313,7 +303,8 @@ public class UIGridManager : MonoBehaviour
         item.transform.position = currentPos;
 
         // Handle parent changes for proper rendering order based on movement direction
-        bool shouldChangeParent = ShouldChangeParent(progress, movementDirection, endCell.machineType);
+        CellData endCellData = GetCellData(endX, endY);
+        bool shouldChangeParent = ShouldChangeParent(progress, movementDirection, endCellData?.machineDefId);
         RectTransform currentParent = item.transform.parent as RectTransform;
         RectTransform targetParent = shouldChangeParent ? endSpawnPoint : startSpawnPoint;
         Debug.Log($"Item {itemId} progress: {progress}, shouldChangeParent: {shouldChangeParent}, currentParent: {currentParent?.name}, targetParent: {targetParent?.name}");
@@ -323,11 +314,19 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
-    private bool ShouldChangeParent(float progress, UICell.Direction movementDirection,  UICell.MachineType machineType)
+    private bool ShouldChangeParent(float progress, UICell.Direction movementDirection, string machineDefId)
     {
         // For Down and Right movement: change parent before hitting boundary (30%)
-        // Also for machines to ensure items appear below roof
-        if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right || machineType == UICell.MachineType.ThreeeInputsOneOutput)
+        // Also for specific machine types to ensure items appear below roof
+        bool isSpecialMachine = false;
+        if (!string.IsNullOrEmpty(machineDefId))
+        {
+            var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
+            // Check for machines that need special handling (like the old ThreeInputsOneOutput)
+            isSpecialMachine = machineDef != null && machineDef.type == "Shredder"; // Example special case
+        }
+        
+        if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right || isSpecialMachine)
         {
             return progress >= 0.3f;
         }
@@ -339,7 +338,7 @@ public class UIGridManager : MonoBehaviour
         return progress >= 0.5f; // Default fallback
     }
 
-    private CellData GetCellData(int x, int y)
+    public CellData GetCellData(int x, int y)
     {
         if (gridData == null) return null;
         

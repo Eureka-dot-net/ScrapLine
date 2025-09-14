@@ -52,30 +52,22 @@ public class MachineRenderer : MonoBehaviour
 
     private void CreateItemSpawnPoint()
     {
-        // Find the UICell parent to set the spawn point
-        UICell parentCell = GetComponentInParent<UICell>();
-        if (parentCell != null)
-        {
-            // Create spawn point GameObject
-            GameObject spawnPointObj = new GameObject("ItemSpawnPoint");
-            spawnPointObj.transform.SetParent(this.transform, false);
-            
-            RectTransform spawnPointRT = spawnPointObj.AddComponent<RectTransform>();
-            
-            // Position it in the center, between border and building layers
-            spawnPointRT.anchorMin = new Vector2(0.5f, 0.5f);
-            spawnPointRT.anchorMax = new Vector2(0.5f, 0.5f);
-            spawnPointRT.anchoredPosition = Vector2.zero;
-            spawnPointRT.sizeDelta = Vector2.zero;
-            
-            // Set the sibling index to be between border (1) and building (2)
-            spawnPointObj.transform.SetSiblingIndex(1);
-            
-            // Assign to the parent UICell
-            parentCell.itemSpawnPoint = spawnPointRT;
-            
-            Debug.Log("Created item spawn point for machine");
-        }
+        // Create spawn point GameObject as a child of this MachineRenderer
+        GameObject spawnPointObj = new GameObject("ItemSpawnPoint");
+        spawnPointObj.transform.SetParent(this.transform, false);
+        
+        RectTransform spawnPointRT = spawnPointObj.AddComponent<RectTransform>();
+        
+        // Position it in the center, between border and building layers
+        spawnPointRT.anchorMin = new Vector2(0.5f, 0.5f);
+        spawnPointRT.anchorMax = new Vector2(0.5f, 0.5f);
+        spawnPointRT.anchoredPosition = Vector2.zero;
+        spawnPointRT.sizeDelta = Vector2.zero;
+        
+        // Set the sibling index to be between border (1) and building (2)
+        spawnPointObj.transform.SetSiblingIndex(1);
+        
+        Debug.Log("Created item spawn point for machine");
     }
 
     // This is the helper method you need:

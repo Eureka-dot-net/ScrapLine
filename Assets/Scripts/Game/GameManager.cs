@@ -147,30 +147,30 @@ public class GameManager : MonoBehaviour
         // Original cell cycling logic for non-machine placements
         UICell.CellType newType = cellData.cellType;
         UICell.Direction newDirection = cellData.direction;
-        UICell.MachineType newMachineType = cellData.machineType;
 
         switch (cellData.cellRole)
         {
             case UICell.CellRole.Grid:
                 if (cellData.cellType == UICell.CellType.Blank)
                 {
-                    newType = UICell.CellType.Conveyor;
+                    // Place a conveyor (which is now a machine)
+                    newType = UICell.CellType.Machine;
                     newDirection = lastConveyorDirection;
-                    cellData.machineDefId = null; // Clear machine reference
+                    cellData.machineDefId = "conveyor"; // Set conveyor machine ID
                 }
-                else if (cellData.cellType == UICell.CellType.Conveyor)
+                else if (cellData.cellType == UICell.CellType.Machine && cellData.machineDefId == "conveyor")
                 {
+                    // Rotate existing conveyor
                     newDirection = (UICell.Direction)(((int)cellData.direction + 1) % 4);
-                    newType = UICell.CellType.Conveyor;
+                    newType = UICell.CellType.Machine;
                     lastConveyorDirection = newDirection;
-                    cellData.machineDefId = null; // Clear machine reference
+                    // Keep the conveyor machine ID
                 }
                 break;
 
             case UICell.CellRole.Top:
                 Debug.Log("Clicked on Top role. Creating a placeholder Output machine.");
                 newType = UICell.CellType.Machine;
-                newMachineType = UICell.MachineType.Output;
                 newDirection = UICell.Direction.Up;
                 cellData.machineDefId = "seller"; // Use seller machine for top
                 break;
@@ -178,7 +178,6 @@ public class GameManager : MonoBehaviour
             case UICell.CellRole.Bottom:
                 Debug.Log("Clicked on Bottom role. Creating a placeholder Input machine.");
                 newType = UICell.CellType.Machine;
-                newMachineType = UICell.MachineType.Input;
                 newDirection = UICell.Direction.Up;
                 cellData.machineDefId = "spawner"; // Use spawner machine for bottom
                 break;
@@ -186,16 +185,15 @@ public class GameManager : MonoBehaviour
 
         cellData.cellType = newType;
         cellData.direction = newDirection;
-        cellData.machineType = newMachineType;
 
         UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, newMachineType, cellData.machineDefId);
+            activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, cellData.machineDefId);
         }
 
-        // Only try to move items if the cell is now a conveyor or machine
-        if (cellData.cellType == UICell.CellType.Conveyor || cellData.cellType == UICell.CellType.Machine)
+        // Only try to move items if the cell is now a machine
+        if (cellData.cellType == UICell.CellType.Machine)
         {
             foreach (var item in cellData.items)
             {
@@ -251,25 +249,11 @@ public class GameManager : MonoBehaviour
         cellData.cellType = UICell.CellType.Machine;
         cellData.machineDefId = machineDef.id;
         cellData.direction = UICell.Direction.Up; // Default direction
-        
-        // Set legacy machine type based on machine definition for compatibility
-        if (machineDef.type == "Spawner")
-        {
-            cellData.machineType = UICell.MachineType.Input;
-        }
-        else if (machineDef.type == "Seller")
-        {
-            cellData.machineType = UICell.MachineType.Output;
-        }
-        else
-        {
-            cellData.machineType = UICell.MachineType.Generic;
-        }
 
         // Update visuals
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType, cellData.machineDefId);
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
         }
     }
 
@@ -284,7 +268,7 @@ public class GameManager : MonoBehaviour
         UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType, cellData.machineDefId);
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
         }
     }
 
@@ -298,11 +282,11 @@ public class GameManager : MonoBehaviour
 
             spawnTimer = spawnInterval;
 
-            // Find all input machines in our data model
+            // Find all spawner machines in our data model
             GridData gridData = activeGrids[0];
             foreach (var cell in gridData.cells)
             {
-                if (cell.cellType == UICell.CellType.Machine && cell.machineType == UICell.MachineType.Input)
+                if (cell.cellType == UICell.CellType.Machine && cell.machineDefId == "spawner")
                 {
                     // Check if the cell already has an item
                     if (cell.items.Count == 0)
@@ -411,7 +395,7 @@ public class GameManager : MonoBehaviour
                 item.shouldStopAtTarget = true;
             }
         }
-        else if (targetCell.cellType == CellType.Conveyor)
+        else if (targetCell.cellType == CellType.Machine && targetCell.machineDefId == "conveyor")
         {
             // Moving to conveyor - determine next movement based on conveyor direction
             int nextX, nextY;
@@ -448,11 +432,11 @@ public class GameManager : MonoBehaviour
         // Remove from source cell
         sourceCell.items.Remove(item);
 
-        // Check if target is output machine
-        if (targetCell.cellType == CellType.Machine && targetCell.machineType == MachineType.Output)
+        // Check if target is seller machine
+        if (targetCell.cellType == CellType.Machine && targetCell.machineDefId == "seller")
         {
             // TODO: Replace this with proper output handling (scoring, collection, etc.)
-            Debug.Log($"Item {item.id} reached output machine - destroying");
+            Debug.Log($"Item {item.id} reached seller machine - destroying");
             gridManager.DestroyVisualItem(item.id);
             return;
         }
@@ -525,8 +509,8 @@ public class GameManager : MonoBehaviour
         nextX = cell.x;
         nextY = cell.y;
 
-        // For input machines, items move in the "up" direction (toward the grid)
-        if (cell.cellType == CellType.Machine && cell.machineType == MachineType.Input)
+        // For spawner machines, items move in the "up" direction (toward the grid)
+        if (cell.cellType == CellType.Machine && cell.machineDefId == "spawner")
         {
             nextY--;
             return;
@@ -585,7 +569,6 @@ public class GameManager : MonoBehaviour
 
             cell.cellType = CellType.Blank;
             cell.direction = Direction.Up;
-            cell.machineType = MachineType.None;
             cell.machineDefId = null; // Clear machine definition reference
             cell.items.Clear();
         }

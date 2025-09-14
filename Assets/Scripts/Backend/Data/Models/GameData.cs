@@ -31,7 +31,6 @@ public class CellData
     public UICell.CellType cellType;
     public UICell.Direction direction;
     public UICell.CellRole cellRole;
-    public UICell.MachineType machineType;
     public string machineDefId; // References the specific machine definition from FactoryRegistry
     public List<ItemData> items = new List<ItemData>();
 }

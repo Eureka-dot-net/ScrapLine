@@ -18,21 +18,18 @@ public class UICell : MonoBehaviour
     // These are now purely visual properties, not the source of truth
     public CellType cellType = CellType.Blank;
     public CellRole cellRole = CellRole.Grid;
-    public MachineType machineType = MachineType.None;
     public Direction conveyorDirection = Direction.Up;
 
     // These are references to the visual GameObjects  
-    public RectTransform itemSpawnPoint; // Single spawn point as requested
-    public RectTransform topSpawnPoint;  // For blank cells, items go on top
+    public RectTransform topSpawnPoint;  // For blank cells and fallback, items go on top
 
     // We no longer need these as the state is in our GridState model
     [HideInInspector]
     public int x, y;
     private UIGridManager gridManager;
 
-    public enum CellType { Blank, Conveyor, Machine }
+    public enum CellType { Blank, Machine }
     public enum CellRole { Grid, Top, Bottom }
-    public enum MachineType { None, Generic, Input, Output, ThreeeInputsOneOutput, OneInputThreeOutputs }
     public enum Direction { Up, Right, Down, Left }
 
     void Awake()
@@ -86,11 +83,10 @@ public class UICell : MonoBehaviour
     }
 
     // This method now receives all its state data from the GameManager
-    public void SetCellType(CellType type, Direction direction, MachineType mType = MachineType.None)
+    public void SetCellType(CellType type, Direction direction, string machineDefId = null)
     {
         cellType = type;
         conveyorDirection = direction;
-        machineType = mType;
 
         switch (type)
         {
@@ -98,32 +94,53 @@ public class UICell : MonoBehaviour
                 SetBorderSprite(blankSprite);
                 innerRawImage.enabled = false;
                 break;
-            case CellType.Conveyor:
-                SetBorderSprite(conveyorBorderSprite);
-                innerRawImage.enabled = true;
-                innerRawImage.texture = conveyorInnerTexture;
-                innerRawImage.material = conveyorMaterial;
-                SetConveyorRotation(conveyorDirection);
-                break;
             case CellType.Machine:
-                SetBorderSprite(machineBorderSprite);
-                innerRawImage.enabled = true;
-                innerRawImage.texture = conveyorInnerTexture;
-                innerRawImage.material = conveyorMaterial;
-                SetConveyorRotation(conveyorDirection); // Keep the conveyor rotating
-
-                Color machineColor = Color.gray; // Default
-                if (mType == MachineType.Input)
+                // All machines (including conveyors) are handled the same way
+                // The visual appearance is determined by the machine definition
+                if (!string.IsNullOrEmpty(machineDefId))
                 {
-                    machineColor = Color.green;
-                }
-                else if (mType == MachineType.Output)
-                {
-                    machineColor = Color.red;
-                    borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, -180f);
-                }
-                innerRawImage.color = machineColor; // Apply the tint
+                    var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
+                    if (machineDef != null)
+                    {
+                        if (machineDef.type == "Conveyor")
+                        {
+                            // Conveyors use the old visual style for compatibility
+                            SetBorderSprite(conveyorBorderSprite);
+                            innerRawImage.enabled = true;
+                            innerRawImage.texture = conveyorInnerTexture;
+                            innerRawImage.material = conveyorMaterial;
+                            SetConveyorRotation(conveyorDirection);
+                        }
+                        else
+                        {
+                            // Other machines use machine border and get their visuals from MachineRenderer
+                            SetBorderSprite(machineBorderSprite);
+                            innerRawImage.enabled = true;
+                            innerRawImage.texture = conveyorInnerTexture;
+                            innerRawImage.material = conveyorMaterial;
+                            SetConveyorRotation(conveyorDirection);
 
+                            // Apply machine-specific colors based on type
+                            Color machineColor = Color.gray; // Default
+                            if (machineDef.type == "Spawner")
+                            {
+                                machineColor = Color.green;
+                            }
+                            else if (machineDef.type == "Seller")
+                            {
+                                machineColor = Color.red;
+                                borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, -180f);
+                            }
+                            innerRawImage.color = machineColor; // Apply the tint
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback for machines without definition
+                    SetBorderSprite(machineBorderSprite);
+                    innerRawImage.enabled = false;
+                }
                 break;
         }
     }
@@ -157,14 +174,39 @@ public class UICell : MonoBehaviour
 
     public RectTransform GetItemSpawnPoint()
     {
-        if (cellType == CellType.Machine && itemSpawnPoint != null)
+        if (cellType == CellType.Machine && !string.IsNullOrEmpty(GetMachineDefId()))
         {
-            return itemSpawnPoint;
+            // For machines, try to find the spawn point created by MachineRenderer
+            MachineRenderer machineRenderer = GetComponentInChildren<MachineRenderer>();
+            if (machineRenderer != null)
+            {
+                Transform spawnPointTransform = machineRenderer.transform.Find("ItemSpawnPoint");
+                if (spawnPointTransform != null)
+                {
+                    return spawnPointTransform.GetComponent<RectTransform>();
+                }
+            }
+            // Fallback to topSpawnPoint if machine spawn point not found
+            return topSpawnPoint;
         }
         else
         {
-            // For blank cells and other types, use topSpawnPoint
+            // For blank cells and conveyors, use topSpawnPoint
             return topSpawnPoint;
         }
+    }
+
+    private string GetMachineDefId()
+    {
+        // Get machine definition ID from the cell data
+        var gridManager = FindFirstObjectByType<UIGridManager>();
+        if (gridManager != null)
+        {
+            // This is a simplified approach - in a real implementation you'd want
+            // a more direct way to get the machine def ID for this cell
+            var cellData = gridManager.GetCellData(x, y);
+            return cellData?.machineDefId;
+        }
+        return null;
     }
 }
