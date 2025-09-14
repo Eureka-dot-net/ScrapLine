@@ -32,7 +32,7 @@ public class UICell : MonoBehaviour
 
     public enum CellType { Blank, Conveyor, Machine }
     public enum CellRole { Grid, Top, Bottom }
-    public enum MachineType { None, Generic, Input, Output }
+    public enum MachineType { None, Generic, Input, Output, ThreeeInputsOneOutput, OneInputThreeOutputs }
     public enum Direction { Up, Right, Down, Left }
 
     void Awake()
@@ -120,6 +120,7 @@ public class UICell : MonoBehaviour
                 else if (mType == MachineType.Output)
                 {
                     machineColor = Color.red;
+                    borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, -180f);
                 }
                 innerRawImage.color = machineColor; // Apply the tint
 
@@ -164,14 +165,5 @@ public class UICell : MonoBehaviour
         {
             return topSpawnPoint;
         }
-    }
-
-    // Removed OnItemArrived and GetNextCell methods as they're no longer needed
-    // GameManager now handles all movement logic
-
-    // The Update method is now empty, as all logic is handled by the GameManager
-    void Update()
-    {
-        // Empty - all logic now handled by GameManager
     }
 }

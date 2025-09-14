@@ -183,8 +183,8 @@ public class UIGridManager : MonoBehaviour
         }
 
         // Calculate positions based on spawn point type
-        RectTransform startSpawnPoint = GetAppropriateSpawnPoint(startCell);
-        RectTransform endSpawnPoint = GetAppropriateSpawnPoint(endCell);
+        RectTransform startSpawnPoint = startCell.GetItemSpawnPoint();
+        RectTransform endSpawnPoint = endCell.GetItemSpawnPoint();
 
         Vector3 startPos = startSpawnPoint.position;
         Vector3 endPos = endSpawnPoint.position;
@@ -194,50 +194,30 @@ public class UIGridManager : MonoBehaviour
         item.transform.position = currentPos;
 
         // Handle parent changes for proper rendering order based on movement direction
-        bool shouldChangeParent = ShouldChangeParent(progress, movementDirection);
+        bool shouldChangeParent = ShouldChangeParent(progress, movementDirection, endCell.machineType);
         RectTransform currentParent = item.transform.parent as RectTransform;
         RectTransform targetParent = shouldChangeParent ? endSpawnPoint : startSpawnPoint;
-
+        Debug.Log($"Item {itemId} progress: {progress}, shouldChangeParent: {shouldChangeParent}, currentParent: {currentParent?.name}, targetParent: {targetParent?.name}");
         if (currentParent != targetParent)
         {
             item.transform.SetParent(targetParent, true);
         }
     }
 
-    private RectTransform GetAppropriateSpawnPoint(UICell cell)
+    private bool ShouldChangeParent(float progress, UICell.Direction movementDirection,  UICell.MachineType machineType)
     {
-        // If target cell is a machine, use ItemSpawnPoint (under the "roof")
-        if (cell.cellType == UICell.CellType.Machine)
-        {
-            return cell.itemSpawnPoint ?? cell.topSpawnPoint;
-        }
-        // Otherwise use topSpawnPoint (on top of conveyor)
-        else
-        {
-            return cell.topSpawnPoint;
-        }
-    }
-
-    private bool ShouldChangeParent(float progress, UICell.Direction movementDirection)
-    {
-        // For Up and Left movement: change parent after crossing boundary (99%)
-        if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
-        {
-            return progress >= 0.99f;
-        }
         // For Down and Right movement: change parent before hitting boundary (30%)
-        else if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right)
+        // Also for machines to ensure items appear below roof
+        if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right || machineType == UICell.MachineType.ThreeeInputsOneOutput)
         {
             return progress >= 0.3f;
         }
-        
+        // For Up and Left movement: change parent after crossing boundary (99%)
+        else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
+        {
+            return progress >= 0.7f;
+        }
         return progress >= 0.5f; // Default fallback
     }
 
-    // Remove the old movement system methods and Update method
-    // The Update method is now empty since GameManager handles all logic
-    void Update()
-    {
-        // Empty - GameManager now handles all movement logic
-    }
 }

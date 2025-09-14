@@ -155,12 +155,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private bool didSpawn = false;
     private void Update()
     {
         // Handle item spawning
         spawnTimer -= Time.deltaTime;
-        if (spawnTimer <= 0)
+        if (spawnTimer <= 0 && !didSpawn)
         {
+           
             spawnTimer = spawnInterval;
 
             // Find all input machines in our data model
@@ -172,6 +174,7 @@ public class GameManager : MonoBehaviour
                     // Check if the cell already has an item
                     if (cell.items.Count == 0)
                     {
+                         didSpawn = true;
                         // Spawn a new item if the cell is empty
                         SpawnItem(cell);
                     }
