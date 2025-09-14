@@ -39,13 +39,42 @@ public class MachineRenderer : MonoBehaviour
             building.transform.SetSiblingIndex(2);
         }
 
-
-
         // 4. If there's a main sprite, create it on top
         if (!string.IsNullOrEmpty(def.sprite))
         {
             var mainSprite = CreateImageChild("Main", def.sprite);
             mainSprite.transform.SetSiblingIndex(3);
+        }
+
+        // Create spawn point for items between border and building
+        CreateItemSpawnPoint();
+    }
+
+    private void CreateItemSpawnPoint()
+    {
+        // Find the UICell parent to set the spawn point
+        UICell parentCell = GetComponentInParent<UICell>();
+        if (parentCell != null)
+        {
+            // Create spawn point GameObject
+            GameObject spawnPointObj = new GameObject("ItemSpawnPoint");
+            spawnPointObj.transform.SetParent(this.transform, false);
+            
+            RectTransform spawnPointRT = spawnPointObj.AddComponent<RectTransform>();
+            
+            // Position it in the center, between border and building layers
+            spawnPointRT.anchorMin = new Vector2(0.5f, 0.5f);
+            spawnPointRT.anchorMax = new Vector2(0.5f, 0.5f);
+            spawnPointRT.anchoredPosition = Vector2.zero;
+            spawnPointRT.sizeDelta = Vector2.zero;
+            
+            // Set the sibling index to be between border (1) and building (2)
+            spawnPointObj.transform.SetSiblingIndex(1);
+            
+            // Assign to the parent UICell
+            parentCell.itemSpawnPoint = spawnPointRT;
+            
+            Debug.Log("Created item spawn point for machine");
         }
     }
 

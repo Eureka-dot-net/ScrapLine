@@ -21,9 +21,9 @@ public class UICell : MonoBehaviour
     public MachineType machineType = MachineType.None;
     public Direction conveyorDirection = Direction.Up;
 
-    // These are references to the visual GameObjects
-    public RectTransform itemSpawnPoint;
-    public RectTransform topSpawnPoint;
+    // These are references to the visual GameObjects  
+    public RectTransform itemSpawnPoint; // Single spawn point as requested
+    public RectTransform topSpawnPoint;  // For blank cells, items go on top
 
     // We no longer need these as the state is in our GridState model
     [HideInInspector]
@@ -157,12 +157,13 @@ public class UICell : MonoBehaviour
 
     public RectTransform GetItemSpawnPoint()
     {
-        if (cellType == CellType.Machine)
+        if (cellType == CellType.Machine && itemSpawnPoint != null)
         {
             return itemSpawnPoint;
         }
         else
         {
+            // For blank cells and other types, use topSpawnPoint
             return topSpawnPoint;
         }
     }

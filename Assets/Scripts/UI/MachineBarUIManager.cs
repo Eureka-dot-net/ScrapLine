@@ -5,10 +5,23 @@ public class MachineBarUIManager : MonoBehaviour
 {
     public GameObject machineButtonPrefab;
     public Transform machineBarPanel;
+    
+    // Selection state
+    private MachineDef selectedMachine;
+    private GameObject selectedButtonObj;
+    
+    // Reference to grid manager for highlighting
+    private UIGridManager gridManager;
 
     void Awake()
     {
         Debug.Log("Awake called on MachineBarUIManager");
+    }
+
+    void Start()
+    {
+        // Get reference to grid manager
+        gridManager = FindAnyObjectByType<UIGridManager>();
     }
 
     public void InitBar()
@@ -58,9 +71,86 @@ public class MachineBarUIManager : MonoBehaviour
 
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)
     {
-        // Highlight allowed placement area
-        // Store selected machine for placement
-        // Update UI accordingly
         Debug.Log($"Selected machine: {machineDef.id}");
+        
+        // Clear previous selection visual feedback
+        ClearSelectionHighlight();
+        
+        // Set new selection
+        selectedMachine = machineDef;
+        selectedButtonObj = buttonObj;
+        
+        // Highlight selected button
+        HighlightSelectedButton(buttonObj);
+        
+        // Highlight valid placement areas on grid
+        if (gridManager != null)
+        {
+            gridManager.HighlightValidPlacements(machineDef);
+        }
+        
+        // Notify GameManager about machine selection
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetSelectedMachine(machineDef);
+        }
+    }
+    
+    private void HighlightSelectedButton(GameObject buttonObj)
+    {
+        // Add visual feedback to show this button is selected
+        var button = buttonObj.GetComponent<Button>();
+        if (button != null)
+        {
+            var colors = button.colors;
+            colors.selectedColor = new Color(0.8f, 1f, 0.8f, 1f); // Light green
+            button.colors = colors;
+        }
+        
+        // Add outline or border effect if desired
+        var outline = buttonObj.GetComponent<Outline>();
+        if (outline == null)
+        {
+            outline = buttonObj.AddComponent<Outline>();
+        }
+        outline.effectColor = Color.green;
+        outline.effectDistance = new Vector2(2, 2);
+        outline.enabled = true;
+    }
+    
+    private void ClearSelectionHighlight()
+    {
+        if (selectedButtonObj != null)
+        {
+            // Remove outline
+            var outline = selectedButtonObj.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
+        }
+        
+        // Clear grid highlighting
+        if (gridManager != null)
+        {
+            gridManager.ClearHighlights();
+        }
+    }
+    
+    public void ClearSelection()
+    {
+        ClearSelectionHighlight();
+        selectedMachine = null;
+        selectedButtonObj = null;
+        
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetSelectedMachine(null);
+        }
+    }
+    
+    public MachineDef GetSelectedMachine()
+    {
+        return selectedMachine;
     }
 }

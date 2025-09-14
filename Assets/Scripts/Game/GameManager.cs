@@ -18,6 +18,10 @@ public class GameManager : MonoBehaviour
     private int nextItemId = 1;
 
     private Direction lastConveyorDirection = Direction.Up;
+    
+    // Machine placement state
+    private MachineDef selectedMachine;
+    private MachineBarUIManager machineBarManager;
 
     private void Awake()
     {
@@ -48,7 +52,9 @@ public class GameManager : MonoBehaviour
         FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson);
         Debug.Log("Factory definitions loaded.");
 
-        FindFirstObjectByType<MachineBarUIManager>()?.InitBar();
+        // Get reference to machine bar manager
+        machineBarManager = FindFirstObjectByType<MachineBarUIManager>();
+        machineBarManager?.InitBar();
 
         // Check if a save file exists
         string path = Application.persistentDataPath + "/" + SAVE_FILE_NAME;
@@ -94,6 +100,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void SetSelectedMachine(MachineDef machine)
+    {
+        selectedMachine = machine;
+        Debug.Log($"Selected machine set to: {machine?.id ?? "null"}");
+    }
+
     public void OnCellClicked(int x, int y)
     {
         GridData gridData = activeGrids[0];
@@ -105,6 +117,34 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // Handle machine placement if a machine is selected
+        if (selectedMachine != null)
+        {
+            if (IsValidMachinePlacement(cellData, selectedMachine))
+            {
+                PlaceMachine(cellData, selectedMachine);
+                // Clear selection after placement
+                if (machineBarManager != null)
+                {
+                    machineBarManager.ClearSelection();
+                }
+                return;
+            }
+            else
+            {
+                Debug.Log($"Cannot place {selectedMachine.id} here - invalid placement");
+                return;
+            }
+        }
+
+        // Handle machine rotation if clicking on an existing machine
+        if (cellData.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
+        {
+            RotateMachine(cellData);
+            return;
+        }
+
+        // Original cell cycling logic for non-machine placements
         UICell.CellType newType = cellData.cellType;
         UICell.Direction newDirection = cellData.direction;
         UICell.MachineType newMachineType = cellData.machineType;
@@ -166,6 +206,82 @@ public class GameManager : MonoBehaviour
                     TryStartItemMovement(item, cellData, gridData, activeGridManager);
                 }
             }
+        }
+    }
+
+    private bool IsValidMachinePlacement(CellData cellData, MachineDef machineDef)
+    {
+        // Check if machine's grid placement rules allow this cell
+        foreach (string placement in machineDef.gridPlacement)
+        {
+            switch (placement.ToLower())
+            {
+                case "any":
+                    return true;
+                case "grid":
+                    return cellData.cellRole == UICell.CellRole.Grid;
+                case "top":
+                    return cellData.cellRole == UICell.CellRole.Top;
+                case "bottom":
+                    return cellData.cellRole == UICell.CellRole.Bottom;
+            }
+        }
+        return false;
+    }
+
+    private void PlaceMachine(CellData cellData, MachineDef machineDef)
+    {
+        Debug.Log($"Placing machine {machineDef.id} at ({cellData.x}, {cellData.y})");
+        
+        // Clear any existing items in the cell
+        UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+        if (activeGridManager != null)
+        {
+            foreach (var item in cellData.items)
+            {
+                activeGridManager.DestroyVisualItem(item.id);
+            }
+        }
+        cellData.items.Clear();
+        
+        // Set cell to machine type with the specific machine definition
+        cellData.cellType = UICell.CellType.Machine;
+        cellData.machineDefId = machineDef.id;
+        cellData.direction = UICell.Direction.Up; // Default direction
+        
+        // Set legacy machine type based on machine definition for compatibility
+        if (machineDef.type == "Spawner")
+        {
+            cellData.machineType = UICell.MachineType.Input;
+        }
+        else if (machineDef.type == "Seller")
+        {
+            cellData.machineType = UICell.MachineType.Output;
+        }
+        else
+        {
+            cellData.machineType = UICell.MachineType.Generic;
+        }
+
+        // Update visuals
+        if (activeGridManager != null)
+        {
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType);
+        }
+    }
+
+    private void RotateMachine(CellData cellData)
+    {
+        // Rotate the machine's direction
+        cellData.direction = (UICell.Direction)(((int)cellData.direction + 1) % 4);
+        
+        Debug.Log($"Rotating machine at ({cellData.x}, {cellData.y}) to direction: {cellData.direction}");
+        
+        // Update visuals
+        UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+        if (activeGridManager != null)
+        {
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType);
         }
     }
 
@@ -263,11 +379,10 @@ public class GameManager : MonoBehaviour
 
         if (targetCell.cellType == CellType.Blank)
         {
-            // Stop at blank cell, set progress to complete
+            // Stop at blank cell - items cannot enter blank cells
             item.shouldStopAtTarget = true;
-
-            // Optionally set a custom "stopped" flag if needed
-            // item.hasStopped = true;
+            Debug.Log($"Item {item.id} blocked by blank cell - will stop at edge");
+            return;
         }
         else if (targetCell.cellType == CellType.Machine)
         {
@@ -368,6 +483,12 @@ public class GameManager : MonoBehaviour
 
     private void TryStartItemMovement(ItemData item, CellData cell, GridData gridData, UIGridManager gridManager)
     {
+        // Don't start movement from blank cells
+        if (cell.cellType == CellType.Blank)
+        {
+            return;
+        }
+
         // Determine next cell based on current cell type and direction
         int nextX, nextY;
         GetNextCellCoordinates(cell, out nextX, out nextY);
@@ -377,6 +498,13 @@ public class GameManager : MonoBehaviour
         if (nextCell == null)
         {
             return; // No movement possible
+        }
+
+        // Don't allow movement into blank cells
+        if (nextCell.cellType == CellType.Blank)
+        {
+            Debug.Log($"Item {item.id} cannot move into blank cell at ({nextX}, {nextY})");
+            return; // Movement blocked by blank cell
         }
 
         // Start movement

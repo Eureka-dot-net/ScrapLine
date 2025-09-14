@@ -121,6 +121,113 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
+    // Grid highlighting for machine placement
+    public void HighlightValidPlacements(MachineDef machineDef)
+    {
+        if (cellScripts == null || gridData == null)
+        {
+            Debug.LogError("Cannot highlight - grid not initialized");
+            return;
+        }
+
+        ClearHighlights(); // Clear any existing highlights
+
+        // Check each cell to see if it's a valid placement for this machine
+        for (int y = 0; y < gridData.height; y++)
+        {
+            for (int x = 0; x < gridData.width; x++)
+            {
+                if (IsValidPlacement(x, y, machineDef))
+                {
+                    HighlightCell(x, y, true);
+                }
+            }
+        }
+    }
+
+    public void ClearHighlights()
+    {
+        if (cellScripts == null) return;
+
+        for (int y = 0; y < gridData.height; y++)
+        {
+            for (int x = 0; x < gridData.width; x++)
+            {
+                HighlightCell(x, y, false);
+            }
+        }
+    }
+
+    private void HighlightCell(int x, int y, bool highlight)
+    {
+        UICell cell = GetCell(x, y);
+        if (cell == null) return;
+
+        // Create or get highlight overlay
+        Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
+        
+        if (highlight)
+        {
+            if (highlightOverlay == null)
+            {
+                // Create highlight overlay
+                GameObject overlay = new GameObject("HighlightOverlay");
+                overlay.transform.SetParent(cell.transform, false);
+                
+                Image overlayImage = overlay.AddComponent<Image>();
+                overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
+                
+                // Make it fill the cell
+                RectTransform rt = overlay.GetComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = Vector2.zero;
+                
+                // Put it on top but behind any items
+                overlay.transform.SetSiblingIndex(cell.transform.childCount - 1);
+            }
+            else
+            {
+                highlightOverlay.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            if (highlightOverlay != null)
+            {
+                highlightOverlay.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    private bool IsValidPlacement(int x, int y, MachineDef machineDef)
+    {
+        // Get the cell data
+        CellData cellData = GetCellData(x, y);
+        if (cellData == null) return false;
+
+        // Check if machine's grid placement rules allow this cell
+        foreach (string placement in machineDef.gridPlacement)
+        {
+            switch (placement.ToLower())
+            {
+                case "any":
+                    return true;
+                case "grid":
+                    return cellData.cellRole == CellRole.Grid;
+                case "top":
+                    return cellData.cellRole == CellRole.Top;
+                case "bottom":
+                    return cellData.cellRole == CellRole.Bottom;
+            }
+        }
+
+        return false;
+    }
+
     // New methods for GameManager to control visual items
 
     public void CreateVisualItem(string itemId, int x, int y)
@@ -218,6 +325,20 @@ public class UIGridManager : MonoBehaviour
             return progress >= 0.7f;
         }
         return progress >= 0.5f; // Default fallback
+    }
+
+    private CellData GetCellData(int x, int y)
+    {
+        if (gridData == null) return null;
+        
+        foreach (var cell in gridData.cells)
+        {
+            if (cell.x == x && cell.y == y)
+            {
+                return cell;
+            }
+        }
+        return null;
     }
 
 }
