@@ -110,7 +110,7 @@ public class UICell : MonoBehaviour
                             innerRawImage.enabled = true;
                             innerRawImage.texture = conveyorInnerTexture;
                             innerRawImage.material = conveyorMaterial;
-                            SetConveyorRotation(conveyorDirection);
+                            SetConveyorRotation(direction);
                         }
                         else
                         {
@@ -119,8 +119,7 @@ public class UICell : MonoBehaviour
                             innerRawImage.enabled = true;
                             innerRawImage.texture = conveyorInnerTexture;
                             innerRawImage.material = conveyorMaterial;
-                            SetConveyorRotation(conveyorDirection);
-
+                            
                             // Apply machine-specific colors based on type
                             Color machineColor = Color.gray; // Default
                             if (machineDef.type == "Spawner")
@@ -130,9 +129,11 @@ public class UICell : MonoBehaviour
                             else if (machineDef.type == "Seller")
                             {
                                 machineColor = Color.red;
-                                borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, -180f);
                             }
                             innerRawImage.color = machineColor; // Apply the tint
+                            
+                            // Apply rotation for non-conveyor machines too
+                            SetConveyorRotation(direction);
                         }
                     }
                 }
