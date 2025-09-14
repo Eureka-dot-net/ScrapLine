@@ -1,0 +1,6 @@
+{
+  "items": [
+    { "id": "can", "displayName": "Aluminum Can", "sprite": "can" },
+    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shredded_aluminum" }
+  ]
+}

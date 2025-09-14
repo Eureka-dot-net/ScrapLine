@@ -36,6 +36,20 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("GameManager Start() called.");
 
+        TextAsset machinesAsset = Resources.Load<TextAsset>("machines");
+        string machinesJson = machinesAsset.text;
+
+        TextAsset recipesAsset = Resources.Load<TextAsset>("recipes");
+        string recipesJson = recipesAsset.text;
+
+        TextAsset itemsAsset = Resources.Load<TextAsset>("items");
+        string itemsJson = itemsAsset.text;
+        
+        FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson);
+        Debug.Log("Factory definitions loaded.");
+
+        FindFirstObjectByType<MachineBarUIManager>()?.InitBar();
+
         // Check if a save file exists
         string path = Application.persistentDataPath + "/" + SAVE_FILE_NAME;
         if (File.Exists(path))
@@ -162,7 +176,7 @@ public class GameManager : MonoBehaviour
         spawnTimer -= Time.deltaTime;
         if (spawnTimer <= 0 && !didSpawn)
         {
-           
+
             spawnTimer = spawnInterval;
 
             // Find all input machines in our data model
@@ -174,7 +188,7 @@ public class GameManager : MonoBehaviour
                     // Check if the cell already has an item
                     if (cell.items.Count == 0)
                     {
-                         didSpawn = true;
+                        didSpawn = true;
                         // Spawn a new item if the cell is empty
                         SpawnItem(cell);
                     }
@@ -478,6 +492,8 @@ public class GameManager : MonoBehaviour
             string json = File.ReadAllText(path);
             GameData data = JsonUtility.FromJson<GameData>(json);
             activeGrids = data.grids;
+
+            FactoryRegistry.Instance.LoadFromGameData(data);
 
             // Find highest item ID to continue sequence
             foreach (var grid in activeGrids)

@@ -44,7 +44,16 @@ public class GridData
 }
 
 [System.Serializable]
+public class UserMachineProgress
+{
+    public string machineId;
+    public bool unlocked;
+    public int upgradeLevel;
+}
+
+[System.Serializable]
 public class GameData
 {
     public List<GridData> grids = new List<GridData>();
+    public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
 }

@@ -1,0 +1,130 @@
+{
+    "machines": [
+        {
+            "id": "conveyor",
+            "type": "Conveyor",
+            "sprite": "",
+            "baseProcessTime": 0,
+            "movingPartSprite": "conveyor_moving",
+            "borderSprite": "conveyor_border",
+            "buildingSprite": null,
+            "movingPartMaterial": "mat_conveyor",
+            "buildingDirection": 0,
+            "parentChangeThresholds": {
+                "down": 0.3,
+                "right": 0.3,
+                "up": 0.7,
+                "left": 0.7,
+                "default": 0.5
+            },
+            "upgradeMultipliers": [],
+            "gridPlacement": [
+                "any"
+            ],
+            "maxNumber": -1
+        },
+        {
+            "id": "spawner",
+            "type": "Spawner",
+            "sprite": "",
+            "movingPartSprite": "conveyor_moving",
+            "borderSprite": null,
+            "buildingSprite": "Machine_border",
+            "buildingDirection": 0,
+            "movingPartMaterial": "mat_spawner",
+            "baseProcessTime": 10,
+            "upgradeMultipliers": [
+                {
+                    "multiplier": 0.7,
+                    "cost": 100
+                },
+                {
+                    "multiplier": 0.5,
+                    "cost": 500
+                }
+            ],
+            "spawnableItems": [
+                "can",
+                "plastic"
+            ],
+            "gridPlacement": [
+                "bottom"
+            ],
+            "maxNumber": 1,
+            "upgradeMaxNumbers": [
+                {
+                    "max": 2,
+                    "cost": 200
+                },
+                {
+                    "max": 3,
+                    "cost": 600
+                }
+            ]
+        },
+        {
+            "id": "seller",
+            "type": "Seller",
+            "sprite": "",
+            "baseProcessTime": 0,
+            "movingPartSprite": "conveyor_moving",
+            "borderSprite": "",
+            "buildingSprite": "Machine_border",
+            "movingPartMaterial": "mat_seller",
+            "buildingDirection": 180,
+            "parentChangeThresholds": {
+                "down": 0.3,
+                "right": 0.3,
+                "up": 0.7,
+                "left": 0.7,
+                "default": 0.5
+            },
+            "upgradeMultipliers": [],
+            "gridPlacement": [
+                "top"
+            ],
+            "maxNumber": 1
+        },
+        {
+            "id": "shredder",
+            "type": "Shredder",
+            "sprite": "shredder",
+            "baseProcessTime": 5,
+            "upgradeMultipliers": [
+                {
+                    "multiplier": 0.8,
+                    "cost": 100,
+                    "upgradeTime": 200
+                },
+                {
+                    "multiplier": 0.6,
+                    "cost": 500,
+                    "upgradeTime": 300
+                },
+                {
+                    "multiplier": 0.4,
+                    "cost": 1500,
+                    "upgradeTime": 400
+                }
+            ],
+            "inputItems": [
+                "can"
+            ],
+            "outputItems": [
+                "shreddedAluminum"
+            ],
+            "gridPlacement": [
+                "grid"
+            ],
+            "maxNumber": -1,
+            "upgradeMaxNumbers": [],
+            "processAdjustment": 1,
+            "parentChangeThresholds": {
+                "down": 0.3,
+                "right": 0.3,
+                "up": 0.7,
+                "left": 0.7
+            }
+        }
+    ]
+}

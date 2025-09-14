@@ -1,0 +1,11 @@
+{
+  "recipes": [
+    
+    {
+      "machineId": "shredder",
+      "inputItems": ["can"],
+      "outputItems": ["shreddedAluminum"],
+      "processAdjustment": 1
+    }
+  ]
+}
