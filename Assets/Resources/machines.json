@@ -1,6 +1,29 @@
 {
     "machines": [
         {
+            "id": "blank",
+            "type": "Blank",
+            "sprite": "",
+            "baseProcessTime": 0,
+            "movingPartSprite": "",
+            "borderSprite": "UICellSprite",
+            "buildingSprite": "",
+            "movingPartMaterial": "",
+            "buildingDirection": 0,
+            "parentChangeThresholds": {
+                "down": 0.5,
+                "right": 0.5,
+                "up": 0.5,
+                "left": 0.5,
+                "default": 0.5
+            },
+            "upgradeMultipliers": [],
+            "gridPlacement": [
+                "grid"
+            ],
+            "maxNumber": -1
+        },
+        {
             "id": "conveyor",
             "type": "Conveyor",
             "sprite": "",

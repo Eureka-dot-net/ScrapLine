@@ -4,23 +4,20 @@ using UnityEngine.UI;
 
 public class UICell : MonoBehaviour
 {
-    // These are now references to the visual components
-    public Image borderImage;
+    // Essential UI components only
     public Button cellButton;
 
-    public Sprite blankSprite;
-
-    // These are now purely visual properties, not the source of truth
+    // Data/state properties
     public CellType cellType = CellType.Blank;
     public CellRole cellRole = CellRole.Grid;
 
-    // These are references to the visual GameObjects  
-    public RectTransform topSpawnPoint;  // For blank cells and fallback, items go on top
-
-    // We no longer need these as the state is in our GridState model
+    // Position tracking
     [HideInInspector]
     public int x, y;
     private UIGridManager gridManager;
+
+    // MachineRenderer handles ALL visuals now
+    private MachineRenderer machineRenderer;
 
     public enum CellType { Blank, Machine }
     public enum CellRole { Grid, Top, Bottom }
@@ -30,37 +27,8 @@ public class UICell : MonoBehaviour
     {
         if (cellButton == null) cellButton = GetComponent<Button>();
         cellButton.onClick.AddListener(OnCellClicked);
-
-        if (topSpawnPoint == null)
-        {
-            GameObject topPoint = new GameObject("TopSpawnPoint");
-            topSpawnPoint = topPoint.AddComponent<RectTransform>();
-            topSpawnPoint.SetParent(transform, false);
-            topSpawnPoint.anchoredPosition = Vector2.zero;
-            topSpawnPoint.sizeDelta = Vector2.zero;
-        }
         
-        // Initialize as blank by default - start with proper blank cell appearance
-        InitializeAsBlankCell();
-    }
-
-    private void InitializeAsBlankCell()
-    {
-        Debug.Log($"InitializeAsBlankCell called for cell at ({x}, {y})");
-        
-        // Blank cells should show the blankSprite to provide visual feedback for the grid
-        if (borderImage != null && blankSprite != null)
-        {
-            borderImage.sprite = blankSprite;
-            borderImage.enabled = true;
-            borderImage.gameObject.SetActive(true);
-            borderImage.color = Color.white; // Ensure it's visible
-            Debug.Log($"Applied blankSprite to cell ({x}, {y}) - sprite: {blankSprite.name}");
-        }
-        else
-        {
-            Debug.LogWarning($"Missing borderImage or blankSprite for cell ({x}, {y}) - borderImage: {borderImage}, blankSprite: {blankSprite}");
-        }
+        Debug.Log($"UICell Awake() - cell will be initialized with MachineRenderer for ALL visuals");
     }
 
     // This method is now used to initialize the cell from a CellState model
@@ -69,71 +37,71 @@ public class UICell : MonoBehaviour
         this.x = x;
         this.y = y;
         this.gridManager = gridManager;
+        
+        Debug.Log($"UICell.Init({x}, {y}) - cell ready for machine setup");
     }
 
     public void SetCellRole(CellRole role)
     {
         cellRole = role;
-        
-        // Only show borders for cells that have an actual role (Top/Bottom spawners/sellers)
-        // Regular grid cells should remain hidden unless they become machines
-        if (role == CellRole.Top || role == CellRole.Bottom)
-        {
-            borderImage.sprite = blankSprite;
-            borderImage.gameObject.SetActive(true);
-            borderImage.enabled = true;
+        Debug.Log($"Cell ({x}, {y}) role set to: {role}");
+    }
 
-            switch (role)
-            {
-                case CellRole.Top:
-                    borderImage.color = new Color(0.6f, 0.8f, 1f);
-                    break;
-                case CellRole.Bottom:
-                    borderImage.color = new Color(1f, 0.7f, 0.7f);
-                    break;
-            }
-        }
-        else
+    // This method now receives all its state data and creates MachineRenderer for ALL visuals
+    public void SetCellType(CellType type, Direction direction, string machineDefId = null)
+    {
+        cellType = type;
+        Debug.Log($"Setting cell ({x}, {y}) to type: {type}, direction: {direction}, machineDefId: {machineDefId}");
+
+        // Clean up any existing renderer
+        if (machineRenderer != null)
         {
-            // For Grid role cells, ensure they remain completely hidden (blank cells)
-            if (borderImage != null)
+            Debug.Log($"Removing existing MachineRenderer from cell ({x}, {y})");
+            DestroyImmediate(machineRenderer.gameObject);
+            machineRenderer = null;
+        }
+
+        // Determine which machine definition to use
+        string defIdToUse = machineDefId;
+        if (type == CellType.Blank)
+        {
+            // ALL blank cells use the "blank" machine definition
+            defIdToUse = "blank";
+            Debug.Log($"Cell ({x}, {y}) is blank type - using 'blank' machine definition");
+        }
+
+        // Create MachineRenderer for ALL cell types (including blanks)
+        if (!string.IsNullOrEmpty(defIdToUse))
+        {
+            var machineDef = MachineDefinitions.GetMachine(defIdToUse);
+            if (machineDef != null)
             {
-                borderImage.enabled = false;
-                borderImage.gameObject.SetActive(false);
+                Debug.Log($"Creating MachineRenderer for cell ({x}, {y}) with definition: {defIdToUse}");
+                SetupMachineRenderer(machineDef, direction);
+            }
+            else
+            {
+                Debug.LogError($"Could not find machine definition for: {defIdToUse}");
             }
         }
     }
 
-
-    // This method now receives all its state data from the GameManager
-    public void SetCellType(CellType type, Direction direction, string machineDefId = null)
+    private void SetupMachineRenderer(MachineDef def, Direction direction)
     {
-        cellType = type;
-
-        switch (type)
-        {
-            case CellType.Blank:
-                Debug.Log($"Setting cell ({x}, {y}) to Blank type");
-                // For blank cells, show the blank sprite to provide visual grid feedback
-                InitializeAsBlankCell();
-                
-                // Also ensure any MachineRenderer is removed when switching to blank
-                MachineRenderer renderer = GetComponentInChildren<MachineRenderer>();
-                if (renderer != null)
-                {
-                    Debug.Log($"Removing MachineRenderer from blank cell ({x}, {y})");
-                    DestroyImmediate(renderer.gameObject);
-                }
-                break;
-            case CellType.Machine:
-                Debug.Log($"Setting cell ({x}, {y}) to Machine type with machineDefId: {machineDefId}");
-                // All machines use the same rendering system
-                // Just show the border for machines - MachineRenderer handles all visuals
-                borderImage.gameObject.SetActive(true);
-                borderImage.sprite = blankSprite; // Use blank sprite as base for machines too
-                borderImage.color = Color.white; // Default color for machines
-                break;
-        }
+        // Create MachineRenderer GameObject as child
+        GameObject rendererObj = new GameObject("MachineRenderer");
+        rendererObj.transform.SetParent(this.transform, false);
+        
+        RectTransform rendererRT = rendererObj.AddComponent<RectTransform>();
+        rendererRT.anchorMin = Vector2.zero;
+        rendererRT.anchorMax = Vector2.one;
+        rendererRT.offsetMin = Vector2.zero;
+        rendererRT.offsetMax = Vector2.zero;
+        
+        machineRenderer = rendererObj.AddComponent<MachineRenderer>();
+        machineRenderer.Setup(def, direction);
+        
+        Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
     }
 
     void OnCellClicked()
@@ -144,26 +112,32 @@ public class UICell : MonoBehaviour
 
     public RectTransform GetItemSpawnPoint()
     {
-        if (cellType == CellType.Machine && !string.IsNullOrEmpty(GetMachineDefId()))
+        // ALL cells use MachineRenderer now, including blank cells
+        if (machineRenderer != null)
         {
-            // For all machines, try to find the spawn point created by MachineRenderer
-            MachineRenderer machineRenderer = GetComponentInChildren<MachineRenderer>();
-            if (machineRenderer != null)
+            // Try to find the spawn point created by MachineRenderer
+            Transform spawnPointTransform = machineRenderer.transform.Find("ItemSpawnPoint");
+            if (spawnPointTransform != null)
             {
-                Transform spawnPointTransform = machineRenderer.transform.Find("ItemSpawnPoint");
-                if (spawnPointTransform != null)
-                {
-                    return spawnPointTransform.GetComponent<RectTransform>();
-                }
+                return spawnPointTransform.GetComponent<RectTransform>();
             }
-            // Fallback to topSpawnPoint if machine spawn point not found
-            return topSpawnPoint;
         }
-        else
+        
+        // Fallback: create a default spawn point if none found
+        Transform fallbackSpawn = transform.Find("DefaultSpawnPoint");
+        if (fallbackSpawn == null)
         {
-            // For blank cells, use topSpawnPoint
-            return topSpawnPoint;
+            GameObject spawnObj = new GameObject("DefaultSpawnPoint");
+            spawnObj.transform.SetParent(this.transform, false);
+            RectTransform spawnRT = spawnObj.AddComponent<RectTransform>();
+            spawnRT.anchorMin = new Vector2(0.5f, 0.5f);
+            spawnRT.anchorMax = new Vector2(0.5f, 0.5f);
+            spawnRT.anchoredPosition = Vector2.zero;
+            spawnRT.sizeDelta = Vector2.zero;
+            return spawnRT;
         }
+        
+        return fallbackSpawn.GetComponent<RectTransform>();
     }
 
     private string GetMachineDefId()
@@ -172,8 +146,6 @@ public class UICell : MonoBehaviour
         var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {
-            // This is a simplified approach - in a real implementation you'd want
-            // a more direct way to get the machine def ID for this cell
             var cellData = gridManager.GetCellData(x, y);
             return cellData?.machineDefId;
         }

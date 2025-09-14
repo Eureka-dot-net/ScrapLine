@@ -85,37 +85,23 @@ public class UIGridManager : MonoBehaviour
 
                 cellScript.Init(x, y, this);
 
-                // ALL cells start as blank cells with proper blank appearance
-                Debug.Log($"Initializing cell ({x}, {y}) as blank");
-                cellScript.SetCellType(CellType.Blank, Direction.Up);
-
-                // Then apply specific data if it exists
+                // Set cell role first (for Top/Bottom row cells)
                 CellData cellData = GetCellData(x, y);
                 if (cellData != null)
                 {
                     Debug.Log($"Cell ({x}, {y}) has data: role={cellData.cellRole}, type={cellData.cellType}, machineDefId={cellData.machineDefId}");
+                    cellScript.SetCellRole(cellData.cellRole);
                     
-                    // Only set cell role for cells that actually need visual representation
-                    if (cellData.cellRole == CellRole.Top || cellData.cellRole == CellRole.Bottom)
-                    {
-                        cellScript.SetCellRole(cellData.cellRole);
-                    }
-                    
-                    // Override the blank state with specific cell type if needed
+                    // Set cell type and machine - UICell handles MachineRenderer creation internally
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
-                    
-                    // If this is a machine cell, set up the machine renderer
-                    // All machines use MachineRenderer now - no exceptions
-                    if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
-                    {
-                        SetupMachineRenderer(cellScript, cellData.machineDefId, cellData.direction);
-                    }
                 }
                 else
                 {
-                    Debug.Log($"Cell ({x}, {y}) has no data - remaining as blank cell");
+                    Debug.Log($"Cell ({x}, {y}) has no data - creating as blank cell");
+                    // ALL cells without data become blank cells using the "blank" machine definition
+                    cellScript.SetCellRole(CellRole.Grid);
+                    cellScript.SetCellType(CellType.Blank, Direction.Up);
                 }
-                // Note: cells without data will remain as proper blank cells
             }
         }
 
@@ -132,13 +118,8 @@ public class UIGridManager : MonoBehaviour
         UICell cell = GetCell(x, y);
         if (cell != null)
         {
+            // UICell now handles ALL visual setup internally via MachineRenderer
             cell.SetCellType(newType, newDirection, machineDefId);
-            
-            // If this is a machine cell, set up the machine renderer for ALL machines
-            if (newType == CellType.Machine && !string.IsNullOrEmpty(machineDefId))
-            {
-                SetupMachineRenderer(cell, machineDefId, newDirection);
-            }
         }
     }
 
@@ -418,40 +399,6 @@ public class UIGridManager : MonoBehaviour
             }
         }
         return null;
-    }
-
-    private void SetupMachineRenderer(UICell cell, string machineDefId, UICell.Direction direction)
-    {
-        // Get the machine definition
-        MachineDef machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
-        if (machineDef == null)
-        {
-            Debug.LogWarning($"Machine definition not found for ID: {machineDefId}");
-            return;
-        }
-
-        // Find or create a MachineRenderer component
-        MachineRenderer renderer = cell.GetComponentInChildren<MachineRenderer>();
-        if (renderer == null)
-        {
-            // Create a new GameObject for the machine renderer
-            GameObject rendererObj = new GameObject("MachineRenderer");
-            rendererObj.transform.SetParent(cell.transform, false);
-            
-            // Set up the RectTransform to fill the cell
-            RectTransform rt = rendererObj.AddComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = Vector2.zero;
-            
-            renderer = rendererObj.AddComponent<MachineRenderer>();
-        }
-
-        // Setup the renderer with the machine definition and direction
-        renderer.Setup(machineDef, direction);
     }
 
 }
