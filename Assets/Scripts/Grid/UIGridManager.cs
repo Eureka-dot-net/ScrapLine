@@ -83,7 +83,7 @@ public class UIGridManager : MonoBehaviour
                 UICell cellScript = cellObj.GetComponent<UICell>();
                 cellScripts[x, y] = cellScript;
 
-                cellScript.Init(x, y, this, conveyorSharedMaterial);
+                cellScript.Init(x, y, this);
 
                 // ALL cells start as blank cells with proper blank appearance
                 cellScript.SetCellType(CellType.Blank, Direction.Up);

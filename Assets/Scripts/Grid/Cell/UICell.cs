@@ -10,15 +10,10 @@ public class UICell : MonoBehaviour
     public Button cellButton;
 
     public Sprite blankSprite;
-    public Sprite conveyorBorderSprite;
-    public Sprite machineBorderSprite;
-    public Texture conveyorInnerTexture;
-    private Material conveyorMaterial;
 
     // These are now purely visual properties, not the source of truth
     public CellType cellType = CellType.Blank;
     public CellRole cellRole = CellRole.Grid;
-    public Direction conveyorDirection = Direction.Up;
 
     // These are references to the visual GameObjects  
     public RectTransform topSpawnPoint;  // For blank cells and fallback, items go on top
@@ -52,13 +47,11 @@ public class UICell : MonoBehaviour
 
     private void InitializeAsBlankCell()
     {
-        // Blank cells should show the blank sprite, not be completely hidden
-        if (borderImage != null && blankSprite != null)
+        // Blank cells should be completely invisible - no borders or sprites
+        if (borderImage != null)
         {
-            borderImage.sprite = blankSprite;
-            borderImage.color = Color.white; // Default color for blank cells
-            borderImage.enabled = true;
-            borderImage.gameObject.SetActive(true);
+            borderImage.enabled = false;
+            borderImage.gameObject.SetActive(false);
         }
         
         // Hide inner raw image for blank cells
@@ -67,15 +60,16 @@ public class UICell : MonoBehaviour
             innerRawImage.enabled = false;
             innerRawImage.gameObject.SetActive(false);
         }
+        
+        Debug.Log($"Initialized blank cell at ({x}, {y}) - hidden all visual elements");
     }
 
     // This method is now used to initialize the cell from a CellState model
-    public void Init(int x, int y, UIGridManager gridManager, Material conveyorMaterial)
+    public void Init(int x, int y, UIGridManager gridManager)
     {
         this.x = x;
         this.y = y;
         this.gridManager = gridManager;
-        this.conveyorMaterial = conveyorMaterial;
     }
 
     public void SetCellRole(CellRole role)
@@ -102,22 +96,25 @@ public class UICell : MonoBehaviour
         }
         else
         {
-            // For Grid role cells, keep them hidden unless they become machines
-            // Don't automatically show borders for grid cells
+            // For Grid role cells, ensure they remain completely hidden (blank cells)
+            if (borderImage != null)
+            {
+                borderImage.enabled = false;
+                borderImage.gameObject.SetActive(false);
+            }
+            if (innerRawImage != null)
+            {
+                innerRawImage.enabled = false;
+                innerRawImage.gameObject.SetActive(false);
+            }
         }
     }
 
-    public void SetBorderSprite(Sprite sprite)
-    {
-        borderImage.sprite = sprite;
-        borderImage.enabled = true;
-    }
 
     // This method now receives all its state data from the GameManager
     public void SetCellType(CellType type, Direction direction, string machineDefId = null)
     {
         cellType = type;
-        conveyorDirection = direction;
 
         switch (type)
         {
@@ -133,27 +130,13 @@ public class UICell : MonoBehaviour
                 }
                 break;
             case CellType.Machine:
-                // All machines use the same rendering system - no special handling for conveyors
-                if (!string.IsNullOrEmpty(machineDefId))
-                {
-                    var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
-                    if (machineDef != null)
-                    {
-                        // All machines now use the same border style
-                        borderImage.gameObject.SetActive(true); // Ensure border is active for machines
-                        SetBorderSprite(machineBorderSprite);
-                        innerRawImage.enabled = false; // MachineRenderer handles all visuals
-                        innerRawImage.gameObject.SetActive(false);
-                    }
-                }
-                else
-                {
-                    // Fallback for machines without definition
-                    borderImage.gameObject.SetActive(true); // Ensure border is active for machines
-                    SetBorderSprite(machineBorderSprite);
-                    innerRawImage.enabled = false;
-                    innerRawImage.gameObject.SetActive(false);
-                }
+                // All machines use the same rendering system
+                // Just show the border for machines - MachineRenderer handles all visuals
+                borderImage.gameObject.SetActive(true);
+                borderImage.sprite = blankSprite; // Use blank sprite as base for machines too
+                borderImage.color = Color.white; // Default color for machines
+                innerRawImage.enabled = false; // MachineRenderer handles all visuals
+                innerRawImage.gameObject.SetActive(false);
                 break;
         }
     }
