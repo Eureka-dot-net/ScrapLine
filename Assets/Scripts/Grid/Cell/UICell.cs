@@ -46,11 +46,20 @@ public class UICell : MonoBehaviour
 
     private void InitializeAsBlankCell()
     {
-        // Blank cells should be completely invisible - no borders or sprites
-        if (borderImage != null)
+        Debug.Log($"InitializeAsBlankCell called for cell at ({x}, {y})");
+        
+        // Blank cells should show the blankSprite to provide visual feedback for the grid
+        if (borderImage != null && blankSprite != null)
         {
-            borderImage.enabled = false;
-            borderImage.gameObject.SetActive(false);
+            borderImage.sprite = blankSprite;
+            borderImage.enabled = true;
+            borderImage.gameObject.SetActive(true);
+            borderImage.color = Color.white; // Ensure it's visible
+            Debug.Log($"Applied blankSprite to cell ({x}, {y}) - sprite: {blankSprite.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"Missing borderImage or blankSprite for cell ({x}, {y}) - borderImage: {borderImage}, blankSprite: {blankSprite}");
         }
     }
 
@@ -104,17 +113,20 @@ public class UICell : MonoBehaviour
         switch (type)
         {
             case CellType.Blank:
-                // For blank cells, reset to proper blank cell appearance
+                Debug.Log($"Setting cell ({x}, {y}) to Blank type");
+                // For blank cells, show the blank sprite to provide visual grid feedback
                 InitializeAsBlankCell();
                 
                 // Also ensure any MachineRenderer is removed when switching to blank
                 MachineRenderer renderer = GetComponentInChildren<MachineRenderer>();
                 if (renderer != null)
                 {
+                    Debug.Log($"Removing MachineRenderer from blank cell ({x}, {y})");
                     DestroyImmediate(renderer.gameObject);
                 }
                 break;
             case CellType.Machine:
+                Debug.Log($"Setting cell ({x}, {y}) to Machine type with machineDefId: {machineDefId}");
                 // All machines use the same rendering system
                 // Just show the border for machines - MachineRenderer handles all visuals
                 borderImage.gameObject.SetActive(true);

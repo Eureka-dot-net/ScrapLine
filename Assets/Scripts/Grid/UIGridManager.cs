@@ -86,12 +86,15 @@ public class UIGridManager : MonoBehaviour
                 cellScript.Init(x, y, this);
 
                 // ALL cells start as blank cells with proper blank appearance
+                Debug.Log($"Initializing cell ({x}, {y}) as blank");
                 cellScript.SetCellType(CellType.Blank, Direction.Up);
 
                 // Then apply specific data if it exists
                 CellData cellData = GetCellData(x, y);
                 if (cellData != null)
                 {
+                    Debug.Log($"Cell ({x}, {y}) has data: role={cellData.cellRole}, type={cellData.cellType}, machineDefId={cellData.machineDefId}");
+                    
                     // Only set cell role for cells that actually need visual representation
                     if (cellData.cellRole == CellRole.Top || cellData.cellRole == CellRole.Bottom)
                     {
@@ -107,6 +110,10 @@ public class UIGridManager : MonoBehaviour
                     {
                         SetupMachineRenderer(cellScript, cellData.machineDefId, cellData.direction);
                     }
+                }
+                else
+                {
+                    Debug.Log($"Cell ({x}, {y}) has no data - remaining as blank cell");
                 }
                 // Note: cells without data will remain as proper blank cells
             }
