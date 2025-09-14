@@ -6,7 +6,6 @@ public class UICell : MonoBehaviour
 {
     // These are now references to the visual components
     public Image borderImage;
-    public RawImage innerRawImage;
     public Button cellButton;
 
     public Sprite blankSprite;
@@ -53,15 +52,6 @@ public class UICell : MonoBehaviour
             borderImage.enabled = false;
             borderImage.gameObject.SetActive(false);
         }
-        
-        // Hide inner raw image for blank cells
-        if (innerRawImage != null)
-        {
-            innerRawImage.enabled = false;
-            innerRawImage.gameObject.SetActive(false);
-        }
-        
-        Debug.Log($"Initialized blank cell at ({x}, {y}) - hidden all visual elements");
     }
 
     // This method is now used to initialize the cell from a CellState model
@@ -102,11 +92,6 @@ public class UICell : MonoBehaviour
                 borderImage.enabled = false;
                 borderImage.gameObject.SetActive(false);
             }
-            if (innerRawImage != null)
-            {
-                innerRawImage.enabled = false;
-                innerRawImage.gameObject.SetActive(false);
-            }
         }
     }
 
@@ -135,8 +120,6 @@ public class UICell : MonoBehaviour
                 borderImage.gameObject.SetActive(true);
                 borderImage.sprite = blankSprite; // Use blank sprite as base for machines too
                 borderImage.color = Color.white; // Default color for machines
-                innerRawImage.enabled = false; // MachineRenderer handles all visuals
-                innerRawImage.gameObject.SetActive(false);
                 break;
         }
     }
