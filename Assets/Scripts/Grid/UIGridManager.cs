@@ -98,6 +98,12 @@ public class UIGridManager : MonoBehaviour
                         SetupMachineRenderer(cellScript, cellData.machineDefId, cellData.direction);
                     }
                 }
+                else
+                {
+                    // Default state for cells without data - ensure they are blank and hidden
+                    cellScript.SetCellRole(CellRole.Grid); // Set default role first
+                    cellScript.SetCellType(CellType.Blank, Direction.Up); // Then set blank type (this will hide border/inner)
+                }
             }
         }
 

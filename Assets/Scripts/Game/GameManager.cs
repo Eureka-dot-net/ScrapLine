@@ -482,12 +482,8 @@ public class GameManager : MonoBehaviour
             return; // No movement possible
         }
 
-        // Don't allow movement into blank cells
-        if (nextCell.cellType == CellType.Blank)
-        {
-            Debug.Log($"Item {item.id} cannot move into blank cell at ({nextX}, {nextY})");
-            return; // Movement blocked by blank cell
-        }
+        // Allow movement into blank cells - items will stop there
+        // Removed the blank cell check as items should be able to move into blank spaces
 
         // Start movement
         item.isMoving = true;

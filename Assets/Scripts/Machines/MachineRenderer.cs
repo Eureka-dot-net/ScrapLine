@@ -21,7 +21,14 @@ public class MachineRenderer : MonoBehaviour
             {
                 var mat = Resources.Load<Material>(def.movingPartMaterial);
                 if (mat != null)
+                {
                     movingPart.material = mat;
+                    Debug.Log($"Successfully applied material '{def.movingPartMaterial}' to MovingPart");
+                }
+                else
+                {
+                    Debug.LogWarning($"Material '{def.movingPartMaterial}' could not be found in Resources folder for machine '{def.id}'");
+                }
             }
             movingPart.transform.SetSiblingIndex(0);
         }
