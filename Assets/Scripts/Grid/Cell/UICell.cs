@@ -45,6 +45,18 @@ public class UICell : MonoBehaviour
             topSpawnPoint.anchoredPosition = Vector2.zero;
             topSpawnPoint.sizeDelta = Vector2.zero;
         }
+        
+        // Initialize as blank by default - hide all visual elements
+        if (borderImage != null)
+        {
+            borderImage.enabled = false;
+            borderImage.gameObject.SetActive(false);
+        }
+        if (innerRawImage != null)
+        {
+            innerRawImage.enabled = false;
+            innerRawImage.gameObject.SetActive(false);
+        }
     }
 
     // This method is now used to initialize the cell from a CellState model
@@ -59,20 +71,29 @@ public class UICell : MonoBehaviour
     public void SetCellRole(CellRole role)
     {
         cellRole = role;
-        borderImage.sprite = blankSprite;
-        borderImage.enabled = true;
-
-        switch (role)
+        
+        // Only show borders for cells that have an actual role (Top/Bottom spawners/sellers)
+        // Regular grid cells should remain hidden unless they become machines
+        if (role == CellRole.Top || role == CellRole.Bottom)
         {
-            case CellRole.Grid:
-                borderImage.color = Color.gray;
-                break;
-            case CellRole.Top:
-                borderImage.color = new Color(0.6f, 0.8f, 1f);
-                break;
-            case CellRole.Bottom:
-                borderImage.color = new Color(1f, 0.7f, 0.7f);
-                break;
+            borderImage.sprite = blankSprite;
+            borderImage.gameObject.SetActive(true);
+            borderImage.enabled = true;
+
+            switch (role)
+            {
+                case CellRole.Top:
+                    borderImage.color = new Color(0.6f, 0.8f, 1f);
+                    break;
+                case CellRole.Bottom:
+                    borderImage.color = new Color(1f, 0.7f, 0.7f);
+                    break;
+            }
+        }
+        else
+        {
+            // For Grid role cells, keep them hidden unless they become machines
+            // Don't automatically show borders for grid cells
         }
     }
 
@@ -91,10 +112,12 @@ public class UICell : MonoBehaviour
         switch (type)
         {
             case CellType.Blank:
-                // For blank cells, hide both border and inner images as requested
+                // For blank cells, completely hide all visual elements as requested
                 // This overrides any previous settings from SetCellRole
                 borderImage.enabled = false;
+                borderImage.gameObject.SetActive(false); // Be extra explicit about hiding
                 innerRawImage.enabled = false;
+                innerRawImage.gameObject.SetActive(false); // Be extra explicit about hiding
                 
                 // Also ensure any MachineRenderer is removed when switching to blank
                 MachineRenderer renderer = GetComponentInChildren<MachineRenderer>();
@@ -111,15 +134,19 @@ public class UICell : MonoBehaviour
                     if (machineDef != null)
                     {
                         // All machines now use the same border style
+                        borderImage.gameObject.SetActive(true); // Ensure border is active for machines
                         SetBorderSprite(machineBorderSprite);
                         innerRawImage.enabled = false; // MachineRenderer handles all visuals
+                        innerRawImage.gameObject.SetActive(false);
                     }
                 }
                 else
                 {
                     // Fallback for machines without definition
+                    borderImage.gameObject.SetActive(true); // Ensure border is active for machines
                     SetBorderSprite(machineBorderSprite);
                     innerRawImage.enabled = false;
+                    innerRawImage.gameObject.SetActive(false);
                 }
                 break;
         }

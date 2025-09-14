@@ -88,7 +88,11 @@ public class UIGridManager : MonoBehaviour
                 CellData cellData = GetCellData(x, y);
                 if (cellData != null)
                 {
-                    cellScript.SetCellRole(cellData.cellRole);
+                    // Only set cell role for cells that actually need visual representation
+                    if (cellData.cellRole == CellRole.Top || cellData.cellRole == CellRole.Bottom)
+                    {
+                        cellScript.SetCellRole(cellData.cellRole);
+                    }
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
                     
                     // If this is a machine cell, set up the machine renderer
@@ -100,9 +104,10 @@ public class UIGridManager : MonoBehaviour
                 }
                 else
                 {
-                    // Default state for cells without data - ensure they are blank and hidden
-                    cellScript.SetCellRole(CellRole.Grid); // Set default role first
-                    cellScript.SetCellType(CellType.Blank, Direction.Up); // Then set blank type (this will hide border/inner)
+                    // Default state for cells without data - ensure they are completely blank and hidden
+                    // For cells that have no data (most of the grid), we want them completely invisible
+                    cellScript.SetCellType(CellType.Blank, Direction.Up); // Set blank type to hide everything
+                    // Don't call SetCellRole - leave them in default hidden state
                 }
             }
         }
