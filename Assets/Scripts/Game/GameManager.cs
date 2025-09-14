@@ -17,6 +17,8 @@ public class GameManager : MonoBehaviour
     public float itemMoveSpeed = 1f; // cells per second
     private int nextItemId = 1;
 
+    private Direction lastConveyorDirection = Direction.Up;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -99,12 +101,14 @@ public class GameManager : MonoBehaviour
                 if (cellData.cellType == UICell.CellType.Blank)
                 {
                     newType = UICell.CellType.Conveyor;
-                    newDirection = UICell.Direction.Up;
+                    newDirection = lastConveyorDirection;
+
                 }
                 else if (cellData.cellType == UICell.CellType.Conveyor)
                 {
                     newDirection = (UICell.Direction)(((int)cellData.direction + 1) % 4);
                     newType = UICell.CellType.Conveyor;
+                    lastConveyorDirection = newDirection;
                 }
                 break;
 

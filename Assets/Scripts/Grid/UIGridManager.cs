@@ -145,7 +145,6 @@ public class UIGridManager : MonoBehaviour
         // Create the new item instance
         GameObject newItem = Instantiate(itemPrefab, spawnPoint);
         newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        newItem.GetComponent<Image>().color = Color.cyan; // Placeholder color
 
         visualItems[itemId] = newItem;
         Debug.Log($"Created visual item {itemId} at ({x}, {y})");
