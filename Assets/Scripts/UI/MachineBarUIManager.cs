@@ -73,6 +73,13 @@ public class MachineBarUIManager : MonoBehaviour
     {
         Debug.Log($"Selected machine: {machineDef.id}");
         
+        // If the same machine is clicked again, clear selection
+        if (selectedMachine == machineDef)
+        {
+            ClearSelection();
+            return;
+        }
+        
         // Clear previous selection visual feedback
         ClearSelectionHighlight();
         
@@ -83,7 +90,7 @@ public class MachineBarUIManager : MonoBehaviour
         // Highlight selected button
         HighlightSelectedButton(buttonObj);
         
-        // Highlight valid placement areas on grid
+        // Highlight valid placement areas on grid (keep them visible)
         if (gridManager != null)
         {
             gridManager.HighlightValidPlacements(machineDef);

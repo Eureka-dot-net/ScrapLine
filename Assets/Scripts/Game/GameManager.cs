@@ -123,11 +123,8 @@ public class GameManager : MonoBehaviour
             if (IsValidMachinePlacement(cellData, selectedMachine))
             {
                 PlaceMachine(cellData, selectedMachine);
-                // Clear selection after placement
-                if (machineBarManager != null)
-                {
-                    machineBarManager.ClearSelection();
-                }
+                // Don't clear selection - allow continuous placement
+                // Selection will be cleared when user clicks a different machine or manually clears
                 return;
             }
             else
@@ -144,69 +141,64 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Original cell cycling logic for non-machine placements
-        UICell.CellType newType = cellData.cellType;
-        UICell.Direction newDirection = cellData.direction;
-
-        switch (cellData.cellRole)
+        // Only allow fallback behavior for Top/Bottom roles when no machine is selected
+        // This preserves the original spawner/seller placement behavior
+        if (selectedMachine == null && (cellData.cellRole == UICell.CellRole.Top || cellData.cellRole == UICell.CellRole.Bottom))
         {
-            case UICell.CellRole.Grid:
-                if (cellData.cellType == UICell.CellType.Blank)
-                {
-                    // Place a conveyor (which is now a machine)
-                    newType = UICell.CellType.Machine;
-                    newDirection = lastConveyorDirection;
-                    cellData.machineDefId = "conveyor"; // Set conveyor machine ID
-                }
-                else if (cellData.cellType == UICell.CellType.Machine && cellData.machineDefId == "conveyor")
-                {
-                    // Rotate existing conveyor
-                    newDirection = (UICell.Direction)(((int)cellData.direction + 1) % 4);
-                    newType = UICell.CellType.Machine;
-                    lastConveyorDirection = newDirection;
-                    // Keep the conveyor machine ID
-                }
-                break;
+            // Original cell cycling logic for Top/Bottom roles only
+            UICell.CellType newType = cellData.cellType;
+            UICell.Direction newDirection = cellData.direction;
 
-            case UICell.CellRole.Top:
-                Debug.Log("Clicked on Top role. Creating a placeholder Output machine.");
-                newType = UICell.CellType.Machine;
-                newDirection = UICell.Direction.Up;
-                cellData.machineDefId = "seller"; // Use seller machine for top
-                break;
-
-            case UICell.CellRole.Bottom:
-                Debug.Log("Clicked on Bottom role. Creating a placeholder Input machine.");
-                newType = UICell.CellType.Machine;
-                newDirection = UICell.Direction.Up;
-                cellData.machineDefId = "spawner"; // Use spawner machine for bottom
-                break;
-        }
-
-        cellData.cellType = newType;
-        cellData.direction = newDirection;
-
-        UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
-        if (activeGridManager != null)
-        {
-            activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, cellData.machineDefId);
-        }
-
-        // Only try to move items if the cell is now a machine
-        if (cellData.cellType == UICell.CellType.Machine)
-        {
-            foreach (var item in cellData.items)
+            switch (cellData.cellRole)
             {
-                item.shouldStopAtTarget = false;
-                item.hasCheckedMiddle = false;
-                item.hasQueuedMovement = false;
+                case UICell.CellRole.Top:
+                    Debug.Log("Clicked on Top role. Creating a placeholder Output machine.");
+                    newType = UICell.CellType.Machine;
+                    newDirection = UICell.Direction.Up;
+                    cellData.machineDefId = "seller"; // Use seller machine for top
+                    break;
 
-                // If not already moving, start movement in the new direction/type
-                if (!item.isMoving)
+                case UICell.CellRole.Bottom:
+                    Debug.Log("Clicked on Bottom role. Creating a placeholder Input machine.");
+                    newType = UICell.CellType.Machine;
+                    newDirection = UICell.Direction.Up;
+                    cellData.machineDefId = "spawner"; // Use spawner machine for bottom
+                    break;
+            }
+
+            cellData.cellType = newType;
+            cellData.direction = newDirection;
+
+            UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+            if (activeGridManager != null)
+            {
+                activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, newType, newDirection, cellData.machineDefId);
+            }
+
+            // Only try to move items if the cell is now a machine
+            if (cellData.cellType == UICell.CellType.Machine)
+            {
+                foreach (var item in cellData.items)
                 {
-                    TryStartItemMovement(item, cellData, gridData, activeGridManager);
+                    item.shouldStopAtTarget = false;
+                    item.hasCheckedMiddle = false;
+                    item.hasQueuedMovement = false;
+
+                    // If not already moving, start movement in the new direction/type
+                    if (!item.isMoving)
+                    {
+                        TryStartItemMovement(item, cellData, gridData, activeGridManager);
+                    }
                 }
             }
+            return;
+        }
+
+        // If no machine is selected and this is a Grid cell, don't do anything
+        if (selectedMachine == null && cellData.cellRole == UICell.CellRole.Grid)
+        {
+            Debug.Log("No machine selected for grid placement");
+            return;
         }
     }
 

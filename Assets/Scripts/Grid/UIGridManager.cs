@@ -119,7 +119,7 @@ public class UIGridManager : MonoBehaviour
 
         foreach (var cell in gridData.cells)
         {
-            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineType, cell.machineDefId);
+            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineDefId);
         }
     }
 
@@ -316,26 +316,61 @@ public class UIGridManager : MonoBehaviour
 
     private bool ShouldChangeParent(float progress, UICell.Direction movementDirection, string machineDefId)
     {
-        // For Down and Right movement: change parent before hitting boundary (30%)
-        // Also for specific machine types to ensure items appear below roof
-        bool isSpecialMachine = false;
+        // Get machine-specific parent change thresholds
+        float threshold = 0.5f; // Default fallback
+        
         if (!string.IsNullOrEmpty(machineDefId))
         {
             var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
-            // Check for machines that need special handling (like the old ThreeInputsOneOutput)
-            isSpecialMachine = machineDef != null && machineDef.type == "Shredder"; // Example special case
+            if (machineDef?.parentChangeThresholds != null)
+            {
+                // Use machine-specific thresholds based on movement direction
+                switch (movementDirection)
+                {
+                    case UICell.Direction.Down:
+                        threshold = machineDef.parentChangeThresholds.down;
+                        break;
+                    case UICell.Direction.Right:
+                        threshold = machineDef.parentChangeThresholds.right;
+                        break;
+                    case UICell.Direction.Up:
+                        threshold = machineDef.parentChangeThresholds.up;
+                        break;
+                    case UICell.Direction.Left:
+                        threshold = machineDef.parentChangeThresholds.left;
+                        break;
+                    default:
+                        threshold = machineDef.parentChangeThresholds.@default;
+                        break;
+                }
+            }
+            else
+            {
+                // Fallback to old hardcoded logic for machines without thresholds
+                if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right)
+                {
+                    threshold = 0.3f;
+                }
+                else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
+                {
+                    threshold = 0.7f;
+                }
+            }
+        }
+        else
+        {
+            // Fallback for cells without machine definitions (like conveyors)
+            if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right)
+            {
+                threshold = 0.3f;
+            }
+            else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
+            {
+                threshold = 0.7f;
+            }
         }
         
-        if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right || isSpecialMachine)
-        {
-            return progress >= 0.3f;
-        }
-        // For Up and Left movement: change parent after crossing boundary (99%)
-        else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
-        {
-            return progress >= 0.7f;
-        }
-        return progress >= 0.5f; // Default fallback
+        return progress >= threshold;
     }
 
     public CellData GetCellData(int x, int y)
