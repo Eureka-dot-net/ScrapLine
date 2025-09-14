@@ -117,9 +117,12 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        Debug.Log($"Cell clicked at ({x}, {y}): cellType={cellData.cellType}, machineDefId={cellData.machineDefId}, selectedMachine={selectedMachine?.id ?? "null"}");
+
         // Handle machine rotation if clicking on an existing machine (should work regardless of selection)
         if (cellData.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
         {
+            Debug.Log($"Attempting to rotate machine {cellData.machineDefId} at ({x}, {y})");
             RotateMachine(cellData);
             return;
         }

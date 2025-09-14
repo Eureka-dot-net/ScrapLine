@@ -91,7 +91,8 @@ public class UICell : MonoBehaviour
         switch (type)
         {
             case CellType.Blank:
-                SetBorderSprite(blankSprite);
+                // For blank cells, hide both border and inner images as requested
+                borderImage.enabled = false;
                 innerRawImage.enabled = false;
                 break;
             case CellType.Machine:

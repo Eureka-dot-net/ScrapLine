@@ -17,6 +17,20 @@ public class UIGridManager : MonoBehaviour
     // Track visual items by ID
     private Dictionary<string, GameObject> visualItems = new Dictionary<string, GameObject>();
 
+    void Start()
+    {
+        // Set up conveyor material scrolling
+        if (conveyorSharedMaterial != null)
+        {
+            ConveyorMaterialScroller scroller = gameObject.GetComponent<ConveyorMaterialScroller>();
+            if (scroller == null)
+            {
+                scroller = gameObject.AddComponent<ConveyorMaterialScroller>();
+            }
+            scroller.conveyorMaterial = conveyorSharedMaterial;
+        }
+    }
+
     public UICell GetCell(int x, int y)
     {
         if (x >= 0 && x < gridData.width && y >= 0 && y < gridData.height)
