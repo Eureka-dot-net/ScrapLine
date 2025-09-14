@@ -92,9 +92,14 @@ public class UIGridManager : MonoBehaviour
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
                     
                     // If this is a machine cell, set up the machine renderer
+                    // Exception: Conveyors use the old visual style and don't need MachineRenderer
                     if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
                     {
-                        SetupMachineRenderer(cellScript, cellData.machineDefId);
+                        var machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
+                        if (machineDef != null && machineDef.type != "Conveyor")
+                        {
+                            SetupMachineRenderer(cellScript, cellData.machineDefId);
+                        }
                     }
                 }
             }
@@ -116,9 +121,14 @@ public class UIGridManager : MonoBehaviour
             cell.SetCellType(newType, newDirection, machineDefId);
             
             // If this is a machine cell, set up the machine renderer
+            // Exception: Conveyors use the old visual style and don't need MachineRenderer
             if (newType == CellType.Machine && !string.IsNullOrEmpty(machineDefId))
             {
-                SetupMachineRenderer(cell, machineDefId);
+                var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
+                if (machineDef != null && machineDef.type != "Conveyor")
+                {
+                    SetupMachineRenderer(cell, machineDefId);
+                }
             }
         }
     }

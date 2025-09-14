@@ -97,6 +97,13 @@ public class UICell : MonoBehaviour
                 // This overrides any previous settings from SetCellRole
                 borderImage.enabled = false;
                 innerRawImage.enabled = false;
+                
+                // Also ensure any MachineRenderer is removed when switching to blank
+                MachineRenderer renderer = GetComponentInChildren<MachineRenderer>();
+                if (renderer != null)
+                {
+                    DestroyImmediate(renderer.gameObject);
+                }
                 break;
             case CellType.Machine:
                 // All machines (including conveyors) are handled the same way
@@ -109,6 +116,13 @@ public class UICell : MonoBehaviour
                         if (machineDef.type == "Conveyor")
                         {
                             // Conveyors use the old visual style for compatibility
+                            // Remove any MachineRenderer that might have been created previously
+                            MachineRenderer existingRenderer = GetComponentInChildren<MachineRenderer>();
+                            if (existingRenderer != null)
+                            {
+                                DestroyImmediate(existingRenderer.gameObject);
+                            }
+                            
                             SetBorderSprite(conveyorBorderSprite);
                             innerRawImage.enabled = true;
                             innerRawImage.texture = conveyorInnerTexture;
@@ -172,12 +186,12 @@ public class UICell : MonoBehaviour
         if (innerRawImage != null)
         {
             innerRawImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
-            Debug.Log($"Applied rotation {zRot} to innerRawImage");
+            Debug.Log($"Applied rotation {zRot} to innerRawImage at ({x},{y}) - final rotation: {innerRawImage.rectTransform.localEulerAngles}");
         }
         if (borderImage != null)
         {
             borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
-            Debug.Log($"Applied rotation {zRot} to borderImage");
+            Debug.Log($"Applied rotation {zRot} to borderImage at ({x},{y}) - final rotation: {borderImage.rectTransform.localEulerAngles}");
         }
     }
 
