@@ -76,6 +76,12 @@ public class UIGridManager : MonoBehaviour
                 {
                     cellScript.SetCellRole(cellData.cellRole);
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineType);
+                    
+                    // If this is a machine cell, set up the machine renderer
+                    if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
+                    {
+                        SetupMachineRenderer(cellScript, cellData.machineDefId);
+                    }
                 }
             }
         }
@@ -98,12 +104,18 @@ public class UIGridManager : MonoBehaviour
         return null;
     }
 
-    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, MachineType machineType = MachineType.None)
+    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, MachineType machineType = MachineType.None, string machineDefId = null)
     {
         UICell cell = GetCell(x, y);
         if (cell != null)
         {
             cell.SetCellType(newType, newDirection, machineType);
+            
+            // If this is a machine cell, set up the machine renderer
+            if (newType == CellType.Machine && !string.IsNullOrEmpty(machineDefId))
+            {
+                SetupMachineRenderer(cell, machineDefId);
+            }
         }
     }
 
@@ -117,7 +129,7 @@ public class UIGridManager : MonoBehaviour
 
         foreach (var cell in gridData.cells)
         {
-            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineType);
+            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineType, cell.machineDefId);
         }
     }
 
@@ -339,6 +351,40 @@ public class UIGridManager : MonoBehaviour
             }
         }
         return null;
+    }
+
+    private void SetupMachineRenderer(UICell cell, string machineDefId)
+    {
+        // Get the machine definition
+        MachineDef machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
+        if (machineDef == null)
+        {
+            Debug.LogWarning($"Machine definition not found for ID: {machineDefId}");
+            return;
+        }
+
+        // Find or create a MachineRenderer component
+        MachineRenderer renderer = cell.GetComponentInChildren<MachineRenderer>();
+        if (renderer == null)
+        {
+            // Create a new GameObject for the machine renderer
+            GameObject rendererObj = new GameObject("MachineRenderer");
+            rendererObj.transform.SetParent(cell.transform, false);
+            
+            // Set up the RectTransform to fill the cell
+            RectTransform rt = rendererObj.AddComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = Vector2.zero;
+            
+            renderer = rendererObj.AddComponent<MachineRenderer>();
+        }
+
+        // Setup the renderer with the machine definition
+        renderer.Setup(machineDef);
     }
 
 }

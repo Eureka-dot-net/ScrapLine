@@ -156,13 +156,14 @@ public class GameManager : MonoBehaviour
                 {
                     newType = UICell.CellType.Conveyor;
                     newDirection = lastConveyorDirection;
-
+                    cellData.machineDefId = null; // Clear machine reference
                 }
                 else if (cellData.cellType == UICell.CellType.Conveyor)
                 {
                     newDirection = (UICell.Direction)(((int)cellData.direction + 1) % 4);
                     newType = UICell.CellType.Conveyor;
                     lastConveyorDirection = newDirection;
+                    cellData.machineDefId = null; // Clear machine reference
                 }
                 break;
 
@@ -171,6 +172,7 @@ public class GameManager : MonoBehaviour
                 newType = UICell.CellType.Machine;
                 newMachineType = UICell.MachineType.Output;
                 newDirection = UICell.Direction.Up;
+                cellData.machineDefId = "seller"; // Use seller machine for top
                 break;
 
             case UICell.CellRole.Bottom:
@@ -178,6 +180,7 @@ public class GameManager : MonoBehaviour
                 newType = UICell.CellType.Machine;
                 newMachineType = UICell.MachineType.Input;
                 newDirection = UICell.Direction.Up;
+                cellData.machineDefId = "spawner"; // Use spawner machine for bottom
                 break;
         }
 
@@ -188,7 +191,7 @@ public class GameManager : MonoBehaviour
         UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, newMachineType);
+            activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, newMachineType, cellData.machineDefId);
         }
 
         // Only try to move items if the cell is now a conveyor or machine
@@ -266,7 +269,7 @@ public class GameManager : MonoBehaviour
         // Update visuals
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType);
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType, cellData.machineDefId);
         }
     }
 
@@ -281,7 +284,7 @@ public class GameManager : MonoBehaviour
         UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType);
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineType, cellData.machineDefId);
         }
     }
 
@@ -583,6 +586,7 @@ public class GameManager : MonoBehaviour
             cell.cellType = CellType.Blank;
             cell.direction = Direction.Up;
             cell.machineType = MachineType.None;
+            cell.machineDefId = null; // Clear machine definition reference
             cell.items.Clear();
         }
 
