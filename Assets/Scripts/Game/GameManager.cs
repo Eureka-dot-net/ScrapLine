@@ -286,7 +286,7 @@ public class GameManager : MonoBehaviour
                     // Check if the cell already has an item
                     if (cell.items.Count == 0)
                     {
-                        didSpawn = true;
+                      //  didSpawn = true;
                         // Spawn a new item if the cell is empty
                         SpawnItem(cell);
                     }

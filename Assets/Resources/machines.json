@@ -8,7 +8,7 @@
             "movingPartSprite": "conveyor_moving",
             "borderSprite": "conveyor_border",
             "buildingSprite": null,
-            "movingPartMaterial": "mat_conveyor",
+            "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 0,
             "parentChangeThresholds": {
                 "down": 0.3,
@@ -19,7 +19,7 @@
             },
             "upgradeMultipliers": [],
             "gridPlacement": [
-                "any"
+                "grid"
             ],
             "maxNumber": -1
         },
@@ -31,7 +31,7 @@
             "borderSprite": null,
             "buildingSprite": "Machine_border",
             "buildingDirection": 0,
-            "movingPartMaterial": "mat_spawner",
+            "movingPartMaterial": "ConveyorSharedMat",
             "baseProcessTime": 10,
             "upgradeMultipliers": [
                 {
@@ -70,7 +70,7 @@
             "movingPartSprite": "conveyor_moving",
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-            "movingPartMaterial": "mat_seller",
+            "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 180,
             "parentChangeThresholds": {
                 "down": 0.3,

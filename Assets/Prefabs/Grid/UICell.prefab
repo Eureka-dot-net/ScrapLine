@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 2800000, guid: 27d45b0da1adebd42b295504b3a095c1, type: 3}
+  m_Texture: {fileID: 0}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1698200531851376059, guid: c918ab6161312d74195a5a0b95638988, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -212,7 +212,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1698200531851376059, guid: c918ab6161312d74195a5a0b95638988, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -403,9 +403,7 @@ MonoBehaviour:
   conveyorInnerTexture: {fileID: 2800000, guid: 27d45b0da1adebd42b295504b3a095c1, type: 3}
   cellType: 0
   cellRole: 0
-  machineType: 0
   conveyorDirection: 0
-  itemSpawnPoint: {fileID: 2489282294217761697}
   topSpawnPoint: {fileID: 0}
   x: 0
   y: 0
