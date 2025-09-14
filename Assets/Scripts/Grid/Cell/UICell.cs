@@ -46,12 +46,22 @@ public class UICell : MonoBehaviour
             topSpawnPoint.sizeDelta = Vector2.zero;
         }
         
-        // Initialize as blank by default - hide all visual elements
-        if (borderImage != null)
+        // Initialize as blank by default - start with proper blank cell appearance
+        InitializeAsBlankCell();
+    }
+
+    private void InitializeAsBlankCell()
+    {
+        // Blank cells should show the blank sprite, not be completely hidden
+        if (borderImage != null && blankSprite != null)
         {
-            borderImage.enabled = false;
-            borderImage.gameObject.SetActive(false);
+            borderImage.sprite = blankSprite;
+            borderImage.color = Color.white; // Default color for blank cells
+            borderImage.enabled = true;
+            borderImage.gameObject.SetActive(true);
         }
+        
+        // Hide inner raw image for blank cells
         if (innerRawImage != null)
         {
             innerRawImage.enabled = false;
@@ -112,12 +122,8 @@ public class UICell : MonoBehaviour
         switch (type)
         {
             case CellType.Blank:
-                // For blank cells, completely hide all visual elements as requested
-                // This overrides any previous settings from SetCellRole
-                borderImage.enabled = false;
-                borderImage.gameObject.SetActive(false); // Be extra explicit about hiding
-                innerRawImage.enabled = false;
-                innerRawImage.gameObject.SetActive(false); // Be extra explicit about hiding
+                // For blank cells, reset to proper blank cell appearance
+                InitializeAsBlankCell();
                 
                 // Also ensure any MachineRenderer is removed when switching to blank
                 MachineRenderer renderer = GetComponentInChildren<MachineRenderer>();

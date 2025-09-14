@@ -85,6 +85,10 @@ public class UIGridManager : MonoBehaviour
 
                 cellScript.Init(x, y, this, conveyorSharedMaterial);
 
+                // ALL cells start as blank cells with proper blank appearance
+                cellScript.SetCellType(CellType.Blank, Direction.Up);
+
+                // Then apply specific data if it exists
                 CellData cellData = GetCellData(x, y);
                 if (cellData != null)
                 {
@@ -93,6 +97,8 @@ public class UIGridManager : MonoBehaviour
                     {
                         cellScript.SetCellRole(cellData.cellRole);
                     }
+                    
+                    // Override the blank state with specific cell type if needed
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
                     
                     // If this is a machine cell, set up the machine renderer
@@ -102,13 +108,7 @@ public class UIGridManager : MonoBehaviour
                         SetupMachineRenderer(cellScript, cellData.machineDefId, cellData.direction);
                     }
                 }
-                else
-                {
-                    // Default state for cells without data - ensure they are completely blank and hidden
-                    // For cells that have no data (most of the grid), we want them completely invisible
-                    cellScript.SetCellType(CellType.Blank, Direction.Up); // Set blank type to hide everything
-                    // Don't call SetCellRole - leave them in default hidden state
-                }
+                // Note: cells without data will remain as proper blank cells
             }
         }
 
