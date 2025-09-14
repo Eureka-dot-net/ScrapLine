@@ -117,6 +117,13 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // Handle machine rotation if clicking on an existing machine (should work regardless of selection)
+        if (cellData.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
+        {
+            RotateMachine(cellData);
+            return;
+        }
+
         // Handle machine placement if a machine is selected
         if (selectedMachine != null)
         {
@@ -132,13 +139,6 @@ public class GameManager : MonoBehaviour
                 Debug.Log($"Cannot place {selectedMachine.id} here - invalid placement");
                 return;
             }
-        }
-
-        // Handle machine rotation if clicking on an existing machine
-        if (cellData.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
-        {
-            RotateMachine(cellData);
-            return;
         }
 
         // Only allow fallback behavior for Top/Bottom roles when no machine is selected
