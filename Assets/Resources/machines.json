@@ -21,7 +21,8 @@
             "gridPlacement": [
                 "grid"
             ],
-            "maxNumber": -1
+            "maxNumber": -1,
+            "displayInPanel": false
         },
         {
             "id": "conveyor",
@@ -44,7 +45,8 @@
             "gridPlacement": [
                 "grid"
             ],
-            "maxNumber": -1
+            "maxNumber": -1,
+            "displayInPanel": true
         },
         {
             "id": "spawner",
@@ -83,7 +85,8 @@
                     "max": 3,
                     "cost": 600
                 }
-            ]
+            ],
+            "displayInPanel": true
         },
         {
             "id": "seller",
@@ -106,7 +109,8 @@
             "gridPlacement": [
                 "top"
             ],
-            "maxNumber": 1
+            "maxNumber": 1,
+            "displayInPanel": true
         },
         {
             "id": "shredder",
@@ -147,7 +151,8 @@
                 "right": 0.3,
                 "up": 0.7,
                 "left": 0.7
-            }
+            },
+            "displayInPanel": true
         }
     ]
 }

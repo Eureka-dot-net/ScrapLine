@@ -29,6 +29,13 @@ public class MachineBarUIManager : MonoBehaviour
         Debug.Log("Initializing Machine Bar UI");
         foreach (var machine in FactoryRegistry.Instance.Machines.Values)
         {
+            // Skip machines that shouldn't be displayed in panel
+            if (!machine.displayInPanel)
+            {
+                Debug.Log($"Skipping machine '{machine.id}' - displayInPanel is false");
+                continue;
+            }
+            
             Debug.Log($"Creating machine: {machine.id}");
             GameObject buttonObj = Instantiate(machineButtonPrefab, machineBarPanel);
 

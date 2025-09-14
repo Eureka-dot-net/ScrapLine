@@ -32,6 +32,7 @@ public class MachineDef
     public List<UpgradeMultiplier> upgradeMultipliers;
     public List<string> gridPlacement;     // e.g., ["any"], ["bottom"]
     public int maxNumber;
+    public bool displayInPanel = true;     // whether to show in machine selection panel
 }
 
 [System.Serializable]

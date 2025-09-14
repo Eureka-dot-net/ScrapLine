@@ -361,9 +361,9 @@ public class GameManager : MonoBehaviour
 
         if (targetCell.cellType == CellType.Blank)
         {
-            // Stop at blank cell - items cannot enter blank cells
+            // Items can move into blank cells and stop there (intended behavior)
             item.shouldStopAtTarget = true;
-            Debug.Log($"Item {item.id} blocked by blank cell - will stop at edge");
+            Debug.Log($"Item {item.id} moving to blank cell - will stop there");
             return;
         }
         else if (targetCell.cellType == CellType.Machine)
