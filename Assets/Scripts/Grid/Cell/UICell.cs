@@ -104,52 +104,15 @@ public class UICell : MonoBehaviour
                 }
                 break;
             case CellType.Machine:
-                // All machines (including conveyors) are handled the same way
-                // The visual appearance is determined by the machine definition
+                // All machines use the same rendering system - no special handling for conveyors
                 if (!string.IsNullOrEmpty(machineDefId))
                 {
                     var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
                     if (machineDef != null)
                     {
-                        if (machineDef.type == "Conveyor")
-                        {
-                            // Conveyors use the old visual style for compatibility
-                            // Remove any MachineRenderer that might have been created previously
-                            MachineRenderer existingRenderer = GetComponentInChildren<MachineRenderer>();
-                            if (existingRenderer != null)
-                            {
-                                DestroyImmediate(existingRenderer.gameObject);
-                            }
-                            
-                            SetBorderSprite(conveyorBorderSprite);
-                            innerRawImage.enabled = true;
-                            innerRawImage.texture = conveyorInnerTexture;
-                            innerRawImage.material = conveyorMaterial;
-                            SetConveyorRotation(direction);
-                        }
-                        else
-                        {
-                            // Other machines use machine border and get their visuals from MachineRenderer
-                            SetBorderSprite(machineBorderSprite);
-                            innerRawImage.enabled = true;
-                            innerRawImage.texture = conveyorInnerTexture;
-                            innerRawImage.material = conveyorMaterial;
-                            
-                            // Apply machine-specific colors based on type
-                            Color machineColor = Color.gray; // Default
-                            if (machineDef.type == "Spawner")
-                            {
-                                machineColor = Color.green;
-                            }
-                            else if (machineDef.type == "Seller")
-                            {
-                                machineColor = Color.red;
-                            }
-                            innerRawImage.color = machineColor; // Apply the tint
-                            
-                            // Apply rotation for non-conveyor machines too
-                            SetConveyorRotation(direction);
-                        }
+                        // All machines now use the same border style
+                        SetBorderSprite(machineBorderSprite);
+                        innerRawImage.enabled = false; // MachineRenderer handles all visuals
                     }
                 }
                 else
@@ -168,32 +131,11 @@ public class UICell : MonoBehaviour
         GameManager.Instance.OnCellClicked(x, y);
     }
 
-    void SetConveyorRotation(Direction dir)
-    {
-        float zRot = 0f;
-        switch (dir)
-        {
-            case Direction.Up: zRot = 0f; break;
-            case Direction.Right: zRot = -90f; break;
-            case Direction.Down: zRot = -180f; break;
-            case Direction.Left: zRot = -270f; break;
-        }
-
-        if (innerRawImage != null)
-        {
-            innerRawImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
-        }
-        if (borderImage != null)
-        {
-            borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
-        }
-    }
-
     public RectTransform GetItemSpawnPoint()
     {
         if (cellType == CellType.Machine && !string.IsNullOrEmpty(GetMachineDefId()))
         {
-            // For machines, try to find the spawn point created by MachineRenderer
+            // For all machines, try to find the spawn point created by MachineRenderer
             MachineRenderer machineRenderer = GetComponentInChildren<MachineRenderer>();
             if (machineRenderer != null)
             {
@@ -208,7 +150,7 @@ public class UICell : MonoBehaviour
         }
         else
         {
-            // For blank cells and conveyors, use topSpawnPoint
+            // For blank cells, use topSpawnPoint
             return topSpawnPoint;
         }
     }

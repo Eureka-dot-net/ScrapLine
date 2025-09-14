@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class MachineRenderer : MonoBehaviour
 {
-    public void Setup(MachineDef def)
+    public void Setup(MachineDef def, UICell.Direction cellDirection = UICell.Direction.Up)
     {
         foreach (Transform child in transform) Destroy(child.gameObject);
 
@@ -45,6 +45,10 @@ public class MachineRenderer : MonoBehaviour
             var mainSprite = CreateImageChild("Main", def.sprite);
             mainSprite.transform.SetSiblingIndex(3);
         }
+
+        // Apply cell direction rotation to entire renderer
+        float cellRotation = GetCellDirectionRotation(cellDirection);
+        transform.rotation = Quaternion.Euler(0, 0, cellRotation);
 
         // Create spawn point for items between border and building
         CreateItemSpawnPoint();
@@ -106,5 +110,17 @@ public class MachineRenderer : MonoBehaviour
         rt.sizeDelta = Vector2.zero;
 
         return img;
+    }
+
+    private float GetCellDirectionRotation(UICell.Direction direction)
+    {
+        switch (direction)
+        {
+            case UICell.Direction.Up: return 0f;
+            case UICell.Direction.Right: return -90f;
+            case UICell.Direction.Down: return -180f;
+            case UICell.Direction.Left: return -270f;
+            default: return 0f;
+        }
     }
 }

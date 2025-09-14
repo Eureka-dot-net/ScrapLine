@@ -92,14 +92,10 @@ public class UIGridManager : MonoBehaviour
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
                     
                     // If this is a machine cell, set up the machine renderer
-                    // Exception: Conveyors use the old visual style and don't need MachineRenderer
+                    // All machines use MachineRenderer now - no exceptions
                     if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
                     {
-                        var machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
-                        if (machineDef != null && machineDef.type != "Conveyor")
-                        {
-                            SetupMachineRenderer(cellScript, cellData.machineDefId);
-                        }
+                        SetupMachineRenderer(cellScript, cellData.machineDefId, cellData.direction);
                     }
                 }
             }
@@ -120,15 +116,10 @@ public class UIGridManager : MonoBehaviour
         {
             cell.SetCellType(newType, newDirection, machineDefId);
             
-            // If this is a machine cell, set up the machine renderer
-            // Exception: Conveyors use the old visual style and don't need MachineRenderer
+            // If this is a machine cell, set up the machine renderer for ALL machines
             if (newType == CellType.Machine && !string.IsNullOrEmpty(machineDefId))
             {
-                var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
-                if (machineDef != null && machineDef.type != "Conveyor")
-                {
-                    SetupMachineRenderer(cell, machineDefId);
-                }
+                SetupMachineRenderer(cell, machineDefId, newDirection);
             }
         }
     }
@@ -411,7 +402,7 @@ public class UIGridManager : MonoBehaviour
         return null;
     }
 
-    private void SetupMachineRenderer(UICell cell, string machineDefId)
+    private void SetupMachineRenderer(UICell cell, string machineDefId, UICell.Direction direction)
     {
         // Get the machine definition
         MachineDef machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
@@ -441,8 +432,8 @@ public class UIGridManager : MonoBehaviour
             renderer = rendererObj.AddComponent<MachineRenderer>();
         }
 
-        // Setup the renderer with the machine definition
-        renderer.Setup(machineDef);
+        // Setup the renderer with the machine definition and direction
+        renderer.Setup(machineDef, direction);
     }
 
 }
