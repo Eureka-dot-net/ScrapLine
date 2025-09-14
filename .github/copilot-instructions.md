@@ -2,7 +2,7 @@
 
 **Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
-ScrapLine is a Unity 6000.2.3f1 (Unity 6 LTS) factory automation game where players build conveyor belt systems to process scrap materials. The game features a grid-based building system with machines (shredders, spawners, sellers), conveyors, and item processing mechanics. Players can place items like aluminum cans and process them into shredded aluminum using various machines in a factory layout.
+ScrapLine is a Unity 6000.2.3f1 (Unity 6 LTS) mobile-first factory automation game where players build conveyor belt systems to process scrap materials. The game features a touch-optimized grid-based building system with machines (shredders, spawners, sellers), conveyors, and item processing mechanics. Players can place items like aluminum cans and process them into shredded aluminum using various machines in a factory layout, all optimized for mobile devices.
 
 ## Working Effectively
 
@@ -73,7 +73,7 @@ ScrapLine is a Unity 6000.2.3f1 (Unity 6 LTS) factory automation game where play
   ```bash
   # Opens Unity Editor in play mode. Takes 2-5 minutes to start.
   Unity -projectPath /home/runner/work/ScrapLine/ScrapLine
-  # Manual: Open GridScene.unity, press Play button
+  # Manual: Open MobileGridScene.unity, press Play button
   ```
 
 - **Standalone Build:**
@@ -141,7 +141,7 @@ If Unity installation fails due to network restrictions:
 ### Project Scale and Complexity
 - **Unity Assets:** 25 total (.asset, .prefab, .unity files)
 - **C# Scripts:** 14 total scripts
-- **Scenes:** 3 (GridScene, MobileGridScene, SampleScene)
+- **Scenes:** 1 (MobileGridScene) - primary gameplay scene optimized for mobile
 - **Resource Files:** 3 JSON data files
 - **Project Type:** Small-to-medium Unity project, manageable scope
 
@@ -149,9 +149,7 @@ This is a focused project with clear boundaries, making it ideal for rapid devel
 ```
 Assets/
 ├── Scenes/                          # Unity scenes
-│   ├── GridScene.unity             # Main desktop gameplay scene
-│   ├── MobileGridScene.unity       # Mobile-optimized scene  
-│   └── SampleScene.unity           # Test/sample scene
+│   └── MobileGridScene.unity       # Main mobile gameplay scene
 ├── Scripts/                        # C# game logic
 │   ├── Game/GameManager.cs         # Core game management
 │   ├── Grid/UIGridManager.cs       # Grid system management
@@ -185,9 +183,9 @@ Before committing any changes, ALWAYS complete these steps:
    ```
 
 2. **Play Mode Testing:** 
-   - Open GridScene.unity
+   - Open MobileGridScene.unity
    - Enter Play Mode
-   - Test basic conveyor and machine functionality
+   - Test basic conveyor and machine functionality with touch controls
 
 3. **Build Verification:**
    ```bash
@@ -199,8 +197,8 @@ Before committing any changes, ALWAYS complete these steps:
 After any code changes, ALWAYS test these scenarios:
 
 1. **Item Spawning and Movement:**
-   - Open GridScene.unity in Unity Editor
-   - Place conveyor belts in a line on the grid
+   - Open MobileGridScene.unity in Unity Editor
+   - Place conveyor belts in a line on the grid using touch controls
    - Use spawner machine to generate aluminum cans
    - Verify smooth movement along conveyor path at correct speed
 
@@ -211,9 +209,9 @@ After any code changes, ALWAYS test these scenarios:
    - Verify processed items move to seller and disappear
 
 3. **Grid System Integrity:**
-   - Test grid cell placement and removal of machines
+   - Test grid cell placement and removal of machines using touch controls
    - Verify UI updates correctly when machines are placed/removed
-   - Check cell highlighting and selection feedback
+   - Check cell highlighting and selection feedback for mobile interface
    - Test different machine types: conveyor, spawner, shredder, seller
 
 4. **Save/Load Functionality:**
@@ -222,11 +220,12 @@ After any code changes, ALWAYS test these scenarios:
    - Close and reopen Unity/game
    - Load save file and verify all machines, conveyors, and items are restored correctly
 
-5. **Mobile Compatibility:**
-   - Test MobileGridScene.unity specifically
-   - Verify touch controls work for placing/removing machines
-   - Check UI scaling and responsiveness on different screen sizes
+5. **Mobile Compatibility (Primary Focus):**
+   - Test MobileGridScene.unity thoroughly as the main gameplay scene
+   - Verify touch controls work smoothly for placing/removing machines
+   - Check UI scaling and responsiveness on different screen sizes and orientations
    - Test gesture controls and mobile input system
+   - Verify performance optimization for mobile devices
 
 6. **Resource Data Integrity:**
    - Verify items.json loads correctly (aluminum cans, shredded aluminum)
@@ -289,7 +288,7 @@ Based on Unity 6 LTS documentation and industry standards:
 
 ## Development Environment Notes
 - **Unity Version:** 6000.2.3f1 (Unity 6 LTS) - EXACT version required
-- **Target Platforms:** Standalone (Windows/Mac/Linux), WebGL, Mobile
+- **Target Platforms:** Mobile (iOS/Android primary), Standalone (Windows/Mac/Linux), WebGL
 - **Render Pipeline:** Universal Render Pipeline (URP)
 - **Input System:** New Unity Input System package
 - **Graphics API:** DirectX 11, OpenGL, Metal, Vulkan
@@ -311,10 +310,11 @@ Based on Unity 6 LTS documentation and industry standards:
 5. Test placement restrictions and grid behavior
 
 ### When Modifying Grid System:
-1. Always test in both GridScene.unity and MobileGridScene.unity
-2. Verify UIGridManager.InitGrid() behavior
-3. Check UICell placement and removal logic
+1. Always test in MobileGridScene.unity as the primary target platform
+2. Verify UIGridManager.InitGrid() behavior for mobile interface
+3. Check UICell placement and removal logic with touch controls
 4. Test save/load functionality with new grid configurations
+5. Ensure mobile performance optimization is maintained
 
 ### Performance Considerations:
 - Item movement uses smooth interpolation, check `itemMoveSpeed` in GameManager
