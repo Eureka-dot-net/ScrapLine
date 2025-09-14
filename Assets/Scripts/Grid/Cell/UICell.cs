@@ -85,6 +85,8 @@ public class UICell : MonoBehaviour
     // This method now receives all its state data from the GameManager
     public void SetCellType(CellType type, Direction direction, string machineDefId = null)
     {
+        Debug.Log($"SetCellType called for cell ({x},{y}): type={type}, direction={direction}, machineDefId={machineDefId}");
+        
         cellType = type;
         conveyorDirection = direction;
 
@@ -92,6 +94,7 @@ public class UICell : MonoBehaviour
         {
             case CellType.Blank:
                 // For blank cells, hide both border and inner images as requested
+                // This overrides any previous settings from SetCellRole
                 borderImage.enabled = false;
                 innerRawImage.enabled = false;
                 break;
@@ -164,13 +167,17 @@ public class UICell : MonoBehaviour
             case Direction.Left: zRot = -270f; break;
         }
 
+        Debug.Log($"SetConveyorRotation: dir={dir}, zRot={zRot} for cell ({x},{y})");
+
         if (innerRawImage != null)
         {
             innerRawImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
+            Debug.Log($"Applied rotation {zRot} to innerRawImage");
         }
         if (borderImage != null)
         {
             borderImage.rectTransform.localEulerAngles = new Vector3(0, 0, zRot);
+            Debug.Log($"Applied rotation {zRot} to borderImage");
         }
     }
 
