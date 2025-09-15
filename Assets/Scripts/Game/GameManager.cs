@@ -16,8 +16,13 @@ public class GameManager : MonoBehaviour
     // Movement settings
     public float itemMoveSpeed = 1f; // cells per second
     private int nextItemId = 1;
+    
+    // Item management settings
+    public float itemTimeoutOnBlankCells = 10f; // seconds items stay on blank cells before disappearing
+    public int maxItemsOnGrid = 100; // maximum items allowed on grid
+    public bool showItemLimitWarning = true; // whether to show warning when limit reached
 
-    private Direction lastConveyorDirection = Direction.Up;
+    private Direction lastMachineDirection = Direction.Up;
     
     // Machine placement state
     private MachineDef selectedMachine;
@@ -229,21 +234,25 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"Placing machine {machineDef.id} at ({cellData.x}, {cellData.y})");
         
-        // Clear any existing items in the cell
+        // Process any existing items in the cell by the new machine
         UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
-        if (activeGridManager != null)
+        if (activeGridManager != null && cellData.items.Count > 0)
         {
-            foreach (var item in cellData.items)
+            Debug.Log($"Processing {cellData.items.Count} existing items with new machine {machineDef.id}");
+            
+            // Create a copy of the items list to avoid modification during iteration
+            var itemsToProcess = new List<ItemData>(cellData.items);
+            
+            foreach (var item in itemsToProcess)
             {
-                activeGridManager.DestroyVisualItem(item.id);
+                ProcessItemAtMachine(item, cellData, machineDef);
             }
         }
-        cellData.items.Clear();
         
         // Set cell to machine type with the specific machine definition
         cellData.cellType = UICell.CellType.Machine;
         cellData.machineDefId = machineDef.id;
-        cellData.direction = UICell.Direction.Up; // Default direction
+        cellData.direction = lastMachineDirection; // Use last placed machine direction
 
         // Update visuals
         if (activeGridManager != null)
@@ -257,6 +266,9 @@ public class GameManager : MonoBehaviour
         // Rotate the machine's direction
         cellData.direction = (UICell.Direction)(((int)cellData.direction + 1) % 4);
         
+        // Store this as the last machine direction for future placements
+        lastMachineDirection = cellData.direction;
+        
         Debug.Log($"Rotating machine at ({cellData.x}, {cellData.y}) to direction: {cellData.direction}");
         
         // Update visuals
@@ -264,6 +276,110 @@ public class GameManager : MonoBehaviour
         if (activeGridManager != null)
         {
             activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
+        }
+    }
+
+    private void ProcessItemAtMachine(ItemData item, CellData cellData, MachineDef machineDef)
+    {
+        Debug.Log($"Processing item {item.id} at machine {machineDef.id}");
+        
+        // For now, implement basic machine processing:
+        // - Spawner: should not process items (items shouldn't be placed on spawners)
+        // - Seller: consume the item and remove it from grid
+        // - Conveyor and other machines: let item continue through normal flow
+        
+        if (machineDef.id == "seller")
+        {
+            Debug.Log($"Item {item.id} sold by seller machine");
+            cellData.items.Remove(item);
+            
+            UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+            if (activeGridManager != null)
+            {
+                activeGridManager.DestroyVisualItem(item.id);
+            }
+        }
+        else
+        {
+            Debug.Log($"Item {item.id} will continue through machine {machineDef.id} normally");
+            // For conveyors and other machines, items will be processed in the normal movement flow
+            // Reset item state since it's now on a machine
+            item.isOnBlankCell = false;
+            item.timeOnBlankCell = 0f;
+        }
+    }
+
+    private void HandleItemTimeoutAndLimits()
+    {
+        GridData gridData = activeGrids[0];
+        UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
+        if (gridManager == null) return;
+
+        // Count total items on grid and handle timeouts
+        int totalItems = 0;
+        List<ItemData> itemsToRemove = new List<ItemData>();
+        List<CellData> cellsWithItemsToRemove = new List<CellData>();
+
+        foreach (var cell in gridData.cells)
+        {
+            totalItems += cell.items.Count;
+
+            // Handle timeout for items on blank cells
+            for (int i = cell.items.Count - 1; i >= 0; i--)
+            {
+                ItemData item = cell.items[i];
+
+                // Update blank cell time tracking
+                if (cell.cellType == CellType.Blank)
+                {
+                    if (!item.isOnBlankCell)
+                    {
+                        // Item just arrived on blank cell
+                        item.isOnBlankCell = true;
+                        item.timeOnBlankCell = 0f;
+                        Debug.Log($"Item {item.id} arrived on blank cell at ({cell.x}, {cell.y})");
+                    }
+                    else
+                    {
+                        // Item has been on blank cell, update timer
+                        item.timeOnBlankCell += Time.deltaTime;
+
+                        if (item.timeOnBlankCell >= itemTimeoutOnBlankCells)
+                        {
+                            Debug.Log($"Item {item.id} timed out on blank cell after {item.timeOnBlankCell:F1} seconds");
+                            itemsToRemove.Add(item);
+                            cellsWithItemsToRemove.Add(cell);
+                        }
+                    }
+                }
+                else
+                {
+                    // Item is no longer on blank cell
+                    if (item.isOnBlankCell)
+                    {
+                        item.isOnBlankCell = false;
+                        item.timeOnBlankCell = 0f;
+                        Debug.Log($"Item {item.id} left blank cell and moved to machine {cell.machineDefId}");
+                    }
+                }
+            }
+        }
+
+        // Remove timed-out items
+        for (int i = 0; i < itemsToRemove.Count; i++)
+        {
+            var item = itemsToRemove[i];
+            var cell = cellsWithItemsToRemove[i];
+            
+            cell.items.Remove(item);
+            gridManager.DestroyVisualItem(item.id);
+        }
+
+        // Check grid item limit
+        if (totalItems >= maxItemsOnGrid && showItemLimitWarning)
+        {
+            Debug.LogWarning($"Grid item limit reached! {totalItems}/{maxItemsOnGrid} items. Consider adding more sellers or increasing the limit.");
+            // You could add UI notification here in the future
         }
     }
 
@@ -279,6 +395,23 @@ public class GameManager : MonoBehaviour
 
             // Find all spawner machines in our data model
             GridData gridData = activeGrids[0];
+            
+            // Check current item count before spawning
+            int currentItemCount = 0;
+            foreach (var cell in gridData.cells)
+            {
+                currentItemCount += cell.items.Count;
+            }
+            
+            if (currentItemCount >= maxItemsOnGrid)
+            {
+                if (showItemLimitWarning)
+                {
+                    Debug.LogWarning($"Cannot spawn new items: Grid limit reached ({currentItemCount}/{maxItemsOnGrid})");
+                }
+                return;
+            }
+            
             foreach (var cell in gridData.cells)
             {
                 if (cell.cellType == UICell.CellType.Machine && cell.machineDefId == "spawner")
@@ -287,12 +420,15 @@ public class GameManager : MonoBehaviour
                     if (cell.items.Count == 0)
                     {
                       //  didSpawn = true;
-                        // Spawn a new item if the cell is empty
+                        // Spawn a new item if the cell is empty (and grid limit allows)
                         SpawnItem(cell);
                     }
                 }
             }
         }
+
+        // Handle item timeout on blank cells and grid limits
+        HandleItemTimeoutAndLimits();
 
         // Handle item movement
         ProcessItemMovement();
@@ -369,7 +505,7 @@ public class GameManager : MonoBehaviour
         else if (targetCell.cellType == CellType.Machine)
         {
             // Moving to machine - will be processed
-            Debug.Log($"Item {item.id} moving to machine - will be processed");
+            Debug.Log($"Item {item.id} moving to machine {targetCell.machineDefId} - will be processed");
             // TODO: Process item at machine (crafting, upgrades, etc.)
 
             // After processing, determine next movement direction
@@ -387,27 +523,6 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                item.shouldStopAtTarget = true;
-            }
-        }
-        else if (targetCell.cellType == CellType.Machine && targetCell.machineDefId == "conveyor")
-        {
-            // Moving to conveyor - determine next movement based on conveyor direction
-            int nextX, nextY;
-            GetNextCellCoordinates(targetCell, out nextX, out nextY);
-            CellData nextCell = GetCellData(gridData, nextX, nextY);
-
-            if (nextCell != null)
-            {
-                // Queue up the next movement
-                item.queuedTargetX = nextX;
-                item.queuedTargetY = nextY;
-                item.hasQueuedMovement = true;
-                Debug.Log($"Item {item.id} will continue to ({nextX}, {nextY}) following conveyor");
-            }
-            else
-            {
-                Debug.Log($"Item {item.id} will stop at conveyor end");
                 item.shouldStopAtTarget = true;
             }
         }
@@ -440,6 +555,19 @@ public class GameManager : MonoBehaviour
         item.isMoving = false;
         item.moveProgress = 0f;
         targetCell.items.Add(item);
+
+        // Update blank cell tracking based on target cell type
+        if (targetCell.cellType == CellType.Blank)
+        {
+            item.isOnBlankCell = true;
+            item.timeOnBlankCell = 0f;
+            Debug.Log($"Item {item.id} moved to blank cell at ({targetCell.x}, {targetCell.y})");
+        }
+        else
+        {
+            item.isOnBlankCell = false;
+            item.timeOnBlankCell = 0f;
+        }
 
         // Update visual position to exact target
         gridManager.UpdateItemVisualPosition(item.id, 1f, sourceCell.x, sourceCell.y, item.targetX, item.targetY, sourceCell.direction);
@@ -527,7 +655,9 @@ public class GameManager : MonoBehaviour
             id = "item_" + nextItemId++,
             itemType = "Placeholder",
             isMoving = false,
-            moveProgress = 0f
+            moveProgress = 0f,
+            isOnBlankCell = false,
+            timeOnBlankCell = 0f
         };
 
         cellData.items.Add(newItem);

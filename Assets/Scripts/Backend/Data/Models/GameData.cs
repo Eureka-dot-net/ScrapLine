@@ -21,6 +21,10 @@ public class ItemData
     public bool hasQueuedMovement;
     public int queuedTargetX;
     public int queuedTargetY;
+    
+    // Timeout tracking for blank cells
+    public float timeOnBlankCell; // Time spent on current blank cell
+    public bool isOnBlankCell; // Whether item is currently on a blank cell
 }
 
 [System.Serializable]
