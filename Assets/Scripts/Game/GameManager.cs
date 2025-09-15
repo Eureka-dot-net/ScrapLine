@@ -628,6 +628,16 @@ public class GameManager : MonoBehaviour
                         }
                     }
                 }
+                else if (item.isProcessing)
+                {
+                    // Check if processing is complete
+                    float processingElapsed = Time.time - item.processingStartTime;
+                    if (processingElapsed >= item.processingDuration)
+                    {
+                        CompleteRecipeProcessing(item, cell, gridData, gridManager);
+                        i--; // Account for item being potentially removed/replaced
+                    }
+                }
                 else
                 {
                     if (cell.cellType != CellType.Blank && !item.shouldStopAtTarget /* && !item.hasStopped */)
@@ -737,35 +747,14 @@ public class GameManager : MonoBehaviour
                     float processTime = machineDef.baseProcessTime * recipe.processMultiplier;
                     Debug.Log($"Recipe processing time: {processTime}s (base: {machineDef.baseProcessTime}, multiplier: {recipe.processMultiplier})");
                     
-                    // For now, process immediately (TODO: implement timing/delays in future)
-                    // Remove input item (current item)
-                    Debug.Log($"Removing input item {item.id} ({item.itemType})");
-                    gridManager.DestroyVisualItem(item.id);
+                    // Start processing with timing delay
+                    item.isProcessing = true;
+                    item.processingStartTime = Time.time;
+                    item.processingDuration = processTime;
+                    item.processingMachineId = targetCell.machineDefId;
+                    item.isMoving = false; // Stop movement while processing
                     
-                    // Create output items
-                    foreach (var outputItem in recipe.outputItems)
-                    {
-                        for (int i = 0; i < outputItem.count; i++)
-                        {
-                            // Create new output item
-                            ItemData newItem = new ItemData
-                            {
-                                id = "item_" + nextItemId++,
-                                itemType = outputItem.item,
-                                isMoving = false,
-                                moveProgress = 0f,
-                                isOnBlankCell = false,
-                                timeOnBlankCell = 0f
-                            };
-                            
-                            targetCell.items.Add(newItem);
-                            
-                            // Create visual representation
-                            gridManager.CreateVisualItem(newItem.id, targetCell.x, targetCell.y);
-                            
-                            Debug.Log($"Created output item {newItem.id} ({outputItem.item}) at ({targetCell.x}, {targetCell.y})");
-                        }
-                    }
+                    Debug.Log($"Started processing item {item.id} ({item.itemType}) - will complete in {processTime}s");
                     
                     return; // Don't continue with normal item movement processing
                 }
@@ -896,7 +885,11 @@ public class GameManager : MonoBehaviour
             isMoving = false,
             moveProgress = 0f,
             isOnBlankCell = false,
-            timeOnBlankCell = 0f
+            timeOnBlankCell = 0f,
+            isProcessing = false,
+            processingStartTime = 0f,
+            processingDuration = 0f,
+            processingMachineId = ""
         };
 
         cellData.items.Add(newItem);
@@ -905,7 +898,55 @@ public class GameManager : MonoBehaviour
         UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
-            gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y);
+            gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
+        }
+    }
+
+    private void CompleteRecipeProcessing(ItemData item, CellData cell, GridData gridData, UIGridManager gridManager)
+    {
+        Debug.Log($"Completing processing for item {item.id} ({item.itemType}) after {item.processingDuration}s");
+        
+        // Look up the recipe again to get output items
+        RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(item.processingMachineId, item.itemType);
+        if (recipe != null)
+        {
+            // Remove input item (current item)
+            Debug.Log($"Removing input item {item.id} ({item.itemType})");
+            cell.items.Remove(item);
+            gridManager.DestroyVisualItem(item.id);
+            
+            // Create output items
+            foreach (var outputItem in recipe.outputItems)
+            {
+                for (int i = 0; i < outputItem.count; i++)
+                {
+                    // Create new output item
+                    ItemData newItem = new ItemData
+                    {
+                        id = "item_" + nextItemId++,
+                        itemType = outputItem.item,
+                        isMoving = false,
+                        moveProgress = 0f,
+                        isOnBlankCell = false,
+                        timeOnBlankCell = 0f,
+                        isProcessing = false,
+                        processingStartTime = 0f,
+                        processingDuration = 0f,
+                        processingMachineId = ""
+                    };
+                    
+                    cell.items.Add(newItem);
+                    
+                    // Create visual representation
+                    gridManager.CreateVisualItem(newItem.id, cell.x, cell.y, newItem.itemType);
+                    
+                    Debug.Log($"Created output item {newItem.id} ({outputItem.item}) at ({cell.x}, {cell.y})");
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError($"Recipe not found when completing processing for machine {item.processingMachineId} with item {item.itemType}");
         }
     }
 
@@ -1024,7 +1065,7 @@ public class GameManager : MonoBehaviour
             {
                 foreach (var item in cell.items)
                 {
-                    activeGridManager.CreateVisualItem(item.id, cell.x, cell.y);
+                    activeGridManager.CreateVisualItem(item.id, cell.x, cell.y, item.itemType);
                 }
             }
         }
