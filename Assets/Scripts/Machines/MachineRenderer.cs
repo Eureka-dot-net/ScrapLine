@@ -7,18 +7,32 @@ public class MachineRenderer : MonoBehaviour
     [Header("Context")]
     public bool isInMenu = false; // Set to true when used in UI panels to disable materials
 
-    public void Setup(MachineDef def, UICell.Direction cellDirection = UICell.Direction.Up)
-    {
-        foreach (Transform child in transform) Destroy(child.gameObject);
+    // Separate rendering: building sprites in dedicated container
+    private UIGridManager gridManager;
+    private int cellX, cellY;
+    private GameObject buildingSprite; // Track building sprite separately
 
-        Debug.Log("Creating machine with sprites: " +
+    public void Setup(MachineDef def, UICell.Direction cellDirection = UICell.Direction.Up, UIGridManager gridManager = null, int cellX = 0, int cellY = 0)
+    {
+        this.gridManager = gridManager;
+        this.cellX = cellX;
+        this.cellY = cellY;
+        
+        foreach (Transform child in transform) Destroy(child.gameObject);
+        
+        // Clean up any existing building sprite in separate container
+        if (buildingSprite != null)
+        {
+            Destroy(buildingSprite);
+            buildingSprite = null;
+        }
+
+        Debug.Log("Creating machine with separated rendering: " +
                   $"Main='{def.sprite}', Border='{def.borderSprite}', " +
                   $"MovingPart='{def.movingPartSprite}', Building='{def.buildingSprite}'" +
                   $" BorderColor='{def.borderColor}', IsInMenu={isInMenu}");
 
-        // Create images in back-to-front order (first created = background)
-
-
+        // Solution 1: Create border and moving parts in this renderer (will be in BordersContainer layer)
         if (!string.IsNullOrEmpty(def.movingPartSprite))
         {
             var movingPart = CreateImageChild("MovingPart", def.movingPartSprite);
@@ -62,20 +76,25 @@ public class MachineRenderer : MonoBehaviour
                     Debug.LogWarning($"Failed to parse border color '{def.borderColor}' for machine '{def.id}'");
                 }
             }
-            border.transform.SetSiblingIndex(1); // Ensure it's in back
-
+            border.transform.SetSiblingIndex(1);
         }
 
         CreateItemSpawnPoint();
 
-        if (!string.IsNullOrEmpty(def.buildingSprite))
+        // Solution 1: Create building sprite in separate BuildingsContainer (unless in menu)
+        if (!string.IsNullOrEmpty(def.buildingSprite) && !isInMenu && gridManager != null)
         {
+            CreateSeparatedBuildingSprite(def, cellDirection);
+        }
+        else if (!string.IsNullOrEmpty(def.buildingSprite) && isInMenu)
+        {
+            // For menu context, keep building sprites in local renderer
             var building = CreateImageChild("Building", def.buildingSprite);
             building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
             building.transform.SetSiblingIndex(3);
         }
 
-        // 4. If there's a main sprite, create it on top
+        // Main sprite stays in local renderer if needed
         if (!string.IsNullOrEmpty(def.sprite))
         {
             var mainSprite = CreateImageChild("Main", def.sprite);
@@ -85,8 +104,52 @@ public class MachineRenderer : MonoBehaviour
         // Apply cell direction rotation to entire renderer
         float cellRotation = GetCellDirectionRotation(cellDirection);
         transform.rotation = Quaternion.Euler(0, 0, cellRotation);
-
-        // Create spawn point for items between border and building
+    }
+    
+    private void CreateSeparatedBuildingSprite(MachineDef def, UICell.Direction cellDirection)
+    {
+        RectTransform buildingsContainer = gridManager.GetBuildingsContainer();
+        if (buildingsContainer == null)
+        {
+            Debug.LogWarning("BuildingsContainer not found, falling back to local building sprite");
+            var building = CreateImageChild("Building", def.buildingSprite);
+            building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
+            building.transform.SetSiblingIndex(3);
+            return;
+        }
+        
+        // Create building sprite in separate container
+        buildingSprite = new GameObject($"Building_{cellX}_{cellY}");
+        buildingSprite.transform.SetParent(buildingsContainer, false);
+        
+        Image buildingImage = buildingSprite.AddComponent<Image>();
+        string spritePath = "Sprites/Machines/" + def.buildingSprite;
+        buildingImage.sprite = Resources.Load<Sprite>(spritePath);
+        
+        if (buildingImage.sprite == null)
+        {
+            Debug.LogWarning($"Building sprite not found! Tried to load: {spritePath}");
+            buildingImage.color = Color.blue; // Fallback color
+        }
+        else
+        {
+            Debug.Log($"Successfully loaded building sprite: {spritePath}");
+            buildingImage.color = Color.white;
+        }
+        
+        // Position and size the building sprite to match this cell
+        RectTransform buildingRT = buildingSprite.GetComponent<RectTransform>();
+        Vector3 cellPosition = gridManager.GetCellWorldPosition(cellX, cellY);
+        Vector2 cellSize = gridManager.GetCellSize();
+        
+        buildingRT.position = cellPosition;
+        buildingRT.sizeDelta = cellSize;
+        
+        // Apply rotations: building direction + cell direction
+        float totalRotation = def.buildingDirection + GetCellDirectionRotation(cellDirection);
+        buildingRT.rotation = Quaternion.Euler(0, 0, totalRotation);
+        
+        Debug.Log($"Created separated building sprite for cell ({cellX}, {cellY}) in BuildingsContainer");
     }
 
     private void CreateItemSpawnPoint()
@@ -145,6 +208,16 @@ public class MachineRenderer : MonoBehaviour
         rt.sizeDelta = Vector2.zero;
 
         return img;
+    }
+
+    void OnDestroy()
+    {
+        // Clean up separated building sprite when this renderer is destroyed
+        if (buildingSprite != null)
+        {
+            Destroy(buildingSprite);
+            buildingSprite = null;
+        }
     }
 
     private float GetCellDirectionRotation(UICell.Direction direction)

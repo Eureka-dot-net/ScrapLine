@@ -357,7 +357,16 @@ public class GameManager : MonoBehaviour
         // Set cell to machine type with the specific machine definition
         cellData.cellType = UICell.CellType.Machine;
         cellData.machineDefId = machineDef.id;
-        cellData.direction = lastMachineDirection; // Use last placed machine direction
+        
+        // Set direction based on whether the machine can be rotated
+        if (machineDef.canRotate)
+        {
+            cellData.direction = lastMachineDirection; // Use last placed machine direction
+        }
+        else
+        {
+            cellData.direction = Direction.Up; // Default to "up" for non-rotatable machines
+        }
 
         // Update visuals
         if (activeGridManager != null)
@@ -368,6 +377,21 @@ public class GameManager : MonoBehaviour
 
     private void RotateMachine(CellData cellData)
     {
+        // Get the machine definition to check if it can be rotated
+        MachineDef machineDef = FactoryRegistry.Instance.Machines.GetValueOrDefault(cellData.machineDefId);
+        if (machineDef == null)
+        {
+            Debug.LogError($"Cannot find machine definition for {cellData.machineDefId}");
+            return;
+        }
+        
+        // Check if this machine can be rotated
+        if (!machineDef.canRotate)
+        {
+            Debug.Log($"Machine {machineDef.id} cannot be rotated (canRotate = false)");
+            return;
+        }
+        
         // Rotate the machine's direction
         cellData.direction = (UICell.Direction)(((int)cellData.direction + 1) % 4);
         

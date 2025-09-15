@@ -10,20 +10,14 @@
             "buildingSprite": "",
             "movingPartMaterial": "",
             "buildingDirection": 0,
-            "parentChangeThresholds": {
-                "down": 0.5,
-                "right": 0.5,
-                "up": 0.5,
-                "left": 0.5,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "grid"
             ],
             "maxNumber": -1,
             "displayInPanel": false,
-            "cost": 0
+            "cost": 0,
+            "canRotate": false
         },
         {
             "id": "blank_top",
@@ -36,20 +30,14 @@
             "movingPartMaterial": "",
             "buildingDirection": 0,
             "borderColor": "#FFAAAA",
-            "parentChangeThresholds": {
-                "down": 0.5,
-                "right": 0.5,
-                "up": 0.5,
-                "left": 0.5,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "top"
             ],
             "maxNumber": -1,
             "displayInPanel": false,
-            "cost": 0
+            "cost": 0,
+            "canRotate": false
         },
         {
             "id": "blank_bottom",
@@ -62,20 +50,14 @@
             "movingPartMaterial": "",
             "buildingDirection": 0,
             "borderColor": "#AAFFAA",
-            "parentChangeThresholds": {
-                "down": 0.5,
-                "right": 0.5,
-                "up": 0.5,
-                "left": 0.5,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "bottom"
             ],
             "maxNumber": -1,
             "displayInPanel": false,
-            "cost": 0
+            "cost": 0,
+            "canRotate": false
         },
         {
             "id": "conveyor",
@@ -87,20 +69,14 @@
             "buildingSprite": null,
             "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 0,
-            "parentChangeThresholds": {
-                "down": 0.3,
-                "right": 0.3,
-                "up": 0.7,
-                "left": 0.7,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "grid"
             ],
             "maxNumber": -1,
             "displayInPanel": true,
-            "cost": 20
+            "cost": 20,
+            "canRotate": true
         },
         {
             "id": "spawner",
@@ -141,7 +117,8 @@
                 }
             ],
             "displayInPanel": true,
-            "cost": 50
+            "cost": 50,
+            "canRotate": false
         },
         {
             "id": "seller",
@@ -153,20 +130,14 @@
             "buildingSprite": "Machine_border",
             "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 180,
-            "parentChangeThresholds": {
-                "down": 0.3,
-                "right": 0.3,
-                "up": 0.7,
-                "left": 0.7,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "top"
             ],
             "maxNumber": 1,
             "displayInPanel": true,
-            "cost": 50
+            "cost": 50,
+            "canRotate": false
         },
         {
             "id": "shredder",
@@ -206,14 +177,9 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "processAdjustment": 1,
-            "parentChangeThresholds": {
-                "down": 0.7,
-                "right": 0.7,
-                "up": 0.3,
-                "left": 0.3
-            },
             "displayInPanel": true,
-            "cost": 75
+            "cost": 75,
+            "canRotate": true
         }
     ]
 }
