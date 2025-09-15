@@ -6,7 +6,7 @@ public class MachineRenderer : MonoBehaviour
 {
     [Header("Context")]
     public bool isInMenu = false; // Set to true when used in UI panels to disable materials
-    
+
     public void Setup(MachineDef def, UICell.Direction cellDirection = UICell.Direction.Up)
     {
         foreach (Transform child in transform) Destroy(child.gameObject);
@@ -47,7 +47,7 @@ public class MachineRenderer : MonoBehaviour
         if (!string.IsNullOrEmpty(def.borderSprite))
         {
             var border = CreateImageChild("Border", def.borderSprite);
-            
+
             // Apply border color tinting if specified
             if (!string.IsNullOrEmpty(def.borderColor))
             {
@@ -62,9 +62,11 @@ public class MachineRenderer : MonoBehaviour
                     Debug.LogWarning($"Failed to parse border color '{def.borderColor}' for machine '{def.id}'");
                 }
             }
-            
             border.transform.SetSiblingIndex(1); // Ensure it's in back
+
         }
+
+        CreateItemSpawnPoint();
 
         if (!string.IsNullOrEmpty(def.buildingSprite))
         {
@@ -85,7 +87,6 @@ public class MachineRenderer : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, 0, cellRotation);
 
         // Create spawn point for items between border and building
-        CreateItemSpawnPoint();
     }
 
     private void CreateItemSpawnPoint()
@@ -93,18 +94,18 @@ public class MachineRenderer : MonoBehaviour
         // Create spawn point GameObject as a child of this MachineRenderer
         GameObject spawnPointObj = new GameObject("ItemSpawnPoint");
         spawnPointObj.transform.SetParent(this.transform, false);
-        
+
         RectTransform spawnPointRT = spawnPointObj.AddComponent<RectTransform>();
-        
+
         // Position it in the center, between border and building layers
         spawnPointRT.anchorMin = new Vector2(0.5f, 0.5f);
         spawnPointRT.anchorMax = new Vector2(0.5f, 0.5f);
         spawnPointRT.anchoredPosition = Vector2.zero;
         spawnPointRT.sizeDelta = Vector2.zero;
-        
+
         // Set the sibling index to be between border (1) and building (3)
         spawnPointObj.transform.SetSiblingIndex(2);
-        
+
         Debug.Log("Created item spawn point for machine");
     }
 
