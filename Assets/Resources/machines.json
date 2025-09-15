@@ -171,7 +171,11 @@
         {
             "id": "shredder",
             "type": "Shredder",
-            "sprite": "shredder",
+            "sprite": "",
+            "movingPartSprite": "conveyor_moving",
+            "borderSprite": "",
+            "buildingSprite": "Machine_border",
+            "movingPartMaterial": "ConveyorSharedMat",
             "baseProcessTime": 5,
             "upgradeMultipliers": [
                 {
@@ -203,10 +207,10 @@
             "upgradeMaxNumbers": [],
             "processAdjustment": 1,
             "parentChangeThresholds": {
-                "down": 0.3,
-                "right": 0.3,
-                "up": 0.7,
-                "left": 0.7
+                "down": 0.7,
+                "right": 0.7,
+                "up": 0.3,
+                "left": 0.3
             },
             "displayInPanel": true,
             "cost": 75
