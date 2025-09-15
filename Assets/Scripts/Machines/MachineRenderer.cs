@@ -47,16 +47,16 @@ public class MachineRenderer : MonoBehaviour
                     movingPart.material = mat;
                     Debug.Log($"Successfully applied material '{movingPartMatPath}' to MovingPart for machine '{def.id}'");
                     
-                    // Log if material has any TextureScroller component
-                    var textureScroller = movingPart.GetComponent<TextureScroller>();
-                    if (textureScroller != null)
+                    // Add UITextureScroller component for UI Image material animation
+                    var uiTextureScroller = movingPart.GetComponent<UITextureScroller>();
+                    if (uiTextureScroller != null)
                     {
-                        Debug.Log($"TextureScroller component found on MovingPart for machine '{def.id}'");
+                        Debug.Log($"UITextureScroller component found on MovingPart for machine '{def.id}'");
                     }
                     else
                     {
-                        Debug.Log($"No TextureScroller component found on MovingPart for machine '{def.id}' - adding one");
-                        movingPart.gameObject.AddComponent<TextureScroller>();
+                        Debug.Log($"No UITextureScroller component found on MovingPart for machine '{def.id}' - adding one");
+                        movingPart.gameObject.AddComponent<UITextureScroller>();
                     }
                 }
                 else
@@ -69,7 +69,7 @@ public class MachineRenderer : MonoBehaviour
                     {
                         movingPart.material = altMat;
                         Debug.Log($"Successfully applied alternative material '{altPath}' to MovingPart for machine '{def.id}'");
-                        movingPart.gameObject.AddComponent<TextureScroller>();
+                        movingPart.gameObject.AddComponent<UITextureScroller>();
                     }
                     else
                     {
@@ -127,9 +127,18 @@ public class MachineRenderer : MonoBehaviour
             mainSprite.transform.SetSiblingIndex(4);
         }
 
-        // Apply cell direction rotation to entire renderer
-        float cellRotation = GetCellDirectionRotation(cellDirection);
-        transform.rotation = Quaternion.Euler(0, 0, cellRotation);
+        // Apply cell direction rotation to entire renderer (only if ConveyorBelt isn't handling it)
+        ConveyorBelt existingBelt = GetComponentInParent<ConveyorBelt>();
+        if (existingBelt == null)
+        {
+            float cellRotation = GetCellDirectionRotation(cellDirection);
+            transform.rotation = Quaternion.Euler(0, 0, cellRotation);
+            Debug.Log($"MachineRenderer applying rotation {cellRotation} for cell direction {cellDirection}");
+        }
+        else
+        {
+            Debug.Log($"ConveyorBelt component found in parent - skipping MachineRenderer rotation for {def.id}");
+        }
     }
     
     private void CreateSeparatedBuildingSprite(MachineDef def, UICell.Direction cellDirection)

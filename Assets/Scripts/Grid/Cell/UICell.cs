@@ -111,10 +111,34 @@ public class UICell : MonoBehaviour
         rendererRT.offsetMin = Vector2.zero;
         rendererRT.offsetMax = Vector2.zero;
         
+        // Add ConveyorBelt component if this machine has moving parts that need animation
+        if (!string.IsNullOrEmpty(def.movingPartMaterial) && !string.IsNullOrEmpty(def.movingPartSprite))
+        {
+            ConveyorBelt conveyorBelt = rendererObj.AddComponent<ConveyorBelt>();
+            
+            // Set the conveyor direction based on UICell direction
+            float cellRotation = GetCellDirectionRotation(direction);
+            rendererObj.transform.rotation = Quaternion.Euler(0, 0, cellRotation);
+            
+            Debug.Log($"Added ConveyorBelt component to machine '{def.id}' at cell ({x}, {y}) with rotation {cellRotation}");
+        }
+        
         machineRenderer = rendererObj.AddComponent<MachineRenderer>();
         machineRenderer.Setup(def, direction, gridManager, x, y);
         
         Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
+    }
+    
+    private float GetCellDirectionRotation(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Up: return 0f;
+            case Direction.Right: return -90f;
+            case Direction.Down: return -180f;
+            case Direction.Left: return -270f;
+            default: return 0f;
+        }
     }
 
     void OnCellClicked()
