@@ -65,9 +65,22 @@ public class UICell : MonoBehaviour
         string defIdToUse = machineDefId;
         if (type == CellType.Blank)
         {
-            // ALL blank cells use the "blank" machine definition
-            defIdToUse = "blank";
-            Debug.Log($"Cell ({x}, {y}) is blank type - using 'blank' machine definition");
+            // Use different blank machine definitions based on cell role
+            switch (cellRole)
+            {
+                case CellRole.Top:
+                    defIdToUse = "blank_top";
+                    Debug.Log($"Cell ({x}, {y}) is blank type with Top role - using 'blank_top' machine definition");
+                    break;
+                case CellRole.Bottom:
+                    defIdToUse = "blank_bottom";
+                    Debug.Log($"Cell ({x}, {y}) is blank type with Bottom role - using 'blank_bottom' machine definition");
+                    break;
+                default:
+                    defIdToUse = "blank";
+                    Debug.Log($"Cell ({x}, {y}) is blank type with Grid role - using 'blank' machine definition");
+                    break;
+            }
         }
 
         // Create MachineRenderer for ALL cell types (including blanks)
