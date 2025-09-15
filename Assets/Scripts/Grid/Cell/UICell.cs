@@ -112,7 +112,7 @@ public class UICell : MonoBehaviour
         rendererRT.offsetMax = Vector2.zero;
         
         machineRenderer = rendererObj.AddComponent<MachineRenderer>();
-        machineRenderer.Setup(def, direction);
+        machineRenderer.Setup(def, direction, gridManager, x, y);
         
         Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
     }

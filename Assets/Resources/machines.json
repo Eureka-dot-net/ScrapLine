@@ -10,13 +10,6 @@
             "buildingSprite": "",
             "movingPartMaterial": "",
             "buildingDirection": 0,
-            "parentChangeThresholds": {
-                "down": 0.5,
-                "right": 0.5,
-                "up": 0.5,
-                "left": 0.5,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "grid"
@@ -36,13 +29,6 @@
             "movingPartMaterial": "",
             "buildingDirection": 0,
             "borderColor": "#FFAAAA",
-            "parentChangeThresholds": {
-                "down": 0.5,
-                "right": 0.5,
-                "up": 0.5,
-                "left": 0.5,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "top"
@@ -62,13 +48,6 @@
             "movingPartMaterial": "",
             "buildingDirection": 0,
             "borderColor": "#AAFFAA",
-            "parentChangeThresholds": {
-                "down": 0.5,
-                "right": 0.5,
-                "up": 0.5,
-                "left": 0.5,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "bottom"
@@ -87,13 +66,6 @@
             "buildingSprite": null,
             "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 0,
-            "parentChangeThresholds": {
-                "down": 0.3,
-                "right": 0.3,
-                "up": 0.7,
-                "left": 0.7,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "grid"
@@ -153,13 +125,6 @@
             "buildingSprite": "Machine_border",
             "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 180,
-            "parentChangeThresholds": {
-                "down": 0.3,
-                "right": 0.3,
-                "up": 0.7,
-                "left": 0.7,
-                "default": 0.5
-            },
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "top"
@@ -206,12 +171,6 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "processAdjustment": 1,
-            "parentChangeThresholds": {
-                "down": 0.7,
-                "right": 0.7,
-                "up": 0.3,
-                "left": 0.3
-            },
             "displayInPanel": true,
             "cost": 75
         }

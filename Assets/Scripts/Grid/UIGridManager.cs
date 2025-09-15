@@ -16,6 +16,10 @@ public class UIGridManager : MonoBehaviour
     
     // Track visual items by ID
     private Dictionary<string, GameObject> visualItems = new Dictionary<string, GameObject>();
+    
+    // Separate rendering layers for Solution 1
+    private RectTransform bordersContainer;
+    private RectTransform buildingsContainer;
 
     void Start()
     {
@@ -44,6 +48,9 @@ public class UIGridManager : MonoBehaviour
     {
         Debug.Log("UIGridManager InitGrid() called.");
         this.gridData = data;
+
+        // Create separate rendering layers for Solution 1
+        CreateRenderingLayers();
 
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
         if (layout != null)
@@ -109,6 +116,59 @@ public class UIGridManager : MonoBehaviour
         {
             movingItemsContainer.SetAsLastSibling();
         }
+    }
+
+    private void CreateRenderingLayers()
+    {
+        // Get the parent container (should be the same parent as gridPanel)
+        Transform parentContainer = gridPanel.parent;
+        
+        // Clean up existing rendering layers if they exist
+        if (bordersContainer != null)
+        {
+            DestroyImmediate(bordersContainer.gameObject);
+        }
+        if (buildingsContainer != null)
+        {
+            DestroyImmediate(buildingsContainer.gameObject);
+        }
+
+        // Create BordersContainer (index 0) - for border sprites and moving parts
+        GameObject bordersObj = new GameObject("BordersContainer");
+        bordersObj.transform.SetParent(parentContainer, false);
+        bordersContainer = bordersObj.AddComponent<RectTransform>();
+        
+        // Make it fill the same area as gridPanel
+        bordersContainer.anchorMin = gridPanel.anchorMin;
+        bordersContainer.anchorMax = gridPanel.anchorMax;
+        bordersContainer.offsetMin = gridPanel.offsetMin;
+        bordersContainer.offsetMax = gridPanel.offsetMax;
+        bordersContainer.anchoredPosition = gridPanel.anchoredPosition;
+        bordersContainer.sizeDelta = gridPanel.sizeDelta;
+        
+        // Set as first sibling (index 0)
+        bordersObj.transform.SetSiblingIndex(0);
+        
+        // Ensure gridPanel is at index 1 
+        gridPanel.SetSiblingIndex(1);
+        
+        // Create BuildingsContainer (index 2) - for building sprites
+        GameObject buildingsObj = new GameObject("BuildingsContainer");
+        buildingsObj.transform.SetParent(parentContainer, false);
+        buildingsContainer = buildingsObj.AddComponent<RectTransform>();
+        
+        // Make it fill the same area as gridPanel
+        buildingsContainer.anchorMin = gridPanel.anchorMin;
+        buildingsContainer.anchorMax = gridPanel.anchorMax;
+        buildingsContainer.offsetMin = gridPanel.offsetMin;
+        buildingsContainer.offsetMax = gridPanel.offsetMax;
+        buildingsContainer.anchoredPosition = gridPanel.anchoredPosition;
+        buildingsContainer.sizeDelta = gridPanel.sizeDelta;
+        
+        // Set as last sibling (index 2)
+        buildingsObj.transform.SetSiblingIndex(2);
+        
+        Debug.Log("Created separate rendering layers: BordersContainer (0), GridPanel (1), BuildingsContainer (2)");
     }
 
 
@@ -321,75 +381,32 @@ public class UIGridManager : MonoBehaviour
         Vector3 currentPos = Vector3.Lerp(startPos, endPos, progress);
         item.transform.position = currentPos;
 
-        // Handle parent changes for proper rendering order based on movement direction
-        CellData endCellData = GetCellData(endX, endY);
-        bool shouldChangeParent = ShouldChangeParent(progress, movementDirection, endCellData?.machineDefId);
-        RectTransform currentParent = item.transform.parent as RectTransform;
-        RectTransform targetParent = shouldChangeParent ? endSpawnPoint : startSpawnPoint;
-        Debug.Log($"Item {itemId} progress: {progress}, shouldChangeParent: {shouldChangeParent}, currentParent: {currentParent?.name}, targetParent: {targetParent?.name}");
-        if (currentParent != targetParent)
-        {
-            item.transform.SetParent(targetParent, true);
-        }
+        // Solution 1: Items always stay in grid hierarchy - no more parent switching!
+        // The separate rendering layers ensure proper visual order without complex parent handovers
+        Debug.Log($"Item {itemId} progress: {progress} - staying in grid hierarchy for consistent rendering");
     }
 
-    private bool ShouldChangeParent(float progress, UICell.Direction movementDirection, string machineDefId)
+    // Accessor methods for separate rendering containers
+    public RectTransform GetBordersContainer()
     {
-        // Get machine-specific parent change thresholds
-        float threshold = 0.5f; // Default fallback
-        
-        if (!string.IsNullOrEmpty(machineDefId))
-        {
-            var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
-            if (machineDef?.parentChangeThresholds != null)
-            {
-                // Use machine-specific thresholds based on movement direction
-                switch (movementDirection)
-                {
-                    case UICell.Direction.Down:
-                        threshold = machineDef.parentChangeThresholds.down;
-                        break;
-                    case UICell.Direction.Right:
-                        threshold = machineDef.parentChangeThresholds.right;
-                        break;
-                    case UICell.Direction.Up:
-                        threshold = machineDef.parentChangeThresholds.up;
-                        break;
-                    case UICell.Direction.Left:
-                        threshold = machineDef.parentChangeThresholds.left;
-                        break;
-                    default:
-                        threshold = machineDef.parentChangeThresholds.@default;
-                        break;
-                }
-            }
-            else
-            {
-                // Fallback to old hardcoded logic for machines without thresholds
-                if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right)
-                {
-                    threshold = 0.3f;
-                }
-                else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
-                {
-                    threshold = 0.7f;
-                }
-            }
-        }
-        else
-        {
-            // Fallback for cells without machine definitions (like conveyors)
-            if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right)
-            {
-                threshold = 0.3f;
-            }
-            else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
-            {
-                threshold = 0.7f;
-            }
-        }
-        
-        return progress >= threshold;
+        return bordersContainer;
+    }
+    
+    public RectTransform GetBuildingsContainer()
+    {
+        return buildingsContainer;
+    }
+    
+    public Vector2 GetCellSize()
+    {
+        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
+        return layout != null ? layout.cellSize : Vector2.zero;
+    }
+    
+    public Vector3 GetCellWorldPosition(int x, int y)
+    {
+        UICell cell = GetCell(x, y);
+        return cell != null ? cell.transform.position : Vector3.zero;
     }
 
     public CellData GetCellData(int x, int y)
