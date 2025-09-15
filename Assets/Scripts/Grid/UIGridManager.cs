@@ -288,6 +288,11 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
+    public bool HasVisualItem(string itemId)
+    {
+        return visualItems.TryGetValue(itemId, out GameObject item) && item != null;
+    }
+
     public void UpdateItemVisualPosition(string itemId, float progress, int startX, int startY, int endX, int endY, UICell.Direction movementDirection)
     {
         if (!visualItems.TryGetValue(itemId, out GameObject item) || item == null)

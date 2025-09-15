@@ -291,6 +291,12 @@ public class GameManager : MonoBehaviour
         if (machineDef.id == "seller")
         {
             Debug.Log($"Item {item.id} sold by seller machine");
+            
+            // Stop any movement immediately to prevent visual updates after destruction
+            item.isMoving = false;
+            item.shouldStopAtTarget = true;
+            item.hasQueuedMovement = false;
+            
             cellData.items.Remove(item);
             
             UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
@@ -306,6 +312,15 @@ public class GameManager : MonoBehaviour
             // Reset item state since it's now on a machine
             item.isOnBlankCell = false;
             item.timeOnBlankCell = 0f;
+            
+            // If item was moving, stop it so it can be processed by the new machine
+            if (item.isMoving)
+            {
+                item.isMoving = false;
+                item.shouldStopAtTarget = true;
+                item.hasQueuedMovement = false;
+                Debug.Log($"Stopped moving item {item.id} to be processed by new machine {machineDef.id}");
+            }
         }
     }
 
@@ -467,7 +482,11 @@ public class GameManager : MonoBehaviour
                         }
 
                         // Update visual position with proper parent handover timing
-                        gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                        // Only update if the visual item still exists (might have been destroyed by machine processing)
+                        if (gridManager.HasVisualItem(item.id))
+                        {
+                            gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                        }
                     }
                 }
                 else
