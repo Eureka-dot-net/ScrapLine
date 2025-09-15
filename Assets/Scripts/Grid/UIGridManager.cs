@@ -350,7 +350,7 @@ public class UIGridManager : MonoBehaviour
     private void SetItemSprite(GameObject itemObject, string itemType)
     {
         // Try to load sprite for the item type
-        string spritePath = $"Sprites/Scrap/{itemType}";
+        string spritePath = $"Sprites/Items/{itemType}";
         Sprite itemSprite = Resources.Load<Sprite>(spritePath);
         
         // Get the Image component on the item
