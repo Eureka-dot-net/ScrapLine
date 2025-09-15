@@ -1,6 +1,6 @@
 {
   "items": [
-    { "id": "can", "displayName": "Aluminum Can", "sprite": "can" },
-    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shredded_aluminum" }
+    { "id": "can", "displayName": "Aluminum Can", "sprite": "can", "sellValue": 5 },
+    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shredded_aluminum", "sellValue": 15 }
   ]
 }

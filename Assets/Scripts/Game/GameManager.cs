@@ -22,6 +22,12 @@ public class GameManager : MonoBehaviour
     public int maxItemsOnGrid = 100; // maximum items allowed on grid
     public bool showItemLimitWarning = true; // whether to show warning when limit reached
 
+    // Credits system
+    [Header("Credits System")]
+    [Tooltip("Starting credits amount for new games")]
+    public int startingCredits = 150; // Enough for 1 spawner (50) + 5 conveyors (20 each) + 1 seller (50)
+    private int currentCredits = 0;
+
     private Direction lastMachineDirection = Direction.Up;
     
     // Machine placement state
@@ -71,6 +77,11 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("No save file found. Creating a new default grid.");
+            
+            // Initialize starting credits for new game
+            currentCredits = startingCredits;
+            Debug.Log($"New game started with {currentCredits} credits");
+            
             GridData defaultGrid = new GridData();
             defaultGrid.width = 5;
             defaultGrid.height = 7;
@@ -103,6 +114,68 @@ public class GameManager : MonoBehaviour
         {
             gridManager.InitGrid(activeGrids[0]);
         }
+        
+        // Initialize credits display
+        Credits.RefreshDisplay();
+    }
+
+    // === CREDITS SYSTEM METHODS ===
+    
+    /// <summary>
+    /// Get current credits amount
+    /// </summary>
+    /// <returns>Current credits</returns>
+    public int GetCredits()
+    {
+        return currentCredits;
+    }
+    
+    /// <summary>
+    /// Add credits (e.g., when selling items)
+    /// </summary>
+    /// <param name="amount">Amount to add</param>
+    public void AddCredits(int amount)
+    {
+        currentCredits += amount;
+        Debug.Log($"Added {amount} credits. Total: {currentCredits}");
+        Credits.RefreshDisplay();
+        
+        // Update machine bar to enable/disable buttons based on new credits
+        machineBarManager?.UpdateAffordability();
+    }
+    
+    /// <summary>
+    /// Try to spend credits (e.g., when placing machines)
+    /// </summary>
+    /// <param name="amount">Amount to spend</param>
+    /// <returns>True if successful, false if insufficient credits</returns>
+    public bool TrySpendCredits(int amount)
+    {
+        if (currentCredits >= amount)
+        {
+            currentCredits -= amount;
+            Debug.Log($"Spent {amount} credits. Remaining: {currentCredits}");
+            Credits.RefreshDisplay();
+            
+            // Update machine bar to enable/disable buttons based on new credits
+            machineBarManager?.UpdateAffordability();
+            return true;
+        }
+        else
+        {
+            Debug.LogWarning($"Insufficient credits! Need {amount}, have {currentCredits}");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Check if player can afford a specific amount
+    /// </summary>
+    /// <param name="amount">Amount to check</param>
+    /// <returns>True if affordable</returns>
+    public bool CanAfford(int amount)
+    {
+        return currentCredits >= amount;
     }
 
     public void SetSelectedMachine(MachineDef machine)
@@ -137,10 +210,19 @@ public class GameManager : MonoBehaviour
         {
             if (IsValidMachinePlacement(cellData, selectedMachine))
             {
-                PlaceMachine(cellData, selectedMachine);
-                // Don't clear selection - allow continuous placement
-                // Selection will be cleared when user clicks a different machine or manually clears
-                return;
+                // Check if player can afford the machine
+                if (CanAfford(selectedMachine.cost))
+                {
+                    PlaceMachine(cellData, selectedMachine);
+                    // Don't clear selection - allow continuous placement
+                    // Selection will be cleared when user clicks a different machine or manually clears
+                    return;
+                }
+                else
+                {
+                    Debug.LogWarning($"Cannot afford {selectedMachine.id} - costs {selectedMachine.cost}, have {currentCredits} credits");
+                    return;
+                }
             }
             else
             {
@@ -234,6 +316,13 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"Placing machine {machineDef.id} at ({cellData.x}, {cellData.y})");
         
+        // Deduct credits for machine placement
+        if (!TrySpendCredits(machineDef.cost))
+        {
+            Debug.LogError($"Failed to place machine {machineDef.id} - insufficient credits!");
+            return;
+        }
+        
         // Process any existing items in the cell by the new machine
         UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
         if (activeGridManager != null && cellData.items.Count > 0)
@@ -285,12 +374,22 @@ public class GameManager : MonoBehaviour
         
         // For now, implement basic machine processing:
         // - Spawner: should not process items (items shouldn't be placed on spawners)
-        // - Seller: consume the item and remove it from grid
+        // - Seller: consume the item and remove it from grid, add credits
         // - Conveyor and other machines: let item continue through normal flow
         
         if (machineDef.id == "seller")
         {
-            Debug.Log($"Item {item.id} sold by seller machine");
+            // Get item definition to check sell value
+            ItemDef itemDef = FactoryRegistry.Instance.GetItem(item.itemType);
+            int sellValue = itemDef?.sellValue ?? 0;
+            
+            Debug.Log($"Item {item.id} ({item.itemType}) sold by seller machine for {sellValue} credits");
+            
+            // Add credits for selling the item
+            if (sellValue > 0)
+            {
+                AddCredits(sellValue);
+            }
             
             // Stop any movement immediately to prevent visual updates after destruction
             item.isMoving = false;
@@ -564,8 +663,18 @@ public class GameManager : MonoBehaviour
         // Check if target is seller machine
         if (targetCell.cellType == CellType.Machine && targetCell.machineDefId == "seller")
         {
-            // TODO: Replace this with proper output handling (scoring, collection, etc.)
-            Debug.Log($"Item {item.id} reached seller machine - destroying");
+            // Get item definition to check sell value
+            ItemDef itemDef = FactoryRegistry.Instance.GetItem(item.itemType);
+            int sellValue = itemDef?.sellValue ?? 0;
+            
+            Debug.Log($"Item {item.id} ({item.itemType}) reached seller machine - selling for {sellValue} credits");
+            
+            // Add credits for selling the item
+            if (sellValue > 0)
+            {
+                AddCredits(sellValue);
+            }
+            
             gridManager.DestroyVisualItem(item.id);
             return;
         }
@@ -668,11 +777,21 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"Spawning new item at ({cellData.x}, {cellData.y})");
 
+        // Get spawner machine definition to determine what item to spawn
+        MachineDef spawnerDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
+        string itemType = "can"; // Default item type
+        
+        // Use first spawnable item from spawner definition if available
+        if (spawnerDef != null && spawnerDef.spawnableItems != null && spawnerDef.spawnableItems.Count > 0)
+        {
+            itemType = spawnerDef.spawnableItems[0]; // Use first spawnable item for now
+        }
+
         // Create new item with unique ID
         ItemData newItem = new ItemData
         {
             id = "item_" + nextItemId++,
-            itemType = "Placeholder",
+            itemType = itemType, // Use actual item type instead of "Placeholder"
             isMoving = false,
             moveProgress = 0f,
             isOnBlankCell = false,
@@ -733,10 +852,18 @@ public class GameManager : MonoBehaviour
 
     public void SaveGame()
     {
-        GameData data = new GameData { grids = activeGrids };
+        GameData data = new GameData 
+        { 
+            grids = activeGrids,
+            credits = currentCredits
+        };
+        
+        // Save user machine progress to game data
+        FactoryRegistry.Instance.SaveToGameData(data);
+        
         string json = JsonUtility.ToJson(data);
         File.WriteAllText(Application.persistentDataPath + "/" + SAVE_FILE_NAME, json);
-        Debug.Log("Game saved to location " + Application.persistentDataPath + "/" + SAVE_FILE_NAME + "!");
+        Debug.Log($"Game saved with {currentCredits} credits to location " + Application.persistentDataPath + "/" + SAVE_FILE_NAME + "!");
     }
 
     private void LoadGame()
@@ -747,6 +874,10 @@ public class GameManager : MonoBehaviour
             string json = File.ReadAllText(path);
             GameData data = JsonUtility.FromJson<GameData>(json);
             activeGrids = data.grids;
+            
+            // Load credits from save data
+            currentCredits = data.credits;
+            Debug.Log($"Loaded {currentCredits} credits from save file");
 
             FactoryRegistry.Instance.LoadFromGameData(data);
 
@@ -770,6 +901,9 @@ public class GameManager : MonoBehaviour
             }
 
             Debug.Log("Game loaded!");
+            
+            // Update credits display after loading
+            Credits.RefreshDisplay();
         }
     }
 
@@ -793,5 +927,9 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+        
+        // Refresh credits display and machine affordability after manual load
+        Credits.RefreshDisplay();
+        machineBarManager?.UpdateAffordability();
     }
 }

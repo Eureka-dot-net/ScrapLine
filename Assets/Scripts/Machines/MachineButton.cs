@@ -23,4 +23,13 @@ public class MachineButton : MonoBehaviour
     {
         OnButtonClicked?.Invoke(machineDef, this.gameObject);
     }
+    
+    /// <summary>
+    /// Get the machine definition associated with this button
+    /// </summary>
+    /// <returns>The machine definition</returns>
+    public MachineDef GetMachineDef()
+    {
+        return machineDef;
+    }
 }
