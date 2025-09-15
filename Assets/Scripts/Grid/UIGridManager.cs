@@ -383,7 +383,7 @@ public class UIGridManager : MonoBehaviour
 
         // Solution 1: Items always stay in grid hierarchy - no more parent switching!
         // The separate rendering layers ensure proper visual order without complex parent handovers
-        Debug.Log($"Item {itemId} progress: {progress} - staying in grid hierarchy for consistent rendering");
+        //Debug.Log($"Item {itemId} progress: {progress} - staying in grid hierarchy for consistent rendering");
     }
 
     // Accessor methods for separate rendering containers
