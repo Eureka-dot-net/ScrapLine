@@ -35,6 +35,7 @@ public class MachineDef
     public int maxNumber;
     public bool displayInPanel = true;     // whether to show in machine selection panel
     public int cost = 0;                   // Credits cost to place this machine
+    public List<string> spawnableItems;    // Items that this machine can spawn (for spawners)
 }
 
 [System.Serializable]

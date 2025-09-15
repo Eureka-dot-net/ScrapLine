@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     [Tooltip("Starting credits amount for new games")]
     public int startingCredits = 200; // Enough for 1 spawner (50) + 5 conveyors (100) + 1 seller (50)
     private int currentCredits = 0;
+    private CreditsUI creditsUI;
 
     private Direction lastMachineDirection = Direction.Up;
     
@@ -66,6 +67,9 @@ public class GameManager : MonoBehaviour
         // Get reference to machine bar manager
         machineBarManager = FindFirstObjectByType<MachineBarUIManager>();
         machineBarManager?.InitBar();
+        
+        // Get reference to credits UI
+        creditsUI = FindFirstObjectByType<CreditsUI>();
 
         // Check if a save file exists
         string path = Application.persistentDataPath + "/" + SAVE_FILE_NAME;
@@ -116,7 +120,7 @@ public class GameManager : MonoBehaviour
         }
         
         // Initialize credits display
-        Credits.RefreshDisplay();
+        UpdateCreditsDisplay();
     }
 
     // === CREDITS SYSTEM METHODS ===
@@ -131,6 +135,17 @@ public class GameManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Update the credits UI display
+    /// </summary>
+    private void UpdateCreditsDisplay()
+    {
+        if (creditsUI != null)
+        {
+            creditsUI.UpdateCredits(currentCredits);
+        }
+    }
+    
+    /// <summary>
     /// Add credits (e.g., when selling items)
     /// </summary>
     /// <param name="amount">Amount to add</param>
@@ -138,7 +153,7 @@ public class GameManager : MonoBehaviour
     {
         currentCredits += amount;
         Debug.Log($"Added {amount} credits. Total: {currentCredits}");
-        Credits.RefreshDisplay();
+        UpdateCreditsDisplay();
         
         // Update machine bar to enable/disable buttons based on new credits
         machineBarManager?.UpdateAffordability();
@@ -155,7 +170,7 @@ public class GameManager : MonoBehaviour
         {
             currentCredits -= amount;
             Debug.Log($"Spent {amount} credits. Remaining: {currentCredits}");
-            Credits.RefreshDisplay();
+            UpdateCreditsDisplay();
             
             // Update machine bar to enable/disable buttons based on new credits
             machineBarManager?.UpdateAffordability();
@@ -903,7 +918,7 @@ public class GameManager : MonoBehaviour
             Debug.Log("Game loaded!");
             
             // Update credits display after loading
-            Credits.RefreshDisplay();
+            UpdateCreditsDisplay();
         }
     }
 
@@ -929,7 +944,7 @@ public class GameManager : MonoBehaviour
         }
         
         // Refresh credits display and machine affordability after manual load
-        Credits.RefreshDisplay();
+        UpdateCreditsDisplay();
         machineBarManager?.UpdateAffordability();
     }
 }
