@@ -2,6 +2,8 @@
 
 **Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
+**Always keep these instructions up to date with changes that are made or new information that is found while implementing changes.**
+
 ScrapLine is a Unity 6000.2.3f1 (Unity 6 LTS) mobile-first factory automation game where players build conveyor belt systems to process scrap materials. The game features a touch-optimized grid-based building system with machines (shredders, spawners, sellers), conveyors, and item processing mechanics. Players can place items like aluminum cans and process them into shredded aluminum using various machines in a factory layout, all optimized for mobile devices.
 
 ## Working Effectively
