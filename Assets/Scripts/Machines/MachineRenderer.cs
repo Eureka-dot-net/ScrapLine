@@ -128,7 +128,7 @@ public class MachineRenderer : MonoBehaviour
         }
 
         // Apply cell direction rotation to entire renderer (only if ConveyorBelt isn't handling it)
-        ConveyorBelt existingBelt = GetComponentInParent<ConveyorBelt>();
+        ConveyorBelt existingBelt = GetComponent<ConveyorBelt>();
         if (existingBelt == null)
         {
             float cellRotation = GetCellDirectionRotation(cellDirection);
@@ -137,7 +137,7 @@ public class MachineRenderer : MonoBehaviour
         }
         else
         {
-            Debug.Log($"ConveyorBelt component found in parent - skipping MachineRenderer rotation for {def.id}");
+            Debug.Log($"ConveyorBelt component found on same GameObject - skipping MachineRenderer rotation for {def.id}");
         }
     }
     

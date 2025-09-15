@@ -11,34 +11,14 @@ public class ConveyorBelt : MonoBehaviour
         float zRotation = transform.eulerAngles.z;
         zRotation = (zRotation % 360 + 360) % 360;
 
-        Debug.Log($"ConveyorBelt.GetDirectionVector: zRotation = {zRotation} for {gameObject.name}");
-
-        if (Mathf.Approximately(zRotation, 0)) 
-        {
-            Debug.Log($"ConveyorBelt: Returning Vector2.up for rotation {zRotation}");
-            return Vector2.up;
-        }
-        if (Mathf.Approximately(zRotation, 90)) 
-        {
-            Debug.Log($"ConveyorBelt: Returning Vector2.left for rotation {zRotation}");
-            return Vector2.left; //invert
-        }
-        if (Mathf.Approximately(zRotation, 180)) 
-        {
-            Debug.Log($"ConveyorBelt: Returning Vector2.down for rotation {zRotation}");
-            return Vector2.down;
-        }
-        if (Mathf.Approximately(zRotation, 270)) 
-        {
-            Debug.Log($"ConveyorBelt: Returning Vector2.right for rotation {zRotation}");
-            return Vector2.right;
-        }
+        if (Mathf.Approximately(zRotation, 0)) return Vector2.up;
+        if (Mathf.Approximately(zRotation, 90)) return Vector2.left; //invert
+        if (Mathf.Approximately(zRotation, 180)) return Vector2.down;
+        if (Mathf.Approximately(zRotation, 270)) return Vector2.right;
 
         // For other angles, calculate direction vector
         float rad = zRotation * Mathf.Deg2Rad;
-        Vector2 calculatedDirection = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)).normalized;
-        Debug.Log($"ConveyorBelt: Calculated direction {calculatedDirection} for rotation {zRotation}");
-        return calculatedDirection;
+        return new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)).normalized;
     }
 
     // Call this from GameManager
