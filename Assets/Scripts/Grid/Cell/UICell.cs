@@ -73,7 +73,7 @@ public class UICell : MonoBehaviour
         // Create MachineRenderer for ALL cell types (including blanks)
         if (!string.IsNullOrEmpty(defIdToUse))
         {
-            var machineDef = MachineDefinitions.GetMachine(defIdToUse);
+            var machineDef = FactoryRegistry.Instance.GetMachine(defIdToUse);
             if (machineDef != null)
             {
                 Debug.Log($"Creating MachineRenderer for cell ({x}, {y}) with definition: {defIdToUse}");

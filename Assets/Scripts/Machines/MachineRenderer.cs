@@ -14,20 +14,22 @@ public class MachineRenderer : MonoBehaviour
 
         // Create images in back-to-front order (first created = background)
 
+
         if (!string.IsNullOrEmpty(def.movingPartSprite))
         {
             var movingPart = CreateImageChild("MovingPart", def.movingPartSprite);
             if (!string.IsNullOrEmpty(def.movingPartMaterial))
             {
-                var mat = Resources.Load<Material>(def.movingPartMaterial);
+                string movingPartMatPath = "Materials/" + def.movingPartMaterial;
+                var mat = Resources.Load<Material>(movingPartMatPath);
                 if (mat != null)
                 {
                     movingPart.material = mat;
-                    Debug.Log($"Successfully applied material '{def.movingPartMaterial}' to MovingPart");
+                    Debug.Log($"Successfully applied material '{movingPartMatPath}' to MovingPart");
                 }
                 else
                 {
-                    Debug.LogWarning($"Material '{def.movingPartMaterial}' could not be found in Resources folder for machine '{def.id}'");
+                    Debug.LogWarning($"Material '{movingPartMatPath}' could not be found in Resources folder for machine '{def.id}'");
                 }
             }
             movingPart.transform.SetSiblingIndex(0);
