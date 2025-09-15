@@ -75,6 +75,7 @@ public class MachineBarUIManager : MonoBehaviour
                 Debug.LogWarning($"MachineRenderer not found on prefab for machine '{machine.id}'");
             }
         }
+        
     }
 
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)
@@ -167,5 +168,50 @@ public class MachineBarUIManager : MonoBehaviour
     public MachineDef GetSelectedMachine()
     {
         return selectedMachine;
+    }
+    
+    /// <summary>
+    /// Updates the affordability of all machine buttons based on current credits
+    /// </summary>
+    public void UpdateAffordability()
+    {
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("GameManager.Instance is null, cannot update machine affordability");
+            return;
+        }
+        
+        // Find all machine buttons in the panel
+        MachineButton[] machineButtons = machineBarPanel.GetComponentsInChildren<MachineButton>();
+        
+        foreach (var machineButton in machineButtons)
+        {
+            var button = machineButton.GetComponent<Button>();
+            var machineDef = machineButton.GetMachineDef(); // We'll need to add this method to MachineButton
+            
+            if (button != null && machineDef != null)
+            {
+                bool canAfford = GameManager.Instance.CanAfford(machineDef.cost);
+                
+                // Enable/disable the button based on affordability
+                button.interactable = canAfford;
+                
+                // Visual feedback for unaffordable machines
+                var canvasGroup = machineButton.GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    canvasGroup = machineButton.gameObject.AddComponent<CanvasGroup>();
+                }
+                
+                // Reduce opacity for unaffordable machines
+                canvasGroup.alpha = canAfford ? 1.0f : 0.5f;
+                
+                // Log affordability status
+                if (!canAfford)
+                {
+                    Debug.Log($"Machine {machineDef.id} disabled - costs {machineDef.cost}, player has {GameManager.Instance.GetCredits()} credits");
+                }
+            }
+        }
     }
 }

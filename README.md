@@ -13,17 +13,20 @@ Build the ultimate recycling factory! Place machines, design conveyor routes, an
 - **📱 Mobile Optimized**: Touch-friendly controls designed for smartphones and tablets  
 - **⚙️ Machine System**: Spawners generate materials, shredders process them, sellers complete the cycle
 - **🔄 Conveyor Networks**: Smart directional belt system that moves items smoothly
+- **💰 Credits Economy**: Earn money by selling processed materials, spend on new machines
 - **💾 Save & Load**: Persistent factory designs with JSON-based save system
 - **📈 Upgrades**: Improve machine speed and capacity with earned resources
 
 ### Core Gameplay Loop
 
-1. **Place Spawners** on the bottom edge to generate aluminum cans
-2. **Build Conveyor Networks** to transport materials through your factory
-3. **Install Shredders** to process cans into valuable shredded aluminum
-4. **Position Sellers** on the top edge to complete the production cycle
-5. **Upgrade Machines** to increase processing speed and efficiency
-6. **Optimize Layout** for maximum throughput and profit
+1. **Start with 200 Credits** - enough for a basic production setup
+2. **Place Spawners** on the bottom edge to generate aluminum cans (costs 50 credits)
+3. **Build Conveyor Networks** to transport materials through your factory (20 credits each)
+4. **Install Shredders** to process cans into valuable shredded aluminum (75 credits)
+5. **Position Sellers** on the top edge to earn credits from completed items (50 credits)
+6. **Earn Credits**: Aluminum cans = 5 credits, Shredded aluminum = 15 credits
+7. **Upgrade Machines** to increase processing speed and efficiency
+8. **Expand Factory** with additional machines as your credits grow
 
 ## 🛠️ Technical Details
 
@@ -61,14 +64,14 @@ ScrapLine/
 ### Key Components
 
 #### Machines (`machines.json`)
-- **Conveyor**: Moves items in specified directions
-- **Spawner**: Generates items (max 1-3 with upgrades)
-- **Shredder**: Processes cans → shredded aluminum
-- **Seller**: Removes items and awards currency
+- **Conveyor** (20 credits): Moves items in specified directions
+- **Spawner** (50 credits): Generates items (max 1-3 with upgrades)
+- **Shredder** (75 credits): Processes cans → shredded aluminum
+- **Seller** (50 credits): Removes items and awards credits
 
 #### Items (`items.json`)
-- **Aluminum Can**: Raw material spawned by machines
-- **Shredded Aluminum**: Processed valuable output
+- **Aluminum Can**: Raw material spawned by machines (sells for 5 credits)
+- **Shredded Aluminum**: Processed valuable output (sells for 15 credits)
 
 #### Processing (`recipes.json`)
 - **Can → Shredded Aluminum**: Primary transformation recipe
@@ -98,7 +101,11 @@ ScrapLine/
 3. Select "Open" and navigate to the ScrapLine folder
 4. Unity will automatically resolve dependencies (5-15 minutes first time)
 5. Open `Assets/Scenes/MobileGridScene.unity`
-6. Press Play to test the game
+6. **Setup Credits UI** (if not already configured):
+   - Create UI > Text - TextMeshPro, position at top of screen
+   - Attach CreditsUI script to the text GameObject
+   - The script will automatically display current credits
+7. Press Play to test the game
 
 ### Building
 
@@ -123,11 +130,13 @@ Unity -batchmode -quit -projectPath ./ScrapLine \
 ### Manual Testing Scenarios
 
 1. **Basic Factory Setup**
-   - Place spawner on bottom edge
-   - Create conveyor path upward
-   - Add shredder machine in path
-   - Place seller on top edge
+   - Start with 200 credits
+   - Place spawner on bottom edge (50 credits)
+   - Create conveyor path upward (20 credits each)
+   - Add shredder machine in path (75 credits)
+   - Place seller on top edge (50 credits)
    - Verify items flow and process correctly
+   - Watch credits increase as items are sold
 
 2. **Touch Controls**
    - Test machine placement with finger/stylus
@@ -174,6 +183,38 @@ Modify JSON files in `Assets/Resources/` to adjust:
 - **Render Pipeline**: Universal Render Pipeline (URP)
 - **Quality Levels**: Configurable graphics presets
 - **Resolution Scaling**: Automatic mobile adaptation
+
+## 💰 Credits System
+
+ScrapLine features a complete economic gameplay system:
+
+### Starting Economy
+- **New Game**: Begin with 200 credits (exactly enough for basic setup)
+- **Minimum Factory**: 1 Spawner (50) + 5 Conveyors (100) + 1 Seller (50) = 200 credits
+
+### Machine Costs
+- **Conveyor Belt**: 20 credits
+- **Spawner**: 50 credits  
+- **Seller**: 50 credits
+- **Shredder**: 75 credits
+
+### Item Values
+- **Aluminum Can**: 5 credits when sold
+- **Shredded Aluminum**: 15 credits when sold (3x more valuable!)
+
+### Strategic Gameplay
+1. Build basic production line with starting credits
+2. Earn credits by selling aluminum cans (5 each)
+3. Invest in shredders for higher-value output (15 vs 5)
+4. Expand factory with additional machines
+5. Optimize for maximum credits per minute
+
+### UI Setup
+The CreditsUI system requires proper Unity setup:
+1. Create a TextMeshPro text element in your UI
+2. Attach the CreditsUI script to the text GameObject
+3. The display updates automatically when credits change
+4. Customize display format: "Credits: {0}", "${0}", etc.
 
 ## 🤝 Contributing
 

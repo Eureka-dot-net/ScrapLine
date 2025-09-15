@@ -34,6 +34,8 @@ public class MachineDef
     public List<string> gridPlacement;     // e.g., ["any"], ["bottom"]
     public int maxNumber;
     public bool displayInPanel = true;     // whether to show in machine selection panel
+    public int cost = 0;                   // Credits cost to place this machine
+    public List<string> spawnableItems;    // Items that this machine can spawn (for spawners)
 }
 
 [System.Serializable]
@@ -49,4 +51,5 @@ public class ItemDef {
     public string id;
     public string displayName;
     public string sprite;
+    public int sellValue = 0; // Credits earned when this item is sold
 }
