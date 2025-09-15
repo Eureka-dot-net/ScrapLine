@@ -29,11 +29,17 @@ public class MachineDef
 }
 
 [System.Serializable]
+public class RecipeItemDef {
+    public string item;
+    public int count;
+}
+
+[System.Serializable]
 public class RecipeDef {
     public string machineId;
-    public List<string> inputItems;
-    public List<string> outputItems;
-    public float processAdjustment;
+    public List<RecipeItemDef> inputItems;
+    public List<RecipeItemDef> outputItems;
+    public float processMultiplier;
 }
 
 [System.Serializable]

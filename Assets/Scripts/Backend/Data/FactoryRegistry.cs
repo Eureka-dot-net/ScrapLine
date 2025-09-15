@@ -29,9 +29,16 @@ public class FactoryRegistry
         foreach (var m in machinesWrapper.machines)
             Machines[m.id] = m;
 
-        // Load Recipes
-        var recipesWrapper = JsonUtility.FromJson<RecipeListWrapper>(recipesJson);
-        Recipes = recipesWrapper.recipes ?? new List<RecipeDef>();
+        // Load Recipes - handle direct array format
+        try
+        {
+            Recipes = JsonUtility.FromJson<RecipeListWrapper>("{\"recipes\":" + recipesJson + "}").recipes ?? new List<RecipeDef>();
+        }
+        catch
+        {
+            Debug.LogWarning("Failed to load recipes from JSON, using empty list");
+            Recipes = new List<RecipeDef>();
+        }
 
         // Load Items
         var itemsWrapper = JsonUtility.FromJson<ItemListWrapper>(itemsJson);
@@ -68,8 +75,15 @@ public class FactoryRegistry
     {
         foreach (var recipe in Recipes)
         {
-            if (recipe.machineId == machineId && recipe.inputItems.Contains(inputItemId))
-                return recipe;
+            if (recipe.machineId == machineId)
+            {
+                // Check if any of the input items match the provided itemId
+                foreach (var inputItem in recipe.inputItems)
+                {
+                    if (inputItem.item == inputItemId)
+                        return recipe;
+                }
+            }
         }
         return null;
     }

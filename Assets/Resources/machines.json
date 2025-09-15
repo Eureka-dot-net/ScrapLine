@@ -165,18 +165,11 @@
                     "upgradeTime": 400
                 }
             ],
-            "inputItems": [
-                "can"
-            ],
-            "outputItems": [
-                "shreddedAluminum"
-            ],
             "gridPlacement": [
                 "grid"
             ],
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
-            "processAdjustment": 1,
             "displayInPanel": true,
             "cost": 75,
             "canRotate": true

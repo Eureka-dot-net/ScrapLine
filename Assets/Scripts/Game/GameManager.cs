@@ -719,6 +719,67 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // Check if target is a processing machine (not conveyor, blank, spawner, or seller)
+        if (targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId) && 
+            targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
+        {
+            // Look up recipe for this machine and item
+            RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(targetCell.machineDefId, item.itemType);
+            if (recipe != null)
+            {
+                Debug.Log($"Processing item {item.id} ({item.itemType}) with machine {targetCell.machineDefId} using recipe");
+                
+                // Get machine definition for base process time
+                MachineDef machineDef = FactoryRegistry.Instance.GetMachine(targetCell.machineDefId);
+                if (machineDef != null)
+                {
+                    // Calculate process time with recipe multiplier
+                    float processTime = machineDef.baseProcessTime * recipe.processMultiplier;
+                    Debug.Log($"Recipe processing time: {processTime}s (base: {machineDef.baseProcessTime}, multiplier: {recipe.processMultiplier})");
+                    
+                    // For now, process immediately (TODO: implement timing/delays in future)
+                    // Remove input item (current item)
+                    Debug.Log($"Removing input item {item.id} ({item.itemType})");
+                    gridManager.DestroyVisualItem(item.id);
+                    
+                    // Create output items
+                    foreach (var outputItem in recipe.outputItems)
+                    {
+                        for (int i = 0; i < outputItem.count; i++)
+                        {
+                            // Create new output item
+                            ItemData newItem = new ItemData
+                            {
+                                id = "item_" + nextItemId++,
+                                itemType = outputItem.item,
+                                isMoving = false,
+                                moveProgress = 0f,
+                                isOnBlankCell = false,
+                                timeOnBlankCell = 0f
+                            };
+                            
+                            targetCell.items.Add(newItem);
+                            
+                            // Create visual representation
+                            gridManager.CreateVisualItem(newItem.id, targetCell.x, targetCell.y);
+                            
+                            Debug.Log($"Created output item {newItem.id} ({outputItem.item}) at ({targetCell.x}, {targetCell.y})");
+                        }
+                    }
+                    
+                    return; // Don't continue with normal item movement processing
+                }
+                else
+                {
+                    Debug.LogWarning($"Machine definition not found for {targetCell.machineDefId}");
+                }
+            }
+            else
+            {
+                Debug.Log($"No recipe found for machine {targetCell.machineDefId} with input item {item.itemType} - maintaining current behavior");
+            }
+        }
+
         // Add to target cell and reset movement state
         item.isMoving = false;
         item.moveProgress = 0f;
