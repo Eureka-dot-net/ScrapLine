@@ -45,14 +45,14 @@ public class MachineRenderer : MonoBehaviour
         {
             var building = CreateImageChild("Building", def.buildingSprite);
             building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
-            building.transform.SetSiblingIndex(2);
+            building.transform.SetSiblingIndex(3);
         }
 
         // 4. If there's a main sprite, create it on top
         if (!string.IsNullOrEmpty(def.sprite))
         {
             var mainSprite = CreateImageChild("Main", def.sprite);
-            mainSprite.transform.SetSiblingIndex(3);
+            mainSprite.transform.SetSiblingIndex(4);
         }
 
         // Apply cell direction rotation to entire renderer
@@ -77,8 +77,8 @@ public class MachineRenderer : MonoBehaviour
         spawnPointRT.anchoredPosition = Vector2.zero;
         spawnPointRT.sizeDelta = Vector2.zero;
         
-        // Set the sibling index to be between border (1) and building (2)
-        spawnPointObj.transform.SetSiblingIndex(1);
+        // Set the sibling index to be between border (1) and building (3)
+        spawnPointObj.transform.SetSiblingIndex(2);
         
         Debug.Log("Created item spawn point for machine");
     }
