@@ -327,7 +327,13 @@ public class UIGridManager : MonoBehaviour
 
         // Create the new item instance
         GameObject newItem = Instantiate(itemPrefab, spawnPoint);
-        newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        RectTransform itemRect = newItem.GetComponent<RectTransform>();
+        itemRect.anchoredPosition = Vector2.zero;
+
+        // Resize the item to 1/3 of the cell size
+        Vector2 cellSize = GetCellSize();
+        Vector2 itemSize = cellSize / 3f;
+        itemRect.sizeDelta = itemSize;
 
         // Set the item type on the UIItem component
         UIItem itemComponent = newItem.GetComponent<UIItem>();
@@ -338,7 +344,7 @@ public class UIGridManager : MonoBehaviour
         }
 
         visualItems[itemId] = newItem;
-        Debug.Log($"Created visual item {itemId} at ({x}, {y})");
+        Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/3 of cell size {cellSize})");
     }
 
     private void SetItemSprite(GameObject itemObject, string itemType)
