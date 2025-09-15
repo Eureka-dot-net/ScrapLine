@@ -632,6 +632,7 @@ public class GameManager : MonoBehaviour
                 {
                     // Check if processing is complete
                     float processingElapsed = Time.time - item.processingStartTime;
+                    Debug.Log($"Processing item {item.id} ({item.itemType}): elapsed={processingElapsed:F2}s, duration={item.processingDuration:F2}s, complete={processingElapsed >= item.processingDuration}");
                     if (processingElapsed >= item.processingDuration)
                     {
                         CompleteRecipeProcessing(item, cell, gridData, gridManager);
@@ -908,6 +909,7 @@ public class GameManager : MonoBehaviour
         
         // Look up the recipe again to get output items
         RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(item.processingMachineId, item.itemType);
+        Debug.Log($"Recipe lookup for machine '{item.processingMachineId}' with item '{item.itemType}': {(recipe != null ? "found" : "not found")}");
         if (recipe != null)
         {
             // Remove input item (current item)
