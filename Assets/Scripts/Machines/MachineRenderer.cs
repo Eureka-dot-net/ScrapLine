@@ -36,6 +36,14 @@ public class MachineRenderer : MonoBehaviour
         if (!string.IsNullOrEmpty(def.movingPartSprite))
         {
             var movingPart = CreateImageChild("MovingPart", def.movingPartSprite);
+            
+            // Apply counter-rotation to the moving part so texture scrolls in the correct visual direction
+            // The parent renderer is rotated for machine orientation, but we want texture to scroll independently
+            float cellRotation = GetCellDirectionRotation(cellDirection);
+            float counterRotation = -cellRotation; // Counter-rotate to maintain texture alignment
+            movingPart.rectTransform.rotation = Quaternion.Euler(0, 0, counterRotation);
+            Debug.Log($"Applying counter-rotation {counterRotation}° to MovingPart of machine '{def.id}' to maintain texture alignment");
+            
             // Only apply materials if NOT in menu to prevent unwanted animations
             if (!isInMenu && !string.IsNullOrEmpty(def.movingPartMaterial))
             {
@@ -127,18 +135,8 @@ public class MachineRenderer : MonoBehaviour
             mainSprite.transform.SetSiblingIndex(4);
         }
 
-        // Apply cell direction rotation to entire renderer (only if ConveyorBelt isn't handling it)
-        ConveyorBelt existingBelt = GetComponentInParent<ConveyorBelt>();
-        if (existingBelt == null)
-        {
-            float cellRotation = GetCellDirectionRotation(cellDirection);
-            transform.rotation = Quaternion.Euler(0, 0, cellRotation);
-            Debug.Log($"MachineRenderer applying rotation {cellRotation} for cell direction {cellDirection}");
-        }
-        else
-        {
-            Debug.Log($"ConveyorBelt component found in parent - skipping MachineRenderer rotation for {def.id}");
-        }
+        // Parent ConveyorBelt handles rotation, so individual components inherit the correct orientation
+        Debug.Log($"MachineRenderer for '{def.id}' setup complete with parent rotation for direction {cellDirection}");
     }
     
     private void CreateSeparatedBuildingSprite(MachineDef def, UICell.Direction cellDirection)
