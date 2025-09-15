@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
     // Credits system
     [Header("Credits System")]
     [Tooltip("Starting credits amount for new games")]
-    public int startingCredits = 150; // Enough for 1 spawner (50) + 5 conveyors (20 each) + 1 seller (50)
+    public int startingCredits = 200; // Enough for 1 spawner (50) + 5 conveyors (100) + 1 seller (50)
     private int currentCredits = 0;
 
     private Direction lastMachineDirection = Direction.Up;
