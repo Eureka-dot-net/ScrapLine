@@ -44,13 +44,13 @@ public class UITextureScroller : MonoBehaviour
 
         if (belt != null)
         {
-            // Use direction directly (no flip needed since GetDirectionVector returns UV offset direction)
-            Vector2 dir = belt.GetDirectionVector();
+            // Flip the direction for visual effect!
+            Vector2 dir = -belt.GetDirectionVector();
             offset += dir * belt.speed * Time.deltaTime;
         }
         else
         {
-            offset += Vector2.down * 0.5f * Time.deltaTime; // fallback direction for up-facing
+            offset += Vector2.down * 0.5f * Time.deltaTime; // fallback flips direction
         }
 
         mat.SetTextureOffset("_BaseMap", offset);

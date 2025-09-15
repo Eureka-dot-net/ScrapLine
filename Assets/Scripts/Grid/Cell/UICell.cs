@@ -120,7 +120,8 @@ public class UICell : MonoBehaviour
             float cellRotation = GetCellDirectionRotation(direction);
             rendererObj.transform.rotation = Quaternion.Euler(0, 0, cellRotation);
             
-            Debug.Log($"Added ConveyorBelt component to machine '{def.id}' at cell ({x}, {y}) with rotation {cellRotation}");
+            Debug.Log($"Added ConveyorBelt component to machine '{def.id}' at cell ({x}, {y}) with direction {direction} and rotation {cellRotation}");
+            Debug.Log($"Actual transform rotation after setting: {rendererObj.transform.eulerAngles}");
         }
         
         machineRenderer = rendererObj.AddComponent<MachineRenderer>();
