@@ -330,9 +330,8 @@ public class UIGridManager : MonoBehaviour
         RectTransform itemRect = newItem.GetComponent<RectTransform>();
         itemRect.anchoredPosition = Vector2.zero;
 
-        // Resize the item to 1/3 of the cell size
         Vector2 cellSize = GetCellSize();
-        Vector2 itemSize = cellSize / 3f;
+        Vector2 itemSize = cellSize / 2f;
         itemRect.sizeDelta = itemSize;
 
         // Set the item type on the UIItem component
