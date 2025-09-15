@@ -47,12 +47,6 @@ public class UITextureScroller : MonoBehaviour
             // Use direction directly (no flip needed since GetDirectionVector returns UV offset direction)
             Vector2 dir = belt.GetDirectionVector();
             offset += dir * belt.speed * Time.deltaTime;
-            
-            // Debug logging to understand the issue
-            if (Time.frameCount % 60 == 0) // Log once per second
-            {
-                Debug.Log($"UITextureScroller: {gameObject.name} - Rotation: {belt.transform.eulerAngles.z}, UV Direction: {dir}");
-            }
         }
         else
         {
