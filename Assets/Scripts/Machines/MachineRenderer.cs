@@ -40,15 +40,41 @@ public class MachineRenderer : MonoBehaviour
             if (!isInMenu && !string.IsNullOrEmpty(def.movingPartMaterial))
             {
                 string movingPartMatPath = "Materials/" + def.movingPartMaterial;
+                Debug.Log($"Attempting to load material from path: '{movingPartMatPath}' for machine '{def.id}'");
                 var mat = Resources.Load<Material>(movingPartMatPath);
                 if (mat != null)
                 {
                     movingPart.material = mat;
-                    Debug.Log($"Successfully applied material '{movingPartMatPath}' to MovingPart");
+                    Debug.Log($"Successfully applied material '{movingPartMatPath}' to MovingPart for machine '{def.id}'");
+                    
+                    // Log if material has any TextureScroller component
+                    var textureScroller = movingPart.GetComponent<TextureScroller>();
+                    if (textureScroller != null)
+                    {
+                        Debug.Log($"TextureScroller component found on MovingPart for machine '{def.id}'");
+                    }
+                    else
+                    {
+                        Debug.Log($"No TextureScroller component found on MovingPart for machine '{def.id}' - adding one");
+                        movingPart.gameObject.AddComponent<TextureScroller>();
+                    }
                 }
                 else
                 {
                     Debug.LogWarning($"Material '{movingPartMatPath}' could not be found in Resources folder for machine '{def.id}'");
+                    Debug.Log($"Trying alternative path: 'Materials/Conveyors/{def.movingPartMaterial}'");
+                    string altPath = "Materials/Conveyors/" + def.movingPartMaterial;
+                    var altMat = Resources.Load<Material>(altPath);
+                    if (altMat != null)
+                    {
+                        movingPart.material = altMat;
+                        Debug.Log($"Successfully applied alternative material '{altPath}' to MovingPart for machine '{def.id}'");
+                        movingPart.gameObject.AddComponent<TextureScroller>();
+                    }
+                    else
+                    {
+                        Debug.LogError($"Both material paths failed for machine '{def.id}': '{movingPartMatPath}' and '{altPath}'");
+                    }
                 }
             }
             else if (isInMenu)
