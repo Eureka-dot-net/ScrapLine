@@ -17,6 +17,20 @@ public class UIGridManager : MonoBehaviour
     // Track visual items by ID
     private Dictionary<string, GameObject> visualItems = new Dictionary<string, GameObject>();
 
+    void Start()
+    {
+        // Set up conveyor material scrolling
+        if (conveyorSharedMaterial != null)
+        {
+            ConveyorMaterialScroller scroller = gameObject.GetComponent<ConveyorMaterialScroller>();
+            if (scroller == null)
+            {
+                scroller = gameObject.AddComponent<ConveyorMaterialScroller>();
+            }
+            scroller.conveyorMaterial = conveyorSharedMaterial;
+        }
+    }
+
     public UICell GetCell(int x, int y)
     {
         if (x >= 0 && x < gridData.width && y >= 0 && y < gridData.height)
@@ -69,13 +83,24 @@ public class UIGridManager : MonoBehaviour
                 UICell cellScript = cellObj.GetComponent<UICell>();
                 cellScripts[x, y] = cellScript;
 
-                cellScript.Init(x, y, this, conveyorSharedMaterial);
+                cellScript.Init(x, y, this);
 
+                // Set cell role first (for Top/Bottom row cells)
                 CellData cellData = GetCellData(x, y);
                 if (cellData != null)
                 {
+                    Debug.Log($"Cell ({x}, {y}) has data: role={cellData.cellRole}, type={cellData.cellType}, machineDefId={cellData.machineDefId}");
                     cellScript.SetCellRole(cellData.cellRole);
-                    cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineType);
+                    
+                    // Set cell type and machine - UICell handles MachineRenderer creation internally
+                    cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
+                }
+                else
+                {
+                    Debug.Log($"Cell ({x}, {y}) has no data - creating as blank cell");
+                    // ALL cells without data become blank cells using the "blank" machine definition
+                    cellScript.SetCellRole(CellRole.Grid);
+                    cellScript.SetCellType(CellType.Blank, Direction.Up);
                 }
             }
         }
@@ -86,24 +111,15 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
-    private CellData GetCellData(int x, int y)
-    {
-        foreach (var cell in gridData.cells)
-        {
-            if (cell.x == x && cell.y == y)
-            {
-                return cell;
-            }
-        }
-        return null;
-    }
 
-    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, MachineType machineType = MachineType.None)
+
+    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, string machineDefId = null)
     {
         UICell cell = GetCell(x, y);
         if (cell != null)
         {
-            cell.SetCellType(newType, newDirection, machineType);
+            // UICell now handles ALL visual setup internally via MachineRenderer
+            cell.SetCellType(newType, newDirection, machineDefId);
         }
     }
 
@@ -117,8 +133,115 @@ public class UIGridManager : MonoBehaviour
 
         foreach (var cell in gridData.cells)
         {
-            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineType);
+            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineDefId);
         }
+    }
+
+    // Grid highlighting for machine placement
+    public void HighlightValidPlacements(MachineDef machineDef)
+    {
+        if (cellScripts == null || gridData == null)
+        {
+            Debug.LogError("Cannot highlight - grid not initialized");
+            return;
+        }
+
+        ClearHighlights(); // Clear any existing highlights
+
+        // Check each cell to see if it's a valid placement for this machine
+        for (int y = 0; y < gridData.height; y++)
+        {
+            for (int x = 0; x < gridData.width; x++)
+            {
+                if (IsValidPlacement(x, y, machineDef))
+                {
+                    HighlightCell(x, y, true);
+                }
+            }
+        }
+    }
+
+    public void ClearHighlights()
+    {
+        if (cellScripts == null) return;
+
+        for (int y = 0; y < gridData.height; y++)
+        {
+            for (int x = 0; x < gridData.width; x++)
+            {
+                HighlightCell(x, y, false);
+            }
+        }
+    }
+
+    private void HighlightCell(int x, int y, bool highlight)
+    {
+        UICell cell = GetCell(x, y);
+        if (cell == null) return;
+
+        // Create or get highlight overlay
+        Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
+        
+        if (highlight)
+        {
+            if (highlightOverlay == null)
+            {
+                // Create highlight overlay
+                GameObject overlay = new GameObject("HighlightOverlay");
+                overlay.transform.SetParent(cell.transform, false);
+                
+                Image overlayImage = overlay.AddComponent<Image>();
+                overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
+                
+                // Make it fill the cell
+                RectTransform rt = overlay.GetComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = Vector2.zero;
+                
+                // Put it on top but behind any items
+                overlay.transform.SetSiblingIndex(cell.transform.childCount - 1);
+            }
+            else
+            {
+                highlightOverlay.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            if (highlightOverlay != null)
+            {
+                highlightOverlay.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    private bool IsValidPlacement(int x, int y, MachineDef machineDef)
+    {
+        // Get the cell data
+        CellData cellData = GetCellData(x, y);
+        if (cellData == null) return false;
+
+        // Check if machine's grid placement rules allow this cell
+        foreach (string placement in machineDef.gridPlacement)
+        {
+            switch (placement.ToLower())
+            {
+                case "any":
+                    return true;
+                case "grid":
+                    return cellData.cellRole == CellRole.Grid;
+                case "top":
+                    return cellData.cellRole == CellRole.Top;
+                case "bottom":
+                    return cellData.cellRole == CellRole.Bottom;
+            }
+        }
+
+        return false;
     }
 
     // New methods for GameManager to control visual items
@@ -165,6 +288,11 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
+    public bool HasVisualItem(string itemId)
+    {
+        return visualItems.TryGetValue(itemId, out GameObject item) && item != null;
+    }
+
     public void UpdateItemVisualPosition(string itemId, float progress, int startX, int startY, int endX, int endY, UICell.Direction movementDirection)
     {
         if (!visualItems.TryGetValue(itemId, out GameObject item) || item == null)
@@ -194,7 +322,8 @@ public class UIGridManager : MonoBehaviour
         item.transform.position = currentPos;
 
         // Handle parent changes for proper rendering order based on movement direction
-        bool shouldChangeParent = ShouldChangeParent(progress, movementDirection, endCell.machineType);
+        CellData endCellData = GetCellData(endX, endY);
+        bool shouldChangeParent = ShouldChangeParent(progress, movementDirection, endCellData?.machineDefId);
         RectTransform currentParent = item.transform.parent as RectTransform;
         RectTransform targetParent = shouldChangeParent ? endSpawnPoint : startSpawnPoint;
         Debug.Log($"Item {itemId} progress: {progress}, shouldChangeParent: {shouldChangeParent}, currentParent: {currentParent?.name}, targetParent: {targetParent?.name}");
@@ -204,20 +333,77 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
-    private bool ShouldChangeParent(float progress, UICell.Direction movementDirection,  UICell.MachineType machineType)
+    private bool ShouldChangeParent(float progress, UICell.Direction movementDirection, string machineDefId)
     {
-        // For Down and Right movement: change parent before hitting boundary (30%)
-        // Also for machines to ensure items appear below roof
-        if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right || machineType == UICell.MachineType.ThreeeInputsOneOutput)
+        // Get machine-specific parent change thresholds
+        float threshold = 0.5f; // Default fallback
+        
+        if (!string.IsNullOrEmpty(machineDefId))
         {
-            return progress >= 0.3f;
+            var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
+            if (machineDef?.parentChangeThresholds != null)
+            {
+                // Use machine-specific thresholds based on movement direction
+                switch (movementDirection)
+                {
+                    case UICell.Direction.Down:
+                        threshold = machineDef.parentChangeThresholds.down;
+                        break;
+                    case UICell.Direction.Right:
+                        threshold = machineDef.parentChangeThresholds.right;
+                        break;
+                    case UICell.Direction.Up:
+                        threshold = machineDef.parentChangeThresholds.up;
+                        break;
+                    case UICell.Direction.Left:
+                        threshold = machineDef.parentChangeThresholds.left;
+                        break;
+                    default:
+                        threshold = machineDef.parentChangeThresholds.@default;
+                        break;
+                }
+            }
+            else
+            {
+                // Fallback to old hardcoded logic for machines without thresholds
+                if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right)
+                {
+                    threshold = 0.3f;
+                }
+                else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
+                {
+                    threshold = 0.7f;
+                }
+            }
         }
-        // For Up and Left movement: change parent after crossing boundary (99%)
-        else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
+        else
         {
-            return progress >= 0.7f;
+            // Fallback for cells without machine definitions (like conveyors)
+            if (movementDirection == UICell.Direction.Down || movementDirection == UICell.Direction.Right)
+            {
+                threshold = 0.3f;
+            }
+            else if (movementDirection == UICell.Direction.Up || movementDirection == UICell.Direction.Left)
+            {
+                threshold = 0.7f;
+            }
         }
-        return progress >= 0.5f; // Default fallback
+        
+        return progress >= threshold;
+    }
+
+    public CellData GetCellData(int x, int y)
+    {
+        if (gridData == null) return null;
+        
+        foreach (var cell in gridData.cells)
+        {
+            if (cell.x == x && cell.y == y)
+            {
+                return cell;
+            }
+        }
+        return null;
     }
 
 }

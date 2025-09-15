@@ -21,6 +21,10 @@ public class ItemData
     public bool hasQueuedMovement;
     public int queuedTargetX;
     public int queuedTargetY;
+    
+    // Timeout tracking for blank cells
+    public float timeOnBlankCell; // Time spent on current blank cell
+    public bool isOnBlankCell; // Whether item is currently on a blank cell
 }
 
 [System.Serializable]
@@ -31,7 +35,7 @@ public class CellData
     public UICell.CellType cellType;
     public UICell.Direction direction;
     public UICell.CellRole cellRole;
-    public UICell.MachineType machineType;
+    public string machineDefId; // References the specific machine definition from FactoryRegistry
     public List<ItemData> items = new List<ItemData>();
 }
 

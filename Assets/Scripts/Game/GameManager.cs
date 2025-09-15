@@ -16,8 +16,17 @@ public class GameManager : MonoBehaviour
     // Movement settings
     public float itemMoveSpeed = 1f; // cells per second
     private int nextItemId = 1;
+    
+    // Item management settings
+    public float itemTimeoutOnBlankCells = 10f; // seconds items stay on blank cells before disappearing
+    public int maxItemsOnGrid = 100; // maximum items allowed on grid
+    public bool showItemLimitWarning = true; // whether to show warning when limit reached
 
-    private Direction lastConveyorDirection = Direction.Up;
+    private Direction lastMachineDirection = Direction.Up;
+    
+    // Machine placement state
+    private MachineDef selectedMachine;
+    private MachineBarUIManager machineBarManager;
 
     private void Awake()
     {
@@ -48,7 +57,9 @@ public class GameManager : MonoBehaviour
         FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson);
         Debug.Log("Factory definitions loaded.");
 
-        FindFirstObjectByType<MachineBarUIManager>()?.InitBar();
+        // Get reference to machine bar manager
+        machineBarManager = FindFirstObjectByType<MachineBarUIManager>();
+        machineBarManager?.InitBar();
 
         // Check if a save file exists
         string path = Application.persistentDataPath + "/" + SAVE_FILE_NAME;
@@ -94,6 +105,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void SetSelectedMachine(MachineDef machine)
+    {
+        selectedMachine = machine;
+        Debug.Log($"Selected machine set to: {machine?.id ?? "null"}");
+    }
+
     public void OnCellClicked(int x, int y)
     {
         GridData gridData = activeGrids[0];
@@ -105,67 +122,279 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        UICell.CellType newType = cellData.cellType;
-        UICell.Direction newDirection = cellData.direction;
-        UICell.MachineType newMachineType = cellData.machineType;
+        Debug.Log($"Cell clicked at ({x}, {y}): cellType={cellData.cellType}, machineDefId={cellData.machineDefId}, selectedMachine={selectedMachine?.id ?? "null"}");
 
-        switch (cellData.cellRole)
+        // Handle machine rotation if clicking on an existing machine (should work regardless of selection)
+        if (cellData.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
         {
-            case UICell.CellRole.Grid:
-                if (cellData.cellType == UICell.CellType.Blank)
-                {
-                    newType = UICell.CellType.Conveyor;
-                    newDirection = lastConveyorDirection;
-
-                }
-                else if (cellData.cellType == UICell.CellType.Conveyor)
-                {
-                    newDirection = (UICell.Direction)(((int)cellData.direction + 1) % 4);
-                    newType = UICell.CellType.Conveyor;
-                    lastConveyorDirection = newDirection;
-                }
-                break;
-
-            case UICell.CellRole.Top:
-                Debug.Log("Clicked on Top role. Creating a placeholder Output machine.");
-                newType = UICell.CellType.Machine;
-                newMachineType = UICell.MachineType.Output;
-                newDirection = UICell.Direction.Up;
-                break;
-
-            case UICell.CellRole.Bottom:
-                Debug.Log("Clicked on Bottom role. Creating a placeholder Input machine.");
-                newType = UICell.CellType.Machine;
-                newMachineType = UICell.MachineType.Input;
-                newDirection = UICell.Direction.Up;
-                break;
+            Debug.Log($"Attempting to rotate machine {cellData.machineDefId} at ({x}, {y})");
+            RotateMachine(cellData);
+            return;
         }
 
-        cellData.cellType = newType;
-        cellData.direction = newDirection;
-        cellData.machineType = newMachineType;
+        // Handle machine placement if a machine is selected
+        if (selectedMachine != null)
+        {
+            if (IsValidMachinePlacement(cellData, selectedMachine))
+            {
+                PlaceMachine(cellData, selectedMachine);
+                // Don't clear selection - allow continuous placement
+                // Selection will be cleared when user clicks a different machine or manually clears
+                return;
+            }
+            else
+            {
+                Debug.Log($"Cannot place {selectedMachine.id} here - invalid placement");
+                return;
+            }
+        }
 
+        // Only allow fallback behavior for Top/Bottom roles when no machine is selected
+        // This preserves the original spawner/seller placement behavior
+        if (selectedMachine == null && (cellData.cellRole == UICell.CellRole.Top || cellData.cellRole == UICell.CellRole.Bottom))
+        {
+            // Original cell cycling logic for Top/Bottom roles only
+            UICell.CellType newType = cellData.cellType;
+            UICell.Direction newDirection = cellData.direction;
+
+            switch (cellData.cellRole)
+            {
+                case UICell.CellRole.Top:
+                    Debug.Log("Clicked on Top role. Creating a placeholder Output machine.");
+                    newType = UICell.CellType.Machine;
+                    newDirection = UICell.Direction.Up;
+                    cellData.machineDefId = "seller"; // Use seller machine for top
+                    break;
+
+                case UICell.CellRole.Bottom:
+                    Debug.Log("Clicked on Bottom role. Creating a placeholder Input machine.");
+                    newType = UICell.CellType.Machine;
+                    newDirection = UICell.Direction.Up;
+                    cellData.machineDefId = "spawner"; // Use spawner machine for bottom
+                    break;
+            }
+
+            cellData.cellType = newType;
+            cellData.direction = newDirection;
+
+            UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+            if (activeGridManager != null)
+            {
+                activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, newType, newDirection, cellData.machineDefId);
+            }
+
+            // Only try to move items if the cell is now a machine
+            if (cellData.cellType == UICell.CellType.Machine)
+            {
+                foreach (var item in cellData.items)
+                {
+                    item.shouldStopAtTarget = false;
+                    item.hasCheckedMiddle = false;
+                    item.hasQueuedMovement = false;
+
+                    // If not already moving, start movement in the new direction/type
+                    if (!item.isMoving)
+                    {
+                        TryStartItemMovement(item, cellData, gridData, activeGridManager);
+                    }
+                }
+            }
+            return;
+        }
+
+        // If no machine is selected and this is a Grid cell, don't do anything
+        if (selectedMachine == null && cellData.cellRole == UICell.CellRole.Grid)
+        {
+            Debug.Log("No machine selected for grid placement");
+            return;
+        }
+    }
+
+    private bool IsValidMachinePlacement(CellData cellData, MachineDef machineDef)
+    {
+        // Check if machine's grid placement rules allow this cell
+        foreach (string placement in machineDef.gridPlacement)
+        {
+            switch (placement.ToLower())
+            {
+                case "any":
+                    return true;
+                case "grid":
+                    return cellData.cellRole == UICell.CellRole.Grid;
+                case "top":
+                    return cellData.cellRole == UICell.CellRole.Top;
+                case "bottom":
+                    return cellData.cellRole == UICell.CellRole.Bottom;
+            }
+        }
+        return false;
+    }
+
+    private void PlaceMachine(CellData cellData, MachineDef machineDef)
+    {
+        Debug.Log($"Placing machine {machineDef.id} at ({cellData.x}, {cellData.y})");
+        
+        // Process any existing items in the cell by the new machine
+        UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+        if (activeGridManager != null && cellData.items.Count > 0)
+        {
+            Debug.Log($"Processing {cellData.items.Count} existing items with new machine {machineDef.id}");
+            
+            // Create a copy of the items list to avoid modification during iteration
+            var itemsToProcess = new List<ItemData>(cellData.items);
+            
+            foreach (var item in itemsToProcess)
+            {
+                ProcessItemAtMachine(item, cellData, machineDef);
+            }
+        }
+        
+        // Set cell to machine type with the specific machine definition
+        cellData.cellType = UICell.CellType.Machine;
+        cellData.machineDefId = machineDef.id;
+        cellData.direction = lastMachineDirection; // Use last placed machine direction
+
+        // Update visuals
+        if (activeGridManager != null)
+        {
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
+        }
+    }
+
+    private void RotateMachine(CellData cellData)
+    {
+        // Rotate the machine's direction
+        cellData.direction = (UICell.Direction)(((int)cellData.direction + 1) % 4);
+        
+        // Store this as the last machine direction for future placements
+        lastMachineDirection = cellData.direction;
+        
+        Debug.Log($"Rotating machine at ({cellData.x}, {cellData.y}) to direction: {cellData.direction}");
+        
+        // Update visuals
         UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(x, y, newType, newDirection, newMachineType);
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
         }
+    }
 
-        // Only try to move items if the cell is now a conveyor or machine
-        if (cellData.cellType == UICell.CellType.Conveyor || cellData.cellType == UICell.CellType.Machine)
+    private void ProcessItemAtMachine(ItemData item, CellData cellData, MachineDef machineDef)
+    {
+        Debug.Log($"Processing item {item.id} at machine {machineDef.id}");
+        
+        // For now, implement basic machine processing:
+        // - Spawner: should not process items (items shouldn't be placed on spawners)
+        // - Seller: consume the item and remove it from grid
+        // - Conveyor and other machines: let item continue through normal flow
+        
+        if (machineDef.id == "seller")
         {
-            foreach (var item in cellData.items)
+            Debug.Log($"Item {item.id} sold by seller machine");
+            
+            // Stop any movement immediately to prevent visual updates after destruction
+            item.isMoving = false;
+            item.shouldStopAtTarget = true;
+            item.hasQueuedMovement = false;
+            
+            cellData.items.Remove(item);
+            
+            UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
+            if (activeGridManager != null)
             {
-                item.shouldStopAtTarget = false;
-                item.hasCheckedMiddle = false;
+                activeGridManager.DestroyVisualItem(item.id);
+            }
+        }
+        else
+        {
+            Debug.Log($"Item {item.id} will continue through machine {machineDef.id} normally");
+            // For conveyors and other machines, items will be processed in the normal movement flow
+            // Reset item state since it's now on a machine
+            item.isOnBlankCell = false;
+            item.timeOnBlankCell = 0f;
+            
+            // If item was moving, stop it so it can be processed by the new machine
+            if (item.isMoving)
+            {
+                item.isMoving = false;
+                item.shouldStopAtTarget = true;
                 item.hasQueuedMovement = false;
+                Debug.Log($"Stopped moving item {item.id} to be processed by new machine {machineDef.id}");
+            }
+        }
+    }
 
-                // If not already moving, start movement in the new direction/type
-                if (!item.isMoving)
+    private void HandleItemTimeoutAndLimits()
+    {
+        GridData gridData = activeGrids[0];
+        UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
+        if (gridManager == null) return;
+
+        // Count total items on grid and handle timeouts
+        int totalItems = 0;
+        List<ItemData> itemsToRemove = new List<ItemData>();
+        List<CellData> cellsWithItemsToRemove = new List<CellData>();
+
+        foreach (var cell in gridData.cells)
+        {
+            totalItems += cell.items.Count;
+
+            // Handle timeout for items on blank cells
+            for (int i = cell.items.Count - 1; i >= 0; i--)
+            {
+                ItemData item = cell.items[i];
+
+                // Update blank cell time tracking
+                if (cell.cellType == CellType.Blank)
                 {
-                    TryStartItemMovement(item, cellData, gridData, activeGridManager);
+                    if (!item.isOnBlankCell)
+                    {
+                        // Item just arrived on blank cell
+                        item.isOnBlankCell = true;
+                        item.timeOnBlankCell = 0f;
+                        Debug.Log($"Item {item.id} arrived on blank cell at ({cell.x}, {cell.y})");
+                    }
+                    else
+                    {
+                        // Item has been on blank cell, update timer
+                        item.timeOnBlankCell += Time.deltaTime;
+
+                        if (item.timeOnBlankCell >= itemTimeoutOnBlankCells)
+                        {
+                            Debug.Log($"Item {item.id} timed out on blank cell after {item.timeOnBlankCell:F1} seconds");
+                            itemsToRemove.Add(item);
+                            cellsWithItemsToRemove.Add(cell);
+                        }
+                    }
+                }
+                else
+                {
+                    // Item is no longer on blank cell
+                    if (item.isOnBlankCell)
+                    {
+                        item.isOnBlankCell = false;
+                        item.timeOnBlankCell = 0f;
+                        Debug.Log($"Item {item.id} left blank cell and moved to machine {cell.machineDefId}");
+                    }
                 }
             }
+        }
+
+        // Remove timed-out items
+        for (int i = 0; i < itemsToRemove.Count; i++)
+        {
+            var item = itemsToRemove[i];
+            var cell = cellsWithItemsToRemove[i];
+            
+            cell.items.Remove(item);
+            gridManager.DestroyVisualItem(item.id);
+        }
+
+        // Check grid item limit
+        if (totalItems >= maxItemsOnGrid && showItemLimitWarning)
+        {
+            Debug.LogWarning($"Grid item limit reached! {totalItems}/{maxItemsOnGrid} items. Consider adding more sellers or increasing the limit.");
+            // You could add UI notification here in the future
         }
     }
 
@@ -179,22 +408,42 @@ public class GameManager : MonoBehaviour
 
             spawnTimer = spawnInterval;
 
-            // Find all input machines in our data model
+            // Find all spawner machines in our data model
             GridData gridData = activeGrids[0];
+            
+            // Check current item count before spawning
+            int currentItemCount = 0;
             foreach (var cell in gridData.cells)
             {
-                if (cell.cellType == UICell.CellType.Machine && cell.machineType == UICell.MachineType.Input)
+                currentItemCount += cell.items.Count;
+            }
+            
+            if (currentItemCount >= maxItemsOnGrid)
+            {
+                if (showItemLimitWarning)
+                {
+                    Debug.LogWarning($"Cannot spawn new items: Grid limit reached ({currentItemCount}/{maxItemsOnGrid})");
+                }
+                return;
+            }
+            
+            foreach (var cell in gridData.cells)
+            {
+                if (cell.cellType == UICell.CellType.Machine && cell.machineDefId == "spawner")
                 {
                     // Check if the cell already has an item
                     if (cell.items.Count == 0)
                     {
-                        didSpawn = true;
-                        // Spawn a new item if the cell is empty
+                      //  didSpawn = true;
+                        // Spawn a new item if the cell is empty (and grid limit allows)
                         SpawnItem(cell);
                     }
                 }
             }
         }
+
+        // Handle item timeout on blank cells and grid limits
+        HandleItemTimeoutAndLimits();
 
         // Handle item movement
         ProcessItemMovement();
@@ -233,7 +482,11 @@ public class GameManager : MonoBehaviour
                         }
 
                         // Update visual position with proper parent handover timing
-                        gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                        // Only update if the visual item still exists (might have been destroyed by machine processing)
+                        if (gridManager.HasVisualItem(item.id))
+                        {
+                            gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                        }
                     }
                 }
                 else
@@ -263,16 +516,15 @@ public class GameManager : MonoBehaviour
 
         if (targetCell.cellType == CellType.Blank)
         {
-            // Stop at blank cell, set progress to complete
+            // Items can move into blank cells and stop there (intended behavior)
             item.shouldStopAtTarget = true;
-
-            // Optionally set a custom "stopped" flag if needed
-            // item.hasStopped = true;
+            Debug.Log($"Item {item.id} moving to blank cell - will stop there");
+            return;
         }
         else if (targetCell.cellType == CellType.Machine)
         {
             // Moving to machine - will be processed
-            Debug.Log($"Item {item.id} moving to machine - will be processed");
+            Debug.Log($"Item {item.id} moving to machine {targetCell.machineDefId} - will be processed");
             // TODO: Process item at machine (crafting, upgrades, etc.)
 
             // After processing, determine next movement direction
@@ -293,27 +545,6 @@ public class GameManager : MonoBehaviour
                 item.shouldStopAtTarget = true;
             }
         }
-        else if (targetCell.cellType == CellType.Conveyor)
-        {
-            // Moving to conveyor - determine next movement based on conveyor direction
-            int nextX, nextY;
-            GetNextCellCoordinates(targetCell, out nextX, out nextY);
-            CellData nextCell = GetCellData(gridData, nextX, nextY);
-
-            if (nextCell != null)
-            {
-                // Queue up the next movement
-                item.queuedTargetX = nextX;
-                item.queuedTargetY = nextY;
-                item.hasQueuedMovement = true;
-                Debug.Log($"Item {item.id} will continue to ({nextX}, {nextY}) following conveyor");
-            }
-            else
-            {
-                Debug.Log($"Item {item.id} will stop at conveyor end");
-                item.shouldStopAtTarget = true;
-            }
-        }
     }
 
     private void CompleteItemMovement(ItemData item, CellData sourceCell, GridData gridData, UIGridManager gridManager)
@@ -330,11 +561,11 @@ public class GameManager : MonoBehaviour
         // Remove from source cell
         sourceCell.items.Remove(item);
 
-        // Check if target is output machine
-        if (targetCell.cellType == CellType.Machine && targetCell.machineType == MachineType.Output)
+        // Check if target is seller machine
+        if (targetCell.cellType == CellType.Machine && targetCell.machineDefId == "seller")
         {
             // TODO: Replace this with proper output handling (scoring, collection, etc.)
-            Debug.Log($"Item {item.id} reached output machine - destroying");
+            Debug.Log($"Item {item.id} reached seller machine - destroying");
             gridManager.DestroyVisualItem(item.id);
             return;
         }
@@ -343,6 +574,19 @@ public class GameManager : MonoBehaviour
         item.isMoving = false;
         item.moveProgress = 0f;
         targetCell.items.Add(item);
+
+        // Update blank cell tracking based on target cell type
+        if (targetCell.cellType == CellType.Blank)
+        {
+            item.isOnBlankCell = true;
+            item.timeOnBlankCell = 0f;
+            Debug.Log($"Item {item.id} moved to blank cell at ({targetCell.x}, {targetCell.y})");
+        }
+        else
+        {
+            item.isOnBlankCell = false;
+            item.timeOnBlankCell = 0f;
+        }
 
         // Update visual position to exact target
         gridManager.UpdateItemVisualPosition(item.id, 1f, sourceCell.x, sourceCell.y, item.targetX, item.targetY, sourceCell.direction);
@@ -368,6 +612,12 @@ public class GameManager : MonoBehaviour
 
     private void TryStartItemMovement(ItemData item, CellData cell, GridData gridData, UIGridManager gridManager)
     {
+        // Don't start movement from blank cells
+        if (cell.cellType == CellType.Blank)
+        {
+            return;
+        }
+
         // Determine next cell based on current cell type and direction
         int nextX, nextY;
         GetNextCellCoordinates(cell, out nextX, out nextY);
@@ -378,6 +628,9 @@ public class GameManager : MonoBehaviour
         {
             return; // No movement possible
         }
+
+        // Allow movement into blank cells - items will stop there
+        // Removed the blank cell check as items should be able to move into blank spaces
 
         // Start movement
         item.isMoving = true;
@@ -394,8 +647,8 @@ public class GameManager : MonoBehaviour
         nextX = cell.x;
         nextY = cell.y;
 
-        // For input machines, items move in the "up" direction (toward the grid)
-        if (cell.cellType == CellType.Machine && cell.machineType == MachineType.Input)
+        // For spawner machines, items move in the "up" direction (toward the grid)
+        if (cell.cellType == CellType.Machine && cell.machineDefId == "spawner")
         {
             nextY--;
             return;
@@ -421,7 +674,9 @@ public class GameManager : MonoBehaviour
             id = "item_" + nextItemId++,
             itemType = "Placeholder",
             isMoving = false,
-            moveProgress = 0f
+            moveProgress = 0f,
+            isOnBlankCell = false,
+            timeOnBlankCell = 0f
         };
 
         cellData.items.Add(newItem);
@@ -454,7 +709,7 @@ public class GameManager : MonoBehaviour
 
             cell.cellType = CellType.Blank;
             cell.direction = Direction.Up;
-            cell.machineType = MachineType.None;
+            cell.machineDefId = null; // Clear machine definition reference
             cell.items.Clear();
         }
 

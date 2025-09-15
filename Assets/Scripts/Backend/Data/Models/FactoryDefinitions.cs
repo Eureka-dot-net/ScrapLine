@@ -27,11 +27,13 @@ public class MachineDef
     public string borderSprite;            // border/track sprite (can be null)
     public string buildingSprite;          // building sprite (can be null)
     public string movingPartMaterial;      // material for moving part (can be null)
+    public string borderColor;             // hex color for border tint (can be null)
     public int buildingDirection;          // degrees (0, 90, 180, 270)
     public ParentChangeThresholds parentChangeThresholds;
     public List<UpgradeMultiplier> upgradeMultipliers;
     public List<string> gridPlacement;     // e.g., ["any"], ["bottom"]
     public int maxNumber;
+    public bool displayInPanel = true;     // whether to show in machine selection panel
 }
 
 [System.Serializable]
