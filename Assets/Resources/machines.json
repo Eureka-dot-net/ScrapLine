@@ -25,6 +25,56 @@
             "displayInPanel": false
         },
         {
+            "id": "blank_top",
+            "type": "Blank",
+            "sprite": "",
+            "baseProcessTime": 0,
+            "movingPartSprite": "",
+            "borderSprite": "UICellSprite",
+            "buildingSprite": "",
+            "movingPartMaterial": "",
+            "buildingDirection": 0,
+            "borderColor": "#FFAAAA",
+            "parentChangeThresholds": {
+                "down": 0.5,
+                "right": 0.5,
+                "up": 0.5,
+                "left": 0.5,
+                "default": 0.5
+            },
+            "upgradeMultipliers": [],
+            "gridPlacement": [
+                "top"
+            ],
+            "maxNumber": -1,
+            "displayInPanel": false
+        },
+        {
+            "id": "blank_bottom",
+            "type": "Blank", 
+            "sprite": "",
+            "baseProcessTime": 0,
+            "movingPartSprite": "",
+            "borderSprite": "UICellSprite", 
+            "buildingSprite": "",
+            "movingPartMaterial": "",
+            "buildingDirection": 0,
+            "borderColor": "#AAFFAA",
+            "parentChangeThresholds": {
+                "down": 0.5,
+                "right": 0.5,
+                "up": 0.5,
+                "left": 0.5,
+                "default": 0.5
+            },
+            "upgradeMultipliers": [],
+            "gridPlacement": [
+                "bottom"
+            ],
+            "maxNumber": -1,
+            "displayInPanel": false
+        },
+        {
             "id": "conveyor",
             "type": "Conveyor",
             "sprite": "",

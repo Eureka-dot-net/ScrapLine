@@ -4,13 +4,17 @@ using UnityEngine.UI;
 
 public class MachineRenderer : MonoBehaviour
 {
+    [Header("Context")]
+    public bool isInMenu = false; // Set to true when used in UI panels to disable materials
+    
     public void Setup(MachineDef def, UICell.Direction cellDirection = UICell.Direction.Up)
     {
         foreach (Transform child in transform) Destroy(child.gameObject);
 
         Debug.Log("Creating machine with sprites: " +
                   $"Main='{def.sprite}', Border='{def.borderSprite}', " +
-                  $"MovingPart='{def.movingPartSprite}', Building='{def.buildingSprite}'");
+                  $"MovingPart='{def.movingPartSprite}', Building='{def.buildingSprite}'" +
+                  $" BorderColor='{def.borderColor}', IsInMenu={isInMenu}");
 
         // Create images in back-to-front order (first created = background)
 
@@ -18,7 +22,8 @@ public class MachineRenderer : MonoBehaviour
         if (!string.IsNullOrEmpty(def.movingPartSprite))
         {
             var movingPart = CreateImageChild("MovingPart", def.movingPartSprite);
-            if (!string.IsNullOrEmpty(def.movingPartMaterial))
+            // Only apply materials if NOT in menu to prevent unwanted animations
+            if (!isInMenu && !string.IsNullOrEmpty(def.movingPartMaterial))
             {
                 string movingPartMatPath = "Materials/" + def.movingPartMaterial;
                 var mat = Resources.Load<Material>(movingPartMatPath);
@@ -32,12 +37,32 @@ public class MachineRenderer : MonoBehaviour
                     Debug.LogWarning($"Material '{movingPartMatPath}' could not be found in Resources folder for machine '{def.id}'");
                 }
             }
+            else if (isInMenu)
+            {
+                Debug.Log($"Skipping material application for '{def.id}' - in menu context");
+            }
             movingPart.transform.SetSiblingIndex(0);
         }
 
         if (!string.IsNullOrEmpty(def.borderSprite))
         {
             var border = CreateImageChild("Border", def.borderSprite);
+            
+            // Apply border color tinting if specified
+            if (!string.IsNullOrEmpty(def.borderColor))
+            {
+                Color borderColor;
+                if (ColorUtility.TryParseHtmlString(def.borderColor, out borderColor))
+                {
+                    border.color = borderColor;
+                    Debug.Log($"Applied border color '{def.borderColor}' to border image");
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to parse border color '{def.borderColor}' for machine '{def.id}'");
+                }
+            }
+            
             border.transform.SetSiblingIndex(1); // Ensure it's in back
         }
 

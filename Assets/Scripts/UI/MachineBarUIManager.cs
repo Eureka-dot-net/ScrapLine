@@ -67,6 +67,7 @@ public class MachineBarUIManager : MonoBehaviour
             var machineRenderer = buttonObj.GetComponent<MachineRenderer>();
             if (machineRenderer != null)
             {
+                machineRenderer.isInMenu = true; // Prevent materials/animations in menu
                 machineRenderer.Setup(machine);
             }
             else
