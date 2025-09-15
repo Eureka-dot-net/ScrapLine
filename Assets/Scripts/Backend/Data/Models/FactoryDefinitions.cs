@@ -25,6 +25,7 @@ public class MachineDef
     public bool displayInPanel = true;     // whether to show in machine selection panel
     public int cost = 0;                   // Credits cost to place this machine
     public List<string> spawnableItems;    // Items that this machine can spawn (for spawners)
+    public bool canRotate = true;          // whether this machine can be rotated by clicking
 }
 
 [System.Serializable]

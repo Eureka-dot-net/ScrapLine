@@ -16,7 +16,8 @@
             ],
             "maxNumber": -1,
             "displayInPanel": false,
-            "cost": 0
+            "cost": 0,
+            "canRotate": false
         },
         {
             "id": "blank_top",
@@ -35,7 +36,8 @@
             ],
             "maxNumber": -1,
             "displayInPanel": false,
-            "cost": 0
+            "cost": 0,
+            "canRotate": false
         },
         {
             "id": "blank_bottom",
@@ -54,7 +56,8 @@
             ],
             "maxNumber": -1,
             "displayInPanel": false,
-            "cost": 0
+            "cost": 0,
+            "canRotate": false
         },
         {
             "id": "conveyor",
@@ -72,7 +75,8 @@
             ],
             "maxNumber": -1,
             "displayInPanel": true,
-            "cost": 20
+            "cost": 20,
+            "canRotate": true
         },
         {
             "id": "spawner",
@@ -113,7 +117,8 @@
                 }
             ],
             "displayInPanel": true,
-            "cost": 50
+            "cost": 50,
+            "canRotate": false
         },
         {
             "id": "seller",
@@ -131,7 +136,8 @@
             ],
             "maxNumber": 1,
             "displayInPanel": true,
-            "cost": 50
+            "cost": 50,
+            "canRotate": false
         },
         {
             "id": "shredder",
@@ -172,7 +178,8 @@
             "upgradeMaxNumbers": [],
             "processAdjustment": 1,
             "displayInPanel": true,
-            "cost": 75
+            "cost": 75,
+            "canRotate": true
         }
     ]
 }
