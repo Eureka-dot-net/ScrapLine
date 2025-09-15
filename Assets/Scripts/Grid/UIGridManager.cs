@@ -306,7 +306,7 @@ public class UIGridManager : MonoBehaviour
 
     // New methods for GameManager to control visual items
 
-    public void CreateVisualItem(string itemId, int x, int y)
+    public void CreateVisualItem(string itemId, int x, int y, string itemType = null)
     {
         UICell cell = GetCell(x, y);
         if (cell == null)
@@ -329,8 +329,50 @@ public class UIGridManager : MonoBehaviour
         GameObject newItem = Instantiate(itemPrefab, spawnPoint);
         newItem.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
+        // Set the item type on the UIItem component
+        UIItem itemComponent = newItem.GetComponent<UIItem>();
+        if (itemComponent != null && !string.IsNullOrEmpty(itemType))
+        {
+            itemComponent.itemType = itemType;
+            SetItemSprite(newItem, itemType);
+        }
+
         visualItems[itemId] = newItem;
         Debug.Log($"Created visual item {itemId} at ({x}, {y})");
+    }
+
+    private void SetItemSprite(GameObject itemObject, string itemType)
+    {
+        // Try to load sprite for the item type
+        string spritePath = $"Sprites/Scrap/{itemType}";
+        Sprite itemSprite = Resources.Load<Sprite>(spritePath);
+        
+        // Get the Image component on the item
+        Image itemImage = itemObject.GetComponent<Image>();
+        if (itemImage == null)
+        {
+            itemImage = itemObject.GetComponentInChildren<Image>();
+        }
+        
+        if (itemImage != null)
+        {
+            if (itemSprite != null)
+            {
+                itemImage.sprite = itemSprite;
+                itemImage.color = Color.white; // Reset to normal color
+                Debug.Log($"Successfully loaded sprite for item type: {itemType}");
+            }
+            else
+            {
+                // Sprite not found - set fallback color and log warning
+                Debug.LogWarning($"Sprite not found for item type '{itemType}' at path: {spritePath}");
+                itemImage.color = Color.magenta; // Make it obvious something is wrong
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"No Image component found on item prefab for item type: {itemType}");
+        }
     }
 
     public void DestroyVisualItem(string itemId)
