@@ -76,8 +76,6 @@ public class MachineBarUIManager : MonoBehaviour
             }
         }
         
-        // Update affordability after creating all buttons
-        UpdateAffordability();
     }
 
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)

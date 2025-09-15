@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
     // Credits system
     [Header("Credits System")]
     [Tooltip("Starting credits amount for new games")]
-    public int startingCredits = 200; // Enough for 1 spawner (50) + 5 conveyors (100) + 1 seller (50)
+    public int startingCredits = 2000; // Enough for 1 spawner (50) + 5 conveyors (100) + 1 seller (50)
     private int currentCredits = 0;
     private CreditsUI creditsUI;
 
@@ -133,7 +133,7 @@ public class GameManager : MonoBehaviour
     {
         return currentCredits;
     }
-    
+
     /// <summary>
     /// Update the credits UI display
     /// </summary>
@@ -143,6 +143,7 @@ public class GameManager : MonoBehaviour
         {
             creditsUI.UpdateCredits(currentCredits);
         }
+        machineBarManager?.UpdateAffordability();
     }
     
     /// <summary>
