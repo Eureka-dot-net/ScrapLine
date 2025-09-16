@@ -757,15 +757,15 @@ public class GameManager : MonoBehaviour
             if (machineIsBusy)
             {
                 // Machine is busy, item stays on source cell and waits
-                Debug.Log($"Machine {targetCell.machineDefId} is busy processing another item, item {item.id} will wait");
+                Debug.Log($"Machine {targetCell.machineDefId} is busy processing another item, item {item.id} will wait on source cell");
                 
-                // Move item to target cell but don't start processing yet (item queues)
+                // Item stays on source cell - do NOT move to target
                 item.isMoving = false;
                 item.moveProgress = 0f;
-                targetCell.items.Add(item);
+                sourceCell.items.Add(item); // Add back to source cell
                 
-                // Update visual position with stacking offset for multiple items on same cell
-                UpdateItemStackingPosition(item, targetCell, gridManager);
+                // Update visual position with stacking offset for multiple items on same source cell
+                UpdateItemStackingPosition(item, sourceCell, gridManager);
                 return;
             }
             
@@ -870,6 +870,20 @@ public class GameManager : MonoBehaviour
         if (nextCell == null)
         {
             return; // No movement possible
+        }
+
+        // Check if target is a processing machine and if it's busy
+        if (nextCell.cellType == CellType.Machine && !string.IsNullOrEmpty(nextCell.machineDefId) && 
+            nextCell.machineDefId != "conveyor" && nextCell.machineDefId != "spawner" && nextCell.machineDefId != "seller")
+        {
+            // Check if machine is already processing an item (single-item processing limit)
+            bool machineIsBusy = nextCell.items.Any(existingItem => existingItem.isProcessing);
+            
+            if (machineIsBusy)
+            {
+                Debug.Log($"Cannot start movement - target machine {nextCell.machineDefId} is busy processing another item");
+                return; // Don't start movement to busy machine
+            }
         }
 
         // Allow movement into blank cells - items will stop there
@@ -995,6 +1009,9 @@ public class GameManager : MonoBehaviour
         
         // After processing completes, check if there are waiting items that can start processing
         CheckForWaitingItemsToProcess(cell);
+        
+        // Also check adjacent cells for items that were waiting to move to this machine
+        CheckAdjacentCellsForWaitingItems(cell, gridData);
     }
     
     private void UpdateItemStackingPosition(ItemData item, CellData cell, UIGridManager gridManager)
@@ -1085,6 +1102,44 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < visibleItems.Count; i++)
         {
             UpdateItemStackingPosition(visibleItems[i], cell, gridManager);
+        }
+    }
+    
+    private void CheckAdjacentCellsForWaitingItems(CellData machineCell, GridData gridData)
+    {
+        // Check all cells adjacent to this machine for items that were waiting to move here
+        int[] deltaX = { -1, 1, 0, 0 };
+        int[] deltaY = { 0, 0, -1, 1 };
+        
+        for (int i = 0; i < 4; i++)
+        {
+            int adjacentX = machineCell.x + deltaX[i];
+            int adjacentY = machineCell.y + deltaY[i];
+            
+            CellData adjacentCell = GetCellData(gridData, adjacentX, adjacentY);
+            if (adjacentCell != null)
+            {
+                // Check if this adjacent cell has items that could move to the now-available machine
+                foreach (var item in adjacentCell.items.ToList()) // ToList to avoid modification during iteration
+                {
+                    if (!item.isMoving && !item.isProcessing)
+                    {
+                        // Check if this cell would normally direct items to the machine cell
+                        int nextX, nextY;
+                        GetNextCellCoordinates(adjacentCell, out nextX, out nextY);
+                        
+                        if (nextX == machineCell.x && nextY == machineCell.y)
+                        {
+                            // This item was waiting to move to this machine - try to start movement now
+                            UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
+                            if (gridManager != null)
+                            {
+                                TryStartItemMovement(item, adjacentCell, gridData, gridManager);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     }
