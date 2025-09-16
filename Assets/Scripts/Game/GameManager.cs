@@ -743,6 +743,19 @@ public class GameManager : MonoBehaviour
         // Remove from source cell
         sourceCell.items.Remove(item);
 
+        // Check if this is an item transitioning from waiting to processing
+        if (!string.IsNullOrEmpty(item.processingMachineId) && item.processingDuration > 0 && item.processingStartTime == 0)
+        {
+            // This item was transitioning from waiting queue to processing
+            // Complete the processing setup and destroy visual
+            item.state = ItemState.Processing;
+            item.processingStartTime = Time.time;
+            
+            gridManager.DestroyVisualItem(item.id);
+            Debug.Log($"Completed transition for item {item.id} - now processing in machine {item.processingMachineId} for {item.processingDuration}s");
+            return;
+        }
+
         // Check if target is blank cell - destroy item
         if (targetCell.cellType == CellType.Blank)
         {
@@ -953,30 +966,40 @@ public class GameManager : MonoBehaviour
         {
             ItemData waitingItem = machineCell.waitingQueue.Dequeue();
             
-            // Start processing this item
-            waitingItem.state = ItemState.Processing;
+            // Animate the item moving from waiting position to machine center before starting processing
+            StartWaitingItemTransition(waitingItem, machineCell, gridManager);
             
-            // Move to machine cell
-            machineCell.items.Add(waitingItem);
-            
-            // Look up recipe
-            RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(machineCell.machineDefId, waitingItem.itemType);
-            if (recipe != null)
+            Debug.Log($"Started transition for waiting item {waitingItem.id} to enter machine {machineCell.machineDefId}");
+        }
+    }
+
+    private void StartWaitingItemTransition(ItemData waitingItem, CellData machineCell, UIGridManager gridManager)
+    {
+        // Set up transition from waiting position to machine center
+        waitingItem.state = ItemState.Moving;
+        waitingItem.targetX = machineCell.x;
+        waitingItem.targetY = machineCell.y;
+        waitingItem.moveStartTime = Time.time;
+        waitingItem.moveProgress = 0.33f; // Start from 33% (waiting position)
+        
+        // We'll complete the processing setup when the movement finishes in CompleteItemMovement
+        
+        // Look up recipe and store processing info for when transition completes
+        RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(machineCell.machineDefId, waitingItem.itemType);
+        if (recipe != null)
+        {
+            MachineDef machineDef = FactoryRegistry.Instance.GetMachine(machineCell.machineDefId);
+            if (machineDef != null)
             {
-                MachineDef machineDef = FactoryRegistry.Instance.GetMachine(machineCell.machineDefId);
-                if (machineDef != null)
-                {
-                    float processTime = machineDef.baseProcessTime * recipe.processMultiplier;
-                    waitingItem.processingStartTime = Time.time;
-                    waitingItem.processingDuration = processTime;
-                    waitingItem.processingMachineId = machineCell.machineDefId;
-                    
-                    // Destroy visual since item is now inside machine
-                    gridManager.DestroyVisualItem(waitingItem.id);
-                    Debug.Log($"Started processing waiting item {waitingItem.id} - will complete in {processTime}s");
-                }
+                float processTime = machineDef.baseProcessTime * recipe.processMultiplier;
+                waitingItem.processingDuration = processTime;
+                waitingItem.processingMachineId = machineCell.machineDefId;
+                // Don't set processingStartTime yet - will be set when animation completes
             }
         }
+        
+        // Add to machine cell
+        machineCell.items.Add(waitingItem);
     }
 
     
