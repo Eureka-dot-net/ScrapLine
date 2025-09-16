@@ -599,9 +599,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Handle item timeout on blank cells and grid limits
-        HandleItemTimeoutAndLimits();
-
         // Handle item movement
         ProcessItemMovement();
     }
@@ -618,60 +615,126 @@ public class GameManager : MonoBehaviour
             {
                 ItemData item = cell.items[i];
 
-                if (item.isMoving)
+                switch (item.state)
                 {
-                    // Update movement progress
-                    float timeSinceStart = Time.time - item.moveStartTime;
-                    item.moveProgress = timeSinceStart * itemMoveSpeed;
-
-                    if (item.moveProgress >= 1.0f)
-                    {
-                        // Movement complete - transfer item to target cell
-                        CompleteItemMovement(item, cell, gridData, gridManager);
-                        i--; // Account for item being removed from current cell
-                    }
-                    else
-                    {
-                        // Check if we've reached the middle of movement and need to decide next action
-                        if (item.moveProgress >= 0.5f && !item.hasCheckedMiddle)
-                        {
-                            CheckItemAtCellMiddle(item, gridData);
-                        }
-
-                        // Update visual position with proper parent handover timing
-                        // Only update if the visual item still exists (might have been destroyed by machine processing)
-                        if (gridManager.HasVisualItem(item.id))
-                        {
-                            gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
-                        }
-                    }
-                }
-                else if (item.isProcessing)
-                {
-                    // Check if processing is complete
-                    float processingElapsed = Time.time - item.processingStartTime;
-                    if (processingElapsed >= item.processingDuration)
-                    {
-                        CompleteRecipeProcessing(item, cell, gridData, gridManager);
-                        i--; // Account for item being potentially removed/replaced
-                    }
-                }
-                else if (item.isWaiting)
-                {
-                    // For waiting items, try to start movement if machine becomes available
-                    TryStartItemMovement(item, cell, gridData, gridManager);
-                }
-                else
-                {
-                    if (cell.cellType != CellType.Blank && !item.shouldStopAtTarget /* && !item.hasStopped */)
-                    {
-                        // Check if item can start moving
+                    case ItemState.Idle:
+                        // Try to start movement if possible
                         TryStartItemMovement(item, cell, gridData, gridManager);
-                    }
+                        break;
+
+                    case ItemState.Moving:
+                        // Update movement progress
+                        float timeSinceStart = Time.time - item.moveStartTime;
+                        item.moveProgress = timeSinceStart * itemMoveSpeed;
+
+                        if (item.moveProgress >= 1.0f)
+                        {
+                            // Movement complete
+                            CompleteItemMovement(item, cell, gridData, gridManager);
+                            i--; // Account for item being removed from current cell
+                        }
+                        else
+                        {
+                            // Update visual position - but only to 1/3 progress if waiting
+                            float visualProgress = item.moveProgress;
+                            if (IsTargetMachineBusy(item, gridData) && item.moveProgress > 0.33f)
+                            {
+                                visualProgress = 0.33f; // Stop visual at 1/3 boundary
+                                item.state = ItemState.Waiting; // Enter waiting state
+                            }
+
+                            if (gridManager.HasVisualItem(item.id))
+                            {
+                                gridManager.UpdateItemVisualPosition(item.id, visualProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                            }
+                        }
+                        break;
+
+                    case ItemState.Waiting:
+                        // Check if target machine is now available
+                        if (!IsTargetMachineBusy(item, gridData))
+                        {
+                            // First item in cell can continue moving
+                            if (cell.items[0] == item)
+                            {
+                                item.state = ItemState.Moving;
+                                Debug.Log($"Item {item.id} can now continue to available machine");
+                            }
+                        }
+                        else
+                        {
+                            // Update visual position for stacking waiting items
+                            UpdateWaitingItemVisualPosition(item, cell, gridManager);
+                        }
+                        break;
+
+                    case ItemState.Processing:
+                        // Check if processing is complete
+                        float processingElapsed = Time.time - item.processingStartTime;
+                        if (processingElapsed >= item.processingDuration)
+                        {
+                            CompleteRecipeProcessing(item, cell, gridData, gridManager);
+                            i--; // Account for item being potentially removed/replaced
+                        }
+                        break;
                 }
             }
         }
+    }
 
+    private bool IsTargetMachineBusy(ItemData item, GridData gridData)
+    {
+        CellData targetCell = GetCellData(gridData, item.targetX, item.targetY);
+        if (targetCell == null) return false;
+        
+        // Check if it's a processing machine (not conveyor, blank, spawner, or seller)
+        if (targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId) && 
+            targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
+        {
+            // Check if machine is processing
+            return targetCell.items.Any(existingItem => existingItem.state == ItemState.Processing);
+        }
+        
+        return false;
+    }
+
+    private void UpdateWaitingItemVisualPosition(ItemData item, CellData sourceCell, UIGridManager gridManager)
+    {
+        if (!gridManager.HasVisualItem(item.id)) return;
+
+        // Calculate position at 1/3 boundary towards target
+        Vector3 sourcePos = gridManager.GetCellWorldPosition(sourceCell.x, sourceCell.y);
+        Vector3 targetPos = gridManager.GetCellWorldPosition(item.targetX, item.targetY);
+        Vector3 boundaryPos = Vector3.Lerp(sourcePos, targetPos, 0.33f);
+
+        // Add stacking offset based on position in cell.items list
+        int itemIndex = sourceCell.items.FindIndex(i => i.id == item.id);
+        Vector2 cellSize = gridManager.GetCellSize();
+        
+        Vector3 stackOffset = Vector3.zero;
+        float stackDistance = cellSize.y * 0.1f;
+        
+        // Stack perpendicular to movement direction
+        switch (sourceCell.direction)
+        {
+            case Direction.Up:
+            case Direction.Down:
+                stackOffset.x = itemIndex * stackDistance * 0.5f; // Smaller offset to prevent overflow
+                break;
+            case Direction.Left:
+            case Direction.Right:
+                stackOffset.y = itemIndex * stackDistance * 0.5f;
+                break;
+        }
+
+        Vector3 finalPos = boundaryPos + stackOffset;
+        
+        GameObject visualItem = gridManager.GetVisualItem(item.id);
+        if (visualItem != null)
+        {
+            RectTransform itemRect = visualItem.GetComponent<RectTransform>();
+            itemRect.position = finalPos;
+        }
     }
 
     private void CheckItemAtCellMiddle(ItemData item, GridData gridData)
@@ -722,7 +785,6 @@ public class GameManager : MonoBehaviour
     {
         // Find target cell
         CellData targetCell = GetCellData(gridData, item.targetX, item.targetY);
-
         if (targetCell == null)
         {
             Debug.LogError($"Target cell not found at ({item.targetX}, {item.targetY})");
@@ -769,125 +831,38 @@ public class GameManager : MonoBehaviour
                     float processTime = machineDef.baseProcessTime * recipe.processMultiplier;
                     Debug.Log($"Recipe processing time: {processTime}s (base: {machineDef.baseProcessTime}, multiplier: {recipe.processMultiplier})");
                     
-                    // Move item to target cell FIRST, then start processing
-                    item.isMoving = false;
-                    item.moveProgress = 0f;
+                    // Move item to target cell and start processing
+                    item.state = ItemState.Processing;
+                    item.processingStartTime = Time.time;
+                    item.processingDuration = processTime;
+                    item.processingMachineId = targetCell.machineDefId;
                     targetCell.items.Add(item);
                     
                     // Destroy visual item when entering machine for processing
                     gridManager.DestroyVisualItem(item.id);
-                    Debug.Log($"Destroyed visual item {item.id} when entering machine for processing");
-                    
-                    // Start processing with timing delay
-                    item.isProcessing = true;
-                    item.processingStartTime = Time.time;
-                    item.processingDuration = processTime;
-                    item.processingMachineId = targetCell.machineDefId;
-                    
                     Debug.Log($"Started processing item {item.id} ({item.itemType}) - will complete in {processTime}s");
                     
-                    return; // Don't continue with normal item movement processing
+                    return;
                 }
-                else
-                {
-                    Debug.LogWarning($"Machine definition not found for {targetCell.machineDefId}");
-                }
-            }
-            else
-            {
-                Debug.Log($"No recipe found for machine {targetCell.machineDefId} with input item {item.itemType} - maintaining current behavior");
             }
         }
 
-        // Add to target cell and reset movement state
-        item.isMoving = false;
+        // Add to target cell and reset to idle state
+        item.state = ItemState.Idle;
         item.moveProgress = 0f;
         targetCell.items.Add(item);
 
-        // Update blank cell tracking based on target cell type
-        if (targetCell.cellType == CellType.Blank)
-        {
-            item.isOnBlankCell = true;
-            item.timeOnBlankCell = 0f;
-            Debug.Log($"Item {item.id} moved to blank cell at ({targetCell.x}, {targetCell.y})");
-        }
-        else
-        {
-            item.isOnBlankCell = false;
-            item.timeOnBlankCell = 0f;
-        }
-
         // Update visual position to exact target
         gridManager.UpdateItemVisualPosition(item.id, 1f, sourceCell.x, sourceCell.y, item.targetX, item.targetY, sourceCell.direction);
-
-        if (item.hasQueuedMovement && !item.shouldStopAtTarget)
-        {
-            // Start the queued movement immediately
-            item.targetX = item.queuedTargetX;
-            item.targetY = item.queuedTargetY;
-            item.isMoving = true;
-            item.moveStartTime = Time.time;
-            item.moveProgress = 0f;
-            item.hasCheckedMiddle = false;
-            item.hasQueuedMovement = false;
-
-            Debug.Log($"Starting queued movement for item {item.id} to ({item.targetX}, {item.targetY})");
-        }
-
-        // Reset flags
-        item.shouldStopAtTarget = false;
-        item.hasQueuedMovement = false;
     }
 
     private void TryStartItemMovement(ItemData item, CellData cell, GridData gridData, UIGridManager gridManager)
     {
+        // Only idle items can start moving
+        if (item.state != ItemState.Idle) return;
+        
         // Don't start movement from blank cells
-        if (cell.cellType == CellType.Blank)
-        {
-            return;
-        }
-
-        // If item is waiting, check if the machine it's waiting for is now available
-        if (item.isWaiting)
-        {
-            CellData waitingMachineCell = GetCellData(gridData, item.waitingAtX, item.waitingAtY);
-            if (waitingMachineCell != null)
-            {
-                // Check if machine is no longer busy and this item is first in queue
-                bool machineIsBusy = waitingMachineCell.items.Any(existingItem => existingItem.isProcessing);
-                
-                if (!machineIsBusy && item.queuePosition == 0)
-                {
-                    // Machine is now available and this item is first in queue - start movement to machine
-                    Debug.Log($"Item {item.id} can now move to available machine {waitingMachineCell.machineDefId}");
-                    
-                    // Clear waiting state
-                    item.isWaiting = false;
-                    item.waitingAtX = 0;
-                    item.waitingAtY = 0;
-                    item.queuePosition = 0;
-                    
-                    // Update queue positions for remaining waiting items
-                    UpdateWaitingQueuePositions(cell, item.waitingAtX, item.waitingAtY);
-                    
-                    // Start movement to the machine
-                    item.isMoving = true;
-                    item.targetX = waitingMachineCell.x;
-                    item.targetY = waitingMachineCell.y;
-                    item.moveStartTime = Time.time;
-                    item.moveProgress = 0f;
-                    item.hasCheckedMiddle = false;
-                    
-                    Debug.Log($"Starting movement for waiting item {item.id} to machine at ({item.targetX}, {item.targetY})");
-                    return;
-                }
-                else
-                {
-                    // Still waiting - don't start movement
-                    return;
-                }
-            }
-        }
+        if (cell.cellType == CellType.Blank) return;
 
         // Determine next cell based on current cell type and direction
         int nextX, nextY;
@@ -895,43 +870,26 @@ public class GameManager : MonoBehaviour
 
         // Check if next cell exists
         CellData nextCell = GetCellData(gridData, nextX, nextY);
-        if (nextCell == null)
+        if (nextCell == null) return;
+
+        // Simplified logic for blank cells - destroy items that move to blank cells
+        if (nextCell.cellType == CellType.Blank)
         {
-            return; // No movement possible
+            Debug.Log($"Item {item.id} moving to blank cell - will be destroyed");
+            cell.items.Remove(item);
+            gridManager.DestroyVisualItem(item.id);
+            return;
         }
 
-        // Check if target is a processing machine and if it's busy - PREVENT movement from starting
-        if (nextCell.cellType == CellType.Machine && !string.IsNullOrEmpty(nextCell.machineDefId) && 
-            nextCell.machineDefId != "conveyor" && nextCell.machineDefId != "spawner" && nextCell.machineDefId != "seller")
-        {
-            // Check if machine is already processing an item (single-item processing limit)
-            bool machineIsBusy = nextCell.items.Any(existingItem => existingItem.isProcessing);
-            
-            if (machineIsBusy)
-            {
-                // Machine is busy - enter waiting state immediately without starting movement
-                Debug.Log($"Machine {nextCell.machineDefId} is busy - item {item.id} will wait at boundary");
-                
-                item.isWaiting = true;
-                item.waitingAtX = nextCell.x;
-                item.waitingAtY = nextCell.y;
-                
-                // Update queue position for this waiting item
-                UpdateWaitingItemQueuePosition(item, cell);
-                
-                // Update visual position to boundary between cells
-                UpdateWaitingItemPosition(item, cell, gridManager);
-                
-                return; // Don't start movement to busy machine
-            }
-        }
-
-        // Allow movement into blank cells - items will stop there
         // Start movement
-        item.isMoving = true;
+        item.state = ItemState.Moving;
         item.targetX = nextX;
         item.targetY = nextY;
         item.moveStartTime = Time.time;
+        item.moveProgress = 0f;
+
+        Debug.Log($"Starting movement for item {item.id} from ({cell.x},{cell.y}) to ({nextX},{nextY})");
+    }
         item.moveProgress = 0f;
 
         Debug.Log($"Starting movement for item {item.id} from ({cell.x},{cell.y}) to ({nextX},{nextY})");
@@ -977,19 +935,12 @@ public class GameManager : MonoBehaviour
         ItemData newItem = new ItemData
         {
             id = "item_" + nextItemId++,
-            itemType = itemType, // Use actual item type instead of "Placeholder"
-            isMoving = false,
+            itemType = itemType,
+            state = ItemState.Idle,
             moveProgress = 0f,
-            isOnBlankCell = false,
-            timeOnBlankCell = 0f,
-            isProcessing = false,
             processingStartTime = 0f,
             processingDuration = 0f,
-            processingMachineId = "",
-            isWaiting = false,
-            waitingAtX = 0,
-            waitingAtY = 0,
-            queuePosition = 0
+            processingMachineId = ""
         };
 
         cellData.items.Add(newItem);
@@ -1025,18 +976,11 @@ public class GameManager : MonoBehaviour
                     {
                         id = "item_" + nextItemId++,
                         itemType = outputItem.item,
-                        isMoving = false,
+                        state = ItemState.Idle,
                         moveProgress = 0f,
-                        isOnBlankCell = false,
-                        timeOnBlankCell = 0f,
-                        isProcessing = false,
                         processingStartTime = 0f,
                         processingDuration = 0f,
-                        processingMachineId = "",
-                        isWaiting = false,
-                        waitingAtX = 0,
-                        waitingAtY = 0,
-                        queuePosition = 0
+                        processingMachineId = ""
                     };
                     
                     cell.items.Add(newItem);

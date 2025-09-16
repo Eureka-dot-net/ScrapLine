@@ -2,41 +2,33 @@
 
 using System.Collections.Generic;
 
+public enum ItemState
+{
+    Idle,      // Item is stationary and ready to move
+    Moving,    // Item is moving between cells
+    Waiting,   // Item is waiting because target machine is busy
+    Processing // Item is being processed by a machine
+}
+
 [System.Serializable]
 public class ItemData
 {
     public string id;
     public string itemType;
     
-    // Movement state
-    public bool isMoving;
+    // Simple state machine
+    public ItemState state = ItemState.Idle;
+    
+    // Movement data (reuse existing fields)
     public int targetX;
     public int targetY;
     public float moveProgress; // 0.0 to 1.0
     public float moveStartTime;
-    public bool hasCheckedMiddle; // Flag to prevent multiple middle checks per movement
     
-    // Waiting state for busy machines
-    public bool isWaiting; // Whether item is waiting at machine border due to busy machine
-    public int waitingAtX; // X coordinate of machine being waited for
-    public int waitingAtY; // Y coordinate of machine being waited for
-    public int queuePosition; // Position in waiting queue (0 = first in line)
-    
-    // Next movement planning
-    public bool shouldStopAtTarget;
-    public bool hasQueuedMovement;
-    public int queuedTargetX;
-    public int queuedTargetY;
-    
-    // Timeout tracking for blank cells
-    public float timeOnBlankCell; // Time spent on current blank cell
-    public bool isOnBlankCell; // Whether item is currently on a blank cell
-    
-    // Recipe processing state
-    public bool isProcessing; // Whether item is currently being processed by a recipe
-    public float processingStartTime; // When processing started
-    public float processingDuration; // How long processing should take
-    public string processingMachineId; // Which machine is processing this item
+    // Processing data (simplified)
+    public float processingStartTime;
+    public float processingDuration;
+    public string processingMachineId;
 }
 
 [System.Serializable]
