@@ -1,11 +1,33 @@
-{
-  "recipes": [
-    
-    {
-      "machineId": "shredder",
-      "inputItems": ["can"],
-      "outputItems": ["shreddedAluminum"],
-      "processAdjustment": 1
-    }
-  ]
-}
+[
+  {
+    "machineId": "shredder",
+    "inputItems": [
+      { "item": "can", "count": 1 }
+    ],
+    "outputItems": [
+      { "item": "shreddedAluminum", "count": 1 }
+    ],
+    "processMultiplier": 1
+  },
+  {
+    "machineId": "shredder",
+    "inputItems": [
+      { "item": "toaster", "count": 1 }
+    ],
+    "outputItems": [
+      { "item": "shreddedIron", "count": 3 }
+    ],
+    "processMultiplier": 2
+  },
+  {
+    "machineId": "crafter",
+    "inputItems": [
+      { "item": "plastic", "count": 1 },
+      { "item": "copper", "count": 2 }
+    ],
+    "outputItems": [
+      { "item": "motherboard", "count": 1 }
+    ],
+    "processMultiplier": 3
+  }
+]

@@ -13,10 +13,9 @@ public class MachineDef
     public string type;
     public string sprite;                  // UI icon
     public float baseProcessTime;
-    public string movingPartSprite;        // moving part sprite
+    public bool isMoving;                  // whether this machine has moving parts
     public string borderSprite;            // border/track sprite (can be null)
     public string buildingSprite;          // building sprite (can be null)
-    public string movingPartMaterial;      // material for moving part (can be null)
     public string borderColor;             // hex color for border tint (can be null)
     public int buildingDirection;          // degrees (0, 90, 180, 270)
     public List<UpgradeMultiplier> upgradeMultipliers;
@@ -29,11 +28,17 @@ public class MachineDef
 }
 
 [System.Serializable]
+public class RecipeItemDef {
+    public string item;
+    public int count;
+}
+
+[System.Serializable]
 public class RecipeDef {
     public string machineId;
-    public List<string> inputItems;
-    public List<string> outputItems;
-    public float processAdjustment;
+    public List<RecipeItemDef> inputItems;
+    public List<RecipeItemDef> outputItems;
+    public float processMultiplier;
 }
 
 [System.Serializable]

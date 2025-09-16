@@ -5,10 +5,9 @@
             "type": "Blank",
             "sprite": "",
             "baseProcessTime": 0,
-            "movingPartSprite": "",
+            "isMoving": false,
             "borderSprite": "UICellSprite",
             "buildingSprite": "",
-            "movingPartMaterial": "",
             "buildingDirection": 0,
             "upgradeMultipliers": [],
             "gridPlacement": [
@@ -24,10 +23,9 @@
             "type": "Blank",
             "sprite": "",
             "baseProcessTime": 0,
-            "movingPartSprite": "",
+            "isMoving": false,
             "borderSprite": "UICellSprite",
             "buildingSprite": "",
-            "movingPartMaterial": "",
             "buildingDirection": 0,
             "borderColor": "#FFAAAA",
             "upgradeMultipliers": [],
@@ -44,10 +42,9 @@
             "type": "Blank", 
             "sprite": "",
             "baseProcessTime": 0,
-            "movingPartSprite": "",
+            "isMoving": false,
             "borderSprite": "UICellSprite", 
             "buildingSprite": "",
-            "movingPartMaterial": "",
             "buildingDirection": 0,
             "borderColor": "#AAFFAA",
             "upgradeMultipliers": [],
@@ -64,10 +61,9 @@
             "type": "Conveyor",
             "sprite": "",
             "baseProcessTime": 0,
-            "movingPartSprite": "conveyor_moving",
+            "isMoving": true,
             "borderSprite": "conveyor_border",
             "buildingSprite": null,
-            "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 0,
             "upgradeMultipliers": [],
             "gridPlacement": [
@@ -82,11 +78,10 @@
             "id": "spawner",
             "type": "Spawner",
             "sprite": "",
-            "movingPartSprite": "conveyor_moving",
+            "isMoving": true,
             "borderSprite": null,
             "buildingSprite": "Machine_border",
             "buildingDirection": 0,
-            "movingPartMaterial": "ConveyorSharedMat",
             "baseProcessTime": 10,
             "upgradeMultipliers": [
                 {
@@ -125,10 +120,9 @@
             "type": "Seller",
             "sprite": "",
             "baseProcessTime": 0,
-            "movingPartSprite": "conveyor_moving",
+            "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-            "movingPartMaterial": "ConveyorSharedMat",
             "buildingDirection": 180,
             "upgradeMultipliers": [],
             "gridPlacement": [
@@ -143,10 +137,9 @@
             "id": "shredder",
             "type": "Shredder",
             "sprite": "",
-            "movingPartSprite": "conveyor_moving",
+            "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-            "movingPartMaterial": "ConveyorSharedMat",
             "baseProcessTime": 5,
             "upgradeMultipliers": [
                 {
@@ -165,18 +158,11 @@
                     "upgradeTime": 400
                 }
             ],
-            "inputItems": [
-                "can"
-            ],
-            "outputItems": [
-                "shreddedAluminum"
-            ],
             "gridPlacement": [
                 "grid"
             ],
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
-            "processAdjustment": 1,
             "displayInPanel": true,
             "cost": 75,
             "canRotate": true
