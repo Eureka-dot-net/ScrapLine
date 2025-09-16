@@ -15,6 +15,8 @@ public class MachineRenderer : MonoBehaviour
     private UIGridManager gridManager;
     private int cellX, cellY;
     private GameObject buildingSprite; // Track building sprite separately
+    private GameObject borderSprite; // Track border sprite separately
+    private GameObject movingPartSprite; // Track moving part sprite separately
 
     // Moving part visual references (created internally)
     [NonSerialized] private RawImage movingPartRawImage;
@@ -56,9 +58,28 @@ public class MachineRenderer : MonoBehaviour
             buildingSprite = null;
         }
 
-        // --- Moving Part: create RawImage, assign Texture and Material ---
-        if (def.isMoving && movingPartTexture != null)
+        // Clean up any existing border sprite in separate container
+        if (borderSprite != null)
         {
+            Destroy(borderSprite);
+            borderSprite = null;
+        }
+
+        // Clean up any existing moving part sprite in separate container
+        if (movingPartSprite != null)
+        {
+            Destroy(movingPartSprite);
+            movingPartSprite = null;
+        }
+
+        // --- Moving Part: create RawImage in BordersContainer ---
+        if (def.isMoving && movingPartTexture != null && !isInMenu && gridManager != null)
+        {
+            CreateSeparatedMovingPart(def, cellDirection);
+        }
+        else if (def.isMoving && movingPartTexture != null)
+        {
+            // For menu context, keep moving parts in local renderer
             GameObject rawImageObj = new GameObject("MovingPartRawImage");
             rawImageObj.transform.SetParent(this.transform, false);
             movingPartRawImage = rawImageObj.AddComponent<RawImage>();
@@ -78,12 +99,16 @@ public class MachineRenderer : MonoBehaviour
             rt.sizeDelta = Vector2.zero;
 
             movingPartRawImage.transform.SetSiblingIndex(0);
-
         }
 
-        // --- Border ---
-        if (!string.IsNullOrEmpty(def.borderSprite))
+        // --- Border: create in BordersContainer ---
+        if (!string.IsNullOrEmpty(def.borderSprite) && !isInMenu && gridManager != null)
         {
+            CreateSeparatedBorder(def, cellDirection);
+        }
+        else if (!string.IsNullOrEmpty(def.borderSprite))
+        {
+            // For menu context, keep border in local renderer
             var border = CreateImageChild("Border", def.borderSprite);
 
             // Apply border color tinting if specified
@@ -185,6 +210,133 @@ public class MachineRenderer : MonoBehaviour
         Debug.Log($"Created separated building sprite for cell ({cellX}, {cellY}) in BuildingsContainer");
     }
 
+    private void CreateSeparatedBorder(MachineDef def, UICell.Direction cellDirection)
+    {
+        RectTransform bordersContainer = gridManager?.GetBordersContainer();
+        if (bordersContainer == null)
+        {
+            Debug.LogWarning("BordersContainer not found, falling back to local border sprite");
+            var border = CreateImageChild("Border", def.borderSprite);
+            
+            // Apply border color tinting if specified
+            if (!string.IsNullOrEmpty(def.borderColor))
+            {
+                Color borderColor;
+                if (ColorUtility.TryParseHtmlString(def.borderColor, out borderColor))
+                {
+                    border.color = borderColor;
+                    Debug.Log($"Applied border color '{def.borderColor}' to border image");
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to parse border color '{def.borderColor}' for machine '{def.id}'");
+                }
+            }
+            border.transform.SetSiblingIndex(1);
+            return;
+        }
+
+        // Create border sprite in separate container
+        borderSprite = new GameObject($"Border_{cellX}_{cellY}");
+        borderSprite.transform.SetParent(bordersContainer, false);
+
+        Image borderImage = borderSprite.AddComponent<Image>();
+        string spritePath = "Sprites/Machines/" + def.borderSprite;
+        borderImage.sprite = Resources.Load<Sprite>(spritePath);
+
+        if (borderImage.sprite == null)
+        {
+            Debug.LogWarning($"Border sprite not found! Tried to load: {spritePath}");
+            borderImage.color = Color.red; // Fallback color
+        }
+        else
+        {
+            Debug.Log($"Successfully loaded border sprite: {spritePath}");
+            borderImage.color = Color.white;
+        }
+
+        // Apply border color tinting if specified
+        if (!string.IsNullOrEmpty(def.borderColor))
+        {
+            Color borderColor;
+            if (ColorUtility.TryParseHtmlString(def.borderColor, out borderColor))
+            {
+                borderImage.color = borderColor;
+                Debug.Log($"Applied border color '{def.borderColor}' to separated border image");
+            }
+            else
+            {
+                Debug.LogWarning($"Failed to parse border color '{def.borderColor}' for machine '{def.id}'");
+            }
+        }
+
+        // Position and size the border sprite to match this cell
+        RectTransform borderRT = borderSprite.GetComponent<RectTransform>();
+        Vector3 cellPosition = gridManager.GetCellWorldPosition(cellX, cellY);
+        Vector2 cellSize = gridManager.GetCellSize();
+
+        borderRT.position = cellPosition;
+        borderRT.sizeDelta = cellSize;
+
+        // Apply cell direction rotation
+        float cellRotation = GetCellDirectionRotation(cellDirection);
+        borderRT.rotation = Quaternion.Euler(0, 0, cellRotation);
+
+        Debug.Log($"Created separated border sprite for cell ({cellX}, {cellY}) in BordersContainer");
+    }
+
+    private void CreateSeparatedMovingPart(MachineDef def, UICell.Direction cellDirection)
+    {
+        RectTransform bordersContainer = gridManager?.GetBordersContainer();
+        if (bordersContainer == null)
+        {
+            Debug.LogWarning("BordersContainer not found, falling back to local moving part");
+            GameObject rawImageObj = new GameObject("MovingPartRawImage");
+            rawImageObj.transform.SetParent(this.transform, false);
+            movingPartRawImage = rawImageObj.AddComponent<RawImage>();
+            movingPartRawImage.texture = movingPartTexture;
+
+            if (!isInMenu && movingPartMaterial != null)
+                movingPartRawImage.material = movingPartMaterial;
+
+            RectTransform rt = movingPartRawImage.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = Vector2.zero;
+
+            movingPartRawImage.transform.SetSiblingIndex(0);
+            return;
+        }
+
+        // Create moving part RawImage in separate container
+        movingPartSprite = new GameObject($"MovingPart_{cellX}_{cellY}");
+        movingPartSprite.transform.SetParent(bordersContainer, false);
+
+        movingPartRawImage = movingPartSprite.AddComponent<RawImage>();
+        movingPartRawImage.texture = movingPartTexture;
+
+        // Assign material for conveyor animation
+        if (movingPartMaterial != null)
+            movingPartRawImage.material = movingPartMaterial;
+
+        // Position and size the moving part to match this cell
+        RectTransform movingPartRT = movingPartSprite.GetComponent<RectTransform>();
+        Vector3 cellPosition = gridManager.GetCellWorldPosition(cellX, cellY);
+        Vector2 cellSize = gridManager.GetCellSize();
+
+        movingPartRT.position = cellPosition;
+        movingPartRT.sizeDelta = cellSize;
+
+        // Apply cell direction rotation
+        float cellRotation = GetCellDirectionRotation(cellDirection);
+        movingPartRT.rotation = Quaternion.Euler(0, 0, cellRotation);
+
+        Debug.Log($"Created separated moving part for cell ({cellX}, {cellY}) in BordersContainer");
+    }
+
     private void CreateItemSpawnPoint()
     {
         // Create spawn point GameObject as a child of this MachineRenderer
@@ -245,6 +397,18 @@ public class MachineRenderer : MonoBehaviour
         {
             Destroy(buildingSprite);
             buildingSprite = null;
+        }
+        
+        if (borderSprite != null)
+        {
+            Destroy(borderSprite);
+            borderSprite = null;
+        }
+        
+        if (movingPartSprite != null)
+        {
+            Destroy(movingPartSprite);
+            movingPartSprite = null;
         }
     }
 
