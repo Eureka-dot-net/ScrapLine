@@ -649,24 +649,55 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"Transferred item {item.id} to waiting list for machine at ({targetCell.x}, {targetCell.y})");
         
-        // Update visual position to show item waiting at boundary
-        UpdateWaitingItemVisualPosition(item, sourceCell, gridManager);
+        // DO NOT call UpdateWaitingItemVisualPosition here - the item is already at the correct 33% position
+        // from the normal movement system. Calling it would cause "teleporting".
     }
 
     private void UpdateWaitingItemVisualPosition(ItemData item, CellData sourceCell, UIGridManager gridManager)
     {
         if (!gridManager.HasVisualItem(item.id)) return;
 
-        // Calculate position at 33% boundary towards target
-        Vector3 sourcePos = gridManager.GetCellWorldPosition(sourceCell.x, sourceCell.y);
-        Vector3 targetPos = gridManager.GetCellWorldPosition(item.targetX, item.targetY);
-        Vector3 boundaryPos = Vector3.Lerp(sourcePos, targetPos, 0.33f);
-
         // Find target machine cell to get the correct waiting list position
         CellData targetCell = GetCellData(activeGrids[0], item.targetX, item.targetY);
         if (targetCell == null) return;
 
-        // Add stacking offset based on position in waiting list (not source cell items!)
+        // Calculate the source cell that the item came from (we need to determine direction)
+        // We'll use the target position to figure out where the item came from
+        CellData actualSourceCell = null;
+        Direction movementDirection = Direction.Up;
+        
+        // Check adjacent cells to find where this item likely came from
+        int[] dx = {0, 1, 0, -1}; // Up, Right, Down, Left
+        int[] dy = {-1, 0, 1, 0};
+        Direction[] directions = {Direction.Down, Direction.Left, Direction.Up, Direction.Right}; // Opposite directions
+        
+        for (int i = 0; i < 4; i++)
+        {
+            int checkX = item.targetX + dx[i];
+            int checkY = item.targetY + dy[i];
+            CellData checkCell = GetCellData(activeGrids[0], checkX, checkY);
+            
+            if (checkCell != null && checkCell.direction == directions[i])
+            {
+                actualSourceCell = checkCell;
+                movementDirection = directions[i];
+                break;
+            }
+        }
+        
+        if (actualSourceCell == null)
+        {
+            // Fallback to provided sourceCell
+            actualSourceCell = sourceCell;
+            movementDirection = sourceCell.direction;
+        }
+
+        // Calculate position at 33% boundary towards target
+        Vector3 sourcePos = gridManager.GetCellWorldPosition(actualSourceCell.x, actualSourceCell.y);
+        Vector3 targetPos = gridManager.GetCellWorldPosition(item.targetX, item.targetY);
+        Vector3 boundaryPos = Vector3.Lerp(sourcePos, targetPos, 0.33f);
+
+        // Add stacking offset based on position in waiting list
         int itemIndex = targetCell.waitingItems.FindIndex(i => i.id == item.id);
         if (itemIndex == -1) itemIndex = 0; // Fallback to prevent errors
         
@@ -677,7 +708,7 @@ public class GameManager : MonoBehaviour
         float maxOffset = cellSize.y * 0.3f; // 30% of cell size maximum
         
         // Stack perpendicular to movement direction
-        switch (sourceCell.direction)
+        switch (movementDirection)
         {
             case Direction.Up:
             case Direction.Down:
@@ -809,16 +840,17 @@ public class GameManager : MonoBehaviour
         if (nextCell.cellType == CellType.Machine && !string.IsNullOrEmpty(nextCell.machineDefId) && 
             nextCell.machineDefId != "conveyor" && nextCell.machineDefId != "spawner" && nextCell.machineDefId != "seller")
         {
-            // If machine is busy, add item to waiting queue instead of starting movement
+            // If machine is busy, allow movement but mark it for waiting at 33% boundary
             if (nextCell.machineState != MachineState.Idle)
             {
-                Debug.Log($"Item {item.id} cannot move to busy machine at ({nextX}, {nextY}) - adding to waiting queue");
-                TransferItemToWaitingQueue(item, cell, nextCell, gridManager);
-                return;
+                Debug.Log($"Item {item.id} will move towards busy machine at ({nextX}, {nextY}) and wait at boundary");
+                // Don't return - allow movement to start so item moves to boundary smoothly
             }
-            
-            // Set machine to receiving state immediately to prevent race conditions
-            nextCell.machineState = MachineState.Receiving;
+            else
+            {
+                // Set machine to receiving state immediately to prevent race conditions
+                nextCell.machineState = MachineState.Receiving;
+            }
         }
 
         // Start movement
