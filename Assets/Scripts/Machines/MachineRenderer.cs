@@ -79,12 +79,6 @@ public class MachineRenderer : MonoBehaviour
 
             movingPartRawImage.transform.SetSiblingIndex(0);
 
-            // Only add animation if NOT in menu
-            if (!isInMenu)
-            {
-                ConveyorBelt conveyorBelt = rawImageObj.AddComponent<ConveyorBelt>();
-                conveyorBelt.SetConveyorDirection(cellDirection);
-            }
         }
 
         // --- Border ---
