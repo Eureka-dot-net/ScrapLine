@@ -2,35 +2,43 @@
 
 using System.Collections.Generic;
 
+public enum ItemState
+{
+    Idle,      // Item is stationary and ready to move
+    Moving,    // Item is moving between cells
+    Waiting,   // Item is waiting because target machine is busy
+    Processing // Item is being processed by a machine
+}
+
+public enum MachineState
+{
+    Idle,       // Machine is ready to receive items
+    Receiving,  // Item is moving to machine (prevents race conditions)
+    Processing  // Machine is actively processing an item
+}
+
 [System.Serializable]
 public class ItemData
 {
     public string id;
     public string itemType;
     
-    // Movement state
-    public bool isMoving;
+    // Simple state machine
+    public ItemState state = ItemState.Idle;
+    
+    // Movement data (reuse existing fields)
     public int targetX;
     public int targetY;
     public float moveProgress; // 0.0 to 1.0
     public float moveStartTime;
-    public bool hasCheckedMiddle; // Flag to prevent multiple middle checks per movement
     
-    // Next movement planning
-    public bool shouldStopAtTarget;
-    public bool hasQueuedMovement;
-    public int queuedTargetX;
-    public int queuedTargetY;
+    // Processing data (simplified)
+    public float processingStartTime;
+    public float processingDuration;
+    public string processingMachineId;
     
-    // Timeout tracking for blank cells
-    public float timeOnBlankCell; // Time spent on current blank cell
-    public bool isOnBlankCell; // Whether item is currently on a blank cell
-    
-    // Recipe processing state
-    public bool isProcessing; // Whether item is currently being processed by a recipe
-    public float processingStartTime; // When processing started
-    public float processingDuration; // How long processing should take
-    public string processingMachineId; // Which machine is processing this item
+    // Waiting timeout
+    public float waitingStartTime;
 }
 
 [System.Serializable]
@@ -43,6 +51,8 @@ public class CellData
     public UICell.CellRole cellRole;
     public string machineDefId; // References the specific machine definition from FactoryRegistry
     public List<ItemData> items = new List<ItemData>();
+    public List<ItemData> waitingItems = new List<ItemData>(); // List for items waiting to enter this machine
+    public MachineState machineState = MachineState.Idle; // Current state of the machine
 }
 
 [System.Serializable]
