@@ -350,9 +350,9 @@ public class UIGridManager : MonoBehaviour
         Vector3 cellPosition = GetCellWorldPosition(x, y);
         itemRect.position = cellPosition;
 
-        // Size the item to 1/3 of cell size
+        // Size the item to 1/2 of cell size  
         Vector2 cellSize = GetCellSize();
-        Vector2 itemSize = cellSize / 3f; // Changed from /2f to /3f as per previous requirement
+        Vector2 itemSize = cellSize / 2f; // User requested 1/2 cell size
         itemRect.sizeDelta = itemSize;
 
         Debug.Log($"Created visual item {itemId} in {targetContainer.name} at position {cellPosition} with size {itemSize}");
