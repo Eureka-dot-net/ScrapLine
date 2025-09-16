@@ -657,28 +657,37 @@ public class GameManager : MonoBehaviour
     {
         if (!gridManager.HasVisualItem(item.id)) return;
 
-        // Calculate position at 1/3 boundary towards target
+        // Calculate position at 33% boundary towards target
         Vector3 sourcePos = gridManager.GetCellWorldPosition(sourceCell.x, sourceCell.y);
         Vector3 targetPos = gridManager.GetCellWorldPosition(item.targetX, item.targetY);
         Vector3 boundaryPos = Vector3.Lerp(sourcePos, targetPos, 0.33f);
 
-        // Add stacking offset based on position in cell.items list
-        int itemIndex = sourceCell.items.FindIndex(i => i.id == item.id);
+        // Find target machine cell to get the correct waiting list position
+        CellData targetCell = GetCellData(activeGrids[0], item.targetX, item.targetY);
+        if (targetCell == null) return;
+
+        // Add stacking offset based on position in waiting list (not source cell items!)
+        int itemIndex = targetCell.waitingItems.FindIndex(i => i.id == item.id);
+        if (itemIndex == -1) itemIndex = 0; // Fallback to prevent errors
+        
         Vector2 cellSize = gridManager.GetCellSize();
         
         Vector3 stackOffset = Vector3.zero;
-        float stackDistance = cellSize.y * 0.1f;
+        float stackDistance = cellSize.y * 0.06f; // Reduced for tighter stacking
+        float maxOffset = cellSize.y * 0.3f; // 30% of cell size maximum
         
         // Stack perpendicular to movement direction
         switch (sourceCell.direction)
         {
             case Direction.Up:
             case Direction.Down:
-                stackOffset.x = itemIndex * stackDistance * 0.5f; // Smaller offset to prevent overflow
+                stackOffset.x = itemIndex * stackDistance;
+                stackOffset.x = Mathf.Clamp(stackOffset.x, -maxOffset, maxOffset); // Constrain to boundaries
                 break;
             case Direction.Left:
             case Direction.Right:
-                stackOffset.y = itemIndex * stackDistance * 0.5f;
+                stackOffset.y = itemIndex * stackDistance;
+                stackOffset.y = Mathf.Clamp(stackOffset.y, -maxOffset, maxOffset); // Constrain to boundaries
                 break;
         }
 
@@ -796,15 +805,16 @@ public class GameManager : MonoBehaviour
         CellData nextCell = GetCellData(gridData, nextX, nextY);
         if (nextCell == null) return;
 
-        // Check if target is a machine and if it's idle
+        // Check if target is a processing machine (not conveyor, blank, spawner, or seller)
         if (nextCell.cellType == CellType.Machine && !string.IsNullOrEmpty(nextCell.machineDefId) && 
             nextCell.machineDefId != "conveyor" && nextCell.machineDefId != "spawner" && nextCell.machineDefId != "seller")
         {
-            // Only allow movement if machine is idle
+            // If machine is busy, add item to waiting queue instead of starting movement
             if (nextCell.machineState != MachineState.Idle)
             {
-                Debug.Log($"Item {item.id} cannot move to busy machine at ({nextX}, {nextY}) - machine state: {nextCell.machineState}");
-                return; // Don't start movement to busy machine
+                Debug.Log($"Item {item.id} cannot move to busy machine at ({nextX}, {nextY}) - adding to waiting queue");
+                TransferItemToWaitingQueue(item, cell, nextCell, gridManager);
+                return;
             }
             
             // Set machine to receiving state immediately to prevent race conditions
@@ -819,6 +829,26 @@ public class GameManager : MonoBehaviour
         item.moveProgress = 0f;
 
         Debug.Log($"Starting movement for item {item.id} from ({cell.x},{cell.y}) to ({nextX},{nextY})");
+    }
+
+    private void TransferItemToWaitingQueue(ItemData item, CellData sourceCell, CellData targetCell, UIGridManager gridManager)
+    {
+        // Set item target for visual positioning
+        item.targetX = targetCell.x;
+        item.targetY = targetCell.y;
+
+        // Remove item from source cell
+        sourceCell.items.Remove(item);
+
+        // Add to target machine's waiting list and set waiting start time
+        targetCell.waitingItems.Add(item);
+        item.state = ItemState.Waiting;
+        item.waitingStartTime = Time.time;
+
+        Debug.Log($"Transferred item {item.id} to waiting list for machine at ({targetCell.x}, {targetCell.y})");
+        
+        // Update visual position to show item waiting at boundary
+        UpdateWaitingItemVisualPosition(item, sourceCell, gridManager);
     }
 
     private void GetNextCellCoordinates(CellData cell, out int nextX, out int nextY)
