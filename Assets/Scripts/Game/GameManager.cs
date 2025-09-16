@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using static UICell;
 
 public class GameManager : MonoBehaviour
@@ -750,6 +751,24 @@ public class GameManager : MonoBehaviour
         if (targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId) && 
             targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
         {
+            // Check if machine is already processing an item (single-item processing limit)
+            bool machineIsBusy = targetCell.items.Any(existingItem => existingItem.isProcessing);
+            
+            if (machineIsBusy)
+            {
+                // Machine is busy, item stays on source cell and waits
+                Debug.Log($"Machine {targetCell.machineDefId} is busy processing another item, item {item.id} will wait");
+                
+                // Move item to target cell but don't start processing yet (item queues)
+                item.isMoving = false;
+                item.moveProgress = 0f;
+                targetCell.items.Add(item);
+                
+                // Update visual position with stacking offset for multiple items on same cell
+                UpdateItemStackingPosition(item, targetCell, gridManager);
+                return;
+            }
+            
             // Look up recipe for this machine and item
             RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(targetCell.machineDefId, item.itemType);
             if (recipe != null)
@@ -769,6 +788,10 @@ public class GameManager : MonoBehaviour
                     item.moveProgress = 0f;
                     targetCell.items.Add(item);
                     
+                    // Destroy visual item when entering machine for processing
+                    gridManager.DestroyVisualItem(item.id);
+                    Debug.Log($"Destroyed visual item {item.id} when entering machine for processing");
+                    
                     // Start processing with timing delay
                     item.isProcessing = true;
                     item.processingStartTime = Time.time;
@@ -776,9 +799,6 @@ public class GameManager : MonoBehaviour
                     item.processingMachineId = targetCell.machineDefId;
                     
                     Debug.Log($"Started processing item {item.id} ({item.itemType}) - will complete in {processTime}s");
-                    
-                    // Update visual position to exact target
-                    gridManager.UpdateItemVisualPosition(item.id, 1f, sourceCell.x, sourceCell.y, item.targetX, item.targetY, sourceCell.direction);
                     
                     return; // Don't continue with normal item movement processing
                 }
@@ -972,6 +992,101 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError($"Recipe not found when completing processing for machine {item.processingMachineId} with item {item.itemType}");
         }
+        
+        // After processing completes, check if there are waiting items that can start processing
+        CheckForWaitingItemsToProcess(cell);
+    }
+    
+    private void UpdateItemStackingPosition(ItemData item, CellData cell, UIGridManager gridManager)
+    {
+        // Calculate stacking offset based on how many items are already on this cell
+        int itemIndex = cell.items.FindIndex(i => i.id == item.id);
+        if (itemIndex == -1) return; // Item not found in cell
+        
+        // Get cell's machine direction for stacking orientation
+        Vector2 stackOffset = Vector2.zero;
+        Vector2 cellSize = gridManager.GetCellSize();
+        float stackDistance = cellSize.y * 0.15f; // Small vertical offset for stacking
+        
+        // Stack items slightly up or down based on machine orientation
+        // For left/right facing machines, stack vertically
+        // For up/down facing machines, stack horizontally
+        if (cell.direction == Direction.Left || cell.direction == Direction.Right)
+        {
+            // Stack vertically for left/right facing machines
+            stackOffset.y = itemIndex * stackDistance;
+        }
+        else
+        {
+            // Stack horizontally for up/down facing machines  
+            stackOffset.x = itemIndex * stackDistance;
+        }
+        
+        // Update visual position with stacking offset
+        Vector3 cellPosition = gridManager.GetCellWorldPosition(cell.x, cell.y);
+        cellPosition += new Vector3(stackOffset.x, stackOffset.y, 0);
+        
+        if (gridManager.HasVisualItem(item.id))
+        {
+            GameObject visualItem = gridManager.GetVisualItem(item.id);
+            if (visualItem != null)
+            {
+                RectTransform itemRect = visualItem.GetComponent<RectTransform>();
+                itemRect.position = cellPosition;
+                Debug.Log($"Updated stacking position for item {item.id} at index {itemIndex} with offset {stackOffset}");
+            }
+        }
+    }
+    
+    private void CheckForWaitingItemsToProcess(CellData cell)
+    {
+        // Find the first non-processing item that can be processed
+        ItemData waitingItem = cell.items.FirstOrDefault(item => !item.isProcessing && !item.isMoving);
+        
+        if (waitingItem != null)
+        {
+            // Try to start processing this waiting item
+            RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(cell.machineDefId, waitingItem.itemType);
+            if (recipe != null)
+            {
+                MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cell.machineDefId);
+                if (machineDef != null)
+                {
+                    float processTime = machineDef.baseProcessTime * recipe.processMultiplier;
+                    
+                    // Start processing the waiting item
+                    waitingItem.isProcessing = true;
+                    waitingItem.processingStartTime = Time.time;
+                    waitingItem.processingDuration = processTime;
+                    waitingItem.processingMachineId = cell.machineDefId;
+                    
+                    Debug.Log($"Started processing waiting item {waitingItem.id} ({waitingItem.itemType}) - will complete in {processTime}s");
+                    
+                    // Destroy visual item when it starts processing
+                    UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
+                    if (gridManager != null && gridManager.HasVisualItem(waitingItem.id))
+                    {
+                        gridManager.DestroyVisualItem(waitingItem.id);
+                        Debug.Log($"Destroyed visual item {waitingItem.id} when starting processing from queue");
+                    }
+                    
+                    // Update positions of remaining waiting items
+                    UpdateAllItemStackingPositions(cell, gridManager);
+                }
+            }
+        }
+    }
+    
+    private void UpdateAllItemStackingPositions(CellData cell, UIGridManager gridManager)
+    {
+        // Update stacking positions for all visible (non-processing) items in the cell
+        var visibleItems = cell.items.Where(item => !item.isProcessing && gridManager.HasVisualItem(item.id)).ToList();
+        
+        for (int i = 0; i < visibleItems.Count; i++)
+        {
+            UpdateItemStackingPosition(visibleItems[i], cell, gridManager);
+        }
+    }
     }
 
     public void ClearGrid()
