@@ -258,6 +258,11 @@ public class MachineRenderer : MonoBehaviour
         string spritePath = "Sprites/Machines/" + def.borderSprite;
         borderImage.sprite = Resources.Load<Sprite>(spritePath);
 
+        // Make border non-interactive to avoid blocking cell button clicks
+        CanvasGroup borderCanvasGroup = borderSprite.AddComponent<CanvasGroup>();
+        borderCanvasGroup.blocksRaycasts = false;
+        borderCanvasGroup.interactable = false;
+
         if (borderImage.sprite == null)
         {
             Debug.LogWarning($"Border sprite not found! Tried to load: {spritePath}");
@@ -339,6 +344,11 @@ public class MachineRenderer : MonoBehaviour
 
         movingPartRawImage = movingPartSprite.AddComponent<RawImage>();
         movingPartRawImage.texture = movingPartTexture;
+
+        // Make moving part non-interactive to avoid blocking cell button clicks
+        CanvasGroup movingPartCanvasGroup = movingPartSprite.AddComponent<CanvasGroup>();
+        movingPartCanvasGroup.blocksRaycasts = false;
+        movingPartCanvasGroup.interactable = false;
 
         Debug.Log($"MovingPart texture assigned: {(movingPartTexture != null ? movingPartTexture.name : "NULL")}");
 

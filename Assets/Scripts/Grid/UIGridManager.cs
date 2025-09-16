@@ -484,25 +484,17 @@ public class UIGridManager : MonoBehaviour
 
     public Vector3 GetCellWorldPosition(int x, int y)
     {
-        UICell cell = GetCell(x, y);
-        if (cell != null)
-        {
-            Vector3 position = cell.transform.position;
-            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform: {position}");
-            return position;
-        }
-
-        // Fallback: Calculate position manually from grid layout
+        // Always use calculated position to ensure accuracy during initialization
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
-        if (layout != null)
+        if (layout != null && gridData != null)
         {
             Vector2 cellSize = layout.cellSize;
             Vector2 spacing = layout.spacing;
-
-            // Calculate position within grid
+            
+            // Calculate position within grid (using grid coordinates)
             float xPos = x * (cellSize.x + spacing.x);
             float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
-
+            
             // Get grid panel's world position and add offset
             Vector3 gridWorldPos = gridPanel.transform.position;
             Vector3 calculatedPos = new Vector3(
@@ -510,11 +502,20 @@ public class UIGridManager : MonoBehaviour
                 gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
                 gridWorldPos.z
             );
-
-            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated fallback: {calculatedPos}");
+            
+            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated: {calculatedPos} (cellSize: {cellSize}, spacing: {spacing})");
             return calculatedPos;
         }
 
+        // Fallback to cell transform if grid layout calculation fails
+        UICell cell = GetCell(x, y);
+        if (cell != null)
+        {
+            Vector3 position = cell.transform.position;
+            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform fallback: {position}");
+            return position;
+        }
+        
         Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
         return Vector3.zero;
     }
