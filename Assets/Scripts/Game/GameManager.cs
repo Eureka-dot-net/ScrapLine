@@ -946,14 +946,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void UpdateWaitingItemVisualPosition(ItemData item, CellData sourceCell, UIGridManager gridManager)
-    {
-        if (!gridManager.HasVisualItem(item.id)) return;
-
-        // This method is now handled by TransferItemToWaitingQueue
-        // Items in waiting queues don't need continuous updates since they're already positioned
-        // This method can be simplified or removed
-    }
     
     private void CheckForWaitingItemsToProcess(CellData cell)
     {
@@ -991,71 +983,7 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    private void UpdateWaitingQueuePositions(CellData cell, int machineX, int machineY)
-    {
-        // Update queue positions for all items waiting for the same machine
-        var waitingItems = cell.items.Where(item => 
-            item.isWaiting && 
-            item.waitingAtX == machineX && 
-            item.waitingAtY == machineY
-        ).OrderBy(item => item.queuePosition).ToList();
-        
-        // Reassign queue positions
-        for (int i = 0; i < waitingItems.Count; i++)
-        {
-            waitingItems[i].queuePosition = i;
-            Debug.Log($"Updated queue position for item {waitingItems[i].id} to {i}");
-        }
-        
-        // Update visual positions for all waiting items
-        UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
-        if (gridManager != null)
-        {
-            foreach (var waitingItem in waitingItems)
-            {
-                UpdateWaitingItemPosition(waitingItem, cell, gridManager);
-            }
-        }
-    }
     
-    private void CheckAdjacentCellsForWaitingItems(CellData machineCell, GridData gridData)
-    {
-        // Check all cells adjacent to this machine for items that were waiting to move here
-        int[] deltaX = { -1, 1, 0, 0 };
-        int[] deltaY = { 0, 0, -1, 1 };
-        
-        for (int i = 0; i < 4; i++)
-        {
-            int adjacentX = machineCell.x + deltaX[i];
-            int adjacentY = machineCell.y + deltaY[i];
-            
-            CellData adjacentCell = GetCellData(gridData, adjacentX, adjacentY);
-            if (adjacentCell != null)
-            {
-                // Check if this adjacent cell has items that could move to the now-available machine
-                foreach (var item in adjacentCell.items.ToList()) // ToList to avoid modification during iteration
-                {
-                    if (item.state == ItemState.Idle)
-                    {
-                        // Check if this cell would normally direct items to the machine cell
-                        int nextX, nextY;
-                        GetNextCellCoordinates(adjacentCell, out nextX, out nextY);
-                        
-                        if (nextX == machineCell.x && nextY == machineCell.y)
-                        {
-                            // This item was waiting to move to this machine - try to start movement now
-                            UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
-                            if (gridManager != null)
-                            {
-                                TryStartItemMovement(item, adjacentCell, gridData, gridManager);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public void ClearGrid()
     {
         Debug.Log("Clearing grid...");
