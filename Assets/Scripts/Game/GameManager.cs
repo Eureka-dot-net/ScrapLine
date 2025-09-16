@@ -956,8 +956,8 @@ public class GameManager : MonoBehaviour
             // Start processing this item
             waitingItem.state = ItemState.Processing;
             
-            // Move to machine cell
-            machineCell.items.Add(waitingItem);
+            // DON'T move to machine cell immediately - keep visual at waiting position
+            // machineCell.items.Add(waitingItem); // Commented out to prevent immediate visual update
             
             // Look up recipe
             RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(machineCell.machineDefId, waitingItem.itemType);
@@ -971,52 +971,26 @@ public class GameManager : MonoBehaviour
                     waitingItem.processingDuration = processTime;
                     waitingItem.processingMachineId = machineCell.machineDefId;
                     
-                    // Animate item from waiting position to machine center before destroying visual
-                    AnimateItemIntoMachine(waitingItem, machineCell, gridManager);
+                    // Schedule the item to be moved to machine cell and visual destroyed after delay
+                    StartCoroutine(DelayedMoveToMachineAndDestroy(waitingItem, machineCell, gridManager, 0.3f));
                     Debug.Log($"Started processing waiting item {waitingItem.id} - will complete in {processTime}s");
                 }
             }
         }
     }
 
-    private void AnimateItemIntoMachine(ItemData item, CellData machineCell, UIGridManager gridManager)
+    private System.Collections.IEnumerator DelayedMoveToMachineAndDestroy(ItemData item, CellData machineCell, UIGridManager gridManager, float delay)
     {
-        if (!gridManager.HasVisualItem(item.id)) return;
-
-        // Get current position (should be at waiting position) and target position (machine center)
-        Vector3 machineCenter = gridManager.GetCellWorldPosition(machineCell.x, machineCell.y);
+        yield return new WaitForSeconds(delay);
         
-        // Start a simple animation using a coroutine-like approach
-        StartCoroutine(AnimateItemToPositionAndDestroy(item.id, machineCenter, gridManager));
-    }
-
-    private System.Collections.IEnumerator AnimateItemToPositionAndDestroy(string itemId, Vector3 targetPosition, UIGridManager gridManager)
-    {
-        GameObject visualItem = gridManager.GetVisualItem(itemId);
-        if (visualItem == null) yield break;
-
-        Vector3 startPosition = visualItem.transform.position;
-        float animationDuration = 0.3f; // Short animation
-        float elapsedTime = 0f;
-
-        while (elapsedTime < animationDuration)
+        // Now move the item to the machine cell (for game logic)
+        machineCell.items.Add(item);
+        
+        // Destroy the visual item
+        if (gridManager.HasVisualItem(item.id))
         {
-            if (visualItem == null) yield break; // Item was destroyed elsewhere
-
-            elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / animationDuration;
-            
-            // Use smooth curve for animation
-            float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
-            visualItem.transform.position = Vector3.Lerp(startPosition, targetPosition, smoothProgress);
-            
-            yield return null;
-        }
-
-        // Animation complete, destroy the visual item
-        if (visualItem != null)
-        {
-            gridManager.DestroyVisualItem(itemId);
+            Debug.Log($"Delayed move to machine and destruction of visual item {item.id}");
+            gridManager.DestroyVisualItem(item.id);
         }
     }
 
