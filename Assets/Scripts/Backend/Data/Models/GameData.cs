@@ -10,6 +10,13 @@ public enum ItemState
     Processing // Item is being processed by a machine
 }
 
+public enum MachineState
+{
+    Idle,       // Machine is ready to receive items
+    Receiving,  // Item is moving to machine (prevents race conditions)
+    Processing  // Machine is actively processing an item
+}
+
 [System.Serializable]
 public class ItemData
 {
@@ -29,6 +36,9 @@ public class ItemData
     public float processingStartTime;
     public float processingDuration;
     public string processingMachineId;
+    
+    // Waiting timeout
+    public float waitingStartTime;
 }
 
 [System.Serializable]
@@ -41,7 +51,8 @@ public class CellData
     public UICell.CellRole cellRole;
     public string machineDefId; // References the specific machine definition from FactoryRegistry
     public List<ItemData> items = new List<ItemData>();
-    public Queue<ItemData> waitingQueue = new Queue<ItemData>(); // Queue for items waiting to enter this machine
+    public List<ItemData> waitingItems = new List<ItemData>(); // List for items waiting to enter this machine
+    public MachineState machineState = MachineState.Idle; // Current state of the machine
 }
 
 [System.Serializable]
