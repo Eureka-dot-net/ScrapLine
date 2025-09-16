@@ -295,21 +295,6 @@ public class GameManager : MonoBehaviour
                 activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, newType, newDirection, cellData.machineDefId);
             }
 
-            // Only try to move items if the cell is now a machine
-            if (cellData.cellType == UICell.CellType.Machine)
-            {
-                foreach (var item in cellData.items)
-                {
-                    // Reset item state when cell changes
-                    // (Removed references to fields that no longer exist)
-
-                    // If not already moving, start movement in the new direction/type
-                    if (item.state == ItemState.Idle)
-                    {
-                        TryStartItemMovement(item, cellData, gridData, activeGridManager);
-                    }
-                }
-            }
             return;
         }
 
@@ -350,21 +335,6 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError($"Failed to place machine {machineDef.id} - insufficient credits!");
             return;
-        }
-        
-        // Process any existing items in the cell by the new machine
-        UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
-        if (activeGridManager != null && cellData.items.Count > 0)
-        {
-            Debug.Log($"Processing {cellData.items.Count} existing items with new machine {machineDef.id}");
-            
-            // Create a copy of the items list to avoid modification during iteration
-            var itemsToProcess = new List<ItemData>(cellData.items);
-            
-            foreach (var item in itemsToProcess)
-            {
-                ProcessItemAtMachine(item, cellData, machineDef);
-            }
         }
         
         // Set cell to machine type with the specific machine definition
@@ -425,63 +395,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void ProcessItemAtMachine(ItemData item, CellData cellData, MachineDef machineDef)
-    {
-        Debug.Log($"Processing item {item.id} at machine {machineDef.id}");
-        
-        // For now, implement basic machine processing:
-        // - Spawner: should not process items (items shouldn't be placed on spawners)
-        // - Seller: consume the item and remove it from grid, add credits
-        // - Conveyor and other machines: let item continue through normal flow
-        
-        if (machineDef.id == "seller")
-        {
-            // Get item definition to check sell value
-            ItemDef itemDef = FactoryRegistry.Instance.GetItem(item.itemType);
-            int sellValue = itemDef?.sellValue ?? 0;
-            
-            Debug.Log($"Item {item.id} ({item.itemType}) sold by seller machine for {sellValue} credits");
-            
-            // Add credits for selling the item
-            if (sellValue > 0)
-            {
-                AddCredits(sellValue);
-            }
-            
-            // Stop any movement immediately to prevent visual updates after destruction
-            item.state = ItemState.Idle;
-            
-            cellData.items.Remove(item);
-            
-            UIGridManager activeGridManager = FindAnyObjectByType<UIGridManager>();
-            if (activeGridManager != null)
-            {
-                activeGridManager.DestroyVisualItem(item.id);
-            }
-        }
-        else
-        {
-            Debug.Log($"Item {item.id} will continue through machine {machineDef.id} normally");
-            // For conveyors and other machines, items will be processed in the normal movement flow
-            // (Removed blank cell tracking as it's no longer needed)
-            
-            // If item was moving, stop it so it can be processed by the new machine
-            if (item.state == ItemState.Moving)
-            {
-                item.state = ItemState.Idle;
-                Debug.Log($"Stopped moving item {item.id} to be processed by new machine {machineDef.id}");
-            }
-        }
-    }
 
-    private bool didSpawn = false;
     private void Update()
     {
         // Handle item spawning
         spawnTimer -= Time.deltaTime;
-        if (spawnTimer <= 0 && !didSpawn)
+        if (spawnTimer <= 0)
         {
-
             spawnTimer = spawnInterval;
 
             // Find all spawner machines in our data model
@@ -510,13 +430,16 @@ public class GameManager : MonoBehaviour
                     // Check if the cell already has an item
                     if (cell.items.Count == 0)
                     {
-                      //  didSpawn = true;
                         // Spawn a new item if the cell is empty (and grid limit allows)
                         SpawnItem(cell);
                     }
                 }
             }
         }
+
+        // Handle item movement - activate the pure pull system
+        ProcessItemMovement();
+    }
 
     // ============================================================================
     // PURE PULL SYSTEM - ITEM MOVEMENT ARCHITECTURE
@@ -727,7 +650,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Simplified visual positioning for waiting items - creates a simple queue.
+    /// Direction-aware visual positioning for waiting items - creates a queue at machine entrance.
     /// </summary>
     private void UpdateWaitingItemVisualPosition(ItemData item, CellData machineCell, UIGridManager gridManager)
     {
@@ -736,13 +659,35 @@ public class GameManager : MonoBehaviour
         int itemIndex = machineCell.waitingItems.FindIndex(i => i.id == item.id);
         if (itemIndex == -1) return;
         
-        // Simple queue positioning - items line up at machine entrance
+        // Simple queue positioning - items line up at machine entrance based on direction
         Vector2 cellSize = gridManager.GetCellSize();
         Vector3 machinePos = gridManager.GetCellWorldPosition(machineCell.x, machineCell.y);
         
-        // Offset items in a line based on their queue position
+        // Calculate direction-aware queue offset
         float queueOffset = itemIndex * cellSize.y * 0.15f;
-        Vector3 queuePos = machinePos + Vector3.down * queueOffset;
+        Vector3 offsetVector;
+        
+        // Queue forms at the entrance of the machine based on its direction
+        switch (machineCell.direction)
+        {
+            case Direction.Up:
+                offsetVector = Vector3.down * queueOffset;
+                break;
+            case Direction.Right:
+                offsetVector = Vector3.left * queueOffset;
+                break;
+            case Direction.Down:
+                offsetVector = Vector3.up * queueOffset;
+                break;
+            case Direction.Left:
+                offsetVector = Vector3.right * queueOffset;
+                break;
+            default:
+                offsetVector = Vector3.down * queueOffset;
+                break;
+        }
+        
+        Vector3 queuePos = machinePos + offsetVector;
         
         GameObject visualItem = gridManager.GetVisualItem(item.id);
         if (visualItem != null)
@@ -787,9 +732,8 @@ public class GameManager : MonoBehaviour
                     waitingItem.y = cell.y;
                     waitingItem.processingStartTime = Time.time;
                     
-                    // Calculate processing duration
-                    MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cell.machineDefId);
-                    waitingItem.processingDuration = machineDef.baseProcessTime * recipe.processMultiplier;
+                    // Use pre-calculated process time from recipe
+                    waitingItem.processingDuration = recipe.processTime;
                     
                     cell.machineState = MachineState.Processing;
                     
