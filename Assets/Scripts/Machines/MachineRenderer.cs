@@ -47,17 +47,7 @@ public class MachineRenderer : MonoBehaviour
                     movingPart.material = mat;
                     Debug.Log($"Successfully applied material '{movingPartMatPath}' to MovingPart for machine '{def.id}'");
                     
-                    // Add UITextureScroller component for UI Image material animation
-                    var uiTextureScroller = movingPart.GetComponent<UITextureScroller>();
-                    if (uiTextureScroller != null)
-                    {
-                        Debug.Log($"UITextureScroller component found on MovingPart for machine '{def.id}'");
-                    }
-                    else
-                    {
-                        Debug.Log($"No UITextureScroller component found on MovingPart for machine '{def.id}' - adding one");
-                        movingPart.gameObject.AddComponent<UITextureScroller>();
-                    }
+                    
                 }
                 else
                 {
@@ -69,7 +59,6 @@ public class MachineRenderer : MonoBehaviour
                     {
                         movingPart.material = altMat;
                         Debug.Log($"Successfully applied alternative material '{altPath}' to MovingPart for machine '{def.id}'");
-                        movingPart.gameObject.AddComponent<UITextureScroller>();
                     }
                     else
                     {
