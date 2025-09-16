@@ -150,7 +150,10 @@ public class UIGridManager : MonoBehaviour
         // Set as last sibling (index 2)
         buildingsObj.transform.SetSiblingIndex(2);
 
-        Debug.Log("Created separate rendering layers: BordersContainer (0), GridPanel (1), BuildingsContainer (2)");
+        Debug.Log($"Created separate rendering layers: BordersContainer (0), GridPanel (1), BuildingsContainer (2)");
+        Debug.Log($"BordersContainer parent: {bordersContainer.parent?.name}, position: {bordersContainer.position}, sizeDelta: {bordersContainer.sizeDelta}");
+        Debug.Log($"BuildingsContainer parent: {buildingsContainer.parent?.name}, position: {buildingsContainer.position}, sizeDelta: {buildingsContainer.sizeDelta}");
+        Debug.Log($"GridPanel parent: {gridPanel.parent?.name}, position: {gridPanel.position}, sizeDelta: {gridPanel.sizeDelta}");
     }
 
 
@@ -418,24 +421,30 @@ public class UIGridManager : MonoBehaviour
     // Accessor methods for separate rendering containers
     public RectTransform GetBordersContainer()
     {
+        Debug.Log($"GetBordersContainer() called - returning: {(bordersContainer != null ? bordersContainer.name : "NULL")}");
         return bordersContainer;
     }
 
     public RectTransform GetBuildingsContainer()
     {
+        Debug.Log($"GetBuildingsContainer() called - returning: {(buildingsContainer != null ? buildingsContainer.name : "NULL")}");
         return buildingsContainer;
     }
 
     public Vector2 GetCellSize()
     {
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
-        return layout != null ? layout.cellSize : Vector2.zero;
+        Vector2 cellSize = layout != null ? layout.cellSize : Vector2.zero;
+        Debug.Log($"GetCellSize() returning: {cellSize}");
+        return cellSize;
     }
 
     public Vector3 GetCellWorldPosition(int x, int y)
     {
         UICell cell = GetCell(x, y);
-        return cell != null ? cell.transform.position : Vector3.zero;
+        Vector3 position = cell != null ? cell.transform.position : Vector3.zero;
+        Debug.Log($"GetCellWorldPosition({x}, {y}) returning: {position}");
+        return position;
     }
 
     public CellData GetCellData(int x, int y)
