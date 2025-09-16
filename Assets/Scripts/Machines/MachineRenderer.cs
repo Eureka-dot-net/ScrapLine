@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Renders a machine using sprites from definition and a passed-in RawImage, Texture, and Material for moving parts.
+/// Renders a machine using sprites from definition and creates its own RawImage for moving parts.
 /// Other images (border, building, main) are created automatically as children.
 /// </summary>
 public class MachineRenderer : MonoBehaviour
@@ -16,20 +16,19 @@ public class MachineRenderer : MonoBehaviour
     private int cellX, cellY;
     private GameObject buildingSprite; // Track building sprite separately
 
-    // Moving part visual references (passed in)
-    [NonSerialized] public RawImage movingPartRawImage; // assign externally or via prefab
-    [NonSerialized] public Texture movingPartTexture;   // assign externally
-    [NonSerialized] public Material movingPartMaterial; // assign externally
+    // Moving part visual references (created internally)
+    [NonSerialized] private RawImage movingPartRawImage;
+    [NonSerialized] private Texture movingPartTexture;
+    [NonSerialized] private Material movingPartMaterial;
 
     /// <summary>
-    /// Setup the renderer. Pass in the RawImage, Texture, and Material for moving part if needed.
+    /// Setup the renderer. Pass in Texture and Material for moving part if needed.
     /// </summary>
     /// <param name="def"></param>
     /// <param name="cellDirection"></param>
     /// <param name="gridManager"></param>
     /// <param name="cellX"></param>
     /// <param name="cellY"></param>
-    /// <param name="movingPartRawImage">Optional: assign this if using moving part</param>
     /// <param name="movingPartTexture">Optional: assign this if using moving part</param>
     /// <param name="movingPartMaterial">Optional: assign this if using moving part</param>
     public void Setup(
@@ -38,7 +37,6 @@ public class MachineRenderer : MonoBehaviour
         UIGridManager gridManager = null,
         int cellX = 0,
         int cellY = 0,
-        RawImage movingPartRawImage = null,
         Texture movingPartTexture = null,
         Material movingPartMaterial = null
     )
@@ -46,7 +44,6 @@ public class MachineRenderer : MonoBehaviour
         this.gridManager = gridManager;
         this.cellX = cellX;
         this.cellY = cellY;
-        this.movingPartRawImage = movingPartRawImage;
         this.movingPartTexture = movingPartTexture;
         this.movingPartMaterial = movingPartMaterial;
 
@@ -59,17 +56,35 @@ public class MachineRenderer : MonoBehaviour
             buildingSprite = null;
         }
 
-        // --- Moving Part: assign passed-in RawImage, Texture, and Material ---
-        if (def.isMoving && movingPartRawImage != null && movingPartTexture != null)
+        // --- Moving Part: create RawImage, assign Texture and Material ---
+        if (def.isMoving && movingPartTexture != null)
         {
+            GameObject rawImageObj = new GameObject("MovingPartRawImage");
+            rawImageObj.transform.SetParent(this.transform, false);
+            movingPartRawImage = rawImageObj.AddComponent<RawImage>();
             movingPartRawImage.texture = movingPartTexture;
+
+            // Only assign the material if NOT in menu
             if (!isInMenu && movingPartMaterial != null)
-            {
                 movingPartRawImage.material = movingPartMaterial;
-            }
-            if (movingPartRawImage.transform.parent != this.transform)
-                movingPartRawImage.transform.SetParent(this.transform, false);
+
+            // Stretch RawImage to fill parent
+            RectTransform rt = movingPartRawImage.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = Vector2.zero;
+
             movingPartRawImage.transform.SetSiblingIndex(0);
+
+            // Only add animation if NOT in menu
+            if (!isInMenu)
+            {
+                ConveyorBelt conveyorBelt = rawImageObj.AddComponent<ConveyorBelt>();
+                conveyorBelt.SetConveyorDirection(cellDirection);
+            }
         }
 
         // --- Border ---

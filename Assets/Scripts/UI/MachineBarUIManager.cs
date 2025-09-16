@@ -5,6 +5,9 @@ public class MachineBarUIManager : MonoBehaviour
 {
     public GameObject machineButtonPrefab;
     public Transform machineBarPanel;
+
+    // --- ADD THESE FIELDS ---
+    public Texture conveyorPanelTexture;
     
     // Selection state
     private MachineDef selectedMachine;
@@ -48,8 +51,6 @@ public class MachineBarUIManager : MonoBehaviour
             {
                 layoutElement = buttonObj.AddComponent<LayoutElement>();
             }
-
-            // Set explicit preferred sizes (square)
             layoutElement.preferredWidth = targetSize;
             layoutElement.preferredHeight = targetSize;
 
@@ -68,14 +69,22 @@ public class MachineBarUIManager : MonoBehaviour
             if (machineRenderer != null)
             {
                 machineRenderer.isInMenu = true; // Prevent materials/animations in menu
-                machineRenderer.Setup(machine);
+
+                // --- PASS TEXTURE & MATERIAL TO SETUP ---
+                machineRenderer.Setup(
+                    machine,
+                    UICell.Direction.Up,
+                    null,
+                    0,
+                    0,
+                    conveyorPanelTexture
+                );
             }
             else
             {
                 Debug.LogWarning($"MachineRenderer not found on prefab for machine '{machine.id}'");
             }
         }
-        
     }
 
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)

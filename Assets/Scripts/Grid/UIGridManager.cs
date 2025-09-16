@@ -7,33 +7,20 @@ public class UIGridManager : MonoBehaviour
 {
     public RectTransform gridPanel;
     public GameObject cellPrefab;
-    //public Material conveyorSharedMaterial;
     public RectTransform movingItemsContainer;
     public GameObject itemPrefab;
 
+    // *** Add these fields for shared resources! ***
+    public Texture conveyorSharedTexture;
+    public Material conveyorSharedMaterial;
+
     private GridData gridData;
     private UICell[,] cellScripts;
-    
-    // Track visual items by ID
+
     private Dictionary<string, GameObject> visualItems = new Dictionary<string, GameObject>();
-    
-    // Separate rendering layers for Solution 1
+
     private RectTransform bordersContainer;
     private RectTransform buildingsContainer;
-
-    void Start()
-    {
-        // Set up conveyor material scrolling
-        // if (conveyorSharedMaterial != null)
-        // {
-        //     ConveyorMaterialScroller scroller = gameObject.GetComponent<ConveyorMaterialScroller>();
-        //     if (scroller == null)
-        //     {
-        //         scroller = gameObject.AddComponent<ConveyorMaterialScroller>();
-        //     }
-        //     scroller.conveyorMaterial = conveyorSharedMaterial;
-        // }
-    }
 
     public UICell GetCell(int x, int y)
     {
@@ -49,7 +36,6 @@ public class UIGridManager : MonoBehaviour
         Debug.Log("UIGridManager InitGrid() called.");
         this.gridData = data;
 
-        // Create separate rendering layers for Solution 1
         CreateRenderingLayers();
 
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
@@ -62,7 +48,6 @@ public class UIGridManager : MonoBehaviour
             layout.constraintCount = gridData.width;
         }
 
-        // Clean up old grid before creating a new one
         if (cellScripts != null)
         {
             foreach (var cell in cellScripts)
@@ -72,7 +57,6 @@ public class UIGridManager : MonoBehaviour
             }
         }
 
-        // Clear visual items
         foreach (var item in visualItems.Values)
         {
             if (item != null)
@@ -90,7 +74,8 @@ public class UIGridManager : MonoBehaviour
                 UICell cellScript = cellObj.GetComponent<UICell>();
                 cellScripts[x, y] = cellScript;
 
-                cellScript.Init(x, y, this);
+                // *** Pass shared resources to cell ***
+                cellScript.Init(x, y, this, conveyorSharedTexture, conveyorSharedMaterial);
 
                 // Set cell role first (for Top/Bottom row cells)
                 CellData cellData = GetCellData(x, y);
@@ -98,14 +83,11 @@ public class UIGridManager : MonoBehaviour
                 {
                     Debug.Log($"Cell ({x}, {y}) has data: role={cellData.cellRole}, type={cellData.cellType}, machineDefId={cellData.machineDefId}");
                     cellScript.SetCellRole(cellData.cellRole);
-                    
-                    // Set cell type and machine - UICell handles MachineRenderer creation internally
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
                 }
                 else
                 {
                     Debug.Log($"Cell ({x}, {y}) has no data - creating as blank cell");
-                    // ALL cells without data become blank cells using the "blank" machine definition
                     cellScript.SetCellRole(CellRole.Grid);
                     cellScript.SetCellType(CellType.Blank, Direction.Up);
                 }
@@ -122,7 +104,7 @@ public class UIGridManager : MonoBehaviour
     {
         // Get the parent container (should be the same parent as gridPanel)
         Transform parentContainer = gridPanel.parent;
-        
+
         // Clean up existing rendering layers if they exist
         if (bordersContainer != null)
         {
@@ -137,7 +119,7 @@ public class UIGridManager : MonoBehaviour
         GameObject bordersObj = new GameObject("BordersContainer");
         bordersObj.transform.SetParent(parentContainer, false);
         bordersContainer = bordersObj.AddComponent<RectTransform>();
-        
+
         // Make it fill the same area as gridPanel
         bordersContainer.anchorMin = gridPanel.anchorMin;
         bordersContainer.anchorMax = gridPanel.anchorMax;
@@ -145,18 +127,18 @@ public class UIGridManager : MonoBehaviour
         bordersContainer.offsetMax = gridPanel.offsetMax;
         bordersContainer.anchoredPosition = gridPanel.anchoredPosition;
         bordersContainer.sizeDelta = gridPanel.sizeDelta;
-        
+
         // Set as first sibling (index 0)
         bordersObj.transform.SetSiblingIndex(0);
-        
+
         // Ensure gridPanel is at index 1 
         gridPanel.SetSiblingIndex(1);
-        
+
         // Create BuildingsContainer (index 2) - for building sprites
         GameObject buildingsObj = new GameObject("BuildingsContainer");
         buildingsObj.transform.SetParent(parentContainer, false);
         buildingsContainer = buildingsObj.AddComponent<RectTransform>();
-        
+
         // Make it fill the same area as gridPanel
         buildingsContainer.anchorMin = gridPanel.anchorMin;
         buildingsContainer.anchorMax = gridPanel.anchorMax;
@@ -164,10 +146,10 @@ public class UIGridManager : MonoBehaviour
         buildingsContainer.offsetMax = gridPanel.offsetMax;
         buildingsContainer.anchoredPosition = gridPanel.anchoredPosition;
         buildingsContainer.sizeDelta = gridPanel.sizeDelta;
-        
+
         // Set as last sibling (index 2)
         buildingsObj.transform.SetSiblingIndex(2);
-        
+
         Debug.Log("Created separate rendering layers: BordersContainer (0), GridPanel (1), BuildingsContainer (2)");
     }
 
@@ -241,7 +223,7 @@ public class UIGridManager : MonoBehaviour
 
         // Create or get highlight overlay
         Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
-        
+
         if (highlight)
         {
             if (highlightOverlay == null)
@@ -249,10 +231,10 @@ public class UIGridManager : MonoBehaviour
                 // Create highlight overlay
                 GameObject overlay = new GameObject("HighlightOverlay");
                 overlay.transform.SetParent(cell.transform, false);
-                
+
                 Image overlayImage = overlay.AddComponent<Image>();
                 overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
-                
+
                 // Make it fill the cell
                 RectTransform rt = overlay.GetComponent<RectTransform>();
                 rt.anchorMin = Vector2.zero;
@@ -261,7 +243,7 @@ public class UIGridManager : MonoBehaviour
                 rt.offsetMax = Vector2.zero;
                 rt.anchoredPosition = Vector2.zero;
                 rt.sizeDelta = Vector2.zero;
-                
+
                 // Put it on top but behind any items
                 overlay.transform.SetSiblingIndex(cell.transform.childCount - 1);
             }
@@ -351,14 +333,14 @@ public class UIGridManager : MonoBehaviour
         // Try to load sprite for the item type
         string spritePath = $"Sprites/Items/{itemType}";
         Sprite itemSprite = Resources.Load<Sprite>(spritePath);
-        
+
         // Get the Image component on the item
         Image itemImage = itemObject.GetComponent<Image>();
         if (itemImage == null)
         {
             itemImage = itemObject.GetComponentInChildren<Image>();
         }
-        
+
         if (itemImage != null)
         {
             if (itemSprite != null)
@@ -438,18 +420,18 @@ public class UIGridManager : MonoBehaviour
     {
         return bordersContainer;
     }
-    
+
     public RectTransform GetBuildingsContainer()
     {
         return buildingsContainer;
     }
-    
+
     public Vector2 GetCellSize()
     {
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
         return layout != null ? layout.cellSize : Vector2.zero;
     }
-    
+
     public Vector3 GetCellWorldPosition(int x, int y)
     {
         UICell cell = GetCell(x, y);
@@ -459,7 +441,7 @@ public class UIGridManager : MonoBehaviour
     public CellData GetCellData(int x, int y)
     {
         if (gridData == null) return null;
-        
+
         foreach (var cell in gridData.cells)
         {
             if (cell.x == x && cell.y == y)

@@ -16,6 +16,10 @@ public class UICell : MonoBehaviour
     public int x, y;
     private UIGridManager gridManager;
 
+    // Shared visual resources for moving parts
+    private Texture conveyorTexture;
+    private Material conveyorMaterial;
+
     // MachineRenderer handles ALL visuals now
     private MachineRenderer machineRenderer;
 
@@ -31,12 +35,14 @@ public class UICell : MonoBehaviour
         Debug.Log($"UICell Awake() - cell will be initialized with MachineRenderer for ALL visuals");
     }
 
-    // This method is now used to initialize the cell from a CellState model
-    public void Init(int x, int y, UIGridManager gridManager)
+    // Now receive texture/material in Init
+    public void Init(int x, int y, UIGridManager gridManager, Texture conveyorTexture, Material conveyorMaterial)
     {
         this.x = x;
         this.y = y;
         this.gridManager = gridManager;
+        this.conveyorTexture = conveyorTexture;
+        this.conveyorMaterial = conveyorMaterial;
 
         Debug.Log($"UICell.Init({x}, {y}) - cell ready for machine setup");
     }
@@ -115,15 +121,20 @@ public class UICell : MonoBehaviour
         if (def.isMoving)
         {
             ConveyorBelt conveyorBelt = rendererObj.AddComponent<ConveyorBelt>();
-
-            // Simply set the direction directly
-            conveyorBelt.SetConveyorDirection(direction); // or conveyorBelt.SetConveyorDirection(direction);
-
+            conveyorBelt.SetConveyorDirection(direction);
             Debug.Log($"Set ConveyorBelt direction to {direction} for machine '{def.id}' at cell ({x}, {y})");
         }
 
         machineRenderer = rendererObj.AddComponent<MachineRenderer>();
-        machineRenderer.Setup(def, direction, gridManager, x, y);
+        machineRenderer.Setup(
+            def,
+            direction,
+            gridManager,
+            x,
+            y,
+            movingPartTexture: conveyorTexture,
+            movingPartMaterial: conveyorMaterial
+        );
 
         Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
     }
@@ -142,16 +153,13 @@ public class UICell : MonoBehaviour
 
     void OnCellClicked()
     {
-        // We now forward this event to the GameManager to handle the core logic
         GameManager.Instance.OnCellClicked(x, y);
     }
 
     public RectTransform GetItemSpawnPoint()
     {
-        // ALL cells use MachineRenderer now, including blank cells
         if (machineRenderer != null)
         {
-            // Try to find the spawn point created by MachineRenderer
             Transform spawnPointTransform = machineRenderer.transform.Find("ItemSpawnPoint");
             if (spawnPointTransform != null)
             {
@@ -159,7 +167,6 @@ public class UICell : MonoBehaviour
             }
         }
 
-        // Fallback: create a default spawn point if none found
         Transform fallbackSpawn = transform.Find("DefaultSpawnPoint");
         if (fallbackSpawn == null)
         {
@@ -178,7 +185,6 @@ public class UICell : MonoBehaviour
 
     private string GetMachineDefId()
     {
-        // Get machine definition ID from the cell data
         var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {

@@ -587,9 +587,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIGridManager
   gridPanel: {fileID: 545885363}
   cellPrefab: {fileID: 6365736263334911754, guid: 99b25ec96cf33d54cabb72112abf447e, type: 3}
-  conveyorSharedMaterial: {fileID: 2100000, guid: d154925764fb3a04d910be9623293a80, type: 2}
   movingItemsContainer: {fileID: 28436209}
   itemPrefab: {fileID: 895698581631599440, guid: 58157593a75441e41a3b29905d617ed1, type: 3}
+  conveyorSharedTexture: {fileID: 2800000, guid: 729b17a5d6107dd45b4fb30a6e3f4825, type: 3}
+  conveyorSharedMaterial: {fileID: 2100000, guid: d154925764fb3a04d910be9623293a80, type: 2}
 --- !u!4 &283717430
 Transform:
   m_ObjectHideFlags: 0
@@ -1283,6 +1284,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MachineBarUIManager
   machineButtonPrefab: {fileID: 6365736263334911754, guid: 928267acdf116e34fbe6c0e614b5bfbb, type: 3}
   machineBarPanel: {fileID: 1429799362}
+  conveyorPanelTexture: {fileID: 2800000, guid: 729b17a5d6107dd45b4fb30a6e3f4825, type: 3}
+  conveyorPanelMaterial: {fileID: 2100000, guid: d154925764fb3a04d910be9623293a80, type: 2}
 --- !u!1 &1559830093
 GameObject:
   m_ObjectHideFlags: 0
