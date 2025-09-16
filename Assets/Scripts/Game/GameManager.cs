@@ -217,6 +217,19 @@ public class GameManager : MonoBehaviour
         if (cellData.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
         {
             Debug.Log($"Attempting to rotate machine {cellData.machineDefId} at ({x}, {y})");
+            Debug.Log($"Machine type: {cellData.cellType}, MachineDefId: {cellData.machineDefId}");
+            
+            // Get machine definition to check canRotate
+            MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
+            if (machineDef != null)
+            {
+                Debug.Log($"Machine {cellData.machineDefId} canRotate: {machineDef.canRotate}");
+            }
+            else
+            {
+                Debug.LogError($"Could not find machine definition for {cellData.machineDefId}");
+            }
+            
             RotateMachine(cellData);
             return;
         }
@@ -392,8 +405,12 @@ public class GameManager : MonoBehaviour
             return;
         }
         
+        Debug.Log($"Rotating machine {machineDef.id} - current direction: {cellData.direction}");
+        
         // Rotate the machine's direction
         cellData.direction = (UICell.Direction)(((int)cellData.direction + 1) % 4);
+        
+        Debug.Log($"New direction after rotation: {cellData.direction}");
         
         // Store this as the last machine direction for future placements
         lastMachineDirection = cellData.direction;
