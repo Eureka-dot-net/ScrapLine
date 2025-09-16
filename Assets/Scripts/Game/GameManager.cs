@@ -627,24 +627,57 @@ public class GameManager : MonoBehaviour
             Vector3 targetPos = gridManager.GetCellWorldPosition(item.targetX, item.targetY);
             Vector3 waitingPos = Vector3.Lerp(sourcePos, targetPos, 0.33f);
 
-            // Add simple stacking offset
+            // Add constrained stacking offset
             int queueIndex = targetCell.waitingQueue.Count - 1; // Position in queue
             Vector2 cellSize = gridManager.GetCellSize();
             Vector3 stackOffset = Vector3.zero;
-            float stackDistance = cellSize.y * 0.08f;
-
-            // Stack perpendicular to movement direction
+            float stackDistance = cellSize.y * 0.06f; // Smaller stack distance
+            
+            // Calculate maximum items that can fit within cell boundary
+            float maxStackDistance = cellSize.x * 0.3f; // 30% of cell width for horizontal stacking
+            int maxItemsInRow = Mathf.Max(1, Mathf.FloorToInt(maxStackDistance / stackDistance));
+            
+            // Stack perpendicular to movement direction with boundary constraints
             switch (sourceCell.direction)
             {
                 case Direction.Up:
                 case Direction.Down:
-                    stackOffset.x = queueIndex * stackDistance * 0.5f;
+                    // Stack horizontally, but if too many items, start overlapping
+                    if (queueIndex < maxItemsInRow)
+                    {
+                        stackOffset.x = queueIndex * stackDistance;
+                    }
+                    else
+                    {
+                        // Overlap items when we run out of horizontal space
+                        int row = queueIndex / maxItemsInRow;
+                        int col = queueIndex % maxItemsInRow;
+                        stackOffset.x = col * stackDistance;
+                        stackOffset.y = row * stackDistance * 0.3f; // Small vertical offset for overlapping
+                    }
                     break;
                 case Direction.Left:
                 case Direction.Right:
-                    stackOffset.y = queueIndex * stackDistance * 0.5f;
+                    // Stack vertically, but if too many items, start overlapping
+                    if (queueIndex < maxItemsInRow)
+                    {
+                        stackOffset.y = queueIndex * stackDistance;
+                    }
+                    else
+                    {
+                        // Overlap items when we run out of vertical space
+                        int row = queueIndex / maxItemsInRow;
+                        int col = queueIndex % maxItemsInRow;
+                        stackOffset.y = col * stackDistance;
+                        stackOffset.x = row * stackDistance * 0.3f; // Small horizontal offset for overlapping
+                    }
                     break;
             }
+            
+            // Ensure we don't exceed cell boundaries
+            float maxOffset = cellSize.x * 0.4f;
+            stackOffset.x = Mathf.Clamp(stackOffset.x, -maxOffset, maxOffset);
+            stackOffset.y = Mathf.Clamp(stackOffset.y, -maxOffset, maxOffset);
 
             Vector3 finalPos = waitingPos + stackOffset;
             GameObject visualItem = gridManager.GetVisualItem(item.id);
@@ -709,6 +742,14 @@ public class GameManager : MonoBehaviour
 
         // Remove from source cell
         sourceCell.items.Remove(item);
+
+        // Check if target is blank cell - destroy item
+        if (targetCell.cellType == CellType.Blank)
+        {
+            Debug.Log($"Item {item.id} reached blank cell - destroying");
+            gridManager.DestroyVisualItem(item.id);
+            return;
+        }
 
         // Check if target is seller machine
         if (targetCell.cellType == CellType.Machine && targetCell.machineDefId == "seller")
@@ -788,15 +829,7 @@ public class GameManager : MonoBehaviour
         CellData nextCell = GetCellData(gridData, nextX, nextY);
         if (nextCell == null) return;
 
-        // Simplified logic for blank cells - destroy items that move to blank cells
-        if (nextCell.cellType == CellType.Blank)
-        {
-            Debug.Log($"Item {item.id} moving to blank cell - will be destroyed");
-            cell.items.Remove(item);
-            gridManager.DestroyVisualItem(item.id);
-            return;
-        }
-
+        // Allow movement to blank cells - they will be destroyed when they arrive
         // Start movement
         item.state = ItemState.Moving;
         item.targetX = nextX;
