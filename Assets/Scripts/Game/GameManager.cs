@@ -776,13 +776,13 @@ public class GameManager : MonoBehaviour
         if (targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId) && 
             targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
         {            
-            // Set machine state to receiving and look up recipe for this machine and item
-            targetCell.machineState = MachineState.Receiving;
+            // Machine should already be in Receiving state from TryStartItemMovement
+            Debug.Log($"Item {item.id} reached machine {targetCell.machineDefId} - looking up recipe for {item.itemType}");
             
             RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(targetCell.machineDefId, item.itemType);
             if (recipe != null)
             {
-                Debug.Log($"Processing item {item.id} ({item.itemType}) with machine {targetCell.machineDefId} using recipe");
+                Debug.Log($"Found recipe for item {item.id} ({item.itemType}) with machine {targetCell.machineDefId}");
                 
                 // Get machine definition for base process time
                 MachineDef machineDef = FactoryRegistry.Instance.GetMachine(targetCell.machineDefId);
@@ -808,6 +808,16 @@ public class GameManager : MonoBehaviour
                     
                     return;
                 }
+                else
+                {
+                    Debug.LogError($"Machine definition not found for {targetCell.machineDefId}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"No recipe found for machine {targetCell.machineDefId} with item {item.itemType}");
+                // Reset machine state to idle if no recipe found
+                targetCell.machineState = MachineState.Idle;
             }
         }
 
@@ -850,6 +860,7 @@ public class GameManager : MonoBehaviour
             {
                 // Set machine to receiving state immediately to prevent race conditions
                 nextCell.machineState = MachineState.Receiving;
+                Debug.Log($"Item {item.id} will move to idle machine at ({nextX}, {nextY}) - setting machine to Receiving state");
             }
         }
 
