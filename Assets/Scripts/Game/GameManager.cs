@@ -557,13 +557,24 @@ public class GameManager : MonoBehaviour
                             // Check if we should transfer to waiting list at 33% progress
                             if (item.moveProgress >= 0.33f && IsTargetMachineBusy(item, gridData))
                             {
+                                Debug.Log($"Item {item.id} at 33% progress - target machine is busy (Processing state), transferring to waiting queue");
                                 // Transfer to machine's waiting list
                                 TransferItemToWaitingList(item, cell, gridData, gridManager);
                                 i--; // Item removed from current cell
                             }
                             else
                             {
-                                // Normal movement update
+                                // Normal movement update - item continues to machine
+                                if (item.moveProgress >= 0.33f)
+                                {
+                                    CellData targetCell = GetCellData(gridData, item.targetX, item.targetY);
+                                    if (targetCell != null && targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId) && 
+                                        targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
+                                    {
+                                        Debug.Log($"Item {item.id} at 33% progress - target machine ({targetCell.machineDefId}) state is {targetCell.machineState}, continuing movement");
+                                    }
+                                }
+                                
                                 if (gridManager.HasVisualItem(item.id))
                                 {
                                     gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
@@ -626,8 +637,9 @@ public class GameManager : MonoBehaviour
         if (targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId) && 
             targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
         {
-            // Check machine state instead of individual item states
-            return targetCell.machineState != MachineState.Idle;
+            // Machine is busy only if it's actively processing
+            // Idle and Receiving states should allow items to continue moving
+            return targetCell.machineState == MachineState.Processing;
         }
         
         return false;
