@@ -346,6 +346,11 @@ public class UIGridManager : MonoBehaviour
         GameObject newItem = Instantiate(itemPrefab, targetContainer);
         RectTransform itemRect = newItem.GetComponent<RectTransform>();
 
+        // Make item non-interactive to avoid blocking cell button clicks
+        CanvasGroup itemCanvasGroup = newItem.AddComponent<CanvasGroup>();
+        itemCanvasGroup.blocksRaycasts = false;
+        itemCanvasGroup.interactable = false;
+
         // Position the item at the cell's world position
         Vector3 cellPosition = GetCellWorldPosition(x, y);
         itemRect.position = cellPosition;
@@ -421,6 +426,12 @@ public class UIGridManager : MonoBehaviour
     public bool HasVisualItem(string itemId)
     {
         return visualItems.TryGetValue(itemId, out GameObject item) && item != null;
+    }
+    
+    public GameObject GetVisualItem(string itemId)
+    {
+        visualItems.TryGetValue(itemId, out GameObject item);
+        return item; // Returns null if not found
     }
 
     public void UpdateItemVisualPosition(string itemId, float progress, int startX, int startY, int endX, int endY, UICell.Direction movementDirection)
