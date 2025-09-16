@@ -41,6 +41,7 @@ public class CellData
     public UICell.CellRole cellRole;
     public string machineDefId; // References the specific machine definition from FactoryRegistry
     public List<ItemData> items = new List<ItemData>();
+    public Queue<ItemData> waitingQueue = new Queue<ItemData>(); // Queue for items waiting to enter this machine
 }
 
 [System.Serializable]

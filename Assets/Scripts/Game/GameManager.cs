@@ -635,37 +635,27 @@ public class GameManager : MonoBehaviour
                         }
                         else
                         {
-                            // Update visual position - but only to 1/3 progress if waiting
-                            float visualProgress = item.moveProgress;
-                            if (IsTargetMachineBusy(item, gridData) && item.moveProgress > 0.33f)
+                            // Check if we should transfer to waiting queue at 33% progress
+                            if (item.moveProgress >= 0.33f && IsTargetMachineBusy(item, gridData))
                             {
-                                visualProgress = 0.33f; // Stop visual at 1/3 boundary
-                                item.state = ItemState.Waiting; // Enter waiting state
+                                // Transfer to machine's waiting queue
+                                TransferItemToWaitingQueue(item, cell, gridData, gridManager);
+                                i--; // Item removed from current cell
                             }
-
-                            if (gridManager.HasVisualItem(item.id))
+                            else
                             {
-                                gridManager.UpdateItemVisualPosition(item.id, visualProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                                // Normal movement update
+                                if (gridManager.HasVisualItem(item.id))
+                                {
+                                    gridManager.UpdateItemVisualPosition(item.id, item.moveProgress, cell.x, cell.y, item.targetX, item.targetY, cell.direction);
+                                }
                             }
                         }
                         break;
 
                     case ItemState.Waiting:
-                        // Check if target machine is now available
-                        if (!IsTargetMachineBusy(item, gridData))
-                        {
-                            // First item in cell can continue moving
-                            if (cell.items[0] == item)
-                            {
-                                item.state = ItemState.Moving;
-                                Debug.Log($"Item {item.id} can now continue to available machine");
-                            }
-                        }
-                        else
-                        {
-                            // Update visual position for stacking waiting items
-                            UpdateWaitingItemVisualPosition(item, cell, gridManager);
-                        }
+                        // Update visual position for waiting items
+                        UpdateWaitingItemVisualPosition(item, cell, gridManager);
                         break;
 
                     case ItemState.Processing:
@@ -696,6 +686,57 @@ public class GameManager : MonoBehaviour
         }
         
         return false;
+    }
+
+    private void TransferItemToWaitingQueue(ItemData item, CellData sourceCell, GridData gridData, UIGridManager gridManager)
+    {
+        // Find target machine cell
+        CellData targetCell = GetCellData(gridData, item.targetX, item.targetY);
+        if (targetCell == null) return;
+
+        // Remove item from source cell
+        sourceCell.items.Remove(item);
+
+        // Add to target machine's waiting queue
+        targetCell.waitingQueue.Enqueue(item);
+        item.state = ItemState.Waiting;
+
+        // Update visual position to 33% boundary
+        if (gridManager.HasVisualItem(item.id))
+        {
+            Vector3 sourcePos = gridManager.GetCellWorldPosition(sourceCell.x, sourceCell.y);
+            Vector3 targetPos = gridManager.GetCellWorldPosition(item.targetX, item.targetY);
+            Vector3 waitingPos = Vector3.Lerp(sourcePos, targetPos, 0.33f);
+
+            // Add simple stacking offset
+            int queueIndex = targetCell.waitingQueue.Count - 1; // Position in queue
+            Vector2 cellSize = gridManager.GetCellSize();
+            Vector3 stackOffset = Vector3.zero;
+            float stackDistance = cellSize.y * 0.08f;
+
+            // Stack perpendicular to movement direction
+            switch (sourceCell.direction)
+            {
+                case Direction.Up:
+                case Direction.Down:
+                    stackOffset.x = queueIndex * stackDistance * 0.5f;
+                    break;
+                case Direction.Left:
+                case Direction.Right:
+                    stackOffset.y = queueIndex * stackDistance * 0.5f;
+                    break;
+            }
+
+            Vector3 finalPos = waitingPos + stackOffset;
+            GameObject visualItem = gridManager.GetVisualItem(item.id);
+            if (visualItem != null)
+            {
+                RectTransform itemRect = visualItem.GetComponent<RectTransform>();
+                itemRect.position = finalPos;
+            }
+        }
+
+        Debug.Log($"Item {item.id} transferred to waiting queue for machine {targetCell.machineDefId} at position {targetCell.waitingQueue.Count - 1}");
     }
 
     private void UpdateWaitingItemVisualPosition(ItemData item, CellData sourceCell, UIGridManager gridManager)
@@ -997,111 +1038,50 @@ public class GameManager : MonoBehaviour
             Debug.LogError($"Recipe not found when completing processing for machine {item.processingMachineId} with item {item.itemType}");
         }
         
-        // After processing completes, check if there are waiting items that can start processing
-        CheckForWaitingItemsToProcess(cell);
-        
-        // Also check adjacent cells for items that were waiting to move to this machine
-        CheckAdjacentCellsForWaitingItems(cell, gridData);
+        // After processing completes, try to process next item from waiting queue
+        ProcessNextWaitingItem(cell, gridManager);
     }
-    
-    private void UpdateWaitingItemQueuePosition(ItemData item, CellData sourceCell)
+
+    private void ProcessNextWaitingItem(CellData machineCell, UIGridManager gridManager)
     {
-        // Count how many items are waiting for the same machine
-        int queuePosition = 0;
-        foreach (var otherItem in sourceCell.items)
+        // Check if there are items waiting in queue for this machine
+        if (machineCell.waitingQueue.Count > 0)
         {
-            if (otherItem.isWaiting && 
-                otherItem.waitingAtX == item.waitingAtX && 
-                otherItem.waitingAtY == item.waitingAtY &&
-                otherItem.id != item.id)
+            ItemData waitingItem = machineCell.waitingQueue.Dequeue();
+            
+            // Start processing this item
+            waitingItem.state = ItemState.Processing;
+            
+            // Move to machine cell
+            machineCell.items.Add(waitingItem);
+            
+            // Look up recipe
+            RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(machineCell.machineDefId, waitingItem.itemType);
+            if (recipe != null)
             {
-                queuePosition++;
+                MachineDef machineDef = FactoryRegistry.Instance.GetMachine(machineCell.machineDefId);
+                if (machineDef != null)
+                {
+                    float processTime = machineDef.baseProcessTime * recipe.processMultiplier;
+                    waitingItem.processingStartTime = Time.time;
+                    waitingItem.processingDuration = processTime;
+                    waitingItem.processingMachineId = machineCell.machineDefId;
+                    
+                    // Destroy visual since item is now inside machine
+                    gridManager.DestroyVisualItem(waitingItem.id);
+                    Debug.Log($"Started processing waiting item {waitingItem.id} - will complete in {processTime}s");
+                }
             }
         }
-        
-        item.queuePosition = queuePosition;
-        Debug.Log($"Item {item.id} assigned queue position {queuePosition} for machine at ({item.waitingAtX}, {item.waitingAtY})");
     }
-    
-    private void UpdateWaitingItemPosition(ItemData item, CellData sourceCell, UIGridManager gridManager)
+
+    private void UpdateWaitingItemVisualPosition(ItemData item, CellData sourceCell, UIGridManager gridManager)
     {
-        if (!item.isWaiting || !gridManager.HasVisualItem(item.id))
-        {
-            return;
-        }
-        
-        // Get the direction the item was moving (from source to target)
-        Direction movementDirection = sourceCell.direction;
-        
-        // Calculate boundary position between source cell and machine cell
-        Vector3 sourcePos = gridManager.GetCellWorldPosition(sourceCell.x, sourceCell.y);
-        Vector3 machinePos = gridManager.GetCellWorldPosition(item.waitingAtX, item.waitingAtY);
-        
-        // Position at boundary (edge of source cell towards machine, not halfway)
-        Vector2 cellSize = gridManager.GetCellSize();
-        Vector3 boundaryPos = sourcePos;
-        
-        // Move to edge of source cell in direction of target
-        switch (movementDirection)
-        {
-            case Direction.Up:
-                boundaryPos.y += cellSize.y * 0.4f; // Move to top edge of source cell
-                break;
-            case Direction.Down:
-                boundaryPos.y -= cellSize.y * 0.4f; // Move to bottom edge of source cell
-                break;
-            case Direction.Left:
-                boundaryPos.x -= cellSize.x * 0.4f; // Move to left edge of source cell
-                break;
-            case Direction.Right:
-                boundaryPos.x += cellSize.x * 0.4f; // Move to right edge of source cell
-                break;
-        }
-        
-        // Calculate stacking offset based on movement direction and queue position
-        Vector3 stackOffset = Vector3.zero;
-        float stackDistance = cellSize.y * 0.08f; // Smaller offset for stacking to prevent overflow
-        
-        // Stack perpendicular to movement direction with proper boundary constraints
-        switch (movementDirection)
-        {
-            case Direction.Up:
-            case Direction.Down:
-                // Moving vertically, stack horizontally (left/right)
-                // Center the stack around the boundary position
-                float totalWidth = Mathf.Max(0, item.queuePosition) * stackDistance;
-                float startX = -totalWidth / 2f;
-                stackOffset.x = startX + (item.queuePosition * stackDistance);
-                
-                // Ensure item stays within reasonable boundary (smaller constraint)
-                float maxHorizontalOffset = cellSize.x * 0.3f; // 30% of cell width from center
-                stackOffset.x = Mathf.Clamp(stackOffset.x, -maxHorizontalOffset, maxHorizontalOffset);
-                break;
-                
-            case Direction.Left:
-            case Direction.Right:
-                // Moving horizontally, stack vertically (up/down)
-                // Center the stack around the boundary position
-                float totalHeight = Mathf.Max(0, item.queuePosition) * stackDistance;
-                float startY = -totalHeight / 2f;
-                stackOffset.y = startY + (item.queuePosition * stackDistance);
-                
-                // Ensure item stays within reasonable boundary (smaller constraint)
-                float maxVerticalOffset = cellSize.y * 0.3f; // 30% of cell height from center
-                stackOffset.y = Mathf.Clamp(stackOffset.y, -maxVerticalOffset, maxVerticalOffset);
-                break;
-        }
-        
-        Vector3 finalPosition = boundaryPos + stackOffset;
-        
-        // Update visual item position
-        GameObject visualItem = gridManager.GetVisualItem(item.id);
-        if (visualItem != null)
-        {
-            RectTransform itemRect = visualItem.GetComponent<RectTransform>();
-            itemRect.position = finalPosition;
-            Debug.Log($"Updated waiting position for item {item.id} at queue position {item.queuePosition} - boundary position with offset {stackOffset}");
-        }
+        if (!gridManager.HasVisualItem(item.id)) return;
+
+        // This method is now handled by TransferItemToWaitingQueue
+        // Items in waiting queues don't need continuous updates since they're already positioned
+        // This method can be simplified or removed
     }
     
     private void CheckForWaitingItemsToProcess(CellData cell)
