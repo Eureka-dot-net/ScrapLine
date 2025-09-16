@@ -115,7 +115,8 @@ public class UIGridManager : MonoBehaviour
             DestroyImmediate(buildingsContainer.gameObject);
         }
 
-        // Create BordersContainer (index 0) - for border sprites and moving parts
+        // Create BordersContainer - for border sprites and moving parts  
+        // Place BELOW GridPanel so grid UI elements remain visible
         GameObject bordersObj = new GameObject("BordersContainer");
         bordersObj.transform.SetParent(parentContainer, false);
         bordersContainer = bordersObj.AddComponent<RectTransform>();
@@ -128,13 +129,13 @@ public class UIGridManager : MonoBehaviour
         bordersContainer.anchoredPosition = gridPanel.anchoredPosition;
         bordersContainer.sizeDelta = gridPanel.sizeDelta;
 
-        // Set as first sibling (index 0)
+        // Set as first sibling (index 0) - BELOW GridPanel
         bordersObj.transform.SetSiblingIndex(0);
 
-        // Ensure gridPanel is at index 1 
+        // Ensure gridPanel is at index 1 (ABOVE BordersContainer)
         gridPanel.SetSiblingIndex(1);
 
-        // Create BuildingsContainer (index 2) - for building sprites
+        // Create BuildingsContainer (index 2) - for building sprites (ABOVE everything)
         GameObject buildingsObj = new GameObject("BuildingsContainer");
         buildingsObj.transform.SetParent(parentContainer, false);
         buildingsContainer = buildingsObj.AddComponent<RectTransform>();
@@ -147,10 +148,10 @@ public class UIGridManager : MonoBehaviour
         buildingsContainer.anchoredPosition = gridPanel.anchoredPosition;
         buildingsContainer.sizeDelta = gridPanel.sizeDelta;
 
-        // Set as last sibling (index 2)
+        // Set as last sibling (index 2) - ABOVE everything
         buildingsObj.transform.SetSiblingIndex(2);
 
-        Debug.Log($"Created separate rendering layers: BordersContainer (0), GridPanel (1), BuildingsContainer (2)");
+        Debug.Log($"Created rendering layers: BordersContainer (0-below), GridPanel (1-middle), BuildingsContainer (2-above)");
         Debug.Log($"BordersContainer parent: {bordersContainer.parent?.name}, position: {bordersContainer.position}, sizeDelta: {bordersContainer.sizeDelta}");
         Debug.Log($"BuildingsContainer parent: {buildingsContainer.parent?.name}, position: {buildingsContainer.position}, sizeDelta: {buildingsContainer.sizeDelta}");
         Debug.Log($"GridPanel parent: {gridPanel.parent?.name}, position: {gridPanel.position}, sizeDelta: {gridPanel.sizeDelta}");
@@ -442,9 +443,38 @@ public class UIGridManager : MonoBehaviour
     public Vector3 GetCellWorldPosition(int x, int y)
     {
         UICell cell = GetCell(x, y);
-        Vector3 position = cell != null ? cell.transform.position : Vector3.zero;
-        Debug.Log($"GetCellWorldPosition({x}, {y}) returning: {position}");
-        return position;
+        if (cell != null)
+        {
+            Vector3 position = cell.transform.position;
+            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform: {position}");
+            return position;
+        }
+        
+        // Fallback: Calculate position manually from grid layout
+        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
+        if (layout != null)
+        {
+            Vector2 cellSize = layout.cellSize;
+            Vector2 spacing = layout.spacing;
+            
+            // Calculate position within grid
+            float xPos = x * (cellSize.x + spacing.x);
+            float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
+            
+            // Get grid panel's world position and add offset
+            Vector3 gridWorldPos = gridPanel.transform.position;
+            Vector3 calculatedPos = new Vector3(
+                gridWorldPos.x + xPos - (gridData.width * (cellSize.x + spacing.x)) / 2 + cellSize.x / 2,
+                gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
+                gridWorldPos.z
+            );
+            
+            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated fallback: {calculatedPos}");
+            return calculatedPos;
+        }
+        
+        Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
+        return Vector3.zero;
     }
 
     public CellData GetCellData(int x, int y)
