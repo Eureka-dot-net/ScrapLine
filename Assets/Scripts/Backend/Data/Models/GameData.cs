@@ -52,30 +52,6 @@ public class CellData
     public List<ItemData> items = new List<ItemData>();
     public List<ItemData> waitingItems = new List<ItemData>(); // List for items waiting to enter this machine
     public MachineState machineState = MachineState.Idle; // Current state of the machine
-    
-    /// <summary>
-    /// Gets the recipe duration for processing an item of the given type in this cell's machine.
-    /// Returns > 0 if the machine has a recipe for the item, 0 otherwise.
-    /// This replaces hardcoded machine ID checks in movement logic.
-    /// </summary>
-    public float GetRecipeDuration(string itemType)
-    {
-        if (string.IsNullOrEmpty(machineDefId) || cellType != UICell.CellType.Machine)
-            return 0f;
-            
-        // Get the machine definition
-        var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
-        if (machineDef == null)
-            return 0f;
-            
-        // Get the recipe for this machine and item type
-        var recipe = FactoryRegistry.Instance.GetRecipe(machineDefId, itemType);
-        if (recipe == null)
-            return 0f;
-            
-        // Calculate process time with recipe multiplier
-        return machineDef.baseProcessTime * recipe.processMultiplier;
-    }
 }
 
 [System.Serializable]
