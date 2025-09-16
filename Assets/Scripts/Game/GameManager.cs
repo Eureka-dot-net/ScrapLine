@@ -522,6 +522,44 @@ public class GameManager : MonoBehaviour
         ProcessItemMovement();
     }
 
+    // ============================================================================
+    // NEW ITEM MOVEMENT SYSTEM - ARCHITECTURAL PRINCIPLES
+    // ============================================================================
+    // 
+    // This system implements a complete re-architecture of item movement following
+    // these key architectural principles:
+    //
+    // 1. SINGLE POINT OF CONTROL:
+    //    - GameManager is the sole authority for all item and cell state transitions
+    //    - Maintains master list of all active items in CellData.items collections
+    //    - Iterates over this list each frame to update item states
+    //
+    // 2. ITEM-CENTRIC STATE MANAGEMENT:
+    //    - ItemData class is the single source of truth for item state
+    //    - Contains all necessary properties: position (x,y), movement data (sourceX/Y, targetX/Y),
+    //      state (Idle, Moving, Waiting, Processing), and timing information
+    //    - No external state tracking - everything is in ItemData
+    //
+    // 3. DESTINATION-BASED BEHAVIOR:
+    //    - Item behavior determined by target cell's GetRecipeDuration() > 0
+    //    - Eliminates hardcoded machine ID checks (no more "conveyor", "seller", etc.)
+    //    - Uses FactoryRegistry recipe lookup to determine processing requirements
+    //
+    // 4. SIMPLIFIED UPDATE LOOP:
+    //    - ProcessItemMovement() uses clean state-based switch logic
+    //    - Each state (Idle, Moving, Waiting, Processing) has dedicated processing method
+    //    - No complex nested conditions or race condition handling
+    //
+    // 5. PULL SYSTEM:
+    //    - Separate ProcessWaitingItemsPullSystem() handles machine queuing
+    //    - When machine becomes idle, pulls first waiting item for processing
+    //    - Prevents race conditions and ensures orderly processing
+    //
+    // ITEM STATE FLOW:
+    // Idle -> (TryStartItemMovement) -> Moving/Waiting -> (CompleteItemMovement) -> Processing -> (CompleteRecipeProcessing) -> Idle
+    //
+    // ============================================================================
+
     /// <summary>
     /// Main item movement processing loop following new architectural principles.
     /// Single point of control for all item state transitions, operating on master list of items.
