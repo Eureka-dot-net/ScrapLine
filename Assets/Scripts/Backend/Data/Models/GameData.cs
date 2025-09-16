@@ -16,6 +16,12 @@ public class ItemData
     public float moveStartTime;
     public bool hasCheckedMiddle; // Flag to prevent multiple middle checks per movement
     
+    // Waiting state for busy machines
+    public bool isWaiting; // Whether item is waiting at machine border due to busy machine
+    public int waitingAtX; // X coordinate of machine being waited for
+    public int waitingAtY; // Y coordinate of machine being waited for
+    public int queuePosition; // Position in waiting queue (0 = first in line)
+    
     // Next movement planning
     public bool shouldStopAtTarget;
     public bool hasQueuedMovement;
