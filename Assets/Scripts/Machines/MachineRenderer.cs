@@ -293,6 +293,7 @@ public class MachineRenderer : MonoBehaviour
 
         Debug.Log($"Setting border position to: {cellPosition}, size to: {cellSize}");
 
+        // Use same positioning approach as building sprites (which work)
         borderRT.position = cellPosition;
         borderRT.sizeDelta = cellSize;
 
@@ -361,6 +362,7 @@ public class MachineRenderer : MonoBehaviour
 
         Debug.Log($"Setting moving part position to: {cellPosition}, size to: {cellSize}");
 
+        // Use same positioning approach as building sprites (which work)
         movingPartRT.position = cellPosition;
         movingPartRT.sizeDelta = cellSize;
 
