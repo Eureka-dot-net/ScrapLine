@@ -2,24 +2,56 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Renders a machine using sprites from definition and a passed-in RawImage, Texture, and Material for moving parts.
+/// Other images (border, building, main) are created automatically as children.
+/// </summary>
 public class MachineRenderer : MonoBehaviour
 {
     [Header("Context")]
     public bool isInMenu = false; // Set to true when used in UI panels to disable materials
 
-    // Separate rendering: building sprites in dedicated container
+    // For separated building rendering
     private UIGridManager gridManager;
     private int cellX, cellY;
     private GameObject buildingSprite; // Track building sprite separately
 
-    public void Setup(MachineDef def, UICell.Direction cellDirection = UICell.Direction.Up, UIGridManager gridManager = null, int cellX = 0, int cellY = 0)
+    // Moving part visual references (passed in)
+    [NonSerialized] public RawImage movingPartRawImage; // assign externally or via prefab
+    [NonSerialized] public Texture movingPartTexture;   // assign externally
+    [NonSerialized] public Material movingPartMaterial; // assign externally
+
+    /// <summary>
+    /// Setup the renderer. Pass in the RawImage, Texture, and Material for moving part if needed.
+    /// </summary>
+    /// <param name="def"></param>
+    /// <param name="cellDirection"></param>
+    /// <param name="gridManager"></param>
+    /// <param name="cellX"></param>
+    /// <param name="cellY"></param>
+    /// <param name="movingPartRawImage">Optional: assign this if using moving part</param>
+    /// <param name="movingPartTexture">Optional: assign this if using moving part</param>
+    /// <param name="movingPartMaterial">Optional: assign this if using moving part</param>
+    public void Setup(
+        MachineDef def,
+        UICell.Direction cellDirection = UICell.Direction.Up,
+        UIGridManager gridManager = null,
+        int cellX = 0,
+        int cellY = 0,
+        RawImage movingPartRawImage = null,
+        Texture movingPartTexture = null,
+        Material movingPartMaterial = null
+    )
     {
         this.gridManager = gridManager;
         this.cellX = cellX;
         this.cellY = cellY;
-        
+        this.movingPartRawImage = movingPartRawImage;
+        this.movingPartTexture = movingPartTexture;
+        this.movingPartMaterial = movingPartMaterial;
+
         foreach (Transform child in transform) Destroy(child.gameObject);
-        
+
         // Clean up any existing building sprite in separate container
         if (buildingSprite != null)
         {
@@ -27,52 +59,20 @@ public class MachineRenderer : MonoBehaviour
             buildingSprite = null;
         }
 
-        Debug.Log("Creating machine with separated rendering: " +
-                  $"Main='{def.sprite}', Border='{def.borderSprite}', " +
-                  $"MovingPart='{def.movingPartSprite}', Building='{def.buildingSprite}'" +
-                  $" BorderColor='{def.borderColor}', IsInMenu={isInMenu}");
-
-        // Solution 1: Create border and moving parts in this renderer (will be in BordersContainer layer)
-        if (!string.IsNullOrEmpty(def.movingPartSprite))
+        // --- Moving Part: assign passed-in RawImage, Texture, and Material ---
+        if (def.isMoving && movingPartRawImage != null && movingPartTexture != null)
         {
-            var movingPart = CreateImageChild("MovingPart", def.movingPartSprite);
-            // Only apply materials if NOT in menu to prevent unwanted animations
-            if (!isInMenu && !string.IsNullOrEmpty(def.movingPartMaterial))
+            movingPartRawImage.texture = movingPartTexture;
+            if (!isInMenu && movingPartMaterial != null)
             {
-                string movingPartMatPath = "Materials/" + def.movingPartMaterial;
-                Debug.Log($"Attempting to load material from path: '{movingPartMatPath}' for machine '{def.id}'");
-                var mat = Resources.Load<Material>(movingPartMatPath);
-                if (mat != null)
-                {
-                    movingPart.material = mat;
-                    Debug.Log($"Successfully applied material '{movingPartMatPath}' to MovingPart for machine '{def.id}'");
-                    
-                    
-                }
-                else
-                {
-                    Debug.LogWarning($"Material '{movingPartMatPath}' could not be found in Resources folder for machine '{def.id}'");
-                    Debug.Log($"Trying alternative path: 'Materials/Conveyors/{def.movingPartMaterial}'");
-                    string altPath = "Materials/Conveyors/" + def.movingPartMaterial;
-                    var altMat = Resources.Load<Material>(altPath);
-                    if (altMat != null)
-                    {
-                        movingPart.material = altMat;
-                        Debug.Log($"Successfully applied alternative material '{altPath}' to MovingPart for machine '{def.id}'");
-                    }
-                    else
-                    {
-                        Debug.LogError($"Both material paths failed for machine '{def.id}': '{movingPartMatPath}' and '{altPath}'");
-                    }
-                }
+                movingPartRawImage.material = movingPartMaterial;
             }
-            else if (isInMenu)
-            {
-                Debug.Log($"Skipping material application for '{def.id}' - in menu context");
-            }
-            movingPart.transform.SetSiblingIndex(0);
+            if (movingPartRawImage.transform.parent != this.transform)
+                movingPartRawImage.transform.SetParent(this.transform, false);
+            movingPartRawImage.transform.SetSiblingIndex(0);
         }
 
+        // --- Border ---
         if (!string.IsNullOrEmpty(def.borderSprite))
         {
             var border = CreateImageChild("Border", def.borderSprite);
@@ -96,7 +96,7 @@ public class MachineRenderer : MonoBehaviour
 
         CreateItemSpawnPoint();
 
-        // Solution 1: Create building sprite in separate BuildingsContainer (unless in menu)
+        // --- Building: separated sprite in BuildingsContainer ---
         if (!string.IsNullOrEmpty(def.buildingSprite) && !isInMenu && gridManager != null)
         {
             CreateSeparatedBuildingSprite(def, cellDirection);
@@ -109,14 +109,14 @@ public class MachineRenderer : MonoBehaviour
             building.transform.SetSiblingIndex(3);
         }
 
-        // Main sprite stays in local renderer if needed
+        // --- Main sprite stays in local renderer if needed ---
         if (!string.IsNullOrEmpty(def.sprite))
         {
             var mainSprite = CreateImageChild("Main", def.sprite);
             mainSprite.transform.SetSiblingIndex(4);
         }
 
-        // Apply cell direction rotation to entire renderer (only if ConveyorBelt isn't handling it)
+        // --- Rotation ---
         ConveyorBelt existingBelt = GetComponent<ConveyorBelt>();
         if (existingBelt == null)
         {
@@ -129,10 +129,10 @@ public class MachineRenderer : MonoBehaviour
             Debug.Log($"ConveyorBelt component found on same GameObject - skipping MachineRenderer rotation for {def.id}");
         }
     }
-    
+
     private void CreateSeparatedBuildingSprite(MachineDef def, UICell.Direction cellDirection)
     {
-        RectTransform buildingsContainer = gridManager.GetBuildingsContainer();
+        RectTransform buildingsContainer = gridManager?.GetBuildingsContainer();
         if (buildingsContainer == null)
         {
             Debug.LogWarning("BuildingsContainer not found, falling back to local building sprite");
@@ -141,15 +141,15 @@ public class MachineRenderer : MonoBehaviour
             building.transform.SetSiblingIndex(3);
             return;
         }
-        
+
         // Create building sprite in separate container
         buildingSprite = new GameObject($"Building_{cellX}_{cellY}");
         buildingSprite.transform.SetParent(buildingsContainer, false);
-        
+
         Image buildingImage = buildingSprite.AddComponent<Image>();
         string spritePath = "Sprites/Machines/" + def.buildingSprite;
         buildingImage.sprite = Resources.Load<Sprite>(spritePath);
-        
+
         if (buildingImage.sprite == null)
         {
             Debug.LogWarning($"Building sprite not found! Tried to load: {spritePath}");
@@ -160,19 +160,19 @@ public class MachineRenderer : MonoBehaviour
             Debug.Log($"Successfully loaded building sprite: {spritePath}");
             buildingImage.color = Color.white;
         }
-        
+
         // Position and size the building sprite to match this cell
         RectTransform buildingRT = buildingSprite.GetComponent<RectTransform>();
         Vector3 cellPosition = gridManager.GetCellWorldPosition(cellX, cellY);
         Vector2 cellSize = gridManager.GetCellSize();
-        
+
         buildingRT.position = cellPosition;
         buildingRT.sizeDelta = cellSize;
-        
+
         // Apply rotations: building direction + cell direction
         float totalRotation = def.buildingDirection + GetCellDirectionRotation(cellDirection);
         buildingRT.rotation = Quaternion.Euler(0, 0, totalRotation);
-        
+
         Debug.Log($"Created separated building sprite for cell ({cellX}, {cellY}) in BuildingsContainer");
     }
 
@@ -196,7 +196,6 @@ public class MachineRenderer : MonoBehaviour
         Debug.Log("Created item spawn point for machine");
     }
 
-    // This is the helper method you need:
     private Image CreateImageChild(string name, string spriteResource)
     {
         GameObject go = new GameObject(name);
@@ -209,7 +208,6 @@ public class MachineRenderer : MonoBehaviour
         if (img.sprite == null)
         {
             Debug.LogWarning($"Sprite not found! Tried to load: {spritePath} for '{name}'");
-            // Create a colored rectangle as fallback so you can see something
             img.color = name == "Border" ? Color.red :
                        name == "Building" ? Color.blue :
                        name == "MovingPart" ? Color.green : Color.yellow;
@@ -220,14 +218,12 @@ public class MachineRenderer : MonoBehaviour
             img.color = Color.white;
         }
 
-        // Stretch to fill parent
         RectTransform rt = img.rectTransform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
 
-        // Ensure the RectTransform is properly reset
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = Vector2.zero;
 
@@ -236,7 +232,6 @@ public class MachineRenderer : MonoBehaviour
 
     void OnDestroy()
     {
-        // Clean up separated building sprite when this renderer is destroyed
         if (buildingSprite != null)
         {
             Destroy(buildingSprite);

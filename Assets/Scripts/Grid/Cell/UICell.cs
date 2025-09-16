@@ -112,7 +112,7 @@ public class UICell : MonoBehaviour
         rendererRT.offsetMax = Vector2.zero;
 
         // Add ConveyorBelt component if this machine has moving parts that need animation
-        if (!string.IsNullOrEmpty(def.movingPartMaterial) && !string.IsNullOrEmpty(def.movingPartSprite))
+        if (def.isMoving)
         {
             ConveyorBelt conveyorBelt = rendererObj.AddComponent<ConveyorBelt>();
 
