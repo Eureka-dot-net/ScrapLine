@@ -158,6 +158,20 @@ public class UICell : MonoBehaviour
 
     public RectTransform GetItemSpawnPoint()
     {
+        // Items should spawn in the ItemsContainer, positioned at this cell's location
+        RectTransform itemsContainer = gridManager?.GetItemsContainer();
+        if (itemsContainer != null)
+        {
+            // Create a virtual spawn point positioned at this cell
+            Vector3 cellPosition = gridManager.GetCellWorldPosition(x, y);
+            
+            // For now, return the cell's own transform as the spawn reference
+            // The actual item positioning will be handled by UIGridManager.CreateVisualItem
+            Debug.Log($"GetItemSpawnPoint for cell ({x}, {y}) using ItemsContainer positioning");
+            return this.GetComponent<RectTransform>();
+        }
+
+        // Fallback to original behavior if ItemsContainer not available
         if (machineRenderer != null)
         {
             Transform spawnPointTransform = machineRenderer.transform.Find("ItemSpawnPoint");

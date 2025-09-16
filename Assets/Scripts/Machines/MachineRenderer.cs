@@ -140,8 +140,6 @@ public class MachineRenderer : MonoBehaviour
             Debug.Log($"No border sprite for machine '{def.id}' - borderSprite is empty");
         }
 
-        CreateItemSpawnPoint();
-
         // --- Building: separated sprite in BuildingsContainer ---
         if (!string.IsNullOrEmpty(def.buildingSprite) && !isInMenu && gridManager != null)
         {
@@ -372,26 +370,6 @@ public class MachineRenderer : MonoBehaviour
 
         Debug.Log($"Created separated moving part for cell ({cellX}, {cellY}) in BordersContainer with rotation {cellRotation}");
         Debug.Log($"Final moving part transform - position: {movingPartRT.position}, sizeDelta: {movingPartRT.sizeDelta}, parent: {movingPartRT.parent?.name}");
-    }
-
-    private void CreateItemSpawnPoint()
-    {
-        // Create spawn point GameObject as a child of this MachineRenderer
-        GameObject spawnPointObj = new GameObject("ItemSpawnPoint");
-        spawnPointObj.transform.SetParent(this.transform, false);
-
-        RectTransform spawnPointRT = spawnPointObj.AddComponent<RectTransform>();
-
-        // Position it in the center, between border and building layers
-        spawnPointRT.anchorMin = new Vector2(0.5f, 0.5f);
-        spawnPointRT.anchorMax = new Vector2(0.5f, 0.5f);
-        spawnPointRT.anchoredPosition = Vector2.zero;
-        spawnPointRT.sizeDelta = Vector2.zero;
-
-        // Set the sibling index to be between border (1) and building (3)
-        spawnPointObj.transform.SetSiblingIndex(2);
-
-        Debug.Log("Created item spawn point for machine");
     }
 
     private Image CreateImageChild(string name, string spriteResource)

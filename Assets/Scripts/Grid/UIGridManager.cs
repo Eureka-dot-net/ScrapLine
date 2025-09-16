@@ -21,6 +21,7 @@ public class UIGridManager : MonoBehaviour
 
     private RectTransform bordersContainer;
     private RectTransform buildingsContainer;
+    private RectTransform itemsContainer; // New container for moving items
 
     public UICell GetCell(int x, int y)
     {
@@ -98,6 +99,13 @@ public class UIGridManager : MonoBehaviour
         {
             movingItemsContainer.SetAsLastSibling();
         }
+
+        // Update movingItemsContainer to use the new ItemsContainer if it's not assigned
+        if (movingItemsContainer == null && itemsContainer != null)
+        {
+            movingItemsContainer = itemsContainer;
+            Debug.Log("Updated movingItemsContainer to use new ItemsContainer");
+        }
     }
 
     private void CreateRenderingLayers()
@@ -114,9 +122,12 @@ public class UIGridManager : MonoBehaviour
         {
             DestroyImmediate(buildingsContainer.gameObject);
         }
+        if (itemsContainer != null)
+        {
+            DestroyImmediate(itemsContainer.gameObject);
+        }
 
-        // Create BordersContainer - for border sprites and moving parts  
-        // Place BELOW GridPanel so grid UI elements remain visible
+        // Create BordersContainer (index 0) - BELOW GridPanel for borders and moving parts
         GameObject bordersObj = new GameObject("BordersContainer");
         bordersObj.transform.SetParent(parentContainer, false);
         bordersContainer = bordersObj.AddComponent<RectTransform>();
@@ -135,7 +146,23 @@ public class UIGridManager : MonoBehaviour
         // Ensure gridPanel is at index 1 (ABOVE BordersContainer)
         gridPanel.SetSiblingIndex(1);
 
-        // Create BuildingsContainer (index 2) - for building sprites (ABOVE everything)
+        // Create ItemsContainer (index 2) - ABOVE GridPanel for moving items
+        GameObject itemsObj = new GameObject("ItemsContainer");
+        itemsObj.transform.SetParent(parentContainer, false);
+        itemsContainer = itemsObj.AddComponent<RectTransform>();
+
+        // Make it fill the same area as gridPanel
+        itemsContainer.anchorMin = gridPanel.anchorMin;
+        itemsContainer.anchorMax = gridPanel.anchorMax;
+        itemsContainer.offsetMin = gridPanel.offsetMin;
+        itemsContainer.offsetMax = gridPanel.offsetMax;
+        itemsContainer.anchoredPosition = gridPanel.anchoredPosition;
+        itemsContainer.sizeDelta = gridPanel.sizeDelta;
+
+        // Set as second sibling (index 2) - ABOVE GridPanel
+        itemsObj.transform.SetSiblingIndex(2);
+
+        // Create BuildingsContainer (index 3) - ABOVE everything for building sprites
         GameObject buildingsObj = new GameObject("BuildingsContainer");
         buildingsObj.transform.SetParent(parentContainer, false);
         buildingsContainer = buildingsObj.AddComponent<RectTransform>();
@@ -148,11 +175,12 @@ public class UIGridManager : MonoBehaviour
         buildingsContainer.anchoredPosition = gridPanel.anchoredPosition;
         buildingsContainer.sizeDelta = gridPanel.sizeDelta;
 
-        // Set as last sibling (index 2) - ABOVE everything
-        buildingsObj.transform.SetSiblingIndex(2);
+        // Set as last sibling (index 3) - ABOVE everything
+        buildingsObj.transform.SetSiblingIndex(3);
 
-        Debug.Log($"Created rendering layers: BordersContainer (0-below), GridPanel (1-middle), BuildingsContainer (2-above)");
+        Debug.Log($"Created rendering layers: BordersContainer (0-bottom), GridPanel (1-middle), ItemsContainer (2-items), BuildingsContainer (3-top)");
         Debug.Log($"BordersContainer parent: {bordersContainer.parent?.name}, position: {bordersContainer.position}, sizeDelta: {bordersContainer.sizeDelta}");
+        Debug.Log($"ItemsContainer parent: {itemsContainer.parent?.name}, position: {itemsContainer.position}, sizeDelta: {itemsContainer.sizeDelta}");
         Debug.Log($"BuildingsContainer parent: {buildingsContainer.parent?.name}, position: {buildingsContainer.position}, sizeDelta: {buildingsContainer.sizeDelta}");
         Debug.Log($"GridPanel parent: {gridPanel.parent?.name}, position: {gridPanel.position}, sizeDelta: {gridPanel.sizeDelta}");
     }
@@ -308,17 +336,28 @@ public class UIGridManager : MonoBehaviour
             return;
         }
 
-        // Find the spawn point on the cell
-        RectTransform spawnPoint = cell.GetItemSpawnPoint();
+        // Use ItemsContainer for positioning if available, otherwise fallback to movingItemsContainer
+        RectTransform targetContainer = itemsContainer != null ? itemsContainer : movingItemsContainer;
+        if (targetContainer == null)
+        {
+            Debug.LogError("No container available for visual items");
+            return;
+        }
 
-        // Create the new item instance
-        GameObject newItem = Instantiate(itemPrefab, spawnPoint);
+        // Create the new item instance in the appropriate container
+        GameObject newItem = Instantiate(itemPrefab, targetContainer);
         RectTransform itemRect = newItem.GetComponent<RectTransform>();
-        itemRect.anchoredPosition = Vector2.zero;
 
+        // Position the item at the cell's world position
+        Vector3 cellPosition = GetCellWorldPosition(x, y);
+        itemRect.position = cellPosition;
+
+        // Size the item to 1/3 of cell size
         Vector2 cellSize = GetCellSize();
-        Vector2 itemSize = cellSize / 2f;
+        Vector2 itemSize = cellSize / 3f; // Changed from /2f to /3f as per previous requirement
         itemRect.sizeDelta = itemSize;
+
+        Debug.Log($"Created visual item {itemId} in {targetContainer.name} at position {cellPosition} with size {itemSize}");
 
         // Set the item type on the UIItem component
         UIItem itemComponent = newItem.GetComponent<UIItem>();
@@ -419,7 +458,6 @@ public class UIGridManager : MonoBehaviour
         //Debug.Log($"Item {itemId} progress: {progress} - staying in grid hierarchy for consistent rendering");
     }
 
-    // Accessor methods for separate rendering containers
     public RectTransform GetBordersContainer()
     {
         Debug.Log($"GetBordersContainer() called - returning: {(bordersContainer != null ? bordersContainer.name : "NULL")}");
@@ -430,6 +468,12 @@ public class UIGridManager : MonoBehaviour
     {
         Debug.Log($"GetBuildingsContainer() called - returning: {(buildingsContainer != null ? buildingsContainer.name : "NULL")}");
         return buildingsContainer;
+    }
+
+    public RectTransform GetItemsContainer()
+    {
+        Debug.Log($"GetItemsContainer() called - returning: {(itemsContainer != null ? itemsContainer.name : "NULL")}");
+        return itemsContainer;
     }
 
     public Vector2 GetCellSize()
