@@ -695,29 +695,7 @@ public class GameManager : MonoBehaviour
         }
         else if (targetCell.cellType == CellType.Machine)
         {
-            // Check if this is a processing machine and if it's busy
-            if (!string.IsNullOrEmpty(targetCell.machineDefId) && 
-                targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
-            {
-                // Check if machine is already processing an item (single-item processing limit)
-                bool machineIsBusy = targetCell.items.Any(existingItem => existingItem.isProcessing);
-                
-                if (machineIsBusy)
-                {
-                    // Machine is busy - item should wait at halfway point
-                    Debug.Log($"Item {item.id} found machine {targetCell.machineDefId} busy at halfway point - entering waiting state");
-                    
-                    // Set item to waiting state at current source cell 
-                    item.isWaiting = true;
-                    item.waitingAtX = targetCell.x;
-                    item.waitingAtY = targetCell.y;
-                    item.shouldStopAtTarget = true; // Stop movement at source cell (halfway waiting position)
-                    
-                    return;
-                }
-            }
-            
-            // Moving to machine and it's not busy - will be processed
+            // Moving to machine - will be processed
             Debug.Log($"Item {item.id} moving to machine {targetCell.machineDefId} - will be processed");
 
             // After processing, determine next movement direction
@@ -751,23 +729,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // If item is in waiting state, it should stay at source cell with waiting visual positioning
-        if (item.isWaiting)
-        {
-            Debug.Log($"Item {item.id} completed movement but is waiting for machine at ({item.waitingAtX}, {item.waitingAtY}) - staying at source cell");
-            
-            // Item stays at source cell but stops moving
-            item.isMoving = false;
-            item.moveProgress = 0f;
-            
-            // Update queue position for this waiting item
-            UpdateWaitingItemQueuePosition(item, sourceCell);
-            
-            // Update visual position with waiting stacking
-            UpdateWaitingItemPosition(item, sourceCell, gridManager);
-            return;
-        }
-
         // Remove from source cell
         sourceCell.items.Remove(item);
 
@@ -793,28 +754,7 @@ public class GameManager : MonoBehaviour
         // Check if target is a processing machine (not conveyor, blank, spawner, or seller)
         if (targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId) && 
             targetCell.machineDefId != "conveyor" && targetCell.machineDefId != "spawner" && targetCell.machineDefId != "seller")
-        {
-            // Check if machine is already processing an item (single-item processing limit)
-            bool machineIsBusy = targetCell.items.Any(existingItem => existingItem.isProcessing);
-            
-            if (machineIsBusy)
-            {
-                // This should not happen anymore with the new waiting system, but handle as fallback
-                Debug.LogWarning($"Item {item.id} reached busy machine {targetCell.machineDefId} - this should have been caught at halfway point");
-                
-                // Put item back to source and mark as waiting
-                item.isMoving = false;
-                item.moveProgress = 0f;
-                item.isWaiting = true;
-                item.waitingAtX = targetCell.x;
-                item.waitingAtY = targetCell.y;
-                sourceCell.items.Add(item); // Add back to source cell
-                
-                UpdateWaitingItemQueuePosition(item, sourceCell);
-                UpdateWaitingItemPosition(item, sourceCell, gridManager);
-                return;
-            }
-            
+        {            
             // Look up recipe for this machine and item
             RecipeDef recipe = FactoryRegistry.Instance.GetRecipe(targetCell.machineDefId, item.itemType);
             if (recipe != null)
@@ -960,7 +900,7 @@ public class GameManager : MonoBehaviour
             return; // No movement possible
         }
 
-        // Check if target is a processing machine and if it's busy
+        // Check if target is a processing machine and if it's busy - PREVENT movement from starting
         if (nextCell.cellType == CellType.Machine && !string.IsNullOrEmpty(nextCell.machineDefId) && 
             nextCell.machineDefId != "conveyor" && nextCell.machineDefId != "spawner" && nextCell.machineDefId != "seller")
         {
@@ -969,14 +909,24 @@ public class GameManager : MonoBehaviour
             
             if (machineIsBusy)
             {
-                Debug.Log($"Cannot start movement - target machine {nextCell.machineDefId} is busy processing another item");
+                // Machine is busy - enter waiting state immediately without starting movement
+                Debug.Log($"Machine {nextCell.machineDefId} is busy - item {item.id} will wait at boundary");
+                
+                item.isWaiting = true;
+                item.waitingAtX = nextCell.x;
+                item.waitingAtY = nextCell.y;
+                
+                // Update queue position for this waiting item
+                UpdateWaitingItemQueuePosition(item, cell);
+                
+                // Update visual position to boundary between cells
+                UpdateWaitingItemPosition(item, cell, gridManager);
+                
                 return; // Don't start movement to busy machine
             }
         }
 
         // Allow movement into blank cells - items will stop there
-        // Removed the blank cell check as items should be able to move into blank spaces
-
         // Start movement
         item.isMoving = true;
         item.targetX = nextX;
@@ -1139,45 +1089,66 @@ public class GameManager : MonoBehaviour
         // Get the direction the item was moving (from source to target)
         Direction movementDirection = sourceCell.direction;
         
-        // Get machine cell for boundary checking
-        CellData machineCell = GetCellData(activeGrids[0], item.waitingAtX, item.waitingAtY);
-        if (machineCell == null) return;
-        
-        // Calculate base waiting position (halfway between source and machine)
+        // Calculate boundary position between source cell and machine cell
         Vector3 sourcePos = gridManager.GetCellWorldPosition(sourceCell.x, sourceCell.y);
         Vector3 machinePos = gridManager.GetCellWorldPosition(item.waitingAtX, item.waitingAtY);
-        Vector3 waitingBasePos = Vector3.Lerp(sourcePos, machinePos, 0.5f);
+        
+        // Position at boundary (edge of source cell towards machine, not halfway)
+        Vector2 cellSize = gridManager.GetCellSize();
+        Vector3 boundaryPos = sourcePos;
+        
+        // Move to edge of source cell in direction of target
+        switch (movementDirection)
+        {
+            case Direction.Up:
+                boundaryPos.y += cellSize.y * 0.4f; // Move to top edge of source cell
+                break;
+            case Direction.Down:
+                boundaryPos.y -= cellSize.y * 0.4f; // Move to bottom edge of source cell
+                break;
+            case Direction.Left:
+                boundaryPos.x -= cellSize.x * 0.4f; // Move to left edge of source cell
+                break;
+            case Direction.Right:
+                boundaryPos.x += cellSize.x * 0.4f; // Move to right edge of source cell
+                break;
+        }
         
         // Calculate stacking offset based on movement direction and queue position
-        Vector2 cellSize = gridManager.GetCellSize();
         Vector3 stackOffset = Vector3.zero;
-        float stackDistance = cellSize.y * 0.1f; // Small offset for stacking
+        float stackDistance = cellSize.y * 0.08f; // Smaller offset for stacking to prevent overflow
         
-        // Stack perpendicular to movement direction
+        // Stack perpendicular to movement direction with proper boundary constraints
         switch (movementDirection)
         {
             case Direction.Up:
             case Direction.Down:
                 // Moving vertically, stack horizontally (left/right)
-                stackOffset.x = (item.queuePosition * stackDistance) - (stackDistance * 0.5f);
+                // Center the stack around the boundary position
+                float totalWidth = Mathf.Max(0, item.queuePosition) * stackDistance;
+                float startX = -totalWidth / 2f;
+                stackOffset.x = startX + (item.queuePosition * stackDistance);
                 
-                // Ensure item stays within machine boundary
-                float maxHorizontalOffset = cellSize.x * 0.4f; // 40% of cell width from center
+                // Ensure item stays within reasonable boundary (smaller constraint)
+                float maxHorizontalOffset = cellSize.x * 0.3f; // 30% of cell width from center
                 stackOffset.x = Mathf.Clamp(stackOffset.x, -maxHorizontalOffset, maxHorizontalOffset);
                 break;
                 
             case Direction.Left:
             case Direction.Right:
                 // Moving horizontally, stack vertically (up/down)
-                stackOffset.y = (item.queuePosition * stackDistance) - (stackDistance * 0.5f);
+                // Center the stack around the boundary position
+                float totalHeight = Mathf.Max(0, item.queuePosition) * stackDistance;
+                float startY = -totalHeight / 2f;
+                stackOffset.y = startY + (item.queuePosition * stackDistance);
                 
-                // Ensure item stays within machine boundary
-                float maxVerticalOffset = cellSize.y * 0.4f; // 40% of cell height from center
+                // Ensure item stays within reasonable boundary (smaller constraint)
+                float maxVerticalOffset = cellSize.y * 0.3f; // 30% of cell height from center
                 stackOffset.y = Mathf.Clamp(stackOffset.y, -maxVerticalOffset, maxVerticalOffset);
                 break;
         }
         
-        Vector3 finalPosition = waitingBasePos + stackOffset;
+        Vector3 finalPosition = boundaryPos + stackOffset;
         
         // Update visual item position
         GameObject visualItem = gridManager.GetVisualItem(item.id);
@@ -1185,7 +1156,7 @@ public class GameManager : MonoBehaviour
         {
             RectTransform itemRect = visualItem.GetComponent<RectTransform>();
             itemRect.position = finalPosition;
-            Debug.Log($"Updated waiting position for item {item.id} at queue position {item.queuePosition} with offset {stackOffset}");
+            Debug.Log($"Updated waiting position for item {item.id} at queue position {item.queuePosition} - boundary position with offset {stackOffset}");
         }
     }
     
