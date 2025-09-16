@@ -140,11 +140,9 @@ public class UIGridManager : MonoBehaviour
         bordersContainer.anchoredPosition = gridPanel.anchoredPosition;
         bordersContainer.sizeDelta = gridPanel.sizeDelta;
 
-        // Set as first sibling (index 0) - BELOW GridPanel
-        bordersObj.transform.SetSiblingIndex(0);
-
-        // Ensure gridPanel is at index 1 (ABOVE BordersContainer)
-        gridPanel.SetSiblingIndex(1);
+        gridPanel.SetSiblingIndex(0);
+        
+        bordersObj.transform.SetSiblingIndex(1);
 
         // Create ItemsContainer (index 2) - ABOVE GridPanel for moving items
         GameObject itemsObj = new GameObject("ItemsContainer");
@@ -493,18 +491,18 @@ public class UIGridManager : MonoBehaviour
             Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform: {position}");
             return position;
         }
-        
+
         // Fallback: Calculate position manually from grid layout
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
         if (layout != null)
         {
             Vector2 cellSize = layout.cellSize;
             Vector2 spacing = layout.spacing;
-            
+
             // Calculate position within grid
             float xPos = x * (cellSize.x + spacing.x);
             float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
-            
+
             // Get grid panel's world position and add offset
             Vector3 gridWorldPos = gridPanel.transform.position;
             Vector3 calculatedPos = new Vector3(
@@ -512,11 +510,11 @@ public class UIGridManager : MonoBehaviour
                 gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
                 gridWorldPos.z
             );
-            
+
             Debug.Log($"GetCellWorldPosition({x}, {y}) calculated fallback: {calculatedPos}");
             return calculatedPos;
         }
-        
+
         Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
         return Vector3.zero;
     }
