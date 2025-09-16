@@ -194,6 +194,11 @@ public class MachineRenderer : MonoBehaviour
         string spritePath = "Sprites/Machines/" + def.buildingSprite;
         buildingImage.sprite = Resources.Load<Sprite>(spritePath);
 
+        // Make building sprite non-interactive to avoid blocking cell button clicks
+        CanvasGroup buildingCanvasGroup = buildingSprite.AddComponent<CanvasGroup>();
+        buildingCanvasGroup.blocksRaycasts = false;
+        buildingCanvasGroup.interactable = false;
+
         if (buildingImage.sprite == null)
         {
             Debug.LogWarning($"Building sprite not found! Tried to load: {spritePath}");
@@ -296,14 +301,8 @@ public class MachineRenderer : MonoBehaviour
 
         Debug.Log($"Setting border position to: {cellPosition}, size to: {cellSize}");
 
-        // For UI elements in separate containers, use anchored positioning
-        borderRT.anchorMin = new Vector2(0, 1); // Top-left anchor
-        borderRT.anchorMax = new Vector2(0, 1); // Top-left anchor
-        borderRT.pivot = new Vector2(0.5f, 0.5f); // Center pivot
-        
-        // Convert world position to local position relative to the borders container
-        Vector3 localPosition = bordersContainer.InverseTransformPoint(cellPosition);
-        borderRT.anchoredPosition = localPosition;
+        // Use same positioning approach as building sprites (which work)
+        borderRT.position = cellPosition;
         borderRT.sizeDelta = cellSize;
 
         // Apply cell direction rotation
@@ -311,7 +310,7 @@ public class MachineRenderer : MonoBehaviour
         borderRT.rotation = Quaternion.Euler(0, 0, cellRotation);
 
         Debug.Log($"Created separated border sprite for cell ({cellX}, {cellY}) in BordersContainer with rotation {cellRotation}");
-        Debug.Log($"Final border sprite transform - anchoredPosition: {borderRT.anchoredPosition}, sizeDelta: {borderRT.sizeDelta}, parent: {borderRT.parent?.name}");
+        Debug.Log($"Final border sprite transform - position: {borderRT.position}, sizeDelta: {borderRT.sizeDelta}, parent: {borderRT.parent?.name}");
     }
 
     private void CreateSeparatedMovingPart(MachineDef def, UICell.Direction cellDirection)
@@ -376,14 +375,8 @@ public class MachineRenderer : MonoBehaviour
 
         Debug.Log($"Setting moving part position to: {cellPosition}, size to: {cellSize}");
 
-        // For UI elements in separate containers, use anchored positioning
-        movingPartRT.anchorMin = new Vector2(0, 1); // Top-left anchor
-        movingPartRT.anchorMax = new Vector2(0, 1); // Top-left anchor
-        movingPartRT.pivot = new Vector2(0.5f, 0.5f); // Center pivot
-        
-        // Convert world position to local position relative to the borders container
-        Vector3 localPosition = bordersContainer.InverseTransformPoint(cellPosition);
-        movingPartRT.anchoredPosition = localPosition;
+        // Use same positioning approach as building sprites (which work)
+        movingPartRT.position = cellPosition;
         movingPartRT.sizeDelta = cellSize;
 
         // Apply cell direction rotation
@@ -391,7 +384,7 @@ public class MachineRenderer : MonoBehaviour
         movingPartRT.rotation = Quaternion.Euler(0, 0, cellRotation);
 
         Debug.Log($"Created separated moving part for cell ({cellX}, {cellY}) in BordersContainer with rotation {cellRotation}");
-        Debug.Log($"Final moving part transform - anchoredPosition: {movingPartRT.anchoredPosition}, sizeDelta: {movingPartRT.sizeDelta}, parent: {movingPartRT.parent?.name}");
+        Debug.Log($"Final moving part transform - position: {movingPartRT.position}, sizeDelta: {movingPartRT.sizeDelta}, parent: {movingPartRT.parent?.name}");
     }
 
     private Image CreateImageChild(string name, string spriteResource)
