@@ -27,7 +27,7 @@ public class UICell : MonoBehaviour
     {
         if (cellButton == null) cellButton = GetComponent<Button>();
         cellButton.onClick.AddListener(OnCellClicked);
-        
+
         Debug.Log($"UICell Awake() - cell will be initialized with MachineRenderer for ALL visuals");
     }
 
@@ -37,7 +37,7 @@ public class UICell : MonoBehaviour
         this.x = x;
         this.y = y;
         this.gridManager = gridManager;
-        
+
         Debug.Log($"UICell.Init({x}, {y}) - cell ready for machine setup");
     }
 
@@ -104,31 +104,30 @@ public class UICell : MonoBehaviour
         // Create MachineRenderer GameObject as child
         GameObject rendererObj = new GameObject("MachineRenderer");
         rendererObj.transform.SetParent(this.transform, false);
-        
+
         RectTransform rendererRT = rendererObj.AddComponent<RectTransform>();
         rendererRT.anchorMin = Vector2.zero;
         rendererRT.anchorMax = Vector2.one;
         rendererRT.offsetMin = Vector2.zero;
         rendererRT.offsetMax = Vector2.zero;
-        
+
         // Add ConveyorBelt component if this machine has moving parts that need animation
         if (!string.IsNullOrEmpty(def.movingPartMaterial) && !string.IsNullOrEmpty(def.movingPartSprite))
         {
             ConveyorBelt conveyorBelt = rendererObj.AddComponent<ConveyorBelt>();
-            
-            // Set the conveyor direction based on UICell direction
-            float cellRotation = GetCellDirectionRotation(direction);
-            rendererObj.transform.rotation = Quaternion.Euler(0, 0, cellRotation);
-            
-            Debug.Log($"Added ConveyorBelt component to machine '{def.id}' at cell ({x}, {y}) with rotation {cellRotation}");
+
+            // Simply set the direction directly
+            conveyorBelt.SetConveyorDirection(direction); // or conveyorBelt.SetConveyorDirection(direction);
+
+            Debug.Log($"Set ConveyorBelt direction to {direction} for machine '{def.id}' at cell ({x}, {y})");
         }
-        
+
         machineRenderer = rendererObj.AddComponent<MachineRenderer>();
         machineRenderer.Setup(def, direction, gridManager, x, y);
-        
+
         Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
     }
-    
+
     private float GetCellDirectionRotation(Direction direction)
     {
         switch (direction)
@@ -159,7 +158,7 @@ public class UICell : MonoBehaviour
                 return spawnPointTransform.GetComponent<RectTransform>();
             }
         }
-        
+
         // Fallback: create a default spawn point if none found
         Transform fallbackSpawn = transform.Find("DefaultSpawnPoint");
         if (fallbackSpawn == null)
@@ -173,7 +172,7 @@ public class UICell : MonoBehaviour
             spawnRT.sizeDelta = Vector2.zero;
             return spawnRT;
         }
-        
+
         return fallbackSpawn.GetComponent<RectTransform>();
     }
 

@@ -7,7 +7,7 @@ public class UIGridManager : MonoBehaviour
 {
     public RectTransform gridPanel;
     public GameObject cellPrefab;
-    public Material conveyorSharedMaterial;
+    //public Material conveyorSharedMaterial;
     public RectTransform movingItemsContainer;
     public GameObject itemPrefab;
 
@@ -24,15 +24,15 @@ public class UIGridManager : MonoBehaviour
     void Start()
     {
         // Set up conveyor material scrolling
-        if (conveyorSharedMaterial != null)
-        {
-            ConveyorMaterialScroller scroller = gameObject.GetComponent<ConveyorMaterialScroller>();
-            if (scroller == null)
-            {
-                scroller = gameObject.AddComponent<ConveyorMaterialScroller>();
-            }
-            scroller.conveyorMaterial = conveyorSharedMaterial;
-        }
+        // if (conveyorSharedMaterial != null)
+        // {
+        //     ConveyorMaterialScroller scroller = gameObject.GetComponent<ConveyorMaterialScroller>();
+        //     if (scroller == null)
+        //     {
+        //         scroller = gameObject.AddComponent<ConveyorMaterialScroller>();
+        //     }
+        //     scroller.conveyorMaterial = conveyorSharedMaterial;
+        // }
     }
 
     public UICell GetCell(int x, int y)
