@@ -15,6 +15,12 @@ public class FactoryRegistry
     // Per-user machine progress
     public List<UserMachineProgress> UserMachines = new();
 
+    public bool IsLoaded()
+    {
+        // This is a simple check; you might want more robust logic
+        return Machines.Count > 0 && Recipes.Count > 0 && Items.Count > 0;
+    }
+
     // --- Methods ---
 
     /// <summary>

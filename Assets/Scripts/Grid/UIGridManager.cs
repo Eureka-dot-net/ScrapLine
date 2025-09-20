@@ -369,7 +369,6 @@ public class UIGridManager : MonoBehaviour
             itemComponent.itemType = itemType;
             SetItemSprite(newItem, itemType);
         }
-
         visualItems[itemId] = newItem;
         Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/3 of cell size {cellSize})");
     }
