@@ -36,6 +36,8 @@ public class GameManager : MonoBehaviour
     private MachineDef selectedMachine;
     private MachineBarUIManager machineBarManager;
 
+    private UIGridManager activeGridManager;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -117,6 +119,7 @@ public class GameManager : MonoBehaviour
         UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
+            this.activeGridManager = gridManager;
             gridManager.InitGrid(activeGrids[0]);
         }
         
