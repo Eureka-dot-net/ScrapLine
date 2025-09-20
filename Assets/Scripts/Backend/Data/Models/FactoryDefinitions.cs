@@ -39,6 +39,18 @@ public class RecipeDef {
     public List<RecipeItemDef> inputItems;
     public List<RecipeItemDef> outputItems;
     public float processMultiplier;
+    
+    /// <summary>
+    /// Calculated process time for this recipe (baseProcessTime * processMultiplier)
+    /// </summary>
+    public float processTime
+    {
+        get
+        {
+            var machineDef = FactoryRegistry.Instance.GetMachine(machineId);
+            return machineDef != null ? machineDef.baseProcessTime * processMultiplier : 0f;
+        }
+    }
 }
 
 [System.Serializable]

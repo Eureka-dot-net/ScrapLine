@@ -22,23 +22,22 @@ public class ItemData
 {
     public string id;
     public string itemType;
+    public int x;
+    public int y;
     
-    // Simple state machine
     public ItemState state = ItemState.Idle;
-    
-    // Movement data (reuse existing fields)
+    public float moveStartTime;
+    public float moveProgress;
+    public int sourceX;
+    public int sourceY;
     public int targetX;
     public int targetY;
-    public float moveProgress; // 0.0 to 1.0
-    public float moveStartTime;
     
-    // Processing data (simplified)
     public float processingStartTime;
     public float processingDuration;
-    public string processingMachineId;
     
-    // Waiting timeout
     public float waitingStartTime;
+    public float targetMoveProgress; // Must be added per problem statement
 }
 
 [System.Serializable]
