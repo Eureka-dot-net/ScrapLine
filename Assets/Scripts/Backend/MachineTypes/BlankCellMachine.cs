@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Handles blank cell and conveyor behavior. Blank cells don't process items,
-/// they just hold them temporarily. Conveyors move items but don't transform them.
+/// Handles blank cell behavior. Blank cells don't process items,
+/// they just hold them temporarily and destroy them after a timeout.
 /// </summary>
 public class BlankCellMachine : BaseMachine
 {
@@ -13,28 +13,12 @@ public class BlankCellMachine : BaseMachine
     }
     
     /// <summary>
-    /// Update logic for blank cells - handles item timeout on blank cells and failsafe movement for conveyors
+    /// Update logic for blank cells - handles item timeout on blank cells
     /// </summary>
     public override void UpdateLogic()
     {
-        // For true blank cells (not conveyors), items should timeout and disappear
-        if (machineDef.id == "blank" || machineDef.id == "blank_top" || machineDef.id == "blank_bottom")
-        {
-            CheckItemTimeouts();
-        }
-        
-        // For conveyors, act as failsafe - check for any Idle items and try to move them
-        if (machineDef.id == "conveyor")
-        {
-            for (int i = cellData.items.Count - 1; i >= 0; i--)
-            {
-                ItemData item = cellData.items[i];
-                if (item.state == ItemState.Idle)
-                {
-                    TryStartMove(item);
-                }
-            }
-        }
+        // Blank cells should timeout and destroy items
+        CheckItemTimeouts();
     }
     
     /// <summary>
@@ -70,27 +54,20 @@ public class BlankCellMachine : BaseMachine
     }
     
     /// <summary>
-    /// Handles items arriving at blank cells or conveyors
+    /// Handles items arriving at blank cells - just accepts them without any special processing
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        // Blank cells and conveyors just accept items without processing
-        // The item's state should already be set to Idle by the movement system
-        Debug.Log($"Item {item.id} arrived at {machineDef.type} cell ({cellData.x}, {cellData.y})");
-        
-        // For conveyors, immediately try to start movement of the arrived item
-        if (machineDef.id == "conveyor")
-        {
-            TryStartMove(item);
-        }
+        // Blank cells just accept items without processing or moving them
+        // Items will timeout and be destroyed by UpdateLogic
+        Debug.Log($"Item {item.id} arrived at blank cell ({cellData.x}, {cellData.y})");
     }
     
     /// <summary>
-    /// Blank cells don't process items - they just hold them
+    /// Blank cells don't process items - they just hold them until timeout
     /// </summary>
     public override void ProcessItem(ItemData item)
     {
-        // Blank cells don't process items, they just hold them
-        // Items will be moved by the GameManager's movement system
+        // Blank cells don't process items, they just hold them until timeout
     }
 }

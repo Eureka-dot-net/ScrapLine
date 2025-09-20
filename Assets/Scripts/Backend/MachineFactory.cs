@@ -19,7 +19,8 @@ public static class MachineFactory
         { "SpawnerMachine", typeof(SpawnerMachine) },
         { "ProcessorMachine", typeof(ProcessorMachine) },
         { "SellerMachine", typeof(SellerMachine) },
-        { "BlankCellMachine", typeof(BlankCellMachine) }
+        { "BlankCellMachine", typeof(BlankCellMachine) },
+        { "ConveyorMachine", typeof(ConveyorMachine) }
     };
 
     /// <summary>

@@ -76,7 +76,7 @@
             "displayInPanel": true,
             "cost": 20,
             "canRotate": true,
-            "className": "BlankCellMachine"
+            "className": "ConveyorMachine"
         },
         {
             "id": "spawner",
