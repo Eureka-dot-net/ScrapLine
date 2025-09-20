@@ -25,6 +25,7 @@ public class MachineDef
     public int cost = 0;                   // Credits cost to place this machine
     public List<string> spawnableItems;    // Items that this machine can spawn (for spawners)
     public bool canRotate = true;          // whether this machine can be rotated by clicking
+    public string className;               // Links to the C# class for machine behavior
 }
 
 [System.Serializable]

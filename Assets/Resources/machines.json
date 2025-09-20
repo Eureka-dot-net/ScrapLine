@@ -16,7 +16,8 @@
             "maxNumber": -1,
             "displayInPanel": false,
             "cost": 0,
-            "canRotate": false
+            "canRotate": false,
+            "className": "BlankCellMachine"
         },
         {
             "id": "blank_top",
@@ -35,7 +36,8 @@
             "maxNumber": -1,
             "displayInPanel": false,
             "cost": 0,
-            "canRotate": false
+            "canRotate": false,
+            "className": "BlankCellMachine"
         },
         {
             "id": "blank_bottom",
@@ -54,7 +56,8 @@
             "maxNumber": -1,
             "displayInPanel": false,
             "cost": 0,
-            "canRotate": false
+            "canRotate": false,
+            "className": "BlankCellMachine"
         },
         {
             "id": "conveyor",
@@ -72,7 +75,8 @@
             "maxNumber": -1,
             "displayInPanel": true,
             "cost": 20,
-            "canRotate": true
+            "canRotate": true,
+            "className": "BlankCellMachine"
         },
         {
             "id": "spawner",
@@ -113,7 +117,8 @@
             ],
             "displayInPanel": true,
             "cost": 50,
-            "canRotate": false
+            "canRotate": false,
+            "className": "SpawnerMachine"
         },
         {
             "id": "seller",
@@ -131,7 +136,8 @@
             "maxNumber": 1,
             "displayInPanel": true,
             "cost": 50,
-            "canRotate": false
+            "canRotate": false,
+            "className": "SellerMachine"
         },
         {
             "id": "shredder",
@@ -165,7 +171,8 @@
             "upgradeMaxNumbers": [],
             "displayInPanel": true,
             "cost": 75,
-            "canRotate": true
+            "canRotate": true,
+            "className": "ProcessorMachine"
         }
     ]
 }
