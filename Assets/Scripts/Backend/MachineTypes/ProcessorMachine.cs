@@ -59,7 +59,7 @@ public class ProcessorMachine : BaseMachine
                 gridManager.DestroyVisualItem(item.id);
             }
             
-            Debug.Log($"Pulled item {item.id} into processing at ({cellData.x}, {cellData.y}) for {item.processingDuration}s");
+            Debug.Log($"Started processing item {item.id} ({item.itemType}) → {recipe.output[0].item} in {item.processingDuration}s");
         }
         else
         {
@@ -92,13 +92,12 @@ public class ProcessorMachine : BaseMachine
     /// </summary>
     private void CompleteProcessing(ItemData item)
     {
-        Debug.Log($"Completing processing for item {item.id} ({item.itemType}) after {item.processingDuration}s");
+        Debug.Log($"Completed processing item {item.id} ({item.itemType}) after {item.processingDuration}s");
         
         RecipeDef recipe = GetRecipeForItem(item.itemType);
         if (recipe != null)
         {
             // Remove input item
-            Debug.Log($"Removing input item {item.id} ({item.itemType})");
             cellData.items.Remove(item);
             
             UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
@@ -135,7 +134,7 @@ public class ProcessorMachine : BaseMachine
                         gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
                     }
                     
-                    Debug.Log($"Created output item {newItem.id} ({outputItem.item}) at ({cellData.x}, {cellData.y})");
+                    Debug.Log($"Created output item {newItem.id} ({outputItem.item}) from {item.itemType}");
                     
                     // Immediately try to start movement of the newly created item
                     TryStartMove(newItem);
@@ -169,7 +168,6 @@ public class ProcessorMachine : BaseMachine
         if (recipe != null)
         {
             AddToWaitingQueue(item);
-            Debug.Log($"Item {item.id} added to waiting queue for processor at ({cellData.x}, {cellData.y})");
         }
         else
         {

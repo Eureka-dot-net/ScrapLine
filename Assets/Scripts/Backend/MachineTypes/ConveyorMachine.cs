@@ -31,8 +31,6 @@ public class ConveyorMachine : BaseMachine
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        Debug.Log($"Item {item.id} arrived at conveyor ({cellData.x}, {cellData.y})");
-        
         // Immediately try to start movement of the arrived item
         TryStartMove(item);
     }

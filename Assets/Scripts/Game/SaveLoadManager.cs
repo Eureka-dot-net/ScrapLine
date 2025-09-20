@@ -28,9 +28,6 @@ public class SaveLoadManager : MonoBehaviour
     {
         this.gridManager = gridManager;
         this.creditsManager = creditsManager;
-        
-        if (enableSaveLoadLogs)
-            Debug.Log("SaveLoadManager initialized.");
     }
 
     /// <summary>
@@ -90,8 +87,6 @@ public class SaveLoadManager : MonoBehaviour
         
         if (!File.Exists(path))
         {
-            if (enableSaveLoadLogs)
-                Debug.Log("No save file found.");
             return false;
         }
 
@@ -116,7 +111,7 @@ public class SaveLoadManager : MonoBehaviour
             FactoryRegistry.Instance.LoadFromGameData(data);
 
             if (enableSaveLoadLogs)
-                Debug.Log("Save file found. Loading saved grid.");
+                Debug.Log("Save game loaded successfully.");
 
             return true;
         }
@@ -152,9 +147,6 @@ public class SaveLoadManager : MonoBehaviour
                 cell.machine = MachineFactory.CreateMachine(cell);
             }
         }
-
-        if (enableSaveLoadLogs)
-            Debug.Log("Machines initialized from save data.");
     }
 
     /// <summary>
@@ -169,18 +161,11 @@ public class SaveLoadManager : MonoBehaviour
             try
             {
                 File.Delete(path);
-                if (enableSaveLoadLogs)
-                    Debug.Log("Save file deleted.");
             }
             catch (System.Exception ex)
             {
                 Debug.LogError($"Failed to delete save file: {ex.Message}");
             }
-        }
-        else
-        {
-            if (enableSaveLoadLogs)
-                Debug.Log("No save file to delete.");
         }
     }
 }

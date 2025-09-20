@@ -35,8 +35,6 @@ public class SpawnerMachine : BaseMachine
     /// </summary>
     private void SpawnItem()
     {
-        Debug.Log($"Spawning new item at ({cellData.x}, {cellData.y})");
-
         // Determine what item to spawn
         string itemType = "can"; // Default item type
         
@@ -62,6 +60,8 @@ public class SpawnerMachine : BaseMachine
         };
 
         cellData.items.Add(newItem);
+
+        Debug.Log($"Created item {newItem.id} ({itemType}) at spawner ({cellData.x}, {cellData.y})");
 
         // Tell visual manager to create visual representation
         UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();

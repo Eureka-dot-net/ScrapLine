@@ -29,9 +29,6 @@ public class GridManager : MonoBehaviour
     public void Initialize(UIGridManager gridManager)
     {
         this.activeGridManager = gridManager;
-        
-        if (enableGridLogs)
-            Debug.Log("GridManager initialized.");
     }
 
     /// <summary>
@@ -40,9 +37,6 @@ public class GridManager : MonoBehaviour
     /// <returns>The created grid data</returns>
     public GridData CreateDefaultGrid()
     {
-        if (enableGridLogs)
-            Debug.Log("Creating default grid...");
-
         GridData defaultGrid = new GridData();
         defaultGrid.width = defaultGridWidth;
         defaultGrid.height = defaultGridHeight;
@@ -71,10 +65,6 @@ public class GridManager : MonoBehaviour
         }
 
         activeGrids.Add(defaultGrid);
-        
-        if (enableGridLogs)
-            Debug.Log($"Created default grid: {defaultGrid.width}x{defaultGrid.height}");
-
         return defaultGrid;
     }
 
@@ -85,9 +75,6 @@ public class GridManager : MonoBehaviour
     public void SetActiveGrids(List<GridData> grids)
     {
         activeGrids = grids;
-        
-        if (enableGridLogs)
-            Debug.Log($"Loaded {grids.Count} grids from save file");
     }
 
     /// <summary>
@@ -151,9 +138,6 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public void ClearGrid()
     {
-        if (enableGridLogs)
-            Debug.Log("Clearing grid...");
-            
         GridData gridData = GetCurrentGrid();
         if (gridData == null)
         {
@@ -184,9 +168,6 @@ public class GridManager : MonoBehaviour
         }
 
         activeGridManager.UpdateAllVisuals();
-        
-        if (enableGridLogs)
-            Debug.Log("Grid cleared successfully.");
     }
 
     /// <summary>
@@ -200,8 +181,6 @@ public class GridManager : MonoBehaviour
             if (currentGrid != null)
             {
                 activeGridManager.InitGrid(currentGrid);
-                if (enableGridLogs)
-                    Debug.Log("UI grid initialized with current grid data.");
             }
             else
             {

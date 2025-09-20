@@ -49,14 +49,10 @@ public class GameManager : MonoBehaviour
         
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        
-        Debug.Log("GameManager singleton initialized.");
     }
 
     private void Start()
     {
-        Debug.Log("GameManager Start() called.");
-        
         InitializeManagers();
         InitializeGame();
     }
@@ -98,8 +94,6 @@ public class GameManager : MonoBehaviour
         saveLoadManager.Initialize(gridManager, creditsManager);
         machineManager.Initialize(creditsManager, gridManager, activeGridManager);
         itemMovementManager.Initialize(gridManager, activeGridManager);
-        
-        Debug.Log("All managers initialized successfully.");
     }
 
     /// <summary>
@@ -109,7 +103,6 @@ public class GameManager : MonoBehaviour
     {
         if (saveLoadManager.SaveFileExists())
         {
-            Debug.Log("Save file found. Loading saved game.");
             if (saveLoadManager.LoadGame())
             {
                 StartCoroutine(InitializeFromSave());
@@ -122,7 +115,6 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("No save file found. Creating a new game.");
             StartNewGame();
         }
         

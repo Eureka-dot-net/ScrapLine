@@ -38,8 +38,6 @@ public class ItemMovementManager : MonoBehaviour
     {
         this.gridManager = gridManager;
         this.activeGridManager = activeGridManager;
-        
-        Debug.Log("ItemMovementManager initialized.");
     }
 
     /// <summary>
@@ -135,9 +133,6 @@ public class ItemMovementManager : MonoBehaviour
         {
             activeGridManager.UpdateItemVisualPosition(item.id, 1f, item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
         }
-
-        if (enableMovementLogs)
-            Debug.Log($"Item {item.id} completed movement to ({item.targetX}, {item.targetY})");
     }
 
     /// <summary>
@@ -156,8 +151,6 @@ public class ItemMovementManager : MonoBehaviour
     public void SetItemMoveSpeed(float speed)
     {
         itemMoveSpeed = speed;
-        if (enableMovementLogs)
-            Debug.Log($"Item move speed set to {speed}");
     }
 
     /// <summary>
@@ -176,8 +169,6 @@ public class ItemMovementManager : MonoBehaviour
     public void SetItemTimeoutOnBlankCells(float timeout)
     {
         itemTimeoutOnBlankCells = timeout;
-        if (enableMovementLogs)
-            Debug.Log($"Item timeout on blank cells set to {timeout}");
     }
 
     /// <summary>
@@ -196,8 +187,6 @@ public class ItemMovementManager : MonoBehaviour
     public void SetMaxItemsOnGrid(int maxItems)
     {
         maxItemsOnGrid = maxItems;
-        if (enableMovementLogs)
-            Debug.Log($"Max items on grid set to {maxItems}");
     }
 
     /// <summary>

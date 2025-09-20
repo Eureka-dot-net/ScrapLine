@@ -27,9 +27,6 @@ public class CreditsManager : MonoBehaviour
     {
         this.creditsUI = creditsUI;
         this.machineBarManager = machineBarManager;
-        
-        if (enableCreditsLogs)
-            Debug.Log("CreditsManager initialized.");
     }
 
     /// <summary>
@@ -38,8 +35,6 @@ public class CreditsManager : MonoBehaviour
     public void InitializeNewGame()
     {
         currentCredits = startingCredits;
-        if (enableCreditsLogs)
-            Debug.Log($"New game started with {currentCredits} credits");
         UpdateCreditsDisplay();
     }
 
@@ -50,8 +45,6 @@ public class CreditsManager : MonoBehaviour
     public void SetCredits(int credits)
     {
         currentCredits = credits;
-        if (enableCreditsLogs)
-            Debug.Log($"Loaded {currentCredits} credits from save file");
         UpdateCreditsDisplay();
     }
 
@@ -71,8 +64,6 @@ public class CreditsManager : MonoBehaviour
     public void AddCredits(int amount)
     {
         currentCredits += amount;
-        if (enableCreditsLogs)
-            Debug.Log($"Added {amount} credits. Total: {currentCredits}");
         UpdateCreditsDisplay();
     }
 
@@ -86,8 +77,6 @@ public class CreditsManager : MonoBehaviour
         if (currentCredits >= amount)
         {
             currentCredits -= amount;
-            if (enableCreditsLogs)
-                Debug.Log($"Spent {amount} credits. Remaining: {currentCredits}");
             UpdateCreditsDisplay();
             return true;
         }

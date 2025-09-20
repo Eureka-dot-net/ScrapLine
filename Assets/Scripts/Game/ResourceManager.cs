@@ -19,9 +19,6 @@ public class ResourceManager : MonoBehaviour
     /// </summary>
     public void Initialize()
     {
-        if (enableResourceLogs)
-            Debug.Log("ResourceManager Initialize() called.");
-
         LoadFactoryData();
         InitializeUIManagers();
     }
@@ -56,9 +53,6 @@ public class ResourceManager : MonoBehaviour
         string itemsJson = itemsAsset.text;
 
         FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson);
-        
-        if (enableResourceLogs)
-            Debug.Log("Factory definitions loaded successfully.");
     }
 
     /// <summary>
@@ -70,8 +64,6 @@ public class ResourceManager : MonoBehaviour
         if (machineBarManager != null)
         {
             machineBarManager.InitBar();
-            if (enableResourceLogs)
-                Debug.Log("Machine bar initialized.");
         }
         else
         {

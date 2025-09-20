@@ -28,9 +28,6 @@ public class MachineManager : MonoBehaviour
         this.creditsManager = creditsManager;
         this.gridManager = gridManager;
         this.activeGridManager = activeGridManager;
-        
-        if (enableMachineLogs)
-            Debug.Log("MachineManager initialized.");
     }
 
     /// <summary>
@@ -40,8 +37,6 @@ public class MachineManager : MonoBehaviour
     public void SetSelectedMachine(MachineDef machine)
     {
         selectedMachine = machine;
-        if (enableMachineLogs)
-            Debug.Log($"Selected machine set to: {machine?.id ?? "null"}");
     }
 
     /// <summary>
@@ -69,6 +64,7 @@ public class MachineManager : MonoBehaviour
         }
 
         if (enableMachineLogs)
+            if (enableMachineLogs)
             Debug.Log($"Cell clicked at ({x}, {y}): cellType={cellData.cellType}, machineDefId={cellData.machineDefId}, selectedMachine={selectedMachine?.id ?? "null"}");
 
         // If clicking on an existing machine, rotate it
@@ -187,18 +183,8 @@ public class MachineManager : MonoBehaviour
             return;
         }
 
-        if (enableMachineLogs)
-            Debug.Log($"Rotating machine {machineDef.id} - current direction: {cellData.direction}");
-
         cellData.direction = (Direction)(((int)cellData.direction + 1) % 4);
-
-        if (enableMachineLogs)
-            Debug.Log($"New direction after rotation: {cellData.direction}");
-
         lastMachineDirection = cellData.direction;
-
-        if (enableMachineLogs)
-            Debug.Log($"Rotating machine at ({cellData.x}, {cellData.y}) to direction: {cellData.direction}");
 
         if (activeGridManager != null)
         {
