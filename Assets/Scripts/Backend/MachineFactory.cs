@@ -1,15 +1,29 @@
 using System.Collections.Generic;
+using System;
+using System.Reflection;
 using UnityEngine;
 
 /// <summary>
 /// Factory class responsible for creating the correct machine instance
 /// based on machine definition data. Uses a lookup dictionary to map
-/// machine types to their corresponding C# classes.
+/// machine types to their corresponding C# classes via className field.
 /// </summary>
 public static class MachineFactory
 {
     /// <summary>
-    /// Creates the appropriate machine instance based on the cell data's machine definition.
+    /// Static dictionary that maps class names to their corresponding Type objects
+    /// for efficient machine instantiation
+    /// </summary>
+    private static readonly Dictionary<string, Type> MachineTypeMap = new Dictionary<string, Type>
+    {
+        { "SpawnerMachine", typeof(SpawnerMachine) },
+        { "ProcessorMachine", typeof(ProcessorMachine) },
+        { "SellerMachine", typeof(SellerMachine) },
+        { "BlankCellMachine", typeof(BlankCellMachine) }
+    };
+
+    /// <summary>
+    /// Creates the appropriate machine instance based on the machine definition's className field.
     /// This replaces the large switch statements in GameManager.
     /// </summary>
     /// <param name="cellData">The cell data containing machine information</param>
@@ -28,60 +42,44 @@ public static class MachineFactory
             Debug.LogError($"Machine definition not found for ID: {cellData.machineDefId}");
             return null;
         }
-        
-        // Create the appropriate machine instance based on machine type/id
-        // This replaces the switch statements that were in GameManager
-        switch (cellData.machineDefId)
+
+        // Check if className is specified in the machine definition
+        if (string.IsNullOrEmpty(machineDef.className))
         {
-            case "spawner":
-                return new SpawnerMachine(cellData, machineDef);
-                
-            case "shredder":
-                return new ProcessorMachine(cellData, machineDef);
-                
-            case "seller":
-                return new SellerMachine(cellData, machineDef);
-                
-            case "blank":
-            case "blank_top":
-            case "blank_bottom":
-                return new BlankCellMachine(cellData, machineDef);
-                
-            case "conveyor":
-                // Conveyors don't process items, they just move them
-                // They can be handled as blank cells with movement behavior
-                return new BlankCellMachine(cellData, machineDef);
-                
-            default:
-                Debug.LogWarning($"Unknown machine type: {cellData.machineDefId}, creating BlankCellMachine");
-                return new BlankCellMachine(cellData, machineDef);
+            Debug.LogError($"Machine definition {cellData.machineDefId} is missing className field");
+            return null;
+        }
+
+        // Look up the class type from our dictionary
+        if (!MachineTypeMap.TryGetValue(machineDef.className, out Type machineType))
+        {
+            Debug.LogError($"Unknown machine class name: {machineDef.className}");
+            return null;
+        }
+
+        try
+        {
+            // Create instance using reflection with constructor parameters
+            BaseMachine machineInstance = (BaseMachine)Activator.CreateInstance(machineType, cellData, machineDef);
+            Debug.Log($"Successfully created machine of type {machineDef.className} for {cellData.machineDefId}");
+            return machineInstance;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to create machine instance for {machineDef.className}: {ex.Message}");
+            return null;
         }
     }
     
     /// <summary>
-    /// Alternative factory method that uses the className field from MachineDef
-    /// This would be used if we add the className field to the JSON definitions
+    /// Alternative factory method that uses the className field from MachineDef.
+    /// This method is now the primary implementation since we use className field.
     /// </summary>
     /// <param name="cellData">The cell data containing machine information</param>
     /// <returns>A BaseMachine instance of the correct type, or null if invalid</returns>
     public static BaseMachine CreateMachineByClassName(CellData cellData)
     {
-        if (cellData == null || string.IsNullOrEmpty(cellData.machineDefId))
-        {
-            return null;
-        }
-        
-        MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
-        if (machineDef == null)
-        {
-            Debug.LogError($"Machine definition not found for ID: {cellData.machineDefId}");
-            return null;
-        }
-        
-        // This would use reflection to create instances based on className
-        // For now, we'll use the simpler approach above
-        // TODO: Implement reflection-based creation if className field is added
-        
+        // This method now calls the main CreateMachine method since it's className-based
         return CreateMachine(cellData);
     }
 }
