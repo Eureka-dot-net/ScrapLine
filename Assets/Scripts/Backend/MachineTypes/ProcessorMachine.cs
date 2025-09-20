@@ -136,6 +136,9 @@ public class ProcessorMachine : BaseMachine
                     }
                     
                     Debug.Log($"Created output item {newItem.id} ({outputItem.item}) at ({cellData.x}, {cellData.y})");
+                    
+                    // Immediately try to start movement of the newly created item
+                    TryStartMove(newItem);
                 }
             }
         }

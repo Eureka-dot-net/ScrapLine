@@ -69,6 +69,9 @@ public class SpawnerMachine : BaseMachine
         {
             gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
         }
+        
+        // Immediately try to start movement of the newly spawned item
+        TryStartMove(newItem);
     }
     
     /// <summary>

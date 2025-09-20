@@ -360,13 +360,7 @@ public class GameManager : MonoBehaviour
                 {
                     ProcessMovingItem(item, cell);
                 }
-                else if (item.state == ItemState.Idle)
-                {
-                    if (cell.machine != null)
-                    {
-                        cell.machine.TryStartMove(item);
-                    }
-                }
+                // Removed Idle item handling - machines are now responsible for initiating movement
             }
         }
     }
