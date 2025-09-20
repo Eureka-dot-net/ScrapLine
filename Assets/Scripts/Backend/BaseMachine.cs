@@ -120,6 +120,8 @@ public abstract class BaseMachine
         item.targetY = nextY;
         item.moveStartTime = Time.time;
 
+        Debug.Log($"Item {item.id} ({item.itemType}) started moving from ({cellData.x},{cellData.y}) to ({nextX},{nextY})");
+
         // Fix: Pass the individual properties of the item instead of the object itself.
         GameManager.Instance.activeGridManager.CreateVisualItem(item.id, item.x, item.y, item.itemType);
     }
@@ -145,7 +147,7 @@ public abstract class BaseMachine
                 break;
         }
 
-        var grid = GameManager.Instance.activeGrids[0];
+        var grid = GameManager.Instance.GetCurrentGrid();
         if (nextX < 0 || nextX >= grid.width || nextY < 0 || nextY >= grid.height)
         {
             nextX = -1;

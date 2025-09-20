@@ -60,7 +60,6 @@ public class BlankCellMachine : BaseMachine
     {
         // Blank cells just accept items without processing or moving them
         // Items will timeout and be destroyed by UpdateLogic
-        Debug.Log($"Item {item.id} arrived at blank cell ({cellData.x}, {cellData.y})");
     }
     
     /// <summary>

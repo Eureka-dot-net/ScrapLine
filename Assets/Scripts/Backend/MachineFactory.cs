@@ -62,7 +62,6 @@ public static class MachineFactory
         {
             // Create instance using reflection with constructor parameters
             BaseMachine machineInstance = (BaseMachine)Activator.CreateInstance(machineType, cellData, machineDef);
-            Debug.Log($"Successfully created machine of type {machineDef.className} for {cellData.machineDefId}");
             return machineInstance;
         }
         catch (Exception ex)

@@ -1,41 +1,41 @@
 using UnityEngine;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using static UICell;
 using System.Collections;
 
+/// <summary>
+/// Core game manager that orchestrates all subsystems.
+/// Maintains singleton pattern and delegates responsibilities to specialized managers.
+/// </summary>
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    public List<GridData> activeGrids = new List<GridData>();
-    private const string SAVE_FILE_NAME = "game_data.json";
+    [Header("Manager References")]
+    [Tooltip("Resource loading and initialization manager")]
+    public ResourceManager resourceManager;
+    
+    [Tooltip("Credits and economy system manager")]
+    public CreditsManager creditsManager;
+    
+    [Tooltip("Grid operations manager")]
+    public GridManager gridManager;
+    
+    [Tooltip("Save and load system manager")]
+    public SaveLoadManager saveLoadManager;
+    
+    [Tooltip("Machine placement and rotation manager")]
+    public MachineManager machineManager;
+    
+    [Tooltip("Item movement processing manager")]
+    public ItemMovementManager itemMovementManager;
 
+    [Header("Legacy Compatibility")]
+    [Tooltip("Legacy field for backward compatibility - use GetCurrentGrid() instead")]
+    public System.Collections.Generic.List<GridData> activeGrids = new System.Collections.Generic.List<GridData>();
+
+    [Header("Timing")]
+    [Tooltip("Interval for spawner machines")]
     public float spawnInterval = 5f;
     private float spawnTimer;
-
-    // Movement settings
-    public float itemMoveSpeed = 1f;
-    private int nextItemId = 1;
-
-    // Item management settings
-    public float itemTimeoutOnBlankCells = 10f;
-    public int maxItemsOnGrid = 100;
-    public bool showItemLimitWarning = true;
-
-    // Credits system
-    [Header("Credits System")]
-    [Tooltip("Starting credits amount for new games")]
-    public int startingCredits = 2000;
-    private int currentCredits = 0;
-    private CreditsUI creditsUI;
-
-    private Direction lastMachineDirection = Direction.Up;
-
-    // Machine placement state
-    private MachineDef selectedMachine;
-    private MachineBarUIManager machineBarManager;
 
     public UIGridManager activeGridManager;
 
@@ -44,296 +44,117 @@ public class GameManager : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
-        else
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
+        
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     private void Start()
     {
-        Debug.Log("GameManager Start() called.");
+        InitializeManagers();
+        InitializeGame();
+    }
 
-        TextAsset machinesAsset = Resources.Load<TextAsset>("machines");
-        string machinesJson = machinesAsset.text;
+    /// <summary>
+    /// Initialize all manager components
+    /// </summary>
+    private void InitializeManagers()
+    {
+        // Find or create managers if not assigned
+        if (resourceManager == null)
+            resourceManager = GetComponent<ResourceManager>() ?? gameObject.AddComponent<ResourceManager>();
+            
+        if (creditsManager == null)
+            creditsManager = GetComponent<CreditsManager>() ?? gameObject.AddComponent<CreditsManager>();
+            
+        if (gridManager == null)
+            gridManager = GetComponent<GridManager>() ?? gameObject.AddComponent<GridManager>();
+            
+        if (saveLoadManager == null)
+            saveLoadManager = GetComponent<SaveLoadManager>() ?? gameObject.AddComponent<SaveLoadManager>();
+            
+        if (machineManager == null)
+            machineManager = GetComponent<MachineManager>() ?? gameObject.AddComponent<MachineManager>();
+            
+        if (itemMovementManager == null)
+            itemMovementManager = GetComponent<ItemMovementManager>() ?? gameObject.AddComponent<ItemMovementManager>();
 
-        TextAsset recipesAsset = Resources.Load<TextAsset>("recipes");
-        string recipesJson = recipesAsset.text;
+        // Find the UI grid manager
+        if (activeGridManager == null)
+            activeGridManager = FindAnyObjectByType<UIGridManager>();
 
-        TextAsset itemsAsset = Resources.Load<TextAsset>("items");
-        string itemsJson = itemsAsset.text;
+        // Initialize resource manager first
+        resourceManager.Initialize();
+        
+        // Initialize other managers
+        creditsManager.Initialize(resourceManager.GetCreditsUI(), resourceManager.GetMachineBarManager());
+        gridManager.Initialize(activeGridManager);
+        saveLoadManager.Initialize(gridManager, creditsManager);
+        machineManager.Initialize(creditsManager, gridManager, activeGridManager);
+        itemMovementManager.Initialize(gridManager, activeGridManager);
+    }
 
-        FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson);
-        Debug.Log("Factory definitions loaded.");
-
-        machineBarManager = FindFirstObjectByType<MachineBarUIManager>();
-        machineBarManager?.InitBar();
-
-        creditsUI = FindFirstObjectByType<CreditsUI>();
-
-        string path = Application.persistentDataPath + "/" + SAVE_FILE_NAME;
-        if (File.Exists(path))
+    /// <summary>
+    /// Initialize the game based on save file existence
+    /// </summary>
+    private void InitializeGame()
+    {
+        if (saveLoadManager.SaveFileExists())
         {
-            Debug.Log("Save file found. Loading saved grid.");
-            LoadGame();
-            StartCoroutine(InitializeMachinesFromSave());
-        }
-        else
-        {
-            Debug.Log("No save file found. Creating a new default grid.");
-
-            currentCredits = startingCredits;
-            Debug.Log($"New game started with {currentCredits} credits");
-
-            GridData defaultGrid = new GridData();
-            defaultGrid.width = 5;
-            defaultGrid.height = 7;
-
-            for (int y = 0; y < defaultGrid.height; y++)
+            if (saveLoadManager.LoadGame())
             {
-                for (int x = 0; x < defaultGrid.width; x++)
-                {
-                    CellRole role = CellRole.Grid;
-                    if (y == 0)
-                        role = CellRole.Top;
-                    else if (y == defaultGrid.height - 1)
-                        role = CellRole.Bottom;
-
-                    var cell = new CellData
-                    {
-                        x = x,
-                        y = y,
-                        cellType = CellType.Blank,
-                        direction = Direction.Up,
-                        cellRole = role,
-                    };
-                    defaultGrid.cells.Add(cell);
-                    cell.machine = MachineFactory.CreateMachine(cell);
-                }
-            }
-            activeGrids.Add(defaultGrid);
-        }
-
-        UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
-        if (gridManager != null)
-        {
-            this.activeGridManager = gridManager;
-            gridManager.InitGrid(activeGrids[0]);
-        }
-
-        UpdateCreditsDisplay();
-    }
-
-    private IEnumerator InitializeMachinesFromSave()
-    {
-        yield return new WaitUntil(() => FactoryRegistry.Instance.IsLoaded());
-
-        foreach (var cell in activeGrids[0].cells)
-        {
-            if (cell.machine == null && !string.IsNullOrEmpty(cell.machineDefId))
-            {
-                cell.machine = MachineFactory.CreateMachine(cell);
-            }
-            else if (cell.machine == null)
-            {
-                cell.machine = MachineFactory.CreateMachine(cell);
-            }
-        }
-    }
-
-    // === CREDITS SYSTEM METHODS ===
-
-    public int GetCredits()
-    {
-        return currentCredits;
-    }
-
-    private void UpdateCreditsDisplay()
-    {
-        if (creditsUI != null)
-        {
-            creditsUI.UpdateCredits(currentCredits);
-        }
-        machineBarManager?.UpdateAffordability();
-    }
-
-    public void AddCredits(int amount)
-    {
-        currentCredits += amount;
-        Debug.Log($"Added {amount} credits. Total: {currentCredits}");
-        UpdateCreditsDisplay();
-
-        machineBarManager?.UpdateAffordability();
-    }
-
-    public string GenerateItemId()
-    {
-        return "item_" + nextItemId++;
-    }
-
-    public bool TrySpendCredits(int amount)
-    {
-        if (currentCredits >= amount)
-        {
-            currentCredits -= amount;
-            Debug.Log($"Spent {amount} credits. Remaining: {currentCredits}");
-            UpdateCreditsDisplay();
-
-            machineBarManager?.UpdateAffordability();
-            return true;
-        }
-        else
-        {
-            Debug.LogWarning($"Insufficient credits! Need {amount}, have {currentCredits}");
-            return false;
-        }
-    }
-
-    public bool CanAfford(int amount)
-    {
-        return currentCredits >= amount;
-    }
-
-    public void SetSelectedMachine(MachineDef machine)
-    {
-        selectedMachine = machine;
-        Debug.Log($"Selected machine set to: {machine?.id ?? "null"}");
-    }
-
-    public void OnCellClicked(int x, int y)
-    {
-        GridData gridData = activeGrids[0];
-        CellData cellData = GetCellData(gridData, x, y);
-
-        if (cellData == null)
-        {
-            Debug.LogError("Clicked cell is not in the data model! Coords: " + x + ", " + y);
-            return;
-        }
-
-        Debug.Log($"Cell clicked at ({x}, {y}): cellType={cellData.cellType}, machineDefId={cellData.machineDefId}, selectedMachine={selectedMachine?.id ?? "null"}");
-
-        if (cellData.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
-        {
-            RotateMachine(cellData);
-            return;
-        }
-
-        if (selectedMachine != null)
-        {
-            if (IsValidMachinePlacement(cellData, selectedMachine))
-            {
-                if (CanAfford(selectedMachine.cost))
-                {
-                    PlaceMachine(cellData, selectedMachine);
-                    return;
-                }
-                else
-                {
-                    Debug.LogWarning($"Cannot afford {selectedMachine.id} - costs {selectedMachine.cost}, have {currentCredits} credits");
-                    return;
-                }
+                StartCoroutine(InitializeFromSave());
             }
             else
             {
-                Debug.Log($"Cannot place {selectedMachine.id} here - invalid placement");
-                return;
+                Debug.LogError("Failed to load save file. Starting new game.");
+                StartNewGame();
             }
-        }
-        
-        Debug.Log("No machine selected for placement");
-    }
-
-    private bool IsValidMachinePlacement(CellData cellData, MachineDef machineDef)
-    {
-        foreach (string placement in machineDef.gridPlacement)
-        {
-            switch (placement.ToLower())
-            {
-                case "any": return true;
-                case "grid": return cellData.cellRole == UICell.CellRole.Grid;
-                case "top": return cellData.cellRole == UICell.CellRole.Top;
-                case "bottom": return cellData.cellRole == UICell.CellRole.Bottom;
-            }
-        }
-        return false;
-    }
-
-    private void PlaceMachine(CellData cellData, MachineDef machineDef)
-    {
-        Debug.Log($"Placing machine {machineDef.id} at ({cellData.x}, {cellData.y})");
-
-        if (!TrySpendCredits(machineDef.cost))
-        {
-            Debug.LogError($"Failed to place machine {machineDef.id} - insufficient credits!");
-            return;
-        }
-
-        cellData.cellType = UICell.CellType.Machine;
-        cellData.machineDefId = machineDef.id;
-
-        if (machineDef.canRotate)
-        {
-            cellData.direction = lastMachineDirection;
         }
         else
         {
-            cellData.direction = Direction.Up;
+            StartNewGame();
         }
-
-        cellData.machine = MachineFactory.CreateMachine(cellData);
-        if (cellData.machine == null)
-        {
-            Debug.LogError($"Failed to create machine object for {machineDef.id}");
-        }
-
-        if (activeGridManager != null)
-        {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
-        }
+        
+        // Update legacy activeGrids for backward compatibility
+        activeGrids = gridManager.GetActiveGrids();
+        
+        // Initialize UI
+        gridManager.InitializeUIGrid();
+        creditsManager.UpdateCreditsDisplay();
     }
 
-    private void RotateMachine(CellData cellData)
+    /// <summary>
+    /// Start a new game with default settings
+    /// </summary>
+    private void StartNewGame()
     {
-        MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
-        if (machineDef == null)
-        {
-            Debug.LogError($"Cannot find machine definition for {cellData.machineDefId}");
-            return;
-        }
-
-        if (!machineDef.canRotate)
-        {
-            Debug.Log($"Machine {machineDef.id} cannot be rotated (canRotate = false)");
-            return;
-        }
-
-        Debug.Log($"Rotating machine {machineDef.id} - current direction: {cellData.direction}");
-
-        cellData.direction = (UICell.Direction)(((int)cellData.direction + 1) % 4);
-
-        Debug.Log($"New direction after rotation: {cellData.direction}");
-
-        lastMachineDirection = cellData.direction;
-
-        Debug.Log($"Rotating machine at ({cellData.x}, {cellData.y}) to direction: {cellData.direction}");
-
-        if (activeGridManager != null)
-        {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
-        }
+        creditsManager.InitializeNewGame();
+        gridManager.CreateDefaultGrid();
+        
+        // Update legacy compatibility
+        activeGrids = gridManager.GetActiveGrids();
     }
 
+    /// <summary>
+    /// Initialize game from loaded save data
+    /// </summary>
+    private IEnumerator InitializeFromSave()
+    {
+        yield return saveLoadManager.InitializeMachinesFromSave();
+        
+        // Update legacy compatibility
+        activeGrids = gridManager.GetActiveGrids();
+    }
 
     private void Update()
     {
-        GridData gridData = activeGrids[0];
+        GridData gridData = GetCurrentGrid();
+        if (gridData == null) return;
         
-        // !!! IMPORTANT: Do NOT remove this. This delegates behavior to the new machine objects.
-        // This is the core of the hybrid OO/data-driven architecture.
-        // All machine-specific logic has been moved out of the GameManager.
+        // Update machine logic - delegates to machine objects
         foreach (var cell in gridData.cells)
         {
             if (cell.machine != null)
@@ -342,148 +163,137 @@ public class GameManager : MonoBehaviour
             }
         }
         
-        ProcessItemMovement();
+        // Process item movement
+        itemMovementManager.ProcessItemMovement();
     }
 
-    private void ProcessItemMovement()
+    #region Public API Methods (Backward Compatibility)
+
+    /// <summary>
+    /// Gets the current grid. Currently returns the first grid but can be extended
+    /// for multiple grid support in the future.
+    /// </summary>
+    public GridData GetCurrentGrid()
     {
-        GridData gridData = activeGrids[0];
-        if (activeGridManager == null) return;
-
-        foreach (var cell in gridData.cells)
-        {
-            for (int i = cell.items.Count - 1; i >= 0; i--)
-            {
-                ItemData item = cell.items[i];
-                
-                if (item.state == ItemState.Moving)
-                {
-                    ProcessMovingItem(item, cell);
-                }
-                // Removed Idle item handling - machines are now responsible for initiating movement
-            }
-        }
+        return gridManager.GetCurrentGrid();
     }
 
-    private void ProcessMovingItem(ItemData item, CellData sourceCell)
+    /// <summary>
+    /// Handle cell click events
+    /// </summary>
+    /// <param name="x">X coordinate</param>
+    /// <param name="y">Y coordinate</param>
+    public void OnCellClicked(int x, int y)
     {
-        float timeSinceStart = Time.time - item.moveStartTime;
-        item.moveProgress = timeSinceStart * itemMoveSpeed;
-
-        if (item.moveProgress >= 1.0f)
-        {
-            CompleteItemMovement(item, sourceCell);
-        }
-        else
-        {
-            if (activeGridManager.HasVisualItem(item.id))
-            {
-                activeGridManager.UpdateItemVisualPosition(item.id, item.moveProgress,
-                    item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
-            }
-        }
+        machineManager.OnCellClicked(x, y);
     }
 
-    private void CompleteItemMovement(ItemData item, CellData sourceCell)
+    /// <summary>
+    /// Set the selected machine for placement
+    /// </summary>
+    /// <param name="machine">Machine definition to select</param>
+    public void SetSelectedMachine(MachineDef machine)
     {
-        CellData targetCell = GetCellData(activeGrids[0], item.targetX, item.targetY);
-        if (targetCell == null)
-        {
-            Debug.LogError($"Target cell not found at ({item.targetX}, {item.targetY})");
-            sourceCell.items.Remove(item);
-            if (activeGridManager.HasVisualItem(item.id))
-            {
-                activeGridManager.DestroyVisualItem(item.id);
-            }
-            return;
-        }
-
-        sourceCell.items.Remove(item);
-        targetCell.items.Add(item);
-
-        item.state = ItemState.Idle;
-        item.x = targetCell.x;
-        item.y = targetCell.y;
-        item.moveProgress = 0f;
-
-        if (targetCell.machine != null)
-        {
-            targetCell.machine.OnItemArrived(item);
-        }
-
-        if (activeGridManager.HasVisualItem(item.id))
-        {
-            activeGridManager.UpdateItemVisualPosition(item.id, 1f, item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
-        }
+        machineManager.SetSelectedMachine(machine);
     }
 
-    public void ClearGrid()
-    {
-        Debug.Log("Clearing grid...");
-        GridData gridData = activeGrids[0];
-
-        if (activeGridManager == null) return;
-
-        foreach (var cell in gridData.cells)
-        {
-            if (activeGridManager != null)
-            {
-                foreach (var item in cell.items)
-                {
-                    activeGridManager.DestroyVisualItem(item.id);
-                }
-            }
-
-            cell.cellType = CellType.Blank;
-            cell.direction = Direction.Up;
-            cell.machineDefId = null;
-            cell.items.Clear();
-            cell.waitingItems.Clear();
-        }
-
-        activeGridManager.UpdateAllVisuals();
-    }
-
-    private CellData GetCellData(GridData grid, int x, int y)
-    {
-        foreach (var cell in grid.cells)
-        {
-            if (cell.x == x && cell.y == y)
-            {
-                return cell;
-            }
-        }
-        return null;
-    }
-
+    /// <summary>
+    /// Save the current game state
+    /// </summary>
     public void SaveGame()
     {
-        GameData data = new GameData
-        {
-            grids = activeGrids,
-            credits = currentCredits
-        };
-
-        FactoryRegistry.Instance.SaveToGameData(data);
-
-        string json = JsonUtility.ToJson(data);
-        File.WriteAllText(Application.persistentDataPath + "/" + SAVE_FILE_NAME, json);
-        Debug.Log($"Game saved with {currentCredits} credits to location " + Application.persistentDataPath + "/" + SAVE_FILE_NAME + "!");
+        saveLoadManager.SaveGame();
     }
 
-    private void LoadGame()
+    /// <summary>
+    /// Clear the current grid
+    /// </summary>
+    public void ClearGrid()
     {
-        string path = Application.persistentDataPath + "/" + SAVE_FILE_NAME;
-        if (File.Exists(path))
-        {
-            string json = File.ReadAllText(path);
-            GameData data = JsonUtility.FromJson<GameData>(json);
-            activeGrids = data.grids;
-
-            currentCredits = data.credits;
-            Debug.Log($"Loaded {currentCredits} credits from save file");
-
-            FactoryRegistry.Instance.LoadFromGameData(data);
-        }
+        gridManager.ClearGrid();
     }
+
+    /// <summary>
+    /// Generate a unique item ID
+    /// </summary>
+    /// <returns>Unique item ID</returns>
+    public string GenerateItemId()
+    {
+        return itemMovementManager.GenerateItemId();
+    }
+
+    /// <summary>
+    /// Get current credits amount
+    /// </summary>
+    /// <returns>Current credits</returns>
+    public int GetCredits()
+    {
+        return creditsManager.GetCredits();
+    }
+
+    /// <summary>
+    /// Add credits to the player's account
+    /// </summary>
+    /// <param name="amount">Amount to add</param>
+    public void AddCredits(int amount)
+    {
+        creditsManager.AddCredits(amount);
+    }
+
+    /// <summary>
+    /// Try to spend credits
+    /// </summary>
+    /// <param name="amount">Amount to spend</param>
+    /// <returns>True if successful, false if insufficient funds</returns>
+    public bool TrySpendCredits(int amount)
+    {
+        return creditsManager.TrySpendCredits(amount);
+    }
+
+    /// <summary>
+    /// Check if player can afford an amount
+    /// </summary>
+    /// <param name="amount">Amount to check</param>
+    /// <returns>True if affordable</returns>
+    public bool CanAfford(int amount)
+    {
+        return creditsManager.CanAfford(amount);
+    }
+
+    #endregion
+
+    #region Manager Access (For advanced usage)
+
+    /// <summary>
+    /// Get the resource manager instance
+    /// </summary>
+    public ResourceManager GetResourceManager() => resourceManager;
+
+    /// <summary>
+    /// Get the credits manager instance
+    /// </summary>
+    public CreditsManager GetCreditsManager() => creditsManager;
+
+    /// <summary>
+    /// Get the grid manager instance
+    /// </summary>
+    public GridManager GetGridManager() => gridManager;
+
+    /// <summary>
+    /// Get the save/load manager instance
+    /// </summary>
+    public SaveLoadManager GetSaveLoadManager() => saveLoadManager;
+
+    /// <summary>
+    /// Get the machine manager instance
+    /// </summary>
+    public MachineManager GetMachineManager() => machineManager;
+
+    /// <summary>
+    /// Get the item movement manager instance
+    /// </summary>
+    public ItemMovementManager GetItemMovementManager() => itemMovementManager;
+
+    #endregion
+}
 }
