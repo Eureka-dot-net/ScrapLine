@@ -351,6 +351,13 @@ public class GameManager : MonoBehaviour
             cellData.direction = Direction.Up; // Default to "up" for non-rotatable machines
         }
 
+        // Create machine object using MachineFactory
+        cellData.machine = MachineFactory.CreateMachine(cellData);
+        if (cellData.machine == null)
+        {
+            Debug.LogError($"Failed to create machine object for {machineDef.id}");
+        }
+
         // Update visuals
         if (activeGridManager != null)
         {
@@ -398,42 +405,38 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        // Handle item spawning
-        spawnTimer -= Time.deltaTime;
-        if (spawnTimer <= 0)
+        GridData gridData = activeGrids[0];
+        
+        // Check current item count for spawning limits
+        int currentItemCount = 0;
+        foreach (var cell in gridData.cells)
         {
-            spawnTimer = spawnInterval;
-
-            // Find all spawner machines in our data model
-            GridData gridData = activeGrids[0];
-            
-            // Check current item count before spawning
-            int currentItemCount = 0;
-            foreach (var cell in gridData.cells)
+            currentItemCount += cell.items.Count;
+        }
+        
+        // Update all machine objects (replaces hardcoded spawner logic)
+        foreach (var cell in gridData.cells)
+        {
+            // Create machine object if it doesn't exist and cell has a machine
+            if (cell.machine == null && cell.cellType == UICell.CellType.Machine && !string.IsNullOrEmpty(cell.machineDefId))
             {
-                currentItemCount += cell.items.Count;
+                cell.machine = MachineFactory.CreateMachine(cell);
             }
             
-            if (currentItemCount >= maxItemsOnGrid)
+            // Update machine logic (replaces switch statements)
+            if (cell.machine != null)
             {
-                if (showItemLimitWarning)
+                // For spawners, check item limit before allowing updates
+                if (cell.machineDefId == "spawner" && currentItemCount >= maxItemsOnGrid)
                 {
-                    Debug.LogWarning($"Cannot spawn new items: Grid limit reached ({currentItemCount}/{maxItemsOnGrid})");
-                }
-                return;
-            }
-            
-            foreach (var cell in gridData.cells)
-            {
-                if (cell.cellType == UICell.CellType.Machine && cell.machineDefId == "spawner")
-                {
-                    // Check if the cell already has an item
-                    if (cell.items.Count == 0)
+                    if (showItemLimitWarning)
                     {
-                        // Spawn a new item if the cell is empty (and grid limit allows)
-                        SpawnItem(cell);
+                        Debug.LogWarning($"Cannot spawn new items: Grid limit reached ({currentItemCount}/{maxItemsOnGrid})");
                     }
+                    continue; // Skip spawner updates when at limit
                 }
+                
+                cell.machine.UpdateLogic();
             }
         }
 
@@ -487,14 +490,16 @@ public class GameManager : MonoBehaviour
                         break;
 
                     case ItemState.Processing:
+                        // Processing is now handled by machine objects in their UpdateLogic() methods
+                        // This case is kept for backward compatibility but should rarely be used
                         ProcessProcessingItem(item, cell, gridData, gridManager, ref i);
                         break;
                 }
             }
         }
 
-        // Implement the pure "pull" system
-        ProcessWaitingItemsPullSystem(gridData, gridManager);
+        // Machine objects now handle their own pull system logic via UpdateLogic()
+        // No need for centralized ProcessWaitingItemsPullSystem anymore
     }
 
     /// <summary>
@@ -576,8 +581,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Simplified CompleteItemMovement - only handles movement finalization.
-    /// No recipe logic here - that's handled by the pull system.
+    /// Simplified CompleteItemMovement - delegates to machine objects instead of hardcoded logic.
     /// </summary>
     private void CompleteItemMovement(ItemData item, CellData sourceCell, GridData gridData, UIGridManager gridManager)
     {
@@ -591,7 +595,13 @@ public class GameManager : MonoBehaviour
         // Remove from source
         sourceCell.items.Remove(item);
 
-        // Handle destination based on type
+        // Create machine object if it doesn't exist
+        if (targetCell.machine == null && targetCell.cellType == CellType.Machine && !string.IsNullOrEmpty(targetCell.machineDefId))
+        {
+            targetCell.machine = MachineFactory.CreateMachine(targetCell);
+        }
+
+        // Handle destination - delegate to machine object or handle blank cells
         if (targetCell.cellType == CellType.Blank)
         {
             // Blank cell - destroy item
@@ -599,20 +609,19 @@ public class GameManager : MonoBehaviour
             gridManager.DestroyVisualItem(item.id);
             return;
         }
-        else if (targetCell.cellType == CellType.Machine && targetCell.machineDefId == "seller")
+        else if (targetCell.machine != null)
         {
-            // Seller machine - sell and destroy
-            ItemDef itemDef = FactoryRegistry.Instance.GetItem(item.itemType);
-            int sellValue = itemDef?.sellValue ?? 0;
+            // Let the machine handle the arriving item (replaces hardcoded seller logic)
+            item.state = ItemState.Idle;
+            item.x = targetCell.x;
+            item.y = targetCell.y;
+            item.moveProgress = 0f;
+            targetCell.items.Add(item);
             
-            Debug.Log($"Item {item.id} sold for {sellValue} credits");
-            if (sellValue > 0)
-            {
-                AddCredits(sellValue);
-            }
+            // Notify machine that item has arrived
+            targetCell.machine.OnItemArrived(item);
             
-            gridManager.DestroyVisualItem(item.id);
-            return;
+            gridManager.UpdateItemVisualPosition(item.id, 1f, item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
         }
         else
         {
@@ -710,43 +719,6 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Pure pull system - machines pull items from their waiting queues when idle.
-    /// </summary>
-    private void ProcessWaitingItemsPullSystem(GridData gridData, UIGridManager gridManager)
-    {
-        foreach (var cell in gridData.cells)
-        {
-            if (cell.machineState == MachineState.Idle && cell.waitingItems.Count > 0)
-            {
-                ItemData waitingItem = cell.waitingItems[0];
-                RecipeDef recipe = GetRecipe(cell.machineDefId, waitingItem.itemType);
-                
-                if (recipe != null)
-                {
-                    // Pull item from waiting queue and start processing
-                    cell.waitingItems.RemoveAt(0);
-                    cell.items.Add(waitingItem);
-                    
-                    waitingItem.state = ItemState.Processing;
-                    waitingItem.x = cell.x;
-                    waitingItem.y = cell.y;
-                    waitingItem.processingStartTime = Time.time;
-                    
-                    // Use pre-calculated process time from recipe
-                    waitingItem.processingDuration = recipe.processTime;
-                    
-                    cell.machineState = MachineState.Processing;
-                    
-                    // Destroy visual item when it enters processing
-                    gridManager.DestroyVisualItem(waitingItem.id);
-                    
-                    Debug.Log($"Pulled item {waitingItem.id} into processing at ({cell.x}, {cell.y}) for {waitingItem.processingDuration}s");
-                }
-            }
-        }
-    }
-
-    /// <summary>
     /// Gets next cell coordinates based on current cell direction.
     /// </summary>
     private void GetNextCellCoordinates(CellData cell, out int nextX, out int nextY)
@@ -768,48 +740,6 @@ public class GameManager : MonoBehaviour
             case Direction.Right: nextX++; break;
             case Direction.Down: nextY++; break;
             case Direction.Left: nextX--; break;
-        }
-    }
-
-    /// <summary>
-    /// Updated SpawnItem method to work with new ItemData structure.
-    /// </summary>
-    private void SpawnItem(CellData cellData)
-    {
-        Debug.Log($"Spawning new item at ({cellData.x}, {cellData.y})");
-
-        // Get spawner machine definition to determine what item to spawn
-        MachineDef spawnerDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
-        string itemType = "can"; // Default item type
-        
-        // Use first spawnable item from spawner definition if available
-        if (spawnerDef != null && spawnerDef.spawnableItems != null && spawnerDef.spawnableItems.Count > 0)
-        {
-            itemType = spawnerDef.spawnableItems[0]; // Use first spawnable item for now
-        }
-
-        // Create new item with updated ItemData structure
-        ItemData newItem = new ItemData
-        {
-            id = "item_" + nextItemId++,
-            itemType = itemType,
-            x = cellData.x,
-            y = cellData.y,
-            state = ItemState.Idle,
-            moveProgress = 0f,
-            processingStartTime = 0f,
-            processingDuration = 0f,
-            waitingStartTime = 0f,
-            targetMoveProgress = 0f
-        };
-
-        cellData.items.Add(newItem);
-
-        // Tell visual manager to create visual representation
-        UIGridManager gridManager = FindAnyObjectByType<UIGridManager>();
-        if (gridManager != null)
-        {
-            gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
         }
     }
 
@@ -866,28 +796,6 @@ public class GameManager : MonoBehaviour
         
         // Set machine state back to idle so it can accept new items from the pull system
         cell.machineState = MachineState.Idle;
-    }
-
-    private void GetNextCellCoordinates(CellData cell, out int nextX, out int nextY)
-    {
-        nextX = cell.x;
-        nextY = cell.y;
-
-        // For spawner machines, items move in the "up" direction (toward the grid)
-        if (cell.cellType == CellType.Machine && cell.machineDefId == "spawner")
-        {
-            nextY--;
-            return;
-        }
-
-        // For conveyors and other machines, use their direction
-        switch (cell.direction)
-        {
-            case Direction.Up: nextY--; break;
-            case Direction.Right: nextX++; break;
-            case Direction.Down: nextY++; break;
-            case Direction.Left: nextX--; break;
-        }
     }
     
     
