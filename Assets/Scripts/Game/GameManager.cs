@@ -162,6 +162,15 @@ public class GameManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Generate a unique item ID for use by machine objects
+    /// </summary>
+    /// <returns>A unique item ID string</returns>
+    public string GenerateItemId()
+    {
+        return "item_" + nextItemId++;
+    }
+    
+    /// <summary>
     /// Try to spend credits (e.g., when placing machines)
     /// </summary>
     /// <param name="amount">Amount to spend</param>

@@ -49,7 +49,7 @@ public class SpawnerMachine : BaseMachine
         // Create new item with proper ItemData structure
         ItemData newItem = new ItemData
         {
-            id = "item_" + System.Guid.NewGuid().ToString("N")[..8], // Generate unique ID
+            id = GameManager.Instance.GenerateItemId(), // Use centralized ID generation
             itemType = itemType,
             x = cellData.x,
             y = cellData.y,

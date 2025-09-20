@@ -115,7 +115,7 @@ public class ProcessorMachine : BaseMachine
                     // Create new output item
                     ItemData newItem = new ItemData
                     {
-                        id = "item_" + System.Guid.NewGuid().ToString("N")[..8],
+                        id = GameManager.Instance.GenerateItemId(),
                         itemType = outputItem.item,
                         x = cellData.x,
                         y = cellData.y,
