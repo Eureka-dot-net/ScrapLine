@@ -145,7 +145,7 @@ public abstract class BaseMachine
                 break;
         }
 
-        var grid = GameManager.Instance.activeGrids[0];
+        var grid = GameManager.Instance.GetCurrentGrid();
         if (nextX < 0 || nextX >= grid.width || nextY < 0 || nextY >= grid.height)
         {
             nextX = -1;
