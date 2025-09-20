@@ -13,7 +13,7 @@ public class BlankCellMachine : BaseMachine
     }
     
     /// <summary>
-    /// Update logic for blank cells - handles item timeout on blank cells
+    /// Update logic for blank cells - handles item timeout on blank cells and failsafe movement for conveyors
     /// </summary>
     public override void UpdateLogic()
     {
@@ -23,8 +23,18 @@ public class BlankCellMachine : BaseMachine
             CheckItemTimeouts();
         }
         
-        // Conveyors don't need special update logic - they just hold items
-        // The movement logic is handled by GameManager
+        // For conveyors, act as failsafe - check for any Idle items and try to move them
+        if (machineDef.id == "conveyor")
+        {
+            for (int i = cellData.items.Count - 1; i >= 0; i--)
+            {
+                ItemData item = cellData.items[i];
+                if (item.state == ItemState.Idle)
+                {
+                    TryStartMove(item);
+                }
+            }
+        }
     }
     
     /// <summary>
@@ -67,6 +77,12 @@ public class BlankCellMachine : BaseMachine
         // Blank cells and conveyors just accept items without processing
         // The item's state should already be set to Idle by the movement system
         Debug.Log($"Item {item.id} arrived at {machineDef.type} cell ({cellData.x}, {cellData.y})");
+        
+        // For conveyors, immediately try to start movement of the arrived item
+        if (machineDef.id == "conveyor")
+        {
+            TryStartMove(item);
+        }
     }
     
     /// <summary>
