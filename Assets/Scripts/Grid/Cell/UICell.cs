@@ -345,24 +345,42 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     private void CreateDragVisual()
     {
-        if (machineRenderer == null) return;
-
-        // Find the main Canvas in the scene
-        Canvas mainCanvas = FindObjectOfType<Canvas>();
-        if (mainCanvas == null)
+        if (machineRenderer == null) 
         {
-            Debug.LogError("Could not find main Canvas for drag visual");
+            Debug.LogWarning("No machine renderer found for drag visual creation");
             return;
         }
 
+        // Find the proper UI Canvas by looking for the gridPanel's canvas
+        Canvas targetCanvas = null;
+        var gridManager = FindFirstObjectByType<UIGridManager>();
+        if (gridManager != null && gridManager.gridPanel != null)
+        {
+            targetCanvas = gridManager.gridPanel.GetComponentInParent<Canvas>();
+        }
+        
+        // Fallback to finding any Canvas if grid canvas not found
+        if (targetCanvas == null)
+        {
+            targetCanvas = FindObjectOfType<Canvas>();
+        }
+        
+        if (targetCanvas == null)
+        {
+            Debug.LogError("Could not find any Canvas for drag visual");
+            return;
+        }
+
+        Debug.Log($"Creating drag visual in canvas: {targetCanvas.name}");
+
         // Create a simple GameObject for the drag visual
         dragVisual = new GameObject("DragVisual");
-        dragVisual.transform.SetParent(mainCanvas.transform, false);
+        dragVisual.transform.SetParent(targetCanvas.transform, false);
 
         // Add RectTransform
         RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
 
-        // Use full canvas anchoring for precise positioning
+        // Use bottom-left anchoring for precise positioning
         dragRT.anchorMin = Vector2.zero;
         dragRT.anchorMax = Vector2.zero;
         dragRT.pivot = new Vector2(0.5f, 0.5f);
@@ -374,49 +392,13 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Set initial position (will be updated in UpdateDragVisualPosition)
         dragRT.anchoredPosition = Vector2.zero;
 
-        // Copy the visual appearance from the machine renderer
-        if (machineRenderer != null)
+        // Try to copy the actual machine visuals first
+        bool visualsCopied = CopyMachineVisuals();
+        
+        if (!visualsCopied)
         {
-            // Get all Image components from the machine renderer
-            Image[] sourceImages = machineRenderer.GetComponentsInChildren<Image>();
-
-            if (sourceImages.Length > 0)
-            {
-                foreach (Image sourceImage in sourceImages)
-                {
-                    // Create a copy of each image
-                    GameObject imageObj = new GameObject(sourceImage.name + "_Copy");
-                    imageObj.transform.SetParent(dragVisual.transform, false);
-
-                    Image copyImage = imageObj.AddComponent<Image>();
-                    copyImage.sprite = sourceImage.sprite;
-                    copyImage.color = sourceImage.color;
-                    copyImage.material = sourceImage.material;
-
-                    // Copy the RectTransform properties
-                    RectTransform sourceRT = sourceImage.GetComponent<RectTransform>();
-                    RectTransform copyRT = imageObj.GetComponent<RectTransform>();
-
-                    copyRT.anchorMin = sourceRT.anchorMin;
-                    copyRT.anchorMax = sourceRT.anchorMax;
-                    copyRT.anchoredPosition = sourceRT.anchoredPosition;
-                    copyRT.sizeDelta = sourceRT.sizeDelta;
-                    copyRT.pivot = sourceRT.pivot;
-                    
-                    Debug.Log($"Copied image {sourceImage.name} with sprite: {copyImage.sprite?.name ?? "null"}");
-                }
-            }
-            else
-            {
-                // Fallback: create a simple colored rectangle if no images found
-                Debug.LogWarning("No images found in machine renderer, creating fallback visual");
-                CreateFallbackVisual();
-            }
-        }
-        else
-        {
-            // Fallback: create a simple colored rectangle
-            Debug.LogWarning("No machine renderer found, creating fallback visual");
+            // If copying failed, create fallback visual
+            Debug.LogWarning("Machine visual copying failed, creating fallback visual");
             CreateFallbackVisual();
         }
 
@@ -428,7 +410,65 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Make sure it renders on top of everything
         dragVisual.transform.SetAsLastSibling();
 
-        Debug.Log($"Created drag visual with size: {dragRT.sizeDelta} at position: {dragRT.anchoredPosition}");
+        Debug.Log($"Created drag visual with size: {dragRT.sizeDelta} in canvas: {targetCanvas.name}");
+    }
+
+    /// <summary>
+    /// Attempts to copy the actual machine visuals to the drag visual
+    /// </summary>
+    /// <returns>True if visuals were successfully copied, false otherwise</returns>
+    private bool CopyMachineVisuals()
+    {
+        if (machineRenderer == null || dragVisual == null)
+        {
+            Debug.LogWarning("CopyMachineVisuals: Missing machineRenderer or dragVisual");
+            return false;
+        }
+
+        // Get all Image components from the machine renderer
+        Image[] sourceImages = machineRenderer.GetComponentsInChildren<Image>();
+        
+        if (sourceImages.Length == 0)
+        {
+            Debug.LogWarning("CopyMachineVisuals: No images found in machine renderer");
+            return false;
+        }
+
+        bool anyVisualCopied = false;
+        
+        foreach (Image sourceImage in sourceImages)
+        {
+            // Skip images without sprites
+            if (sourceImage.sprite == null)
+            {
+                Debug.Log($"Skipping image {sourceImage.name} - no sprite");
+                continue;
+            }
+
+            // Create a copy of each image
+            GameObject imageObj = new GameObject(sourceImage.name + "_Copy");
+            imageObj.transform.SetParent(dragVisual.transform, false);
+
+            Image copyImage = imageObj.AddComponent<Image>();
+            copyImage.sprite = sourceImage.sprite;
+            copyImage.color = sourceImage.color;
+            copyImage.material = sourceImage.material;
+
+            // Copy the RectTransform properties
+            RectTransform sourceRT = sourceImage.GetComponent<RectTransform>();
+            RectTransform copyRT = imageObj.GetComponent<RectTransform>();
+
+            copyRT.anchorMin = sourceRT.anchorMin;
+            copyRT.anchorMax = sourceRT.anchorMax;
+            copyRT.anchoredPosition = sourceRT.anchoredPosition;
+            copyRT.sizeDelta = sourceRT.sizeDelta;
+            copyRT.pivot = sourceRT.pivot;
+            
+            Debug.Log($"Successfully copied image {sourceImage.name} with sprite: {copyImage.sprite.name}");
+            anyVisualCopied = true;
+        }
+
+        return anyVisualCopied;
     }
 
     /// <summary>
@@ -442,7 +482,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         fallbackObj.transform.SetParent(dragVisual.transform, false);
 
         Image fallbackImage = fallbackObj.AddComponent<Image>();
-        fallbackImage.color = Color.yellow; // Bright yellow for visibility
+        fallbackImage.color = new Color(1f, 1f, 0f, 0.8f); // Semi-transparent yellow
         
         RectTransform fallbackRT = fallbackObj.GetComponent<RectTransform>();
         fallbackRT.anchorMin = Vector2.zero;
@@ -450,7 +490,24 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         fallbackRT.offsetMin = Vector2.zero;
         fallbackRT.offsetMax = Vector2.zero;
         
-        Debug.Log("Created fallback visual with bright yellow color");
+        // Add a simple text to show what machine this represents
+        GameObject textObj = new GameObject("MachineText");
+        textObj.transform.SetParent(fallbackObj.transform, false);
+        
+        Text machineText = textObj.AddComponent<Text>();
+        machineText.text = draggedMachineDefId ?? "Machine";
+        machineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        machineText.fontSize = 12;
+        machineText.color = Color.black;
+        machineText.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform textRT = textObj.GetComponent<RectTransform>();
+        textRT.anchorMin = Vector2.zero;
+        textRT.anchorMax = Vector2.one;
+        textRT.offsetMin = Vector2.zero;
+        textRT.offsetMax = Vector2.zero;
+        
+        Debug.Log($"Created fallback visual for machine: {draggedMachineDefId}");
     }
 
     private void UpdateDragVisualPosition(PointerEventData eventData)
@@ -460,9 +517,13 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         RectTransform dragRT = dragVisual.GetComponent<RectTransform>();
         if (dragRT == null) return;
 
-        // Get the canvas
+        // Get the canvas that the drag visual is in
         Canvas canvas = dragVisual.GetComponentInParent<Canvas>();
-        if (canvas == null) return;
+        if (canvas == null) 
+        {
+            Debug.LogError("UpdateDragVisualPosition: Could not find canvas for drag visual");
+            return;
+        }
 
         Vector2 localPosition;
         RectTransform canvasRT = canvas.transform as RectTransform;
@@ -474,14 +535,14 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
             out localPosition))
         {
-            // Directly set the anchored position
+            // Set the anchored position directly
             dragRT.anchoredPosition = localPosition;
             
-            Debug.Log($"Drag visual positioned at screen: {eventData.position}, local: {localPosition}");
+            Debug.Log($"Drag visual positioned at screen: {eventData.position}, canvas local: {localPosition}, canvas: {canvas.name}");
         }
         else
         {
-            Debug.LogWarning($"Failed to convert screen position {eventData.position} to local canvas position");
+            Debug.LogError($"Failed to convert screen position {eventData.position} to local canvas position for canvas: {canvas.name}");
         }
     }
 
