@@ -198,7 +198,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         SetOriginalCellAlpha(0.3f);
 
         Debug.Log($"Started dragging machine from cell ({x}, {y})");
-        UnityEditor.EditorApplication.isPaused = true;
+        //UnityEditor.EditorApplication.isPaused = true;
     }
     public void OnDrag(PointerEventData eventData)
     {
