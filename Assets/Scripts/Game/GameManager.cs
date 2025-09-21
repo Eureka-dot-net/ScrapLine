@@ -162,7 +162,7 @@ public class GameManager : MonoBehaviour
     /// Gets the current grid. Currently returns the first grid but can be extended
     /// for multiple grid support in the future.
     /// </summary>
-    public GridData GetCurrentGrid()
+    public virtual GridData GetCurrentGrid()
     {
         return gridManager.GetCurrentGrid();
     }
@@ -262,7 +262,7 @@ public class GameManager : MonoBehaviour
     /// Generate a unique item ID
     /// </summary>
     /// <returns>Unique item ID</returns>
-    public string GenerateItemId()
+    public virtual string GenerateItemId()
     {
         return itemMovementManager.GenerateItemId();
     }

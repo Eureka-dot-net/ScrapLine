@@ -586,9 +586,9 @@ namespace ScrapLine.Tests
 
         private class MockUIGridManager : UIGridManager
         {
-            public bool HasVisualItem(string itemId) => true;
-            public void CreateVisualItem(string itemId, int x, int y, string itemType) { }
-            public void DestroyVisualItem(string itemId) { }
+            public new bool HasVisualItem(string itemId) => true;
+            public new void CreateVisualItem(string itemId, int x, int y, string itemType) { }
+            public new void DestroyVisualItem(string itemId) { }
         }
 
         /// <summary>

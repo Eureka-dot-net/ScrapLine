@@ -411,6 +411,8 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     #endregion
 
+    #region Drop Target Highlighting
+
     private UICell GetCellUnderPointer(PointerEventData eventData)
     {
         List<RaycastResult> results = new List<RaycastResult>();
@@ -457,7 +459,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     private void ClearDropTargetHighlights()
     {
         // Find all cells and clear their highlights
-        UICell[] allCells = FindObjectsOfType<UICell>();
+        UICell[] allCells = Object.FindObjectsOfType<UICell>(false);
         foreach (UICell cell in allCells)
         {
             cell.SetHighlight(false);
