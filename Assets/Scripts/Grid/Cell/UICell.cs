@@ -345,9 +345,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     private void CreateDragVisual()
     {
-        if (machineRenderer == null) 
+        // We need the stored machine data to create the visual
+        if (string.IsNullOrEmpty(draggedMachineDefId))
         {
-            Debug.LogWarning("No machine renderer found for drag visual creation");
+            Debug.LogError("CreateDragVisual: No machine data stored for drag visual creation");
             return;
         }
 
@@ -371,16 +372,16 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             return;
         }
 
-        Debug.Log($"Creating drag visual in canvas: {targetCanvas.name}");
+        Debug.Log($"Creating drag visual for machine {draggedMachineDefId} in canvas: {targetCanvas.name}");
 
-        // Create a simple GameObject for the drag visual
+        // Create the drag visual container
         dragVisual = new GameObject("DragVisual");
         dragVisual.transform.SetParent(targetCanvas.transform, false);
 
         // Add RectTransform
         RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
 
-        // Use bottom-left anchoring for precise positioning
+        // Use anchoring that matches the grid cells
         dragRT.anchorMin = Vector2.zero;
         dragRT.anchorMax = Vector2.zero;
         dragRT.pivot = new Vector2(0.5f, 0.5f);
@@ -389,22 +390,19 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         Vector2 cellSize = GetComponent<RectTransform>().sizeDelta;
         dragRT.sizeDelta = cellSize;
 
-        // Set initial position (will be updated in UpdateDragVisualPosition)
-        dragRT.anchoredPosition = Vector2.zero;
-
-        // Try to copy the actual machine visuals first
-        bool visualsCopied = CopyMachineVisuals();
+        // Create the machine visual using the same logic as SetCellType
+        bool visualsCreated = CreateMachineVisualFromDefinition();
         
-        if (!visualsCopied)
+        if (!visualsCreated)
         {
-            // If copying failed, create fallback visual
-            Debug.LogWarning("Machine visual copying failed, creating fallback visual");
+            // If visual creation failed, create fallback visual
+            Debug.LogWarning($"Failed to create visuals for machine {draggedMachineDefId}, creating fallback");
             CreateFallbackVisual();
         }
 
         // Make it slightly transparent and ensure it's visible
         CanvasGroup dragCanvasGroup = dragVisual.AddComponent<CanvasGroup>();
-        dragCanvasGroup.alpha = 0.9f; // Increased alpha for better visibility
+        dragCanvasGroup.alpha = 0.9f;
         dragCanvasGroup.blocksRaycasts = false; // Important: don't block raycasts
 
         // Make sure it renders on top of everything
@@ -414,61 +412,64 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     }
 
     /// <summary>
-    /// Attempts to copy the actual machine visuals to the drag visual
+    /// Creates machine visuals directly from the machine definition (not copying from existing renderer)
+    /// This is used for drag visuals since the original cell renderer gets destroyed when blanking
     /// </summary>
-    /// <returns>True if visuals were successfully copied, false otherwise</returns>
-    private bool CopyMachineVisuals()
+    /// <returns>True if visuals were successfully created, false otherwise</returns>
+    private bool CreateMachineVisualFromDefinition()
     {
-        if (machineRenderer == null || dragVisual == null)
+        if (string.IsNullOrEmpty(draggedMachineDefId) || dragVisual == null)
         {
-            Debug.LogWarning("CopyMachineVisuals: Missing machineRenderer or dragVisual");
+            Debug.LogWarning("CreateMachineVisualFromDefinition: Missing machine data or drag visual");
             return false;
         }
 
-        // Get all Image components from the machine renderer
-        Image[] sourceImages = machineRenderer.GetComponentsInChildren<Image>();
-        
-        if (sourceImages.Length == 0)
+        // Get the machine definition
+        var machineDef = FactoryRegistry.Instance.GetMachine(draggedMachineDefId);
+        if (machineDef == null)
         {
-            Debug.LogWarning("CopyMachineVisuals: No images found in machine renderer");
+            Debug.LogWarning($"CreateMachineVisualFromDefinition: Could not find machine definition for {draggedMachineDefId}");
             return false;
         }
 
-        bool anyVisualCopied = false;
+        Debug.Log($"Creating machine visual from definition: {draggedMachineDefId}");
+
+        // Create a temporary MachineRenderer to generate the visual
+        GameObject tempRenderer = new GameObject("TempMachineRenderer");
+        tempRenderer.transform.SetParent(dragVisual.transform, false);
         
-        foreach (Image sourceImage in sourceImages)
+        // Add RectTransform to match cell size
+        RectTransform tempRT = tempRenderer.AddComponent<RectTransform>();
+        tempRT.anchorMin = Vector2.zero;
+        tempRT.anchorMax = Vector2.one;
+        tempRT.offsetMin = Vector2.zero;
+        tempRT.offsetMax = Vector2.zero;
+
+        // Add MachineRenderer component and set it up
+        MachineRenderer tempMachineRenderer = tempRenderer.AddComponent<MachineRenderer>();
+        
+        // Find the grid manager to get shared resources
+        var gridManager = FindFirstObjectByType<UIGridManager>();
+        if (gridManager != null)
         {
-            // Skip images without sprites
-            if (sourceImage.sprite == null)
-            {
-                Debug.Log($"Skipping image {sourceImage.name} - no sprite");
-                continue;
-            }
-
-            // Create a copy of each image
-            GameObject imageObj = new GameObject(sourceImage.name + "_Copy");
-            imageObj.transform.SetParent(dragVisual.transform, false);
-
-            Image copyImage = imageObj.AddComponent<Image>();
-            copyImage.sprite = sourceImage.sprite;
-            copyImage.color = sourceImage.color;
-            copyImage.material = sourceImage.material;
-
-            // Copy the RectTransform properties
-            RectTransform sourceRT = sourceImage.GetComponent<RectTransform>();
-            RectTransform copyRT = imageObj.GetComponent<RectTransform>();
-
-            copyRT.anchorMin = sourceRT.anchorMin;
-            copyRT.anchorMax = sourceRT.anchorMax;
-            copyRT.anchoredPosition = sourceRT.anchoredPosition;
-            copyRT.sizeDelta = sourceRT.sizeDelta;
-            copyRT.pivot = sourceRT.pivot;
+            tempMachineRenderer.Setup(
+                machineDef,
+                draggedMachineDirection,
+                gridManager,
+                x, y, // Use current cell coordinates
+                gridManager.conveyorSharedTexture,
+                gridManager.conveyorSharedMaterial
+            );
             
-            Debug.Log($"Successfully copied image {sourceImage.name} with sprite: {copyImage.sprite.name}");
-            anyVisualCopied = true;
+            Debug.Log($"Successfully created machine visual for {draggedMachineDefId} with direction {draggedMachineDirection}");
+            return true;
         }
-
-        return anyVisualCopied;
+        else
+        {
+            Debug.LogError("Could not find UIGridManager for MachineRenderer setup");
+            DestroyImmediate(tempRenderer);
+            return false;
+        }
     }
 
     /// <summary>
@@ -525,24 +526,46 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             return;
         }
 
-        Vector2 localPosition;
-        RectTransform canvasRT = canvas.transform as RectTransform;
-
-        // Convert screen position to local canvas position
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            canvasRT,
-            eventData.position,
-            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
-            out localPosition))
+        // For screen space overlay canvases, we can use a simpler approach
+        if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
         {
-            // Set the anchored position directly
-            dragRT.anchoredPosition = localPosition;
-            
-            Debug.Log($"Drag visual positioned at screen: {eventData.position}, canvas local: {localPosition}, canvas: {canvas.name}");
+            // Convert screen position directly to canvas local position
+            Vector2 localPosition;
+            RectTransform canvasRT = canvas.transform as RectTransform;
+
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRT,
+                eventData.position,
+                null, // Camera is null for overlay mode
+                out localPosition))
+            {
+                dragRT.anchoredPosition = localPosition;
+                Debug.Log($"Overlay mode: Screen {eventData.position} -> Local {localPosition} (Canvas: {canvas.name})");
+            }
+            else
+            {
+                Debug.LogError($"Failed to convert screen position {eventData.position} for overlay canvas: {canvas.name}");
+            }
         }
         else
         {
-            Debug.LogError($"Failed to convert screen position {eventData.position} to local canvas position for canvas: {canvas.name}");
+            // For world space or camera space canvases
+            Vector2 localPosition;
+            RectTransform canvasRT = canvas.transform as RectTransform;
+
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRT,
+                eventData.position,
+                canvas.worldCamera,
+                out localPosition))
+            {
+                dragRT.anchoredPosition = localPosition;
+                Debug.Log($"Camera mode: Screen {eventData.position} -> Local {localPosition} (Canvas: {canvas.name}, Camera: {canvas.worldCamera?.name})");
+            }
+            else
+            {
+                Debug.LogError($"Failed to convert screen position {eventData.position} for camera canvas: {canvas.name}");
+            }
         }
     }
 
