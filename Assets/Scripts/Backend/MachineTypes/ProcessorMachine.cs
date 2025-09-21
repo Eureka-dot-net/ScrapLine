@@ -12,17 +12,41 @@ public class ProcessorMachine : BaseMachine
     }
     
     /// <summary>
+    /// Adds an item to this machine's internal waiting queue.
+    /// This method is called by the GameManager at the halfway point.
+    /// </summary>
+    public void AddToWaitingQueue(ItemData item)
+    {
+        if (!cellData.waitingItems.Contains(item))
+        {
+            cellData.waitingItems.Add(item);
+            Debug.Log($"Item {item.id} has been added to the waiting queue of processor {machineDef.id}. Queue size: {cellData.waitingItems.Count}");
+        }
+    }
+    
+    /// <summary>
     /// Update logic for processor - handles the pull system for waiting items
     /// </summary>
     public override void UpdateLogic()
     {
-        // Implement pull system - if machine is idle and has waiting items, start processing
+        // Implement pull system - if machine is idle and has waiting items, pull one
         if (cellData.machineState == MachineState.Idle && cellData.waitingItems.Count > 0)
         {
-            ItemData waitingItem = GetNextWaitingItem();
-            if (waitingItem != null)
+            // Get the next item from the queue
+            ItemData waitingItem = cellData.waitingItems[0];
+            
+            // If the item is waiting at the halfway point, the processor "pulls" it.
+            if (waitingItem.isHalfway)
             {
-                StartProcessing(waitingItem);
+                // Give the item permission to start moving again.
+                // The GameManager will handle the rest of the movement.
+                waitingItem.state = ItemState.Moving;
+                //waitingItem.moveStartTime = Time.time; // Restart the timer
+                
+                // Set machine state to processing to prevent it from pulling another item
+                cellData.machineState = MachineState.Processing; 
+
+                Debug.Log($"Processor {machineDef.id} is pulling in item {waitingItem.id} from the border.");
             }
         }
         
@@ -122,8 +146,7 @@ public class ProcessorMachine : BaseMachine
                         moveProgress = 0f,
                         processingStartTime = 0f,
                         processingDuration = 0f,
-                        waitingStartTime = 0f,
-                        targetMoveProgress = 0f
+                        waitingStartTime = 0f
                     };
                     
                     cellData.items.Add(newItem);
@@ -163,15 +186,19 @@ public class ProcessorMachine : BaseMachine
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        // Check if we have a recipe for this item
-        RecipeDef recipe = GetRecipeForItem(item.itemType);
-        if (recipe != null)
+        // When an item fully arrives in this cell, it means it completed the second half of its move.
+        // It is already in the waitingItems queue, so we just need to start processing it.
+        Debug.Log($"Item {item.id} has fully arrived at processor {machineDef.id}. Starting processing.");
+        
+        // We find the item in the waiting queue and process it
+        ItemData itemToProcess = cellData.waitingItems.Find(i => i.id == item.id);
+        if (itemToProcess != null)
         {
-            AddToWaitingQueue(item);
+            StartProcessing(itemToProcess);
         }
         else
         {
-            Debug.LogWarning($"No recipe found for item {item.itemType} in processor {machineDef.id}");
+            Debug.LogWarning($"Could not find item {item.id} in waiting queue to process.");
         }
     }
     
@@ -181,6 +208,6 @@ public class ProcessorMachine : BaseMachine
     public override void ProcessItem(ItemData item)
     {
         // For processors, items should go through the waiting queue first
-        OnItemArrived(item);
+        AddToWaitingQueue(item);
     }
 }

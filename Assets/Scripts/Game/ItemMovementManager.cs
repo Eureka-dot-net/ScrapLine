@@ -10,17 +10,17 @@ public class ItemMovementManager : MonoBehaviour
     [Header("Movement Configuration")]
     [Tooltip("Speed at which items move between cells")]
     public float itemMoveSpeed = 1f;
-    
+
     [Header("Item Management")]
     [Tooltip("Timeout for items on blank cells")]
     public float itemTimeoutOnBlankCells = 10f;
-    
+
     [Tooltip("Maximum number of items allowed on the grid")]
     public int maxItemsOnGrid = 100;
-    
+
     [Tooltip("Show warning when item limit is reached")]
     public bool showItemLimitWarning = true;
-    
+
     [Header("Debug")]
     [Tooltip("Enable debug logs for item movement")]
     public bool enableMovementLogs = false;
@@ -55,7 +55,7 @@ public class ItemMovementManager : MonoBehaviour
     public void ProcessItemMovement()
     {
         GridData gridData = gridManager.GetCurrentGrid();
-        if (gridData == null || activeGridManager == null) 
+        if (gridData == null || activeGridManager == null)
             return;
 
         foreach (var cell in gridData.cells)
@@ -63,7 +63,7 @@ public class ItemMovementManager : MonoBehaviour
             for (int i = cell.items.Count - 1; i >= 0; i--)
             {
                 ItemData item = cell.items[i];
-                
+
                 if (item.state == ItemState.Moving)
                 {
                     ProcessMovingItem(item, cell);
@@ -83,7 +83,21 @@ public class ItemMovementManager : MonoBehaviour
         float timeSinceStart = Time.time - item.moveStartTime;
         item.moveProgress = timeSinceStart * itemMoveSpeed;
 
-        if (item.moveProgress >= 1.0f)
+        CellData targetCell = gridManager.GetCellData(item.targetX, item.targetY);
+
+        if (!item.isHalfway && targetCell != null && targetCell.machine is ProcessorMachine)
+        {
+            if (item.moveProgress >= 0.5f)
+            {
+                // It reached the halfway point.
+                item.state = ItemState.Waiting;
+                item.moveProgress = 0.5f; // Lock progress
+                item.isHalfway = true; // Set the flag for the second phase
+                (targetCell.machine as ProcessorMachine).AddToWaitingQueue(item);
+                Debug.Log($"Item {item.id} is now waiting at the halfway point.");
+            }
+        }
+         if (item.moveProgress >= 1.0f)
         {
             CompleteItemMovement(item, sourceCell);
         }

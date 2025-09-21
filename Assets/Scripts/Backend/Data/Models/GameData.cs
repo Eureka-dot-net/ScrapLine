@@ -25,7 +25,7 @@ public class ItemData
     public string itemType;
     public int x;
     public int y;
-    
+
     public ItemState state = ItemState.Idle;
     public float moveStartTime;
     public float moveProgress;
@@ -33,12 +33,14 @@ public class ItemData
     public int sourceY;
     public int targetX;
     public int targetY;
-    
+
     public float processingStartTime;
     public float processingDuration;
-    
+
     public float waitingStartTime;
-    public float targetMoveProgress; // Must be added per problem statement
+
+    public bool isHalfway = false; // Flag to indicate if the item is halfway in its movement
+
 }
 
 [System.Serializable]

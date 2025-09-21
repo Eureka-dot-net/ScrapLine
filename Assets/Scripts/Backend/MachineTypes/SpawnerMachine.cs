@@ -56,7 +56,6 @@ public class SpawnerMachine : BaseMachine
             processingStartTime = 0f,
             processingDuration = 0f,
             waitingStartTime = 0f,
-            targetMoveProgress = 0f
         };
 
         cellData.items.Add(newItem);

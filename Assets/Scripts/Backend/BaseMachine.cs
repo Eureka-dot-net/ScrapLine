@@ -67,16 +67,6 @@ public abstract class BaseMachine
         return null;
     }
 
-    /// <summary>
-    /// Adds an item to this machine's waiting queue
-    /// </summary>
-    /// <param name="item">The item to add to the queue</param>
-    protected virtual void AddToWaitingQueue(ItemData item)
-    {
-        cellData.waitingItems.Add(item);
-        item.state = ItemState.Waiting;
-        item.waitingStartTime = Time.time;
-    }
 
     /// <summary>
     /// Gets the machine definition for this machine
@@ -102,7 +92,19 @@ public abstract class BaseMachine
     {
         if (item.state != ItemState.Idle || item.x != cellData.x || item.y != cellData.y)
         {
-            return;
+            // Only allow items in the Idle state at their current cell to be moved.
+            // This prevents an endless loop of movement starting.
+            if (item.state == ItemState.Waiting) 
+            {
+                // This is the case where an item is being "pulled" from a waiting queue.
+                // We'll allow it to move even if its coordinates are not at this cell,
+                // because it's technically in a "halfway" position.
+                // The GameManager's logic will handle this.
+            }
+            else
+            {
+                return;
+            }
         }
 
         int nextX, nextY;
@@ -119,11 +121,14 @@ public abstract class BaseMachine
         item.targetX = nextX;
         item.targetY = nextY;
         item.moveStartTime = Time.time;
-
+        
         Debug.Log($"Item {item.id} ({item.itemType}) started moving from ({cellData.x},{cellData.y}) to ({nextX},{nextY})");
 
         // Fix: Pass the individual properties of the item instead of the object itself.
-        GameManager.Instance.activeGridManager.CreateVisualItem(item.id, item.x, item.y, item.itemType);
+        if (!GameManager.Instance.activeGridManager.HasVisualItem(item.id))
+        {
+            GameManager.Instance.activeGridManager.CreateVisualItem(item.id, item.x, item.y, item.itemType);
+        }
     }
 
     // The Y-coordinate needs to decrease to move "up" because the Unity UI coordinate system
