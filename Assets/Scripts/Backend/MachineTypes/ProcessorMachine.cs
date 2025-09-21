@@ -59,7 +59,7 @@ public class ProcessorMachine : BaseMachine
                 gridManager.DestroyVisualItem(item.id);
             }
             
-            Debug.Log($"Started processing item {item.id} ({item.itemType}) → {recipe.output[0].item} in {item.processingDuration}s");
+            Debug.Log($"Started processing item {item.id} ({item.itemType}) → {recipe.outputItems[0].item} in {item.processingDuration}s");
         }
         else
         {

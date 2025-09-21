@@ -86,7 +86,7 @@
             "borderSprite": null,
             "buildingSprite": "Machine_border",
             "buildingDirection": 0,
-            "baseProcessTime": 10,
+            "baseProcessTime": 5,
             "upgradeMultipliers": [
                 {
                     "multiplier": 0.7,

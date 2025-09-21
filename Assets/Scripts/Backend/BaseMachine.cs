@@ -126,6 +126,10 @@ public abstract class BaseMachine
         GameManager.Instance.activeGridManager.CreateVisualItem(item.id, item.x, item.y, item.itemType);
     }
 
+    // The Y-coordinate needs to decrease to move "up" because the Unity UI coordinate system
+    // has its origin (0,0) at the bottom-left of the canvas.
+    // This means as Y increases, the position moves visually upwards on the screen.
+    // This is the correct logic for moving items upwards in the UI. 
     protected void GetNextCellCoordinates(out int nextX, out int nextY)
     {
         nextX = cellData.x;
@@ -134,10 +138,10 @@ public abstract class BaseMachine
         switch (cellData.direction)
         {
             case Direction.Up:
-                nextY += 1;
+                nextY -= 1;
                 break;
             case Direction.Down:
-                nextY -= 1;
+                nextY += 1;
                 break;
             case Direction.Left:
                 nextX -= 1;
