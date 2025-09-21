@@ -364,8 +364,9 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         // Add RectTransform with correct anchoring for cursor following
         RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
-        dragRT.anchorMin = Vector2.zero;
-        dragRT.anchorMax = Vector2.zero;
+        // Use center anchoring for flexibility
+        dragRT.anchorMin = new Vector2(0.5f, 0.5f);
+        dragRT.anchorMax = new Vector2(0.5f, 0.5f);
         dragRT.pivot = new Vector2(0.5f, 0.5f);
 
         // Size it similar to a grid cell
@@ -505,7 +506,11 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         if (converted)
         {
+            // For center anchoring with Screen Space - Overlay canvas, 
+            // we can use the converted local position directly as anchored position
+            // since the anchor is at the center and local position is relative to center
             dragRT.anchoredPosition = localPosition;
+            
             // Only log position updates when user is actively dragging (not on every frame)
             if (isDragging && Time.frameCount % 30 == 0) // Log every 30 frames (~0.5 sec)
             {
