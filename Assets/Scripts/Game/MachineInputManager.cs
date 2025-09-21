@@ -1,13 +1,13 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using static UICell;
 
 /// <summary>
 /// Manages all machine input interactions including clicks, drags, and placement.
 /// Handles both desktop (mouse) and mobile (touch) input with visual feedback.
 /// </summary>
-public class MachineInputManager : MonoBehaviour
+public class MachineInputManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [Header("Configuration")]
     public DragDropSettings settings;
@@ -34,15 +34,8 @@ public class MachineInputManager : MonoBehaviour
     private GridManager gridManager;
     private UIGridManager uiGridManager;
     
-    // Input System
-    private PlayerInput playerInput;
-    private InputAction pointerPositionAction;
-    private InputAction pointerPressAction;
-    
     void Awake()
     {
-        SetupInputActions();
-        
         // Default settings if not configured
         if (settings == null)
         {
@@ -83,36 +76,31 @@ public class MachineInputManager : MonoBehaviour
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
         }
+
+        // Add this component to the grid panel so we can receive UI events
+        if (uiGridManager != null && uiGridManager.gridPanel != null)
+        {
+            if (uiGridManager.gridPanel.GetComponent<MachineInputManager>() == null)
+            {
+                // Copy this component to the grid panel to receive events
+                MachineInputManager gridInputHandler = uiGridManager.gridPanel.gameObject.AddComponent<MachineInputManager>();
+                gridInputHandler.settings = this.settings;
+                gridInputHandler.dragCanvas = this.dragCanvas;
+                
+                // Disable this instance since the one on gridPanel will handle input
+                this.enabled = false;
+            }
+        }
     }
     
-    void SetupInputActions()
+    public void OnPointerDown(PointerEventData eventData)
     {
-        // Create input action map for drag operations
-        var actionMap = new InputActionMap("DragDrop");
-        
-        // Pointer position (mouse/touch position)
-        pointerPositionAction = actionMap.AddAction("PointerPosition", 
-            InputActionType.Value, "<Pointer>/position");
-            
-        // Pointer press (mouse click/touch)
-        pointerPressAction = actionMap.AddAction("PointerPress", 
-            InputActionType.Button, "<Pointer>/press");
-            
-        pointerPressAction.started += OnPointerDown;
-        pointerPressAction.canceled += OnPointerUp;
-        
-        actionMap.Enable();
-    }
-    
-    void OnPointerDown(InputAction.CallbackContext context)
-    {
-        Vector2 screenPosition = pointerPositionAction.ReadValue<Vector2>();
-        startInputPosition = screenPosition;
+        startInputPosition = eventData.position;
         inputStartTime = Time.time;
         hasMovedBeyondThreshold = false;
         
         // Check if we're clicking on an existing machine
-        if (TryGetMachineAtScreenPosition(screenPosition, out CellData cellData, out MachineDef machineDef))
+        if (TryGetMachineAtScreenPosition(eventData.position, out CellData cellData, out MachineDef machineDef))
         {
             // Start potential drag operation
             originalMachineCell = cellData;
@@ -130,40 +118,38 @@ public class MachineInputManager : MonoBehaviour
         }
     }
     
-    void OnPointerUp(InputAction.CallbackContext context)
+    public void OnPointerUp(PointerEventData eventData)
     {
         if (isDragging)
         {
-            CompleteDragOperation();
+            CompleteDragOperation(eventData.position);
         }
         else if (draggedMachineType != null)
         {
             // This was a click, not a drag - handle as traditional click
-            Vector2 screenPosition = pointerPositionAction.ReadValue<Vector2>();
-            HandleClickOperation(screenPosition);
+            HandleClickOperation(eventData.position);
         }
         
         // Reset state
         CleanupDragOperation();
     }
     
-    void Update()
+    public void OnDrag(PointerEventData eventData)
     {
         if (draggedMachineType != null && !isDragging)
         {
-            CheckForDragStart();
+            CheckForDragStart(eventData.position);
         }
         
         if (isDragging)
         {
-            UpdateDragVisuals();
-            UpdateGridHighlighting();
+            UpdateDragVisuals(eventData.position);
+            UpdateGridHighlighting(eventData.position);
         }
     }
     
-    void CheckForDragStart()
+    void CheckForDragStart(Vector2 currentPosition)
     {
-        Vector2 currentPosition = pointerPositionAction.ReadValue<Vector2>();
         float timeSinceStart = Time.time - inputStartTime;
         float distanceMoved = Vector2.Distance(startInputPosition, currentPosition);
         
@@ -236,19 +222,16 @@ public class MachineInputManager : MonoBehaviour
         ghostImage.raycastTarget = false;
     }
     
-    void UpdateDragVisuals()
+    void UpdateDragVisuals(Vector2 screenPosition)
     {
         if (ghostMachine != null)
         {
-            Vector2 screenPosition = pointerPositionAction.ReadValue<Vector2>();
             ghostMachine.transform.position = screenPosition;
         }
     }
     
-    void UpdateGridHighlighting()
+    void UpdateGridHighlighting(Vector2 screenPosition)
     {
-        Vector2 screenPosition = pointerPositionAction.ReadValue<Vector2>();
-        
         // Check if we're over the grid
         if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
         {
@@ -277,10 +260,8 @@ public class MachineInputManager : MonoBehaviour
         }
     }
     
-    void CompleteDragOperation()
+    void CompleteDragOperation(Vector2 screenPosition)
     {
-        Vector2 screenPosition = pointerPositionAction.ReadValue<Vector2>();
-        
         if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
         {
             // Dropped on grid - try to place machine
@@ -393,6 +374,17 @@ public class MachineInputManager : MonoBehaviour
     CellData GetCellData(int x, int y)
     {
         return gridManager.GetCellData(x, y);
+    }
+
+    /// <summary>
+    /// Handle cell click from UICell - delegates to MachineManager for now
+    /// </summary>
+    public void HandleCellClick(int x, int y)
+    {
+        if (machineManager != null)
+        {
+            machineManager.OnCellClicked(x, y);
+        }
     }
     
     bool TryGetMachineAtScreenPosition(Vector2 screenPosition, out CellData cellData, out MachineDef machineDef)
@@ -511,13 +503,6 @@ public class MachineInputManager : MonoBehaviour
     
     void OnDestroy()
     {
-        // Clean up input actions
-        if (pointerPressAction != null)
-        {
-            pointerPressAction.started -= OnPointerDown;
-            pointerPressAction.canceled -= OnPointerUp;
-        }
-        
         CleanupDragOperation();
     }
 }

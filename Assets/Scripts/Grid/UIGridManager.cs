@@ -301,6 +301,9 @@ public class UIGridManager : MonoBehaviour
         CellData cellData = GetCellData(x, y);
         if (cellData == null) return false;
 
+        // Cell must be empty (blank type) to be valid for placement
+        if (cellData.cellType != CellType.Blank) return false;
+
         // Check if machine's grid placement rules allow this cell
         foreach (string placement in machineDef.gridPlacement)
         {
