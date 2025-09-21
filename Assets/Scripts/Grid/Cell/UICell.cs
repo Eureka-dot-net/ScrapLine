@@ -411,14 +411,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     #endregion
 
-    private void SetDragVisualAlpha(float alpha)
-    {
-        if (canvasGroup != null)
-        {
-            canvasGroup.alpha = alpha;
-        }
-    }
-
     private UICell GetCellUnderPointer(PointerEventData eventData)
     {
         List<RaycastResult> results = new List<RaycastResult>();
