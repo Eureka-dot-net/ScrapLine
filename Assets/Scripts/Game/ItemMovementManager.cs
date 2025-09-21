@@ -92,14 +92,13 @@ public class ItemMovementManager : MonoBehaviour
                 // Item has reached the halfway point
                 item.state = ItemState.Idle; // Pause at halfway point
                 item.moveProgress = 0.5f; // Clamp to exactly 50%
+                item.isHalfway = true; // Mark that item is now at halfway point
                 
-                if (activeGridManager.HasVisualItem(item.id) && sourceCell.machine != null)
+                if (activeGridManager.HasVisualItem(item.id))
                 {
                     // Update visual position to halfway point
-                    int nextX, nextY;
-                    sourceCell.machine.GetNextCellCoordinatesPublic(out nextX, out nextY);
                     activeGridManager.UpdateItemVisualPosition(item.id, 0.5f,
-                        item.sourceX, item.sourceY, nextX, nextY, sourceCell.direction);
+                        item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
                 }
                 
                 // Do NOT call CompleteItemMovement - item stays in source cell data model
@@ -111,12 +110,10 @@ public class ItemMovementManager : MonoBehaviour
             else
             {
                 // Still moving toward halfway point
-                if (activeGridManager.HasVisualItem(item.id) && sourceCell.machine != null)
+                if (activeGridManager.HasVisualItem(item.id))
                 {
-                    int nextX, nextY;
-                    sourceCell.machine.GetNextCellCoordinatesPublic(out nextX, out nextY);
                     activeGridManager.UpdateItemVisualPosition(item.id, item.moveProgress,
-                        item.sourceX, item.sourceY, nextX, nextY, sourceCell.direction);
+                        item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
                 }
             }
         }
@@ -168,6 +165,7 @@ public class ItemMovementManager : MonoBehaviour
         item.x = targetCell.x;
         item.y = targetCell.y;
         item.moveProgress = 0f;
+        item.isHalfway = false; // Reset halfway flag when movement completes
 
         if (targetCell.machine != null)
         {

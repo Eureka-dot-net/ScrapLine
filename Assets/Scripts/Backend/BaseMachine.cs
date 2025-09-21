@@ -116,26 +116,22 @@ public abstract class BaseMachine
         item.state = ItemState.Moving;
         item.sourceX = cellData.x;
         item.sourceY = cellData.y;
+        item.targetX = nextX;
+        item.targetY = nextY;
         item.moveStartTime = Time.time;
 
         if (!item.isHalfway)
         {
-            // Phase 1: Full Cell to Halfway
-            // Calculate halfway point between current cell and next cell
-            item.targetX = cellData.x; // Start from current position
-            item.targetY = cellData.y;
-            item.isHalfway = true; // Mark as moving to halfway point
-            
+            // Phase 1: Full Cell to Halfway Point
+            // Item will move toward next cell but stop at 50% progress
+            // isHalfway will be set to true when it reaches the halfway point
             Debug.Log($"Item {item.id} ({item.itemType}) started Phase 1 movement (to halfway) from ({cellData.x},{cellData.y}) toward ({nextX},{nextY})");
         }
         else
         {
-            // Phase 2: Halfway to Full Cell
-            // Move from halfway point to the next full cell
-            item.targetX = nextX;
-            item.targetY = nextY;
-            item.isHalfway = false; // Will be at full cell when movement completes
-            
+            // Phase 2: Halfway Point to Full Cell  
+            // Item continues from halfway point to the destination
+            // isHalfway will be set to false when movement completes
             Debug.Log($"Item {item.id} ({item.itemType}) started Phase 2 movement (to full cell) from halfway to ({nextX},{nextY})");
         }
 

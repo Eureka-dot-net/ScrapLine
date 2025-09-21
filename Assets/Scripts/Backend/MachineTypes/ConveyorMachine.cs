@@ -15,33 +15,26 @@ public class ConveyorMachine : BaseMachine
     /// </summary>
     public override void UpdateLogic()
     {
-        // Failsafe - check for any Idle items and try to move them
+        // Check for any Idle items and try to move them
         for (int i = cellData.items.Count - 1; i >= 0; i--)
         {
             ItemData item = cellData.items[i];
             if (item.state == ItemState.Idle)
             {
+                // Try to start the appropriate movement phase
                 TryStartMove(item);
             }
         }
     }
     
     /// <summary>
-    /// Handles items arriving at conveyors - check isHalfway status and start appropriate movement phase
+    /// Handles items arriving at conveyors - start Phase 1 movement for newly arrived items
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        // Check item.isHalfway to determine which phase to start
-        if (!item.isHalfway)
-        {
-            // Item just came from another machine, start Phase 1 (to halfway point)
-            TryStartMove(item);
-        }
-        else
-        {
-            // Item is at halfway point, start Phase 2 (to next full cell)
-            TryStartMove(item);
-        }
+        // When an item arrives at a conveyor (completes Phase 2), it should be isHalfway=false
+        // Immediately try to start the next movement (Phase 1 to next halfway point)
+        TryStartMove(item);
     }
     
     /// <summary>
