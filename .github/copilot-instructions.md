@@ -237,6 +237,128 @@ After any code changes, ALWAYS test these scenarios:
    - Verify recipes.json loads correctly (can → shreddedAluminum conversion)
    - Test missing or malformed JSON file handling
 
+## Unit Testing Requirements (MANDATORY FOR ALL CHECK-INS)
+
+### Test Framework Setup
+ScrapLine uses Unity's Test Framework with NUnit for comprehensive unit testing. All unit tests MUST PASS before any code can be checked in.
+
+**Test Assembly Definitions:**
+- `Assets/Tests/Runtime/ScrapLine.Tests.Runtime.asmdef` - Runtime tests (play mode)
+- `Assets/Tests/Editor/ScrapLine.Tests.Editor.asmdef` - Editor tests (edit mode)
+
+### Running Unit Tests (CRITICAL - NEVER SKIP)
+**ALL tests must pass for every check-in. NO EXCEPTIONS.**
+
+#### Command Line Test Execution (Recommended)
+```bash
+# Run ALL tests (takes 5-15 minutes, NEVER CANCEL)
+Unity -batchmode -quit -projectPath /home/runner/work/ScrapLine/ScrapLine -runTests -testPlatform PlayMode -testResults PlayModeResults.xml -logFile play_mode_tests.log
+
+# Run Editor tests only (takes 2-5 minutes)
+Unity -batchmode -quit -projectPath /home/runner/work/ScrapLine/ScrapLine -runTests -testPlatform EditMode -testResults EditModeResults.xml -logFile edit_mode_tests.log
+
+# Alternative: Run both test modes in sequence
+Unity -batchmode -quit -projectPath /home/runner/work/ScrapLine/ScrapLine -runTests -testResults AllTestResults.xml -logFile all_tests.log
+```
+
+#### Unity Editor Test Runner (Manual Testing)
+```bash
+# Open Unity Editor and use Test Runner window
+Unity -projectPath /home/runner/work/ScrapLine/ScrapLine
+# Then: Window > General > Test Runner > Run All (PlayMode and EditMode)
+```
+
+#### Quick Validation for Compilation Issues
+```bash
+# Fast syntax validation (30 seconds) - use when Unity is not available
+cd /tmp && dotnet new console -o test-compile --force && cd test-compile
+# Copy a few key C# files to check basic syntax
+cp /home/runner/work/ScrapLine/ScrapLine/Assets/Scripts/Backend/Data/FactoryDefinitions.cs .
+dotnet add package NUnit
+dotnet build
+```
+
+### Test Coverage Requirements
+**Current Test Coverage: 9/28 classes (32%) with 206 individual test methods**
+
+#### Core Data Models (COMPLETE)
+- ✅ FactoryDefinitionsTests.cs - Tests MachineDef, RecipeDef, ItemDef, UpgradeMultiplier (24 tests)
+- ✅ GameDataTests.cs - Tests ItemData, CellData, GridData, UserMachineProgress (35 tests)
+- ✅ FactoryRegistryTests.cs - Tests singleton, JSON loading, data retrieval (32 tests)
+
+#### Manager Classes (COMPLETE)  
+- ✅ CreditsManagerTests.cs - Tests credits system with mock UI components (19 tests)
+- ✅ BaseMachineTests.cs - Tests abstract machine functionality (15 tests)
+
+#### Machine Types (COMPLETE)
+- ✅ ConveyorMachineTests.cs - Tests conveyor movement and failsafe logic (15 tests)
+- ✅ SpawnerMachineTests.cs - Tests item spawning with timing simulation (22 tests)
+- ✅ SellerMachineTests.cs - Tests item selling and credit awarding (20 tests)
+- ✅ BlankCellMachineTests.cs - Tests timeout and temporary storage (24 tests)
+
+#### Still Required (IN PROGRESS)
+- 🔄 ProcessorMachineTests.cs - Complex item processing workflows
+- 🔄 MachineFactoryTests.cs - Machine instantiation patterns
+- 🔄 GameManagerTests.cs - Core game orchestration
+- 🔄 GridManagerTests.cs - Grid operations and data management
+- 🔄 UIGridManagerTests.cs - UI grid visualization
+- 🔄 SaveLoadManagerTests.cs - Game state persistence
+- 🔄 All other remaining classes...
+
+### Mandatory Pre-Commit Test Execution
+**EVERY developer MUST run these commands before committing:**
+
+```bash
+# Step 1: Run all unit tests (15-20 minutes total)
+Unity -batchmode -quit -projectPath /home/runner/work/ScrapLine/ScrapLine -runTests -testResults TestResults.xml -logFile tests.log
+
+# Step 2: Verify test results
+if grep -q 'result="Failed"' TestResults.xml; then
+    echo "❌ TESTS FAILED - Cannot commit changes"
+    cat tests.log | grep -A 5 -B 5 "Failed"
+    exit 1
+else
+    echo "✅ All tests passed - Safe to commit"
+fi
+
+# Step 3: Run JSON validation (quick safety check)
+python3 -m json.tool /home/runner/work/ScrapLine/ScrapLine/Assets/Resources/items.json > /dev/null || exit 1
+python3 -m json.tool /home/runner/work/ScrapLine/ScrapLine/Assets/Resources/machines.json > /dev/null || exit 1
+python3 -m json.tool /home/runner/work/ScrapLine/ScrapLine/Assets/Resources/recipes.json > /dev/null || exit 1
+
+echo "✅ All validations passed - Ready for commit"
+```
+
+### Test Quality Standards
+**ALL tests must meet these requirements:**
+- ✅ Use NUnit [TestFixture] and [Test] attributes
+- ✅ Follow Arrange/Act/Assert pattern with clear comments
+- ✅ Include comprehensive edge case testing (null values, invalid inputs)
+- ✅ Use mock objects for Unity dependencies (GameManager, UI components)
+- ✅ Test both success and failure scenarios
+- ✅ Include integration tests for complex workflows
+- ✅ NO placeholder code - all tests must be complete and runnable
+- ✅ Descriptive test names explaining what is being tested
+
+### Test Debugging and Troubleshooting
+```bash
+# View detailed test output for failures
+cat tests.log | grep -A 10 -B 10 "Failed\|Error"
+
+# Run specific test class only
+Unity -batchmode -quit -projectPath /home/runner/work/ScrapLine/ScrapLine -runTests -testPlatform PlayMode -testFilter "ScrapLine.Tests.FactoryRegistryTests" -logFile specific_test.log
+
+# Check test assembly compilation
+Unity -batchmode -quit -projectPath /home/runner/work/ScrapLine/ScrapLine -executeMethod CompileTestAssemblies -logFile test_compile.log
+```
+
+### Continuous Integration Requirements
+**For automated builds and CI systems:**
+- Tests must complete within 30 minutes maximum
+- Zero tolerance for test failures - build fails if ANY test fails
+- Test results must be published to TestResults.xml for CI parsing
+- Coverage reports should be generated for tracking progress
+
 ## Measured Command Timings (Validated in Current Environment)
 
 ### Actually Tested Commands and Timing
