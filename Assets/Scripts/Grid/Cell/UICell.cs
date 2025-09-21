@@ -176,7 +176,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Check if we have a machine that can be dragged
         if (!GameManager.Instance.CanStartDrag(x, y))
         {
-            Debug.Log($"Cannot start drag on cell ({x}, {y}) - no draggable machine");
             return;
         }
 
@@ -196,8 +195,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             {
                 draggedMachineDefId = cellData.machineDefId;
                 draggedMachineDirection = cellData.direction;
-                
-                Debug.Log($"Storing dragged machine data: {draggedMachineDefId}, direction: {draggedMachineDirection}");
             }
             else
             {
@@ -213,15 +210,13 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         isDragging = true;
 
-        // Create drag visual BEFORE blanking the cell so we can copy the visuals
-        Debug.Log($"Creating drag visual for machine {draggedMachineDefId} at screen position {eventData.position}");
+        // Create drag visual
         CreateDragVisual();
 
-        // Position drag visual at current mouse position immediately BEFORE blanking
+        // Position drag visual at current mouse position immediately
         if (dragVisual != null)
         {
             UpdateDragVisualPosition(eventData);
-            Debug.Log($"Drag visual created and positioned. GameObject active: {dragVisual.activeInHierarchy}");
         }
         else
         {
@@ -233,7 +228,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // This prevents phantom machine effects
         GameManager.Instance.OnCellDragStarted(x, y);
 
-        Debug.Log($"Started dragging machine from cell ({x}, {y}) - original cell is now blank");
+        Debug.Log($"Started dragging {draggedMachineDefId} from cell ({x}, {y})");
     }
     public void OnDrag(PointerEventData eventData)
     {
@@ -348,7 +343,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // We need the stored machine data to create the visual
         if (string.IsNullOrEmpty(draggedMachineDefId))
         {
-            Debug.LogError("CreateDragVisual: No machine data stored for drag visual creation");
+            Debug.LogError("CreateDragVisual: No machine data stored");
             return;
         }
 
@@ -372,16 +367,12 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             return;
         }
 
-        Debug.Log($"Creating drag visual for machine {draggedMachineDefId} in canvas: {targetCanvas.name}");
-
         // Create the drag visual container
         dragVisual = new GameObject("DragVisual");
         dragVisual.transform.SetParent(targetCanvas.transform, false);
 
-        // Add RectTransform
+        // Add RectTransform with correct anchoring for cursor following
         RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
-
-        // Use anchoring that matches the grid cells
         dragRT.anchorMin = Vector2.zero;
         dragRT.anchorMax = Vector2.zero;
         dragRT.pivot = new Vector2(0.5f, 0.5f);
@@ -396,19 +387,16 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         if (!visualsCreated)
         {
             // If visual creation failed, create fallback visual
-            Debug.LogWarning($"Failed to create visuals for machine {draggedMachineDefId}, creating fallback");
             CreateFallbackVisual();
         }
 
-        // Make it slightly transparent and ensure it's visible
+        // Make it visible and non-interactive
         CanvasGroup dragCanvasGroup = dragVisual.AddComponent<CanvasGroup>();
         dragCanvasGroup.alpha = 0.9f;
         dragCanvasGroup.blocksRaycasts = false; // Important: don't block raycasts
 
         // Make sure it renders on top of everything
         dragVisual.transform.SetAsLastSibling();
-
-        Debug.Log($"Created drag visual with size: {dragRT.sizeDelta} in canvas: {targetCanvas.name}");
     }
 
     /// <summary>
@@ -420,7 +408,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     {
         if (string.IsNullOrEmpty(draggedMachineDefId) || dragVisual == null)
         {
-            Debug.LogWarning("CreateMachineVisualFromDefinition: Missing machine data or drag visual");
             return false;
         }
 
@@ -428,11 +415,8 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         var machineDef = FactoryRegistry.Instance.GetMachine(draggedMachineDefId);
         if (machineDef == null)
         {
-            Debug.LogWarning($"CreateMachineVisualFromDefinition: Could not find machine definition for {draggedMachineDefId}");
             return false;
         }
-
-        Debug.Log($"Creating machine visual from definition: {draggedMachineDefId}");
 
         // Create a temporary MachineRenderer to generate the visual
         GameObject tempRenderer = new GameObject("TempMachineRenderer");
@@ -461,12 +445,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
                 gridManager.conveyorSharedMaterial
             );
             
-            Debug.Log($"Successfully created machine visual for {draggedMachineDefId} with direction {draggedMachineDirection}");
             return true;
         }
         else
         {
-            Debug.LogError("Could not find UIGridManager for MachineRenderer setup");
             DestroyImmediate(tempRenderer);
             return false;
         }
@@ -507,8 +489,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         textRT.anchorMax = Vector2.one;
         textRT.offsetMin = Vector2.zero;
         textRT.offsetMax = Vector2.zero;
-        
-        Debug.Log($"Created fallback visual for machine: {draggedMachineDefId}");
     }
 
     private void UpdateDragVisualPosition(PointerEventData eventData)
@@ -520,52 +500,21 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         // Get the canvas that the drag visual is in
         Canvas canvas = dragVisual.GetComponentInParent<Canvas>();
-        if (canvas == null) 
-        {
-            Debug.LogError("UpdateDragVisualPosition: Could not find canvas for drag visual");
-            return;
-        }
+        if (canvas == null) return;
 
-        // For screen space overlay canvases, we can use a simpler approach
-        if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-        {
-            // Convert screen position directly to canvas local position
-            Vector2 localPosition;
-            RectTransform canvasRT = canvas.transform as RectTransform;
+        // Convert screen position to canvas local position
+        Vector2 localPosition;
+        RectTransform canvasRT = canvas.transform as RectTransform;
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvasRT,
-                eventData.position,
-                null, // Camera is null for overlay mode
-                out localPosition))
-            {
-                dragRT.anchoredPosition = localPosition;
-                Debug.Log($"Overlay mode: Screen {eventData.position} -> Local {localPosition} (Canvas: {canvas.name})");
-            }
-            else
-            {
-                Debug.LogError($"Failed to convert screen position {eventData.position} for overlay canvas: {canvas.name}");
-            }
-        }
-        else
-        {
-            // For world space or camera space canvases
-            Vector2 localPosition;
-            RectTransform canvasRT = canvas.transform as RectTransform;
+        bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRT,
+            eventData.position,
+            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            out localPosition);
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvasRT,
-                eventData.position,
-                canvas.worldCamera,
-                out localPosition))
-            {
-                dragRT.anchoredPosition = localPosition;
-                Debug.Log($"Camera mode: Screen {eventData.position} -> Local {localPosition} (Canvas: {canvas.name}, Camera: {canvas.worldCamera?.name})");
-            }
-            else
-            {
-                Debug.LogError($"Failed to convert screen position {eventData.position} for camera canvas: {canvas.name}");
-            }
+        if (converted)
+        {
+            dragRT.anchoredPosition = localPosition;
         }
     }
 
