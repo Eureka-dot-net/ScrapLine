@@ -227,14 +227,12 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Now blank the original cell immediately (both data and visuals)
         // This prevents phantom machine effects
         GameManager.Instance.OnCellDragStarted(x, y);
-
-        Debug.Log($"Started dragging {draggedMachineDefId} from cell ({x}, {y})");
     }
     public void OnDrag(PointerEventData eventData)
     {
         if (!isDragging) return;
 
-        // Update drag visual position
+        // Update drag visual position - this should make it follow the cursor
         UpdateDragVisualPosition(eventData);
 
         // Highlight potential drop targets
@@ -264,15 +262,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
                 draggedMachineDirection
             );
 
-            if (placementSuccess)
-            {
-                Debug.Log($"Successfully placed dragged machine {draggedMachineDefId} at ({targetCell.x}, {targetCell.y})");
-            }
-            else
+            if (!placementSuccess)
             {
                 // Placement failed - restore machine to original cell
                 RestoreMachineToOriginalCell();
-                Debug.Log($"Failed to place machine at ({targetCell.x}, {targetCell.y}) - restored to original cell ({x}, {y})");
             }
         }
         else if (targetCell == this)
@@ -280,12 +273,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             // Dropped on same cell - restore machine and trigger rotation
             RestoreMachineToOriginalCell();
             GameManager.Instance.OnCellClicked(x, y);
-            Debug.Log($"Dropped machine on same cell ({x}, {y}) - rotating");
         }
         else
         {
             // Dropped outside grid - machine is deleted (no need to restore)
-            Debug.Log($"Dropped machine from ({x}, {y}) outside grid - machine deleted");
         }
 
         // Clear stored drag data
@@ -515,6 +506,11 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         if (converted)
         {
             dragRT.anchoredPosition = localPosition;
+            // Only log position updates when user is actively dragging (not on every frame)
+            if (isDragging && Time.frameCount % 30 == 0) // Log every 30 frames (~0.5 sec)
+            {
+                Debug.Log($"Drag position: Screen({eventData.position.x:F0},{eventData.position.y:F0}) -> Canvas({localPosition.x:F0},{localPosition.y:F0})");
+            }
         }
     }
 
