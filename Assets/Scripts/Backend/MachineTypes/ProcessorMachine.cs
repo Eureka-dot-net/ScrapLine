@@ -19,8 +19,10 @@ public class ProcessorMachine : BaseMachine
     {
         if (!cellData.waitingItems.Contains(item))
         {
+            // Assign stack index based on queue position
+            item.stackIndex = cellData.waitingItems.Count;
             cellData.waitingItems.Add(item);
-            Debug.Log($"Item {item.id} has been added to the waiting queue of processor {machineDef.id}. Queue size: {cellData.waitingItems.Count}");
+            Debug.Log($"Item {item.id} has been added to the waiting queue of processor {machineDef.id}. Queue size: {cellData.waitingItems.Count}, Stack index: {item.stackIndex}");
         }
     }
     
@@ -29,10 +31,13 @@ public class ProcessorMachine : BaseMachine
     /// </summary>
     public override void UpdateLogic()
     {
+        // Check for timed out waiting items first
+        CheckWaitingItemTimeouts();
+        
         // Implement pull system - if machine is idle and has waiting items, pull one
         if (cellData.machineState == MachineState.Idle && cellData.waitingItems.Count > 0)
         {
-            // Get the next item from the queue
+            // Get the next item from the queue (always the first one, which is at center)
             ItemData waitingItem = cellData.waitingItems[0];
             
             // If the item is waiting at the halfway point, the processor "pulls" it.
@@ -47,6 +52,10 @@ public class ProcessorMachine : BaseMachine
                 cellData.machineState = MachineState.Processing; 
 
                 Debug.Log($"Processor {machineDef.id} is pulling in item {waitingItem.id} from the border.");
+                
+                // Note: We don't remove the item from waitingItems here because it will be removed
+                // in OnItemArrived when it fully reaches the machine. This allows the visual
+                // system to continue tracking it during the second half of movement.
             }
         }
         
@@ -54,6 +63,89 @@ public class ProcessorMachine : BaseMachine
         if (cellData.machineState == MachineState.Processing)
         {
             CheckProcessingComplete();
+        }
+    }
+    
+    /// <summary>
+    /// Updates stack indices for all waiting items after a change in the queue
+    /// </summary>
+    private void UpdateStackIndices()
+    {
+        for (int i = 0; i < cellData.waitingItems.Count; i++)
+        {
+            cellData.waitingItems[i].stackIndex = i;
+        }
+    }
+    
+    /// <summary>
+    /// Updates visual positions for all waiting items to reflect their current stack positions
+    /// </summary>
+    private void UpdateWaitingItemVisualPositions()
+    {
+        UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+        if (gridManager == null) return;
+        
+        foreach (var item in cellData.waitingItems)
+        {
+            if (item.state == ItemState.Waiting && item.isHalfway)
+            {
+                // Force a visual update for this waiting item with its current progress
+                gridManager.UpdateItemVisualPosition(item.id, item.moveProgress,
+                    item.sourceX, item.sourceY, item.targetX, item.targetY, 
+                    UICell.Direction.Up); // Direction doesn't matter for waiting items
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Checks for items that have been waiting too long and removes them
+    /// </summary>
+    private void CheckWaitingItemTimeouts()
+    {
+        ItemMovementManager itemMovementManager = Object.FindAnyObjectByType<ItemMovementManager>();
+        if (itemMovementManager == null) return;
+        
+        float waitingTimeout = itemMovementManager.GetItemWaitingTimeout();
+        bool anyItemRemoved = false;
+        
+        for (int i = cellData.waitingItems.Count - 1; i >= 0; i--)
+        {
+            ItemData item = cellData.waitingItems[i];
+            
+            if (item.state == ItemState.Waiting && item.waitingStartTime > 0)
+            {
+                float timeWaiting = Time.time - item.waitingStartTime;
+                
+                if (timeWaiting >= waitingTimeout)
+                {
+                    Debug.Log($"Item {item.id} timed out after waiting {timeWaiting:F1}s at processor {machineDef.id} - removing");
+                    
+                    // Remove from waiting queue
+                    cellData.waitingItems.RemoveAt(i);
+                    anyItemRemoved = true;
+                    
+                    // Find and remove from source cell's items list
+                    CellData sourceCell = Object.FindAnyObjectByType<GridManager>()?.GetCellData(item.x, item.y);
+                    if (sourceCell != null)
+                    {
+                        sourceCell.items.Remove(item);
+                    }
+                    
+                    // Destroy visual item
+                    UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+                    if (gridManager != null && gridManager.HasVisualItem(item.id))
+                    {
+                        gridManager.DestroyVisualItem(item.id);
+                    }
+                }
+            }
+        }
+        
+        // Update stack indices if any items were removed
+        if (anyItemRemoved)
+        {
+            UpdateStackIndices();
+            UpdateWaitingItemVisualPositions();
         }
     }
     
@@ -194,6 +286,15 @@ public class ProcessorMachine : BaseMachine
         ItemData itemToProcess = cellData.waitingItems.Find(i => i.id == item.id);
         if (itemToProcess != null)
         {
+            // Remove the item from waiting queue
+            cellData.waitingItems.Remove(itemToProcess);
+            
+            // Update stack indices for remaining items
+            UpdateStackIndices();
+            
+            // Update visual positions of all remaining waiting items
+            UpdateWaitingItemVisualPositions();
+            
             StartProcessing(itemToProcess);
         }
         else

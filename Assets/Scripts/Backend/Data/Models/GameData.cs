@@ -40,6 +40,8 @@ public class ItemData
     public float waitingStartTime;
 
     public bool isHalfway = false; // Flag to indicate if the item is halfway in its movement
+    
+    public int stackIndex = 0; // Index in the waiting stack (0 = center, 1 = left, 2 = right, 3 = left2, etc.)
 
 }
 

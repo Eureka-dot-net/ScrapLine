@@ -370,7 +370,7 @@ public class UIGridManager : MonoBehaviour
             SetItemSprite(newItem, itemType);
         }
         visualItems[itemId] = newItem;
-        Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/3 of cell size {cellSize})");
+        Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/2 of cell size {cellSize})");
     }
 
     private void SetItemSprite(GameObject itemObject, string itemType)
@@ -457,13 +457,83 @@ public class UIGridManager : MonoBehaviour
         Vector3 startPos = startSpawnPoint.position;
         Vector3 endPos = endSpawnPoint.position;
 
-        // Interpolate position
-        Vector3 currentPos = Vector3.Lerp(startPos, endPos, progress);
-        item.transform.position = currentPos;
+        // Check if this item is waiting and should be stacked
+        Vector3 targetPos = Vector3.Lerp(startPos, endPos, progress);
+        
+        // If the item is at the halfway point (progress 0.5) and moving to a processor, apply stacking
+        if (progress >= 0.5f && endCell.GetComponent<UICell>() != null)
+        {
+            CellData endCellData = GetCellData(endX, endY);
+            if (endCellData != null && endCellData.machine is ProcessorMachine)
+            {
+                // Find the item data to get its stack index
+                ItemData itemData = FindItemDataById(itemId, endCellData);
+                if (itemData != null && itemData.state == ItemState.Waiting)
+                {
+                    Vector3 stackOffset = CalculateStackOffset(itemData.stackIndex, endCell);
+                    targetPos += stackOffset;
+                }
+            }
+        }
+
+        // Set the final position
+        item.transform.position = targetPos;
 
         // Solution 1: Items always stay in grid hierarchy - no more parent switching!
         // The separate rendering layers ensure proper visual order without complex parent handovers
         //Debug.Log($"Item {itemId} progress: {progress} - staying in grid hierarchy for consistent rendering");
+    }
+
+    /// <summary>
+    /// Finds item data by ID in the given cell's waiting items
+    /// </summary>
+    private ItemData FindItemDataById(string itemId, CellData cellData)
+    {
+        foreach (var item in cellData.waitingItems)
+        {
+            if (item.id == itemId)
+                return item;
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Calculates the visual offset for stacking items based on their stack index
+    /// </summary>
+    private Vector3 CalculateStackOffset(int stackIndex, UICell cell)
+    {
+        if (stackIndex == 0)
+            return Vector3.zero; // Center item
+            
+        Vector2 cellSize = GetCellSize();
+        float itemSize = cellSize.x / 2f; // Items are 1/2 of cell size (corrected from 1/3)
+        float maxStackOffset = (cellSize.x / 2f) - (itemSize / 2f); // Don't go beyond cell boundary
+        
+        // Alternate left and right: 1=left, 2=right, 3=left2, 4=right2, etc.
+        bool isLeft = (stackIndex % 2 == 1);
+        int stackLevel = (stackIndex + 1) / 2; // How far from center (1, 2, 3...)
+        
+        // Use much smaller spacing - just a few pixels between items
+        float smallSpacing = itemSize * 0.15f; // 15% of item size for minimal spacing
+        float requestedOffset = stackLevel * smallSpacing;
+        
+        // If the requested offset would go beyond boundaries, stack items on top of each other
+        float offsetDistance;
+        if (requestedOffset > maxStackOffset)
+        {
+            // Items that can't fit horizontally stay at max boundary (stacked visually)
+            offsetDistance = maxStackOffset;
+        }
+        else
+        {
+            offsetDistance = requestedOffset;
+        }
+        
+        float xOffset = isLeft ? -offsetDistance : offsetDistance;
+        
+        Debug.Log($"Stack index {stackIndex}: isLeft={isLeft}, level={stackLevel}, requested={requestedOffset:F1}, actual offset=({xOffset:F1}, 0), itemSize={itemSize}, maxOffset={maxStackOffset}");
+        
+        return new Vector3(xOffset, 0, 0);
     }
 
     public RectTransform GetBordersContainer()
