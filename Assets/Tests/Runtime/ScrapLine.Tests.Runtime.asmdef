@@ -2,6 +2,7 @@
     "name": "ScrapLine.Tests.Runtime",
     "rootNamespace": "ScrapLine.Tests",
     "references": [
+        "ScrapLine",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono"
