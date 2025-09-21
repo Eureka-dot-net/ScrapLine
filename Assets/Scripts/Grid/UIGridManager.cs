@@ -423,16 +423,6 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
-    public bool HasVisualItem(string itemId)
-    {
-        return visualItems.ContainsKey(itemId);
-    }
-
-    public RectTransform GetItemsContainer()
-    {
-        return itemsContainer;
-    }
-
     // Helper methods for drag-drop manager
     public Vector2 GetCellSize()
     {
@@ -603,52 +593,6 @@ public class UIGridManager : MonoBehaviour
     {
         Debug.Log($"GetItemsContainer() called - returning: {(itemsContainer != null ? itemsContainer.name : "NULL")}");
         return itemsContainer;
-    }
-
-    public Vector2 GetCellSize()
-    {
-        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
-        Vector2 cellSize = layout != null ? layout.cellSize : Vector2.zero;
-        Debug.Log($"GetCellSize() returning: {cellSize}");
-        return cellSize;
-    }
-
-    public Vector3 GetCellWorldPosition(int x, int y)
-    {
-        // Always use calculated position to ensure accuracy during initialization
-        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
-        if (layout != null && gridData != null)
-        {
-            Vector2 cellSize = layout.cellSize;
-            Vector2 spacing = layout.spacing;
-            
-            // Calculate position within grid (using grid coordinates)
-            float xPos = x * (cellSize.x + spacing.x);
-            float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
-            
-            // Get grid panel's world position and add offset
-            Vector3 gridWorldPos = gridPanel.transform.position;
-            Vector3 calculatedPos = new Vector3(
-                gridWorldPos.x + xPos - (gridData.width * (cellSize.x + spacing.x)) / 2 + cellSize.x / 2,
-                gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
-                gridWorldPos.z
-            );
-            
-            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated: {calculatedPos} (cellSize: {cellSize}, spacing: {spacing})");
-            return calculatedPos;
-        }
-
-        // Fallback to cell transform if grid layout calculation fails
-        UICell cell = GetCell(x, y);
-        if (cell != null)
-        {
-            Vector3 position = cell.transform.position;
-            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform fallback: {position}");
-            return position;
-        }
-        
-        Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
-        return Vector3.zero;
     }
 
     public CellData GetCellData(int x, int y)

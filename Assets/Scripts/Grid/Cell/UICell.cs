@@ -195,7 +195,7 @@ public class UICell : MonoBehaviour
 
     private string GetMachineDefId()
     {
-        var gridManager = FindFirstObjectByType<UIGridManager>();
+        var gridManager = Object.FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {
             var cellData = gridManager.GetCellData(x, y);

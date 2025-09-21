@@ -25,8 +25,8 @@ public class GameManager : MonoBehaviour
     [Tooltip("Machine placement and rotation manager")]
     public MachineManager machineManager;
     
-    [Tooltip("Drag and drop interaction manager")]
-    public MachineDragDropManager dragDropManager;
+    [Tooltip("Machine input and interaction manager")]
+    public MachineInputManager inputManager;
     
     [Tooltip("Item movement processing manager")]
     public ItemMovementManager itemMovementManager;
@@ -85,15 +85,15 @@ public class GameManager : MonoBehaviour
         if (machineManager == null)
             machineManager = GetComponent<MachineManager>() ?? gameObject.AddComponent<MachineManager>();
             
-        if (dragDropManager == null)
-            dragDropManager = GetComponent<MachineDragDropManager>() ?? gameObject.AddComponent<MachineDragDropManager>();
+        if (inputManager == null)
+            inputManager = GetComponent<MachineInputManager>() ?? gameObject.AddComponent<MachineInputManager>();
             
         if (itemMovementManager == null)
             itemMovementManager = GetComponent<ItemMovementManager>() ?? gameObject.AddComponent<ItemMovementManager>();
 
         // Find the UI grid manager
         if (activeGridManager == null)
-            activeGridManager = FindAnyObjectByType<UIGridManager>();
+            activeGridManager = Object.FindAnyObjectByType<UIGridManager>();
 
         // Initialize resource manager first
         resourceManager.Initialize();
@@ -105,7 +105,7 @@ public class GameManager : MonoBehaviour
         machineManager.Initialize(creditsManager, gridManager, activeGridManager);
         itemMovementManager.Initialize(gridManager, activeGridManager);
         
-        // Initialize drag-drop manager - no specific initialization needed as it finds references on Start
+        // Initialize input manager - no specific initialization needed as it finds references on Start
     }
 
     /// <summary>

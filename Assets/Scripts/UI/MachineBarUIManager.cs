@@ -24,7 +24,7 @@ public class MachineBarUIManager : MonoBehaviour
     void Start()
     {
         // Get reference to grid manager
-        gridManager = FindAnyObjectByType<UIGridManager>();
+        gridManager = Object.FindAnyObjectByType<UIGridManager>();
     }
 
     public void InitBar()

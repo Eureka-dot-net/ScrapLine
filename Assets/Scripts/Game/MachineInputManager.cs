@@ -4,10 +4,10 @@ using UnityEngine.UI;
 using static UICell;
 
 /// <summary>
-/// Manages drag-and-drop functionality for machine placement and movement.
+/// Manages all machine input interactions including clicks, drags, and placement.
 /// Handles both desktop (mouse) and mobile (touch) input with visual feedback.
 /// </summary>
-public class MachineDragDropManager : MonoBehaviour
+public class MachineInputManager : MonoBehaviour
 {
     [Header("Configuration")]
     public DragDropSettings settings;
@@ -51,7 +51,7 @@ public class MachineDragDropManager : MonoBehaviour
         
         // Find UI camera
         uiCamera = Camera.main;
-        Canvas[] canvases = FindObjectsOfType<Canvas>();
+        Canvas[] canvases = Object.FindObjectsOfType<Canvas>();
         foreach (Canvas canvas in canvases)
         {
             if (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera != null)

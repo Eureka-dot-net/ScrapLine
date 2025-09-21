@@ -70,7 +70,7 @@ public class SystemValidator : MonoBehaviour
     {
         var result = new ValidationResult { testName = "Machine Bar Dynamic Loading" };
         
-        var machineBar = FindAnyObjectByType<MachineBarUIManager>();
+        var machineBar = Object.FindAnyObjectByType<MachineBarUIManager>();
         if (machineBar != null)
         {
             result.passed = true;
@@ -89,7 +89,7 @@ public class SystemValidator : MonoBehaviour
     {
         var result = new ValidationResult { testName = "Grid Highlighting System" };
         
-        var gridManager = FindAnyObjectByType<UIGridManager>();
+        var gridManager = Object.FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
             // Check if highlighting methods exist
