@@ -25,15 +25,11 @@ public class GameManager : MonoBehaviour
     [Tooltip("Machine placement and rotation manager")]
     public MachineManager machineManager;
     
-    [Tooltip("Machine input and interaction manager")]
-    public MachineInputManager inputManager;
+    [Tooltip("Drag-and-drop functionality for machines")]
+    public MachineDragDropManager dragDropManager;
     
     [Tooltip("Item movement processing manager")]
     public ItemMovementManager itemMovementManager;
-
-    [Header("Game Configuration")]
-    [Tooltip("Current game interaction mode")]
-    public GameMode currentGameMode = GameMode.Build;
 
     [Header("Legacy Compatibility")]
     [Tooltip("Legacy field for backward compatibility - use GetCurrentGrid() instead")]
@@ -85,15 +81,15 @@ public class GameManager : MonoBehaviour
         if (machineManager == null)
             machineManager = GetComponent<MachineManager>() ?? gameObject.AddComponent<MachineManager>();
             
-        if (inputManager == null)
-            inputManager = GetComponent<MachineInputManager>() ?? gameObject.AddComponent<MachineInputManager>();
+        if (dragDropManager == null)
+            dragDropManager = GetComponent<MachineDragDropManager>() ?? gameObject.AddComponent<MachineDragDropManager>();
             
         if (itemMovementManager == null)
             itemMovementManager = GetComponent<ItemMovementManager>() ?? gameObject.AddComponent<ItemMovementManager>();
 
         // Find the UI grid manager
         if (activeGridManager == null)
-            activeGridManager = Object.FindAnyObjectByType<UIGridManager>();
+            activeGridManager = FindAnyObjectByType<UIGridManager>();
 
         // Initialize resource manager first
         resourceManager.Initialize();
@@ -104,8 +100,6 @@ public class GameManager : MonoBehaviour
         saveLoadManager.Initialize(gridManager, creditsManager);
         machineManager.Initialize(creditsManager, gridManager, activeGridManager);
         itemMovementManager.Initialize(gridManager, activeGridManager);
-        
-        // Initialize input manager - no specific initialization needed as it finds references on Start
     }
 
     /// <summary>
@@ -188,6 +182,16 @@ public class GameManager : MonoBehaviour
     public GridData GetCurrentGrid()
     {
         return gridManager.GetCurrentGrid();
+    }
+
+    /// <summary>
+    /// Handle cell click events
+    /// </summary>
+    /// <param name="x">X coordinate</param>
+    /// <param name="y">Y coordinate</param>
+    public void OnCellClicked(int x, int y)
+    {
+        machineManager.OnCellClicked(x, y);
     }
 
     /// <summary>

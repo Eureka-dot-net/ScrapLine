@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using static UICell;
 
 public class UIGridManager : MonoBehaviour
@@ -251,42 +252,52 @@ public class UIGridManager : MonoBehaviour
         UICell cell = GetCell(x, y);
         if (cell == null) return;
 
-        // Create or get highlight overlay
-        Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
+        // Use a highlight in the BuildingsContainer (top layer) for proper layering
+        string highlightName = $"Highlight_{x}_{y}";
+        Transform existingHighlight = buildingsContainer.Find(highlightName);
 
         if (highlight)
         {
-            if (highlightOverlay == null)
+            if (existingHighlight == null)
             {
-                // Create highlight overlay
-                GameObject overlay = new GameObject("HighlightOverlay");
-                overlay.transform.SetParent(cell.transform, false);
+                // Create highlight overlay in BuildingsContainer (top layer)
+                GameObject overlay = new GameObject(highlightName);
+                overlay.transform.SetParent(buildingsContainer, false);
 
                 Image overlayImage = overlay.AddComponent<Image>();
                 overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
 
-                // Make it fill the cell
+                // Position it over the specific cell
                 RectTransform rt = overlay.GetComponent<RectTransform>();
                 rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                rt.anchoredPosition = Vector2.zero;
-                rt.sizeDelta = Vector2.zero;
+                rt.anchorMax = Vector2.zero;
+                rt.pivot = Vector2.zero;
+                
+                // Calculate position and size based on cell
+                Vector2 cellSize = GetCellSize();
+                Vector3 cellWorldPos = GetCellWorldPosition(x, y);
+                
+                // Convert world position to local position in BuildingsContainer
+                Vector2 localPos;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    buildingsContainer, Camera.main.WorldToScreenPoint(cellWorldPos), Camera.main, out localPos);
+                
+                rt.anchoredPosition = localPos;
+                rt.sizeDelta = cellSize;
 
-                // Put it on top but behind any items
-                overlay.transform.SetSiblingIndex(cell.transform.childCount - 1);
+                // Make sure it doesn't block clicks
+                overlayImage.raycastTarget = false;
             }
             else
             {
-                highlightOverlay.gameObject.SetActive(true);
+                existingHighlight.gameObject.SetActive(true);
             }
         }
         else
         {
-            if (highlightOverlay != null)
+            if (existingHighlight != null)
             {
-                highlightOverlay.gameObject.SetActive(false);
+                existingHighlight.gameObject.SetActive(false);
             }
         }
     }
@@ -296,6 +307,9 @@ public class UIGridManager : MonoBehaviour
         // Get the cell data
         CellData cellData = GetCellData(x, y);
         if (cellData == null) return false;
+
+        // IMPORTANT: Only highlight empty/blank cells
+        if (cellData.cellType != CellType.Blank) return false;
 
         // Check if machine's grid placement rules allow this cell
         foreach (string placement in machineDef.gridPlacement)
@@ -612,6 +626,47 @@ public class UIGridManager : MonoBehaviour
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// Setup EventTrigger for drag-and-drop functionality
+    /// </summary>
+    private void SetupDragAndDropEventTrigger()
+    {
+        // Get or add EventTrigger component to grid panel
+        EventTrigger eventTrigger = gridPanel.GetComponent<EventTrigger>();
+        if (eventTrigger == null)
+        {
+            eventTrigger = gridPanel.gameObject.AddComponent<EventTrigger>();
+        }
+
+        // Get the drag-drop manager from GameManager
+        MachineDragDropManager dragDropManager = GameManager.Instance.dragDropManager;
+        if (dragDropManager == null)
+        {
+            Debug.LogWarning("MachineDragDropManager not found on GameManager!");
+            return;
+        }
+
+        // Add BeginDrag event
+        EventTrigger.Entry beginDragEntry = new EventTrigger.Entry();
+        beginDragEntry.eventID = EventTriggerType.BeginDrag;
+        beginDragEntry.callback.AddListener((data) => { dragDropManager.OnBeginDrag((PointerEventData)data); });
+        eventTrigger.triggers.Add(beginDragEntry);
+
+        // Add Drag event
+        EventTrigger.Entry dragEntry = new EventTrigger.Entry();
+        dragEntry.eventID = EventTriggerType.Drag;
+        dragEntry.callback.AddListener((data) => { dragDropManager.OnDrag((PointerEventData)data); });
+        eventTrigger.triggers.Add(dragEntry);
+
+        // Add EndDrag event
+        EventTrigger.Entry endDragEntry = new EventTrigger.Entry();
+        endDragEntry.eventID = EventTriggerType.EndDrag;
+        endDragEntry.callback.AddListener((data) => { dragDropManager.OnEndDrag((PointerEventData)data); });
+        eventTrigger.triggers.Add(endDragEntry);
+
+        Debug.Log("Drag-and-drop EventTrigger setup completed on grid panel.");
     }
 
 }
