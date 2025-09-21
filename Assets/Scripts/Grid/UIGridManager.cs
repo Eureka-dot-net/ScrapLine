@@ -370,7 +370,7 @@ public class UIGridManager : MonoBehaviour
             SetItemSprite(newItem, itemType);
         }
         visualItems[itemId] = newItem;
-        Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/3 of cell size {cellSize})");
+        Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/2 of cell size {cellSize})");
     }
 
     private void SetItemSprite(GameObject itemObject, string itemType)
@@ -506,17 +506,32 @@ public class UIGridManager : MonoBehaviour
             return Vector3.zero; // Center item
             
         Vector2 cellSize = GetCellSize();
-        float itemSize = cellSize.x / 3f; // Items are 1/3 of cell size
+        float itemSize = cellSize.x / 2f; // Items are 1/2 of cell size (corrected from 1/3)
         float maxStackOffset = (cellSize.x / 2f) - (itemSize / 2f); // Don't go beyond cell boundary
         
         // Alternate left and right: 1=left, 2=right, 3=left2, 4=right2, etc.
         bool isLeft = (stackIndex % 2 == 1);
         int stackLevel = (stackIndex + 1) / 2; // How far from center (1, 2, 3...)
         
-        float offsetDistance = Mathf.Min(stackLevel * (itemSize * 0.8f), maxStackOffset);
+        // Use much smaller spacing - just a few pixels between items
+        float smallSpacing = itemSize * 0.15f; // 15% of item size for minimal spacing
+        float requestedOffset = stackLevel * smallSpacing;
+        
+        // If the requested offset would go beyond boundaries, stack items on top of each other
+        float offsetDistance;
+        if (requestedOffset > maxStackOffset)
+        {
+            // Items that can't fit horizontally stay at max boundary (stacked visually)
+            offsetDistance = maxStackOffset;
+        }
+        else
+        {
+            offsetDistance = requestedOffset;
+        }
+        
         float xOffset = isLeft ? -offsetDistance : offsetDistance;
         
-        Debug.Log($"Stack index {stackIndex}: isLeft={isLeft}, level={stackLevel}, offset=({xOffset}, 0)");
+        Debug.Log($"Stack index {stackIndex}: isLeft={isLeft}, level={stackLevel}, requested={requestedOffset:F1}, actual offset=({xOffset:F1}, 0), itemSize={itemSize}, maxOffset={maxStackOffset}");
         
         return new Vector3(xOffset, 0, 0);
     }
