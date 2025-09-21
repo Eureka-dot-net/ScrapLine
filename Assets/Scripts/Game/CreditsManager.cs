@@ -10,6 +10,10 @@ public class CreditsManager : MonoBehaviour
     [Tooltip("Starting credits amount for new games")]
     public int startingCredits = 2000;
     
+    [Tooltip("Percentage of machine cost refunded when dropped outside grid (0.0 to 1.0)")]
+    [Range(0f, 1f)]
+    public float machineRefundPercentage = 0.8f;
+    
     [Header("Debug")]
     [Tooltip("Enable debug logs for credits operations")]
     public bool enableCreditsLogs = true;
@@ -96,6 +100,23 @@ public class CreditsManager : MonoBehaviour
     public bool CanAfford(int amount)
     {
         return currentCredits >= amount;
+    }
+
+    /// <summary>
+    /// Refund credits for a machine that was dropped outside the grid
+    /// </summary>
+    /// <param name="machineCost">Original cost of the machine</param>
+    /// <returns>Amount refunded</returns>
+    public int RefundMachine(int machineCost)
+    {
+        int refundAmount = Mathf.RoundToInt(machineCost * machineRefundPercentage);
+        currentCredits += refundAmount;
+        
+        if (enableCreditsLogs)
+            Debug.Log($"Refunded {refundAmount} credits ({machineRefundPercentage:P0} of {machineCost}) for machine disposal");
+        
+        UpdateCreditsDisplay();
+        return refundAmount;
     }
 
     /// <summary>

@@ -331,128 +331,80 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     private void CreateDragVisual()
     {
-        // We need the stored machine data to create the visual
         if (string.IsNullOrEmpty(draggedMachineDefId))
         {
             Debug.LogError("CreateDragVisual: No machine data stored");
             return;
         }
 
-        // Find the proper UI Canvas by looking for the gridPanel's canvas
-        Canvas targetCanvas = null;
-        var gridManager = FindFirstObjectByType<UIGridManager>();
-        if (gridManager != null && gridManager.gridPanel != null)
-        {
-            targetCanvas = gridManager.gridPanel.GetComponentInParent<Canvas>();
-        }
-        
-        // Fallback to finding any Canvas if grid canvas not found
-        if (targetCanvas == null)
-        {
-            targetCanvas = FindObjectOfType<Canvas>();
-        }
+        // Find the UI Canvas
+        Canvas targetCanvas = FindFirstObjectByType<UIGridManager>()?.gridPanel?.GetComponentInParent<Canvas>() 
+                             ?? FindObjectOfType<Canvas>();
         
         if (targetCanvas == null)
         {
-            Debug.LogError("Could not find any Canvas for drag visual");
+            Debug.LogError("Could not find Canvas for drag visual");
             return;
         }
 
-        // Create the drag visual container
+        // Create drag visual container with proper setup
         dragVisual = new GameObject("DragVisual");
         dragVisual.transform.SetParent(targetCanvas.transform, false);
 
-        // Add RectTransform with correct anchoring for cursor following
         RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
-        // Use center anchoring for flexibility
-        dragRT.anchorMin = new Vector2(0.5f, 0.5f);
+        dragRT.anchorMin = new Vector2(0.5f, 0.5f);  // Center anchoring for smooth positioning
         dragRT.anchorMax = new Vector2(0.5f, 0.5f);
         dragRT.pivot = new Vector2(0.5f, 0.5f);
+        dragRT.sizeDelta = GetComponent<RectTransform>().sizeDelta;
 
-        // Size it similar to a grid cell
-        Vector2 cellSize = GetComponent<RectTransform>().sizeDelta;
-        dragRT.sizeDelta = cellSize;
-
-        // Create the machine visual using the same logic as SetCellType
-        bool visualsCreated = CreateMachineVisualFromDefinition();
-        
-        if (!visualsCreated)
+        // Create machine visual (with fallback if needed)
+        if (!CreateMachineVisualFromDefinition())
         {
-            // If visual creation failed, create fallback visual
             CreateFallbackVisual();
         }
 
-        // Make it visible and non-interactive
+        // Configure visual appearance
         CanvasGroup dragCanvasGroup = dragVisual.AddComponent<CanvasGroup>();
         dragCanvasGroup.alpha = 0.9f;
-        dragCanvasGroup.blocksRaycasts = false; // Important: don't block raycasts
-
-        // Make sure it renders on top of everything
+        dragCanvasGroup.blocksRaycasts = false;
         dragVisual.transform.SetAsLastSibling();
     }
 
     /// <summary>
-    /// Creates machine visuals directly from the machine definition (not copying from existing renderer)
-    /// This is used for drag visuals since the original cell renderer gets destroyed when blanking
+    /// Creates machine visuals from definition for drag display
     /// </summary>
-    /// <returns>True if visuals were successfully created, false otherwise</returns>
     private bool CreateMachineVisualFromDefinition()
     {
         if (string.IsNullOrEmpty(draggedMachineDefId) || dragVisual == null)
-        {
-            Debug.LogError("CreateMachineVisualFromDefinition: Missing machine ID or drag visual");
             return false;
-        }
 
-        // Get the machine definition
         var machineDef = FactoryRegistry.Instance.GetMachine(draggedMachineDefId);
         if (machineDef == null)
-        {
-            Debug.LogError($"CreateMachineVisualFromDefinition: Could not find machine definition for {draggedMachineDefId}");
             return false;
-        }
 
-        Debug.Log($"CreateMachineVisualFromDefinition: Creating visual for {draggedMachineDefId} with sprites: main={machineDef.sprite}, building={machineDef.buildingSprite}, border={machineDef.borderSprite}");
-
-        // Create a temporary MachineRenderer to generate the visual
+        // Create MachineRenderer in menu mode (keeps sprites local)
         GameObject tempRenderer = new GameObject("TempMachineRenderer");
         tempRenderer.transform.SetParent(dragVisual.transform, false);
         
-        // Add RectTransform to match cell size
         RectTransform tempRT = tempRenderer.AddComponent<RectTransform>();
         tempRT.anchorMin = Vector2.zero;
         tempRT.anchorMax = Vector2.one;
         tempRT.offsetMin = Vector2.zero;
         tempRT.offsetMax = Vector2.zero;
 
-        // Add MachineRenderer component and set it up
-        MachineRenderer tempMachineRenderer = tempRenderer.AddComponent<MachineRenderer>();
+        MachineRenderer machineRenderer = tempRenderer.AddComponent<MachineRenderer>();
+        machineRenderer.isInMenu = true;  // Keep sprites local, don't use grid containers
         
-        // Set isInMenu = true so the renderer keeps all sprites locally instead of using separated containers
-        tempMachineRenderer.isInMenu = true;
-        
-        // Find the grid manager to get shared resources
         var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {
-            tempMachineRenderer.Setup(
-                machineDef,
-                draggedMachineDirection,
-                gridManager,
-                x, y, // Use current cell coordinates
-                gridManager.conveyorSharedTexture,
-                gridManager.conveyorSharedMaterial
-            );
-            
-            Debug.Log($"CreateMachineVisualFromDefinition: Successfully created visual for {draggedMachineDefId}");
+            machineRenderer.Setup(machineDef, draggedMachineDirection, gridManager, x, y,
+                                gridManager.conveyorSharedTexture, gridManager.conveyorSharedMaterial);
             return true;
         }
-        else
-        {
-            Debug.LogError("CreateMachineVisualFromDefinition: Could not find UIGridManager");
-            DestroyImmediate(tempRenderer);
-            return false;
-        }
+        
+        DestroyImmediate(tempRenderer);
+        return false;
     }
 
     /// <summary>
