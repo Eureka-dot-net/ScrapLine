@@ -34,6 +34,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     private GameObject dragVisual;
     private Canvas dragCanvas;
 
+    // Store data of the machine being dragged
+    private string draggedMachineDefId;
+    private Direction draggedMachineDirection;
+
     public enum CellType { Blank, Machine }
     public enum CellRole { Grid, Top, Bottom }
     public enum Direction { Up, Right, Down, Left }
@@ -183,10 +187,38 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             return;
         }
 
-        isDragging = true;
-        GameManager.Instance.OnCellDragStarted(x, y);
+        // Store the machine data before blanking the cell
+        var gridManager = FindFirstObjectByType<UIGridManager>();
+        if (gridManager != null)
+        {
+            var cellData = gridManager.GetCellData(x, y);
+            if (cellData != null && cellData.cellType == CellType.Machine)
+            {
+                draggedMachineDefId = cellData.machineDefId;
+                draggedMachineDirection = cellData.direction;
+                
+                Debug.Log($"Storing dragged machine data: {draggedMachineDefId}, direction: {draggedMachineDirection}");
+            }
+            else
+            {
+                Debug.LogError($"Failed to get machine data for cell ({x}, {y})");
+                return;
+            }
+        }
+        else
+        {
+            Debug.LogError("Could not find UIGridManager for storing machine data");
+            return;
+        }
 
+        isDragging = true;
+
+        // Create drag visual BEFORE blanking the cell so we can copy the visuals
         CreateDragVisual();
+
+        // Now blank the original cell immediately (both data and visuals)
+        // This prevents phantom machine effects
+        GameManager.Instance.OnCellDragStarted(x, y);
 
         // Position drag visual at current mouse position immediately
         if (dragVisual != null)
@@ -194,11 +226,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             UpdateDragVisualPosition(eventData);
         }
 
-        // Make the ORIGINAL cell semi-transparent, not the drag visual
-        SetOriginalCellAlpha(0.3f);
-
-        Debug.Log($"Started dragging machine from cell ({x}, {y})");
-        UnityEditor.EditorApplication.isPaused = true;
+        Debug.Log($"Started dragging machine from cell ({x}, {y}) - original cell is now blank");
     }
     public void OnDrag(PointerEventData eventData)
     {
@@ -221,32 +249,68 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         ClearDragVisual();
         ClearDropTargetHighlights();
 
-        // Restore original cell visibility
-        SetOriginalCellAlpha(1.0f);
-
         // Determine where we dropped
         UICell targetCell = GetCellUnderPointer(eventData);
 
-        if (targetCell != null)
+        if (targetCell != null && targetCell != this)
         {
-            // Dropped on another cell - attempt to move machine
-            if (targetCell != this) // Don't move to same cell
+            // Dropped on another cell - attempt to place machine using stored data
+            bool placementSuccess = GameManager.Instance.PlaceDraggedMachine(
+                targetCell.x, 
+                targetCell.y, 
+                draggedMachineDefId, 
+                draggedMachineDirection
+            );
+
+            if (placementSuccess)
             {
-                GameManager.Instance.OnCellDropped(x, y, targetCell.x, targetCell.y);
-                Debug.Log($"Dropped machine from ({x}, {y}) to ({targetCell.x}, {targetCell.y})");
+                Debug.Log($"Successfully placed dragged machine {draggedMachineDefId} at ({targetCell.x}, {targetCell.y})");
             }
             else
             {
-                // Dropped on same cell - trigger rotation
-                GameManager.Instance.OnCellClicked(x, y);
-                Debug.Log($"Dropped machine on same cell ({x}, {y}) - rotating");
+                // Placement failed - restore machine to original cell
+                RestoreMachineToOriginalCell();
+                Debug.Log($"Failed to place machine at ({targetCell.x}, {targetCell.y}) - restored to original cell ({x}, {y})");
             }
+        }
+        else if (targetCell == this)
+        {
+            // Dropped on same cell - restore machine and trigger rotation
+            RestoreMachineToOriginalCell();
+            GameManager.Instance.OnCellClicked(x, y);
+            Debug.Log($"Dropped machine on same cell ({x}, {y}) - rotating");
         }
         else
         {
-            // Dropped outside grid - delete machine
-            GameManager.Instance.OnMachineDraggedOutsideGrid(x, y);
-            Debug.Log($"Dropped machine from ({x}, {y}) outside grid - deleting");
+            // Dropped outside grid - machine is deleted (no need to restore)
+            Debug.Log($"Dropped machine from ({x}, {y}) outside grid - machine deleted");
+        }
+
+        // Clear stored drag data
+        draggedMachineDefId = null;
+        draggedMachineDirection = Direction.Up;
+    }
+
+    /// <summary>
+    /// Restore the dragged machine to its original cell
+    /// Used when drag operation is cancelled or placement fails
+    /// </summary>
+    private void RestoreMachineToOriginalCell()
+    {
+        if (string.IsNullOrEmpty(draggedMachineDefId))
+        {
+            Debug.LogWarning($"Cannot restore machine to cell ({x}, {y}) - no stored machine data");
+            return;
+        }
+
+        bool restoreSuccess = GameManager.Instance.PlaceDraggedMachine(x, y, draggedMachineDefId, draggedMachineDirection);
+        if (!restoreSuccess)
+        {
+            Debug.LogError($"Failed to restore machine {draggedMachineDefId} to original cell ({x}, {y})");
+        }
+        else
+        {
+            Debug.Log($"Restored machine {draggedMachineDefId} to original cell ({x}, {y})");
         }
     }
 
@@ -320,8 +384,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
                 Image copyImage = imageObj.AddComponent<Image>();
                 copyImage.sprite = sourceImage.sprite;
-                copyImage.color = Color.red;
-               // copyImage.color = sourceImage.color;
+                copyImage.color = sourceImage.color;
                 copyImage.material = sourceImage.material;
 
                 // Copy the RectTransform properties

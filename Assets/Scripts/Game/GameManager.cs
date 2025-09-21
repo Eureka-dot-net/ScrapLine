@@ -245,6 +245,19 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Place a dragged machine at the target location
+    /// </summary>
+    /// <param name="x">Target X coordinate</param>
+    /// <param name="y">Target Y coordinate</param>
+    /// <param name="machineDefId">Machine definition ID to place</param>
+    /// <param name="direction">Direction of the machine</param>
+    /// <returns>True if placement was successful, false otherwise</returns>
+    public bool PlaceDraggedMachine(int x, int y, string machineDefId, UICell.Direction direction)
+    {
+        return machineManager.PlaceDraggedMachine(x, y, machineDefId, direction);
+    }
+
+    /// <summary>
     /// Set the selected machine for placement
     /// </summary>
     /// <param name="machine">Machine definition to select</param>
