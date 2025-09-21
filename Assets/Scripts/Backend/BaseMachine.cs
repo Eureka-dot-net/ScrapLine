@@ -76,6 +76,9 @@ public abstract class BaseMachine
         cellData.waitingItems.Add(item);
         item.state = ItemState.Waiting;
         item.waitingStartTime = Time.time;
+        // Reset movement-related state when item enters waiting queue
+        item.moveProgress = 0f;
+        item.isHalfway = false; // Item is now stationary in the queue
     }
 
     /// <summary>
