@@ -146,7 +146,7 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-            "baseProcessTime": 100,
+            "baseProcessTime": 10,
             "upgradeMultipliers": [
                 {
                     "multiplier": 0.8,

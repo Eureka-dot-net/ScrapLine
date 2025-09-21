@@ -97,7 +97,7 @@ public class ItemMovementManager : MonoBehaviour
                 Debug.Log($"Item {item.id} is now waiting at the halfway point.");
             }
         }
-         if (item.moveProgress >= 1.0f)
+        if (item.moveProgress >= 1.0f)
         {
             CompleteItemMovement(item, sourceCell);
         }
@@ -129,6 +129,10 @@ public class ItemMovementManager : MonoBehaviour
             }
             return;
         }
+        if (activeGridManager.HasVisualItem(item.id))
+        {
+            activeGridManager.UpdateItemVisualPosition(item.id, 1f, item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
+        }
 
         sourceCell.items.Remove(item);
         targetCell.items.Add(item);
@@ -143,10 +147,7 @@ public class ItemMovementManager : MonoBehaviour
             targetCell.machine.OnItemArrived(item);
         }
 
-        if (activeGridManager.HasVisualItem(item.id))
-        {
-            activeGridManager.UpdateItemVisualPosition(item.id, 1f, item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
-        }
+
     }
 
     /// <summary>
