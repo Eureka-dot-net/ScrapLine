@@ -29,6 +29,9 @@ public class ProcessorMachine : BaseMachine
     /// </summary>
     public override void UpdateLogic()
     {
+        // Check for timed out waiting items first
+        CheckWaitingItemTimeouts();
+        
         // Implement pull system - if machine is idle and has waiting items, pull one
         if (cellData.machineState == MachineState.Idle && cellData.waitingItems.Count > 0)
         {
@@ -54,6 +57,49 @@ public class ProcessorMachine : BaseMachine
         if (cellData.machineState == MachineState.Processing)
         {
             CheckProcessingComplete();
+        }
+    }
+    
+    /// <summary>
+    /// Checks for items that have been waiting too long and removes them
+    /// </summary>
+    private void CheckWaitingItemTimeouts()
+    {
+        ItemMovementManager itemMovementManager = Object.FindAnyObjectByType<ItemMovementManager>();
+        if (itemMovementManager == null) return;
+        
+        float waitingTimeout = itemMovementManager.GetItemWaitingTimeout();
+        
+        for (int i = cellData.waitingItems.Count - 1; i >= 0; i--)
+        {
+            ItemData item = cellData.waitingItems[i];
+            
+            if (item.state == ItemState.Waiting && item.waitingStartTime > 0)
+            {
+                float timeWaiting = Time.time - item.waitingStartTime;
+                
+                if (timeWaiting >= waitingTimeout)
+                {
+                    Debug.Log($"Item {item.id} timed out after waiting {timeWaiting:F1}s at processor {machineDef.id} - removing");
+                    
+                    // Remove from waiting queue
+                    cellData.waitingItems.RemoveAt(i);
+                    
+                    // Find and remove from source cell's items list
+                    CellData sourceCell = Object.FindAnyObjectByType<GridManager>()?.GetCellData(item.x, item.y);
+                    if (sourceCell != null)
+                    {
+                        sourceCell.items.Remove(item);
+                    }
+                    
+                    // Destroy visual item
+                    UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+                    if (gridManager != null && gridManager.HasVisualItem(item.id))
+                    {
+                        gridManager.DestroyVisualItem(item.id);
+                    }
+                }
+            }
         }
     }
     

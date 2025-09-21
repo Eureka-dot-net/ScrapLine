@@ -15,6 +15,9 @@ public class ItemMovementManager : MonoBehaviour
     [Tooltip("Timeout for items on blank cells")]
     public float itemTimeoutOnBlankCells = 10f;
 
+    [Tooltip("Timeout for items waiting at processor machines")]
+    public float itemWaitingTimeout = 60f;
+
     [Tooltip("Maximum number of items allowed on the grid")]
     public int maxItemsOnGrid = 100;
 
@@ -93,6 +96,7 @@ public class ItemMovementManager : MonoBehaviour
                 item.state = ItemState.Waiting;
                 item.moveProgress = 0.5f; // Lock progress
                 item.isHalfway = true; // Set the flag for the second phase
+                item.waitingStartTime = Time.time; // Set the waiting start time for timeout tracking
                 (targetCell.machine as ProcessorMachine).AddToWaitingQueue(item);
                 Debug.Log($"Item {item.id} is now waiting at the halfway point.");
             }
@@ -184,6 +188,24 @@ public class ItemMovementManager : MonoBehaviour
     public void SetItemTimeoutOnBlankCells(float timeout)
     {
         itemTimeoutOnBlankCells = timeout;
+    }
+
+    /// <summary>
+    /// Get the item waiting timeout for processor machines
+    /// </summary>
+    /// <returns>Timeout in seconds</returns>
+    public float GetItemWaitingTimeout()
+    {
+        return itemWaitingTimeout;
+    }
+
+    /// <summary>
+    /// Set the item waiting timeout for processor machines
+    /// </summary>
+    /// <param name="timeout">Timeout in seconds</param>
+    public void SetItemWaitingTimeout(float timeout)
+    {
+        itemWaitingTimeout = timeout;
     }
 
     /// <summary>
