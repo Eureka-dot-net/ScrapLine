@@ -123,7 +123,9 @@ public class ProcessorMachine : BaseMachine
                         processingStartTime = 0f,
                         processingDuration = 0f,
                         waitingStartTime = 0f,
-                        targetMoveProgress = 0f
+                        targetMoveProgress = 0f,
+                        isHalfway = false, // New items start at full cell position
+                        processingTime = 0f // Initialize processing time
                     };
                     
                     cellData.items.Add(newItem);
@@ -167,7 +169,9 @@ public class ProcessorMachine : BaseMachine
         RecipeDef recipe = GetRecipeForItem(item.itemType);
         if (recipe != null)
         {
+            // Add item to waiting queue regardless of isHalfway status
             AddToWaitingQueue(item);
+            Debug.Log($"Item {item.id} ({item.itemType}) added to processor waiting queue. Queue size: {cellData.waitingItems.Count}");
         }
         else
         {

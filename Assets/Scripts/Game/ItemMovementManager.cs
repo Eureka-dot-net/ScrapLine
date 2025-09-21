@@ -83,16 +83,61 @@ public class ItemMovementManager : MonoBehaviour
         float timeSinceStart = Time.time - item.moveStartTime;
         item.moveProgress = timeSinceStart * itemMoveSpeed;
 
-        if (item.moveProgress >= 1.0f)
+        // Handle two-phase movement with halfway pause
+        if (!item.isHalfway)
         {
-            CompleteItemMovement(item, sourceCell);
+            // Phase 1: Moving to halfway point - check if we've reached 50% progress
+            if (item.moveProgress >= 0.5f)
+            {
+                // Item has reached the halfway point
+                item.state = ItemState.Idle; // Pause at halfway point
+                item.moveProgress = 0.5f; // Clamp to exactly 50%
+                
+                if (activeGridManager.HasVisualItem(item.id) && sourceCell.machine != null)
+                {
+                    // Update visual position to halfway point
+                    int nextX, nextY;
+                    sourceCell.machine.GetNextCellCoordinatesPublic(out nextX, out nextY);
+                    activeGridManager.UpdateItemVisualPosition(item.id, 0.5f,
+                        item.sourceX, item.sourceY, nextX, nextY, sourceCell.direction);
+                }
+                
+                // Do NOT call CompleteItemMovement - item stays in source cell data model
+                if (enableMovementLogs)
+                {
+                    Debug.Log($"Item {item.id} reached halfway point - pausing for phase 2");
+                }
+            }
+            else
+            {
+                // Still moving toward halfway point
+                if (activeGridManager.HasVisualItem(item.id) && sourceCell.machine != null)
+                {
+                    int nextX, nextY;
+                    sourceCell.machine.GetNextCellCoordinatesPublic(out nextX, out nextY);
+                    activeGridManager.UpdateItemVisualPosition(item.id, item.moveProgress,
+                        item.sourceX, item.sourceY, nextX, nextY, sourceCell.direction);
+                }
+            }
         }
         else
         {
-            if (activeGridManager.HasVisualItem(item.id))
+            // Phase 2: Moving from halfway to full cell - check if we've completed the movement
+            if (item.moveProgress >= 1.0f)
             {
-                activeGridManager.UpdateItemVisualPosition(item.id, item.moveProgress,
-                    item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
+                // Movement complete - call CompleteItemMovement to update data model
+                CompleteItemMovement(item, sourceCell);
+            }
+            else
+            {
+                // Still moving from halfway to full cell
+                if (activeGridManager.HasVisualItem(item.id))
+                {
+                    // Calculate position from halfway point to target
+                    float adjustedProgress = 0.5f + (item.moveProgress * 0.5f); // Map 0-1 to 0.5-1
+                    activeGridManager.UpdateItemVisualPosition(item.id, adjustedProgress,
+                        item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
+                }
             }
         }
     }

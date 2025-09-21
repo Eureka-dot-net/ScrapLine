@@ -39,6 +39,10 @@ public class ItemData
     
     public float waitingStartTime;
     public float targetMoveProgress; // Must be added per problem statement
+    
+    // Half-step movement system properties
+    public bool isHalfway = false; // Whether item is currently at halfway point
+    public float processingTime = 0f; // Additional processing time property
 }
 
 [System.Serializable]

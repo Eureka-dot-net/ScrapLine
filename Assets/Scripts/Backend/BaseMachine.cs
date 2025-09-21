@@ -96,7 +96,7 @@ public abstract class BaseMachine
 
     /// <summary>
     /// Attempts to start the movement of an item from this machine's cell.
-    /// This method is now concrete because the movement logic is generic.
+    /// This method now handles two-phase movement: full cell -> halfway -> full cell.
     /// </summary>
     public void TryStartMove(ItemData item)
     {
@@ -116,14 +116,34 @@ public abstract class BaseMachine
         item.state = ItemState.Moving;
         item.sourceX = cellData.x;
         item.sourceY = cellData.y;
-        item.targetX = nextX;
-        item.targetY = nextY;
         item.moveStartTime = Time.time;
 
-        Debug.Log($"Item {item.id} ({item.itemType}) started moving from ({cellData.x},{cellData.y}) to ({nextX},{nextY})");
+        if (!item.isHalfway)
+        {
+            // Phase 1: Full Cell to Halfway
+            // Calculate halfway point between current cell and next cell
+            item.targetX = cellData.x; // Start from current position
+            item.targetY = cellData.y;
+            item.isHalfway = true; // Mark as moving to halfway point
+            
+            Debug.Log($"Item {item.id} ({item.itemType}) started Phase 1 movement (to halfway) from ({cellData.x},{cellData.y}) toward ({nextX},{nextY})");
+        }
+        else
+        {
+            // Phase 2: Halfway to Full Cell
+            // Move from halfway point to the next full cell
+            item.targetX = nextX;
+            item.targetY = nextY;
+            item.isHalfway = false; // Will be at full cell when movement completes
+            
+            Debug.Log($"Item {item.id} ({item.itemType}) started Phase 2 movement (to full cell) from halfway to ({nextX},{nextY})");
+        }
 
-        // Fix: Pass the individual properties of the item instead of the object itself.
-        GameManager.Instance.activeGridManager.CreateVisualItem(item.id, item.x, item.y, item.itemType);
+        // Create visual item if it doesn't exist yet
+        if (!GameManager.Instance.activeGridManager.HasVisualItem(item.id))
+        {
+            GameManager.Instance.activeGridManager.CreateVisualItem(item.id, item.x, item.y, item.itemType);
+        }
     }
 
     // The Y-coordinate needs to decrease to move "up" because the Unity UI coordinate system
@@ -157,5 +177,13 @@ public abstract class BaseMachine
             nextX = -1;
             nextY = -1;
         }
+    }
+
+    /// <summary>
+    /// Public helper method to get next cell coordinates for movement calculations
+    /// </summary>
+    public void GetNextCellCoordinatesPublic(out int nextX, out int nextY)
+    {
+        GetNextCellCoordinates(out nextX, out nextY);
     }
 }

@@ -27,12 +27,21 @@ public class ConveyorMachine : BaseMachine
     }
     
     /// <summary>
-    /// Handles items arriving at conveyors - immediately try to start movement
+    /// Handles items arriving at conveyors - check isHalfway status and start appropriate movement phase
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        // Immediately try to start movement of the arrived item
-        TryStartMove(item);
+        // Check item.isHalfway to determine which phase to start
+        if (!item.isHalfway)
+        {
+            // Item just came from another machine, start Phase 1 (to halfway point)
+            TryStartMove(item);
+        }
+        else
+        {
+            // Item is at halfway point, start Phase 2 (to next full cell)
+            TryStartMove(item);
+        }
     }
     
     /// <summary>

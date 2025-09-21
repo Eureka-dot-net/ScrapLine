@@ -56,7 +56,9 @@ public class SpawnerMachine : BaseMachine
             processingStartTime = 0f,
             processingDuration = 0f,
             waitingStartTime = 0f,
-            targetMoveProgress = 0f
+            targetMoveProgress = 0f,
+            isHalfway = false, // New items start at full cell position
+            processingTime = 0f // Initialize processing time
         };
 
         cellData.items.Add(newItem);
@@ -70,7 +72,7 @@ public class SpawnerMachine : BaseMachine
             gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
         }
         
-        // Immediately try to start movement of the newly spawned item
+        // Immediately try to start movement of the newly spawned item (Phase 1: to halfway)
         TryStartMove(newItem);
     }
     
