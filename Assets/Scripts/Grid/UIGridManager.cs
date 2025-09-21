@@ -235,15 +235,22 @@ public class UIGridManager : MonoBehaviour
 
     public void ClearHighlights()
     {
-        if (buildingsContainer == null) return;
+        if (cellScripts == null) return;
 
-        // Clear all highlight overlays from buildingsContainer
-        for (int i = buildingsContainer.childCount - 1; i >= 0; i--)
+        // Clear highlights from each cell
+        for (int y = 0; y < gridData.height; y++)
         {
-            Transform child = buildingsContainer.GetChild(i);
-            if (child.name.StartsWith("HighlightOverlay_"))
+            for (int x = 0; x < gridData.width; x++)
             {
-                child.gameObject.SetActive(false);
+                UICell cell = GetCell(x, y);
+                if (cell != null)
+                {
+                    Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
+                    if (highlightOverlay != null)
+                    {
+                        highlightOverlay.gameObject.SetActive(false);
+                    }
+                }
             }
         }
     }
@@ -253,32 +260,30 @@ public class UIGridManager : MonoBehaviour
         UICell cell = GetCell(x, y);
         if (cell == null) return;
 
-        // Create highlight overlay in the buildingsContainer (top layer)
-        string overlayName = $"HighlightOverlay_{x}_{y}";
-        Transform highlightOverlay = buildingsContainer.Find(overlayName);
+        // Create highlight overlay directly on the cell, not in buildingsContainer
+        Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
 
         if (highlight)
         {
             if (highlightOverlay == null)
             {
-                // Create highlight overlay in buildingsContainer (top layer)
-                GameObject overlay = new GameObject(overlayName);
-                overlay.transform.SetParent(buildingsContainer, false);
+                // Create highlight overlay as child of the cell
+                GameObject overlay = new GameObject("HighlightOverlay");
+                overlay.transform.SetParent(cell.transform, false);
 
                 Image overlayImage = overlay.AddComponent<Image>();
                 overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
 
-                // Position the overlay at the correct grid cell location
+                // Make it fill the cell completely
                 RectTransform rt = overlay.GetComponent<RectTransform>();
-                Vector2 cellSize = GetCellSize();
-                Vector3 cellPosition = GetCellWorldPosition(x, y);
-                
-                rt.sizeDelta = cellSize;
-                rt.anchorMin = new Vector2(0, 0);
-                rt.anchorMax = new Vector2(0, 0);
-                rt.anchoredPosition = cellPosition;
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = Vector2.zero;
 
-                // Set to top layer - this ensures it appears above machines
+                // Put it on top of everything in the cell
                 overlay.transform.SetAsLastSibling();
             }
             else

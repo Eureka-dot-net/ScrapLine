@@ -153,17 +153,19 @@ public class UICell : MonoBehaviour
 
     void OnCellClicked()
     {
-        // Get the MachineInputManager from GameManager and handle click
-        var inputManager = GameManager.Instance.inputManager;
-        if (inputManager != null)
-        {
-            inputManager.HandleCellClick(x, y);
-        }
-        else
-        {
-            // Fallback to old system if input manager not available
-            GameManager.Instance.GetMachineManager().OnCellClicked(x, y);
-        }
+        // For now, always use the MachineManager directly to ensure placement works
+        GameManager.Instance.GetMachineManager().OnCellClicked(x, y);
+        
+        // Future: Use MachineInputManager for drag-and-drop features
+        // var inputManager = GameManager.Instance.inputManager;
+        // if (inputManager != null)
+        // {
+        //     inputManager.HandleCellClick(x, y);
+        // }
+        // else
+        // {
+        //     GameManager.Instance.GetMachineManager().OnCellClicked(x, y);
+        // }
     }
 
     public RectTransform GetItemSpawnPoint()
