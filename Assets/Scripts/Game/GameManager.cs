@@ -28,9 +28,7 @@ public class GameManager : MonoBehaviour
     [Tooltip("Item movement processing manager")]
     public ItemMovementManager itemMovementManager;
 
-    [Header("Legacy Compatibility")]
-    [Tooltip("Legacy field for backward compatibility - use GetCurrentGrid() instead")]
-    public System.Collections.Generic.List<GridData> activeGrids = new System.Collections.Generic.List<GridData>();
+
 
     [Header("Timing")]
     [Tooltip("Interval for spawner machines")]
@@ -118,9 +116,6 @@ public class GameManager : MonoBehaviour
             StartNewGame();
         }
 
-        // Update legacy activeGrids for backward compatibility
-        activeGrids = gridManager.GetActiveGrids();
-
         // Initialize UI
         gridManager.InitializeUIGrid();
         creditsManager.UpdateCreditsDisplay();
@@ -133,9 +128,6 @@ public class GameManager : MonoBehaviour
     {
         creditsManager.InitializeNewGame();
         gridManager.CreateDefaultGrid();
-
-        // Update legacy compatibility
-        activeGrids = gridManager.GetActiveGrids();
     }
 
     /// <summary>
@@ -144,9 +136,6 @@ public class GameManager : MonoBehaviour
     private IEnumerator InitializeFromSave()
     {
         yield return saveLoadManager.InitializeMachinesFromSave();
-
-        // Update legacy compatibility
-        activeGrids = gridManager.GetActiveGrids();
     }
 
     private void Update()
