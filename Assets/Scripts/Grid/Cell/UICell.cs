@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
-public class UICell : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
+public class UICell : MonoBehaviour
 {
     // Essential UI components only
     public Button cellButton;
@@ -23,12 +22,6 @@ public class UICell : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     // MachineRenderer handles ALL visuals now
     private MachineRenderer machineRenderer;
-
-    // Drag-and-drop state
-    private bool isDragging = false;
-    private GameObject draggedMachineVisual;
-    private Canvas dragCanvas;
-    private Vector2 dragStartPosition;
 
     public enum CellType { Blank, Machine }
     public enum CellRole { Grid, Top, Bottom }
@@ -144,13 +137,6 @@ public class UICell : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         );
 
         Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
-        
-        // Ensure any existing highlights are positioned correctly above the machine renderer
-        Transform existingHighlight = transform.Find("HighlightOverlay");
-        if (existingHighlight != null)
-        {
-            existingHighlight.SetAsLastSibling();
-        }
     }
 
     private float GetCellDirectionRotation(Direction direction)
@@ -167,88 +153,7 @@ public class UICell : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     void OnCellClicked()
     {
-        // For now, always use the MachineManager directly to ensure placement works
-        GameManager.Instance.GetMachineManager().OnCellClicked(x, y);
-        
-        // Future: Use MachineInputManager for drag-and-drop features
-        // var inputManager = GameManager.Instance.inputManager;
-        // if (inputManager != null)
-        // {
-        //     inputManager.HandleCellClick(x, y);
-        // }
-        // else
-        // {
-        //     GameManager.Instance.GetMachineManager().OnCellClicked(x, y);
-        // }
-    }
-
-    // Drag and Drop Event Handlers
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (cellType == CellType.Machine && !string.IsNullOrEmpty(GetMachineDefId()))
-        {
-            dragStartPosition = eventData.position;
-        }
-    }
-
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        // This handles click when not dragging
-        if (!isDragging)
-        {
-            OnCellClicked();
-        }
-    }
-
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        // Only allow dragging existing machines
-        if (cellType == CellType.Machine && !string.IsNullOrEmpty(GetMachineDefId()))
-        {
-            isDragging = true;
-            CreateDraggedMachineVisual();
-            
-            // Hide the original machine temporarily
-            if (machineRenderer != null)
-            {
-                machineRenderer.gameObject.SetActive(false);
-            }
-        }
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        if (isDragging && draggedMachineVisual != null)
-        {
-            // Update dragged visual position
-            draggedMachineVisual.transform.position = eventData.position;
-            
-            // Check if we're over a valid drop location and provide visual feedback
-            UpdateDragFeedback(eventData.position);
-        }
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        if (isDragging)
-        {
-            isDragging = false;
-            
-            // Check where we dropped the machine
-            bool machineMovedOrDeleted = HandleMachineDrop(eventData.position);
-            
-            if (!machineMovedOrDeleted)
-            {
-                // Restore original machine if drop failed
-                if (machineRenderer != null)
-                {
-                    machineRenderer.gameObject.SetActive(true);
-                }
-            }
-            
-            // Cleanup drag visuals
-            CleanupDragOperation();
-        }
+        GameManager.Instance.OnCellClicked(x, y);
     }
 
     public RectTransform GetItemSpawnPoint()
@@ -294,229 +199,12 @@ public class UICell : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     private string GetMachineDefId()
     {
-        var gridManager = Object.FindFirstObjectByType<UIGridManager>();
+        var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {
             var cellData = gridManager.GetCellData(x, y);
             return cellData?.machineDefId;
         }
         return null;
-    }
-
-    private void CreateDraggedMachineVisual()
-    {
-        // Find or create drag canvas
-        dragCanvas = Object.FindFirstObjectByType<Canvas>();
-        GameObject canvasObj = GameObject.Find("DragCanvas");
-        if (canvasObj == null)
-        {
-            canvasObj = new GameObject("DragCanvas");
-            dragCanvas = canvasObj.AddComponent<Canvas>();
-            dragCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            dragCanvas.sortingOrder = 1000;
-            canvasObj.AddComponent<GraphicRaycaster>();
-        }
-        else
-        {
-            dragCanvas = canvasObj.GetComponent<Canvas>();
-        }
-
-        // Create visual copy of the machine
-        draggedMachineVisual = new GameObject("DraggedMachine");
-        draggedMachineVisual.transform.SetParent(dragCanvas.transform, false);
-
-        // Copy the machine visual
-        if (machineRenderer != null)
-        {
-            Image dragImage = draggedMachineVisual.AddComponent<Image>();
-            Image originalImage = machineRenderer.GetComponentInChildren<Image>();
-            if (originalImage != null)
-            {
-                dragImage.sprite = originalImage.sprite;
-                Color dragColor = Color.white;
-                dragColor.a = 0.6f; // Semi-transparent
-                dragImage.color = dragColor;
-            }
-
-            RectTransform dragRT = draggedMachineVisual.GetComponent<RectTransform>();
-            RectTransform originalRT = machineRenderer.GetComponent<RectTransform>();
-            dragRT.sizeDelta = originalRT.sizeDelta;
-        }
-
-        // Disable raycast blocking so we can detect drop targets
-        Image img = draggedMachineVisual.GetComponent<Image>();
-        if (img != null) img.raycastTarget = false;
-    }
-
-    private void UpdateDragFeedback(Vector2 screenPosition)
-    {
-        if (draggedMachineVisual == null) return;
-
-        // Check if we're over the grid or outside it
-        bool isOverGrid = IsPositionOverGrid(screenPosition, out int targetX, out int targetY);
-        
-        Image dragImage = draggedMachineVisual.GetComponent<Image>();
-        if (dragImage != null)
-        {
-            if (isOverGrid)
-            {
-                // Check if target location is valid
-                var gridManager = Object.FindFirstObjectByType<UIGridManager>();
-                var cellData = gridManager?.GetCellData(targetX, targetY);
-                bool isValidTarget = cellData != null && cellData.cellType == CellType.Blank;
-                
-                // Green for valid placement, red for invalid
-                Color feedbackColor = isValidTarget ? Color.green : Color.red;
-                feedbackColor.a = 0.6f;
-                dragImage.color = feedbackColor;
-            }
-            else
-            {
-                // Outside grid - show delete indication
-                Color deleteColor = Color.red;
-                deleteColor.a = 0.3f; // More transparent for delete
-                dragImage.color = deleteColor;
-            }
-        }
-    }
-
-    private bool HandleMachineDrop(Vector2 screenPosition)
-    {
-        bool isOverGrid = IsPositionOverGrid(screenPosition, out int targetX, out int targetY);
-        
-        if (isOverGrid)
-        {
-            // Dropped on grid - try to move machine
-            return TryMoveMachine(targetX, targetY);
-        }
-        else
-        {
-            // Dropped outside grid - delete machine with refund
-            return DeleteMachineWithRefund();
-        }
-    }
-
-    private bool IsPositionOverGrid(Vector2 screenPosition, out int gridX, out int gridY)
-    {
-        gridX = -1;
-        gridY = -1;
-
-        var gridManager = Object.FindFirstObjectByType<UIGridManager>();
-        if (gridManager == null) return false;
-
-        RectTransform gridRect = gridManager.gridPanel;
-        Camera uiCamera = Camera.main;
-
-        Vector2 localPosition;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(gridRect, screenPosition, uiCamera, out localPosition))
-        {
-            var gridData = GameManager.Instance.GetCurrentGrid();
-            Vector2 gridSize = gridRect.rect.size;
-            
-            float cellWidth = gridSize.x / gridData.width;
-            float cellHeight = gridSize.y / gridData.height;
-            
-            localPosition += gridSize * 0.5f;
-            
-            gridX = Mathf.FloorToInt(localPosition.x / cellWidth);
-            gridY = Mathf.FloorToInt(localPosition.y / cellHeight);
-            
-            return gridX >= 0 && gridX < gridData.width && gridY >= 0 && gridY < gridData.height;
-        }
-        
-        return false;
-    }
-
-    private bool TryMoveMachine(int targetX, int targetY)
-    {
-        if (targetX == x && targetY == y) return false; // Same position
-
-        var gridManager = Object.FindFirstObjectByType<UIGridManager>();
-        var targetCellData = gridManager?.GetCellData(targetX, targetY);
-        var sourceCellData = gridManager?.GetCellData(x, y);
-        
-        if (targetCellData == null || sourceCellData == null) return false;
-        
-        // Target must be empty
-        if (targetCellData.cellType != CellType.Blank) return false;
-        
-        // Get machine definition for placement rules
-        string machineDefId = sourceCellData.machineDefId;
-        var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
-        if (machineDef == null) return false;
-        
-        // Check if target location is valid for this machine type
-        bool isValidPlacement = false;
-        foreach (string placement in machineDef.gridPlacement)
-        {
-            switch (placement.ToLower())
-            {
-                case "any": isValidPlacement = true; break;
-                case "grid": isValidPlacement = targetCellData.cellRole == CellRole.Grid; break;
-                case "top": isValidPlacement = targetCellData.cellRole == CellRole.Top; break;
-                case "bottom": isValidPlacement = targetCellData.cellRole == CellRole.Bottom; break;
-            }
-            if (isValidPlacement) break;
-        }
-        
-        if (!isValidPlacement) return false;
-        
-        // Move the machine
-        targetCellData.cellType = CellType.Machine;
-        targetCellData.machineDefId = sourceCellData.machineDefId;
-        targetCellData.direction = sourceCellData.direction;
-        targetCellData.machine = sourceCellData.machine;
-        
-        // Clear source cell
-        sourceCellData.cellType = CellType.Blank;
-        sourceCellData.machineDefId = null;
-        sourceCellData.direction = Direction.Up;
-        sourceCellData.machine = null;
-        
-        // Update visuals
-        gridManager.UpdateCellVisuals(targetX, targetY, targetCellData.cellType, targetCellData.direction, targetCellData.machineDefId);
-        gridManager.UpdateCellVisuals(x, y, sourceCellData.cellType, sourceCellData.direction);
-        
-        return true;
-    }
-
-    private bool DeleteMachineWithRefund()
-    {
-        var gridManager = Object.FindFirstObjectByType<UIGridManager>();
-        var cellData = gridManager?.GetCellData(x, y);
-        
-        if (cellData == null || cellData.cellType != CellType.Machine) return false;
-        
-        // Get machine definition for refund calculation
-        var machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
-        if (machineDef == null) return false;
-        
-        // Calculate refund (80% by default)
-        float refundPercentage = 0.8f;
-        int refundAmount = Mathf.RoundToInt(machineDef.cost * refundPercentage);
-        
-        // Give refund
-        GameManager.Instance.GetCreditsManager().AddCredits(refundAmount);
-        
-        // Clear the cell
-        cellData.cellType = CellType.Blank;
-        cellData.machineDefId = null;
-        cellData.direction = Direction.Up;
-        cellData.machine = null;
-        
-        // Update visuals
-        gridManager.UpdateCellVisuals(x, y, cellData.cellType, cellData.direction);
-        
-        Debug.Log($"Machine deleted. Refunded {refundAmount} credits ({refundPercentage * 100}%)");
-        return true;
-    }
-
-    private void CleanupDragOperation()
-    {
-        if (draggedMachineVisual != null)
-        {
-            DestroyImmediate(draggedMachineVisual);
-            draggedMachineVisual = null;
-        }
     }
 }

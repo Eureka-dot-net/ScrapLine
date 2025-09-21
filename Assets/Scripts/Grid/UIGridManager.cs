@@ -237,20 +237,11 @@ public class UIGridManager : MonoBehaviour
     {
         if (cellScripts == null) return;
 
-        // Clear highlights from each cell
         for (int y = 0; y < gridData.height; y++)
         {
             for (int x = 0; x < gridData.width; x++)
             {
-                UICell cell = GetCell(x, y);
-                if (cell != null)
-                {
-                    Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
-                    if (highlightOverlay != null)
-                    {
-                        highlightOverlay.gameObject.SetActive(false);
-                    }
-                }
+                HighlightCell(x, y, false);
             }
         }
     }
@@ -260,21 +251,21 @@ public class UIGridManager : MonoBehaviour
         UICell cell = GetCell(x, y);
         if (cell == null) return;
 
-        // Create highlight overlay directly on the cell, not in buildingsContainer
+        // Create or get highlight overlay
         Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
 
         if (highlight)
         {
             if (highlightOverlay == null)
             {
-                // Create highlight overlay as child of the cell
+                // Create highlight overlay
                 GameObject overlay = new GameObject("HighlightOverlay");
                 overlay.transform.SetParent(cell.transform, false);
 
                 Image overlayImage = overlay.AddComponent<Image>();
                 overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
 
-                // Make it fill the cell completely
+                // Make it fill the cell
                 RectTransform rt = overlay.GetComponent<RectTransform>();
                 rt.anchorMin = Vector2.zero;
                 rt.anchorMax = Vector2.one;
@@ -283,8 +274,8 @@ public class UIGridManager : MonoBehaviour
                 rt.anchoredPosition = Vector2.zero;
                 rt.sizeDelta = Vector2.zero;
 
-                // Put it on top of everything in the cell
-                overlay.transform.SetAsLastSibling();
+                // Put it on top but behind any items
+                overlay.transform.SetSiblingIndex(cell.transform.childCount - 1);
             }
             else
             {
@@ -306,9 +297,6 @@ public class UIGridManager : MonoBehaviour
         CellData cellData = GetCellData(x, y);
         if (cellData == null) return false;
 
-        // Cell must be empty (blank type) to be valid for placement
-        if (cellData.cellType != CellType.Blank) return false;
-
         // Check if machine's grid placement rules allow this cell
         foreach (string placement in machineDef.gridPlacement)
         {
@@ -328,45 +316,61 @@ public class UIGridManager : MonoBehaviour
         return false;
     }
 
-    // Visual item management methods
-    public void CreateVisualItem(string itemId, int cellX, int cellY, string itemType)
+    // New methods for GameManager to control visual items
+
+    public void CreateVisualItem(string itemId, int x, int y, string itemType = null)
     {
+        UICell cell = GetCell(x, y);
+        if (cell == null)
+        {
+            Debug.LogError($"Cannot create visual item - cell at ({x}, {y}) not found");
+            return;
+        }
+
+        // Check if item already exists
         if (visualItems.ContainsKey(itemId))
         {
             Debug.LogWarning($"Visual item {itemId} already exists!");
             return;
         }
 
-        GameObject itemObj = Instantiate(itemPrefab, itemsContainer);
-        itemObj.name = $"Item_{itemId}";
+        // Use ItemsContainer for positioning if available, otherwise fallback to movingItemsContainer
+        RectTransform targetContainer = itemsContainer != null ? itemsContainer : movingItemsContainer;
+        if (targetContainer == null)
+        {
+            Debug.LogError("No container available for visual items");
+            return;
+        }
+
+        // Create the new item instance in the appropriate container
+        GameObject newItem = Instantiate(itemPrefab, targetContainer);
+        RectTransform itemRect = newItem.GetComponent<RectTransform>();
 
         // Make item non-interactive to avoid blocking cell button clicks
-        CanvasGroup itemCanvasGroup = itemObj.AddComponent<CanvasGroup>();
+        CanvasGroup itemCanvasGroup = newItem.AddComponent<CanvasGroup>();
         itemCanvasGroup.blocksRaycasts = false;
         itemCanvasGroup.interactable = false;
 
-        // Get the actual world position for this cell 
-        Vector3 targetWorldPos = GetCellWorldPosition(cellX, cellY);
-        itemObj.transform.position = targetWorldPos;
+        // Position the item at the cell's world position
+        Vector3 cellPosition = GetCellWorldPosition(x, y);
+        itemRect.position = cellPosition;
 
-        // Size the item to 1/2 of cell size
-        RectTransform itemRect = itemObj.GetComponent<RectTransform>();
+        // Size the item to 1/2 of cell size  
         Vector2 cellSize = GetCellSize();
-        Vector2 itemSize = cellSize / 2f;
+        Vector2 itemSize = cellSize / 2f; // User requested 1/2 cell size
         itemRect.sizeDelta = itemSize;
 
-        // Setup item visuals
-        SetItemSprite(itemObj, itemType);
+        Debug.Log($"Created visual item {itemId} in {targetContainer.name} at position {cellPosition} with size {itemSize}");
 
         // Set the item type on the UIItem component
-        UIItem itemComponent = itemObj.GetComponent<UIItem>();
-        if (itemComponent != null)
+        UIItem itemComponent = newItem.GetComponent<UIItem>();
+        if (itemComponent != null && !string.IsNullOrEmpty(itemType))
         {
             itemComponent.itemType = itemType;
+            SetItemSprite(newItem, itemType);
         }
-
-        visualItems[itemId] = itemObj;
-        Debug.Log($"Created visual item {itemId} of type {itemType} at cell ({cellX}, {cellY}) with world position {targetWorldPos}");
+        visualItems[itemId] = newItem;
+        Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/2 of cell size {cellSize})");
     }
 
     private void SetItemSprite(GameObject itemObject, string itemType)
@@ -402,83 +406,6 @@ public class UIGridManager : MonoBehaviour
             Debug.LogWarning($"No Image component found on item prefab for item type: {itemType}");
         }
     }
-
-    public void MoveVisualItem(string itemId, int fromX, int fromY, int toX, int toY)
-    {
-        if (visualItems.TryGetValue(itemId, out GameObject itemObj))
-        {
-            Vector3 targetWorldPos = GetCellWorldPosition(toX, toY);
-            itemObj.transform.position = targetWorldPos;
-            Debug.Log($"Moved visual item {itemId} from ({fromX}, {fromY}) to ({toX}, {toY})");
-        }
-        else
-        {
-            Debug.LogError($"Cannot move visual item {itemId} - not found in visualItems!");
-        }
-    }
-
-    public void RemoveVisualItem(string itemId)
-    {
-        if (visualItems.TryGetValue(itemId, out GameObject itemObj))
-        {
-            Destroy(itemObj);
-            visualItems.Remove(itemId);
-            Debug.Log($"Removed visual item {itemId}");
-        }
-        else
-        {
-            Debug.LogError($"Cannot remove visual item {itemId} - not found!");
-        }
-    }
-
-    // Helper methods for drag-drop manager
-    public Vector2 GetCellSize()
-    {
-        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
-        Vector2 cellSize = layout != null ? layout.cellSize : Vector2.zero;
-        Debug.Log($"GetCellSize() returning: {cellSize}");
-        return cellSize;
-    }
-
-    public Vector3 GetCellWorldPosition(int x, int y)
-    {
-        // Always use calculated position to ensure accuracy during initialization
-        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
-        if (layout != null && gridData != null)
-        {
-            Vector2 cellSize = layout.cellSize;
-            Vector2 spacing = layout.spacing;
-            
-            // Calculate position within grid (using grid coordinates)
-            float xPos = x * (cellSize.x + spacing.x);
-            float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
-            
-            // Get grid panel's world position and add offset
-            Vector3 gridWorldPos = gridPanel.transform.position;
-            Vector3 calculatedPos = new Vector3(
-                gridWorldPos.x + xPos - (gridData.width * (cellSize.x + spacing.x)) / 2 + cellSize.x / 2,
-                gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
-                gridWorldPos.z
-            );
-            
-            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated: {calculatedPos} (cellSize: {cellSize}, spacing: {spacing})");
-            return calculatedPos;
-        }
-
-        // Fallback to cell transform if grid layout calculation fails
-        UICell cell = GetCell(x, y);
-        if (cell != null)
-        {
-            Vector3 position = cell.transform.position;
-            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform fallback: {position}");
-            return position;
-        }
-        
-        Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
-        return Vector3.zero;
-    }
-
-
 
     public void DestroyVisualItem(string itemId)
     {
@@ -625,6 +552,52 @@ public class UIGridManager : MonoBehaviour
     {
         Debug.Log($"GetItemsContainer() called - returning: {(itemsContainer != null ? itemsContainer.name : "NULL")}");
         return itemsContainer;
+    }
+
+    public Vector2 GetCellSize()
+    {
+        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
+        Vector2 cellSize = layout != null ? layout.cellSize : Vector2.zero;
+        Debug.Log($"GetCellSize() returning: {cellSize}");
+        return cellSize;
+    }
+
+    public Vector3 GetCellWorldPosition(int x, int y)
+    {
+        // Always use calculated position to ensure accuracy during initialization
+        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
+        if (layout != null && gridData != null)
+        {
+            Vector2 cellSize = layout.cellSize;
+            Vector2 spacing = layout.spacing;
+            
+            // Calculate position within grid (using grid coordinates)
+            float xPos = x * (cellSize.x + spacing.x);
+            float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
+            
+            // Get grid panel's world position and add offset
+            Vector3 gridWorldPos = gridPanel.transform.position;
+            Vector3 calculatedPos = new Vector3(
+                gridWorldPos.x + xPos - (gridData.width * (cellSize.x + spacing.x)) / 2 + cellSize.x / 2,
+                gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
+                gridWorldPos.z
+            );
+            
+            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated: {calculatedPos} (cellSize: {cellSize}, spacing: {spacing})");
+            return calculatedPos;
+        }
+
+        // Fallback to cell transform if grid layout calculation fails
+        UICell cell = GetCell(x, y);
+        if (cell != null)
+        {
+            Vector3 position = cell.transform.position;
+            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform fallback: {position}");
+            return position;
+        }
+        
+        Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
+        return Vector3.zero;
     }
 
     public CellData GetCellData(int x, int y)

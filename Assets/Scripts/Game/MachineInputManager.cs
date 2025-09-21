@@ -7,7 +7,7 @@ using static UICell;
 /// Manages all machine input interactions including clicks, drags, and placement.
 /// Handles both desktop (mouse) and mobile (touch) input with visual feedback.
 /// </summary>
-public class MachineInputManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
+public class MachineInputManager : MonoBehaviour
 {
     [Header("Configuration")]
     public DragDropSettings settings;
@@ -77,90 +77,224 @@ public class MachineInputManager : MonoBehaviour, IPointerDownHandler, IPointerU
             scaler.referenceResolution = new Vector2(1920, 1080);
         }
 
-        // Add this component to the grid panel so we can receive UI events
+        // Set up global drag detection on grid
         if (uiGridManager != null && uiGridManager.gridPanel != null)
         {
-            if (uiGridManager.gridPanel.GetComponent<MachineInputManager>() == null)
+            // Add event trigger to grid panel for global drag detection
+            EventTrigger trigger = uiGridManager.gridPanel.GetComponent<EventTrigger>();
+            if (trigger == null)
             {
-                // Copy this component to the grid panel to receive events
-                MachineInputManager gridInputHandler = uiGridManager.gridPanel.gameObject.AddComponent<MachineInputManager>();
-                gridInputHandler.settings = this.settings;
-                gridInputHandler.dragCanvas = this.dragCanvas;
-                
-                // Disable this instance since the one on gridPanel will handle input
-                this.enabled = false;
+                trigger = uiGridManager.gridPanel.gameObject.AddComponent<EventTrigger>();
             }
+
+            // Add drag event handlers
+            AddEventTrigger(trigger, EventTriggerType.BeginDrag, (data) => { OnGridBeginDrag((PointerEventData)data); });
+            AddEventTrigger(trigger, EventTriggerType.Drag, (data) => { OnGridDrag((PointerEventData)data); });
+            AddEventTrigger(trigger, EventTriggerType.EndDrag, (data) => { OnGridEndDrag((PointerEventData)data); });
+            AddEventTrigger(trigger, EventTriggerType.PointerDown, (data) => { OnGridPointerDown((PointerEventData)data); });
+            AddEventTrigger(trigger, EventTriggerType.PointerUp, (data) => { OnGridPointerUp((PointerEventData)data); });
         }
     }
+
+    void AddEventTrigger(EventTrigger trigger, EventTriggerType eventType, System.Action<BaseEventData> action)
+    {
+        EventTrigger.Entry entry = new EventTrigger.Entry();
+        entry.eventID = eventType;
+        entry.callback.AddListener((data) => { action(data); });
+        trigger.triggers.Add(entry);
+    }
     
-    public void OnPointerDown(PointerEventData eventData)
+    // Grid drag event handlers
+    void OnGridPointerDown(PointerEventData eventData)
     {
         startInputPosition = eventData.position;
         inputStartTime = Time.time;
+        isDragging = false;
         hasMovedBeyondThreshold = false;
-        
-        // Check if we're clicking on an existing machine
+
+        // Check if we clicked on a machine
         if (TryGetMachineAtScreenPosition(eventData.position, out CellData cellData, out MachineDef machineDef))
         {
-            // Start potential drag operation
             originalMachineCell = cellData;
             draggedMachineType = machineDef;
+            Debug.Log($"Potential drag start on machine {machineDef.id} at ({cellData.x}, {cellData.y})");
         }
         else
         {
-            // Check if we have a selected machine for placement
-            MachineDef selectedMachine = machineManager.GetSelectedMachine();
-            if (selectedMachine != null)
-            {
-                draggedMachineType = selectedMachine;
-                originalMachineCell = null; // This is a new placement
-            }
+            originalMachineCell = null;
+            draggedMachineType = null;
         }
     }
-    
-    public void OnPointerUp(PointerEventData eventData)
+
+    void OnGridPointerUp(PointerEventData eventData)
     {
         if (isDragging)
         {
             CompleteDragOperation(eventData.position);
         }
-        else if (draggedMachineType != null)
+        else if (originalMachineCell != null)
         {
-            // This was a click, not a drag - handle as traditional click
-            HandleClickOperation(eventData.position);
+            // This was a click, not a drag - delegate to normal click handling
+            machineManager.OnCellClicked(originalMachineCell.x, originalMachineCell.y);
         }
-        
-        // Reset state
+
         CleanupDragOperation();
     }
-    
-    public void OnDrag(PointerEventData eventData)
+
+    void OnGridBeginDrag(PointerEventData eventData)
     {
-        if (draggedMachineType != null && !isDragging)
+        if (originalMachineCell != null && draggedMachineType != null)
         {
-            CheckForDragStart(eventData.position);
+            float timeSinceStart = Time.time - inputStartTime;
+            float distanceMoved = Vector2.Distance(startInputPosition, eventData.position);
+
+            if (timeSinceStart >= settings.dragTimeThreshold || distanceMoved >= settings.pixelMovementThreshold)
+            {
+                StartDragOperation();
+                Debug.Log($"Started dragging machine {draggedMachineType.id}");
+            }
         }
-        
+    }
+
+    void OnGridDrag(PointerEventData eventData)
+    {
         if (isDragging)
         {
             UpdateDragVisuals(eventData.position);
             UpdateGridHighlighting(eventData.position);
         }
     }
-    
-    void CheckForDragStart(Vector2 currentPosition)
+
+    void OnGridEndDrag(PointerEventData eventData)
     {
-        float timeSinceStart = Time.time - inputStartTime;
-        float distanceMoved = Vector2.Distance(startInputPosition, currentPosition);
-        
-        // Check if we should start dragging
-        bool timeThresholdMet = timeSinceStart >= settings.dragTimeThreshold;
-        bool distanceThresholdMet = distanceMoved >= settings.pixelMovementThreshold;
-        
-        if (timeThresholdMet || distanceThresholdMet)
+        if (isDragging)
         {
-            StartDragOperation();
+            CompleteDragOperation(eventData.position);
         }
+        CleanupDragOperation();
+    }
+    
+    void StartDragOperation()
+    {
+        isDragging = true;
+        
+        if (originalMachineCell != null && draggedMachineType != null)
+        {
+            // Create ghost machine visual
+            CreateGhostMachine();
+            
+            // Hide original machine temporarily
+            uiGridManager.UpdateCellVisuals(originalMachineCell.x, originalMachineCell.y, CellType.Blank, Direction.Up);
+        }
+    }
+
+    void CreateGhostMachine()
+    {
+        if (dragCanvas == null) return;
+
+        ghostMachine = new GameObject("GhostMachine");
+        ghostMachine.transform.SetParent(dragCanvas.transform, false);
+
+        Image ghostImage = ghostMachine.AddComponent<Image>();
+        
+        // Try to get the sprite from the machine definition
+        string spritePath = $"Sprites/Machines/{draggedMachineType.id}";
+        Sprite machineSprite = Resources.Load<Sprite>(spritePath);
+        
+        if (machineSprite != null)
+        {
+            ghostImage.sprite = machineSprite;
+        }
+        else
+        {
+            // Fallback to a simple colored rectangle
+            ghostImage.color = Color.white;
+        }
+
+        // Make it semi-transparent
+        Color ghostColor = ghostImage.color;
+        ghostColor.a = settings.ghostMachineAlpha;
+        ghostImage.color = ghostColor;
+
+        // Set size
+        RectTransform ghostRT = ghostMachine.GetComponent<RectTransform>();
+        Vector2 cellSize = uiGridManager.GetCellSize();
+        ghostRT.sizeDelta = cellSize;
+
+        // Disable raycast so it doesn't block input
+        ghostImage.raycastTarget = false;
+    }
+
+    void UpdateDragVisuals(Vector2 screenPosition)
+    {
+        if (ghostMachine != null)
+        {
+            ghostMachine.transform.position = screenPosition;
+        }
+    }
+
+    void UpdateGridHighlighting(Vector2 screenPosition)
+    {
+        // Clear existing highlights
+        uiGridManager.ClearHighlights();
+
+        // Check if we're over a valid drop location
+        if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
+        {
+            CellData targetCell = gridManager.GetCellData(x, y);
+            bool isValidTarget = IsValidDragTarget(targetCell);
+
+            if (ghostMachine != null)
+            {
+                Image ghostImage = ghostMachine.GetComponent<Image>();
+                Color feedbackColor = isValidTarget ? Color.green : Color.red;
+                feedbackColor.a = settings.ghostMachineAlpha;
+                ghostImage.color = feedbackColor;
+            }
+
+            // Highlight the target cell
+            if (isValidTarget)
+            {
+                uiGridManager.HighlightCell(x, y, true);
+            }
+        }
+        else
+        {
+            // Outside grid - deletion zone
+            if (ghostMachine != null)
+            {
+                Image ghostImage = ghostMachine.GetComponent<Image>();
+                Color deleteColor = Color.red;
+                deleteColor.a = settings.ghostMachineAlpha * 0.5f; // Extra faded for delete
+                ghostImage.color = deleteColor;
+            }
+        }
+    }
+
+    bool IsValidDragTarget(CellData targetCell)
+    {
+        if (targetCell == null || draggedMachineType == null) return false;
+        
+        // Can't drop on the same cell
+        if (originalMachineCell != null && targetCell.x == originalMachineCell.x && targetCell.y == originalMachineCell.y)
+            return false;
+
+        // Target must be empty
+        if (targetCell.cellType != CellType.Blank) return false;
+
+        // Check placement rules
+        foreach (string placement in draggedMachineType.gridPlacement)
+        {
+            switch (placement.ToLower())
+            {
+                case "any": return true;
+                case "grid": return targetCell.cellRole == CellRole.Grid;
+                case "top": return targetCell.cellRole == CellRole.Top;
+                case "bottom": return targetCell.cellRole == CellRole.Bottom;
+            }
+        }
+
+        return false;
     }
     
     void StartDragOperation()
@@ -222,158 +356,154 @@ public class MachineInputManager : MonoBehaviour, IPointerDownHandler, IPointerU
         ghostImage.raycastTarget = false;
     }
     
-    void UpdateDragVisuals(Vector2 screenPosition)
-    {
-        if (ghostMachine != null)
-        {
-            ghostMachine.transform.position = screenPosition;
-        }
-    }
-    
-    void UpdateGridHighlighting(Vector2 screenPosition)
-    {
-        // Check if we're over the grid
-        if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
-        {
-            CellData cellData = gridManager.GetCellData(x, y);
-            bool isValidPlacement = IsValidPlacement(cellData, draggedMachineType);
-            
-            // Update ghost machine color based on validity
-            if (ghostMachine != null)
-            {
-                Image ghostImage = ghostMachine.GetComponent<Image>();
-                Color ghostColor = isValidPlacement ? Color.green : Color.red;
-                ghostColor.a = settings.ghostMachineAlpha;
-                ghostImage.color = ghostColor;
-            }
-        }
-        else
-        {
-            // Outside grid - show delete indication
-            if (ghostMachine != null)
-            {
-                Image ghostImage = ghostMachine.GetComponent<Image>();
-                Color deleteColor = Color.red;
-                deleteColor.a = settings.ghostMachineAlpha * 0.5f; // Extra faded for delete
-                ghostImage.color = deleteColor;
-            }
-        }
-    }
-    
     void CompleteDragOperation(Vector2 screenPosition)
     {
-        if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
+        if (!isDragging || originalMachineCell == null || draggedMachineType == null) return;
+
+        bool machineMovedOrDeleted = false;
+
+        if (TryGetGridCellAtScreenPosition(screenPosition, out int targetX, out int targetY))
         {
-            // Dropped on grid - try to place machine
-            CellData targetCell = gridManager.GetCellData(x, y);
+            // Dropped on grid
+            CellData targetCell = gridManager.GetCellData(targetX, targetY);
             
-            if (IsValidPlacement(targetCell, draggedMachineType))
+            if (IsValidDragTarget(targetCell))
             {
-                // Check if we can afford this placement (for new machines or moves that change cost)
-                bool canAfford = true;
-                int costDifference = 0;
-                
-                if (originalMachineCell == null)
-                {
-                    // New machine placement
-                    costDifference = draggedMachineType.cost;
-                    canAfford = creditsManager.CanAfford(costDifference);
-                }
-                // For existing machine moves, no cost difference
-                
-                if (canAfford)
-                {
-                    PlaceMachineAtCell(targetCell, draggedMachineType);
-                    if (costDifference > 0)
-                    {
-                        creditsManager.TrySpendCredits(costDifference);
-                    }
-                }
-                else
-                {
-                    // Can't afford - restore original machine if it existed
-                    RestoreOriginalMachine();
-                }
-            }
-            else
-            {
-                // Invalid placement - restore original machine
-                RestoreOriginalMachine();
+                // Move machine to new location
+                MoveMachineToCell(originalMachineCell, targetCell);
+                machineMovedOrDeleted = true;
+                Debug.Log($"Moved machine {draggedMachineType.id} from ({originalMachineCell.x}, {originalMachineCell.y}) to ({targetX}, {targetY})");
             }
         }
         else
         {
-            // Dropped outside grid - delete machine and refund credits
-            DeleteMachineWithRefund();
+            // Dropped outside grid - delete with refund
+            DeleteMachineWithRefund(originalMachineCell);
+            machineMovedOrDeleted = true;
+            Debug.Log($"Deleted machine {draggedMachineType.id} and refunded credits");
         }
-    }
-    
-    void HandleClickOperation(Vector2 screenPosition)
-    {
-        if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
+
+        if (!machineMovedOrDeleted)
         {
-            // Use existing click logic but updated for new system
-            CellData cellData = gridManager.GetCellData(x, y);
-            
-            if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
-            {
-                // Rotate existing machine
-                RotateMachine(cellData);
-            }
-            else if (draggedMachineType != null && originalMachineCell == null)
-            {
-                // Place new machine
-                if (IsValidPlacement(cellData, draggedMachineType) && creditsManager.CanAfford(draggedMachineType.cost))
-                {
-                    PlaceMachineAtCell(cellData, draggedMachineType);
-                    creditsManager.TrySpendCredits(draggedMachineType.cost);
-                }
-            }
+            // Invalid drop - restore original machine
+            RestoreOriginalMachine();
+            Debug.Log($"Invalid drop - restored machine {draggedMachineType.id} to original position");
         }
     }
-    
+
+    void MoveMachineToCell(CellData sourceCell, CellData targetCell)
+    {
+        // Move machine data
+        targetCell.cellType = CellType.Machine;
+        targetCell.machineDefId = sourceCell.machineDefId;
+        targetCell.direction = sourceCell.direction;
+        targetCell.machine = sourceCell.machine;
+
+        // Clear source cell
+        sourceCell.cellType = CellType.Blank;
+        sourceCell.machineDefId = null;
+        sourceCell.direction = Direction.Up;
+        sourceCell.machine = null;
+
+        // Update visuals
+        uiGridManager.UpdateCellVisuals(targetCell.x, targetCell.y, targetCell.cellType, targetCell.direction, targetCell.machineDefId);
+        uiGridManager.UpdateCellVisuals(sourceCell.x, sourceCell.y, sourceCell.cellType, sourceCell.direction);
+    }
+
+    void DeleteMachineWithRefund(CellData machineCell)
+    {
+        // Calculate refund
+        float refundPercentage = 0.8f; // 80% refund
+        int refundAmount = Mathf.RoundToInt(draggedMachineType.cost * refundPercentage);
+
+        // Give refund
+        creditsManager.AddCredits(refundAmount);
+
+        // Clear the cell
+        machineCell.cellType = CellType.Blank;
+        machineCell.machineDefId = null;
+        machineCell.direction = Direction.Up;
+        machineCell.machine = null;
+
+        // Update visuals
+        uiGridManager.UpdateCellVisuals(machineCell.x, machineCell.y, machineCell.cellType, machineCell.direction);
+
+        Debug.Log($"Machine deleted. Refunded {refundAmount} credits ({refundPercentage * 100}%)");
+    }
+
     void RestoreOriginalMachine()
     {
         if (originalMachineCell != null)
         {
-            PlaceMachineAtCell(originalMachineCell, draggedMachineType);
+            // Restore the original machine visual
+            uiGridManager.UpdateCellVisuals(originalMachineCell.x, originalMachineCell.y, 
+                originalMachineCell.cellType, originalMachineCell.direction, originalMachineCell.machineDefId);
         }
     }
-    
-    void DeleteMachineWithRefund()
-    {
-        if (originalMachineCell != null)
-        {
-            // Calculate refund amount
-            int refundAmount = Mathf.RoundToInt(draggedMachineType.cost * settings.refundPercentage);
-            creditsManager.AddCredits(refundAmount);
-            
-            Debug.Log($"Machine deleted. Refunded {refundAmount} credits ({settings.refundPercentage * 100}%)");
-        }
-    }
-    
+
     void CleanupDragOperation()
     {
         isDragging = false;
-        draggedMachineType = null;
-        originalMachineCell = null;
+        hasMovedBeyondThreshold = false;
         
         if (ghostMachine != null)
         {
             DestroyImmediate(ghostMachine);
             ghostMachine = null;
         }
-        
-        if (settings.showGridHighlighting)
-        {
-            uiGridManager.ClearHighlights();
-        }
+
+        uiGridManager.ClearHighlights();
+
+        originalMachineCell = null;
+        draggedMachineType = null;
     }
-    
     // Helper methods
-    CellData GetCellData(int x, int y)
+    bool TryGetMachineAtScreenPosition(Vector2 screenPosition, out CellData cellData, out MachineDef machineDef)
     {
-        return gridManager.GetCellData(x, y);
+        cellData = null;
+        machineDef = null;
+
+        if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
+        {
+            cellData = gridManager.GetCellData(x, y);
+            if (cellData != null && cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
+            {
+                machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
+                return machineDef != null;
+            }
+        }
+
+        return false;
+    }
+
+    bool TryGetGridCellAtScreenPosition(Vector2 screenPosition, out int x, out int y)
+    {
+        x = -1;
+        y = -1;
+
+        if (uiGridManager == null || uiGridManager.gridPanel == null) return false;
+
+        Vector2 localPosition;
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            uiGridManager.gridPanel, screenPosition, uiCamera, out localPosition))
+        {
+            var gridData = GameManager.Instance.GetCurrentGrid();
+            if (gridData == null) return false;
+
+            Vector2 gridSize = uiGridManager.gridPanel.rect.size;
+            float cellWidth = gridSize.x / gridData.width;
+            float cellHeight = gridSize.y / gridData.height;
+
+            // Convert local position to grid coordinates
+            localPosition += gridSize * 0.5f; // Offset from center to bottom-left
+            
+            x = Mathf.FloorToInt(localPosition.x / cellWidth);
+            y = Mathf.FloorToInt(localPosition.y / cellHeight);
+
+            return x >= 0 && x < gridData.width && y >= 0 && y < gridData.height;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -386,121 +516,7 @@ public class MachineInputManager : MonoBehaviour, IPointerDownHandler, IPointerU
             machineManager.OnCellClicked(x, y);
         }
     }
-    
-    bool TryGetMachineAtScreenPosition(Vector2 screenPosition, out CellData cellData, out MachineDef machineDef)
-    {
-        cellData = null;
-        machineDef = null;
-        
-        if (TryGetGridCellAtScreenPosition(screenPosition, out int x, out int y))
-        {
-            cellData = gridManager.GetCellData(x, y);
-            if (cellData != null && cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
-            {
-                machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
-                return machineDef != null;
-            }
-        }
-        
-        return false;
-    }
-    
-    bool TryGetGridCellAtScreenPosition(Vector2 screenPosition, out int x, out int y)
-    {
-        x = -1;
-        y = -1;
-        
-        // Convert screen position to grid coordinates
-        RectTransform gridRect = uiGridManager.gridPanel;
-        
-        Vector2 localPosition;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            gridRect, screenPosition, uiCamera, out localPosition))
-        {
-            // Convert local position to grid indices
-            Vector2 gridSize = gridRect.rect.size;
-            GridData gridData = gridManager.GetCurrentGrid();
-            
-            float cellWidth = gridSize.x / gridData.width;
-            float cellHeight = gridSize.y / gridData.height;
-            
-            // Adjust for center-based positioning
-            localPosition += gridSize * 0.5f;
-            
-            x = Mathf.FloorToInt(localPosition.x / cellWidth);
-            y = Mathf.FloorToInt(localPosition.y / cellHeight);
-            
-            return x >= 0 && x < gridData.width && y >= 0 && y < gridData.height;
-        }
-        
-        return false;
-    }
-    
-    bool IsValidPlacement(CellData cellData, MachineDef machineDef)
-    {
-        if (cellData == null || machineDef == null) return false;
-        
-        // Check machine-specific placement rules
-        foreach (string placement in machineDef.gridPlacement)
-        {
-            switch (placement.ToLower())
-            {
-                case "any": return true;
-                case "grid": return cellData.cellRole == CellRole.Grid;
-                case "top": return cellData.cellRole == CellRole.Top;
-                case "bottom": return cellData.cellRole == CellRole.Bottom;
-            }
-        }
-        
-        return false;
-    }
-    
-    void PlaceMachineAtCell(CellData cellData, MachineDef machineDef)
-    {
-        cellData.cellType = CellType.Machine;
-        cellData.machineDefId = machineDef.id;
-        cellData.direction = machineManager.GetLastMachineDirection();
-        
-        // Create machine behavior object
-        cellData.machine = MachineFactory.CreateMachine(cellData);
-        
-        // Update visual
-        uiGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
-    }
-    
-    void RemoveMachineFromCell(CellData cellData)
-    {
-        cellData.cellType = CellType.Blank;
-        cellData.machineDefId = null;
-        cellData.machine = null;
-        
-        // Update visual
-        uiGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction);
-    }
-    
-    void RotateMachine(CellData cellData)
-    {
-        MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
-        if (machineDef != null && machineDef.canRotate)
-        {
-            cellData.direction = (Direction)(((int)cellData.direction + 1) % 4);
-            machineManager.SetLastMachineDirection(cellData.direction);
-            
-            uiGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
-        }
-    }
-    
-    Sprite GetMachineSprite(MachineDef machineDef)
-    {
-        // Try to get sprite from existing machine renderer or load from resources
-        if (!string.IsNullOrEmpty(machineDef.sprite))
-        {
-            return Resources.Load<Sprite>($"Sprites/{machineDef.sprite}");
-        }
-        
-        return null;
-    }
-    
+
     void OnDestroy()
     {
         CleanupDragOperation();

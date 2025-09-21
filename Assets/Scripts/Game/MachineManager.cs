@@ -64,6 +64,7 @@ public class MachineManager : MonoBehaviour
         }
 
         if (enableMachineLogs)
+            if (enableMachineLogs)
             Debug.Log($"Cell clicked at ({x}, {y}): cellType={cellData.cellType}, machineDefId={cellData.machineDefId}, selectedMachine={selectedMachine?.id ?? "null"}");
 
         // If clicking on an existing machine, rotate it
@@ -109,9 +110,6 @@ public class MachineManager : MonoBehaviour
     /// <returns>True if placement is valid, false otherwise</returns>
     private bool IsValidMachinePlacement(CellData cellData, MachineDef machineDef)
     {
-        // Cell must be empty to place a machine
-        if (cellData.cellType != CellType.Blank) return false;
-
         foreach (string placement in machineDef.gridPlacement)
         {
             switch (placement.ToLower())
