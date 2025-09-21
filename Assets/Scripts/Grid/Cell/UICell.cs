@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class UICell : MonoBehaviour
+public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
-    // Essential UI components only
-    public Button cellButton;
-
     // Data/state properties
     public CellType cellType = CellType.Blank;
     public CellRole cellRole = CellRole.Grid;
@@ -23,19 +21,42 @@ public class UICell : MonoBehaviour
     // MachineRenderer handles ALL visuals now
     private MachineRenderer machineRenderer;
 
+    // Drag and drop variables
+    private bool isDragging = false;
+    private Vector2 dragStartPosition;
+    private Vector2 pointerDownPosition;
+    private float dragThreshold = 10f; // pixels
+    private float clickTimeThreshold = 0.5f; // seconds
+    private float pointerDownTime;
+
+    // Visual feedback during drag
+    private CanvasGroup canvasGroup;
+    private GameObject dragVisual;
+    private Canvas dragCanvas;
+
     public enum CellType { Blank, Machine }
     public enum CellRole { Grid, Top, Bottom }
     public enum Direction { Up, Right, Down, Left }
 
     void Awake()
     {
-        if (cellButton == null) cellButton = GetComponent<Button>();
-        cellButton.onClick.AddListener(OnCellClicked);
+        // Remove button functionality - we'll handle all interactions manually
+        Button existingButton = GetComponent<Button>();
+        if (existingButton != null)
+        {
+            DestroyImmediate(existingButton);
+        }
 
-        Debug.Log($"UICell Awake() - cell will be initialized with MachineRenderer for ALL visuals");
+        // Add CanvasGroup for visual feedback
+        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+
+        Debug.Log($"UICell Awake() - cell will be initialized with drag and drop support");
     }
 
-    // Now receive texture/material in Init
     public void Init(int x, int y, UIGridManager gridManager, Texture conveyorTexture, Material conveyorMaterial)
     {
         this.x = x;
@@ -44,7 +65,7 @@ public class UICell : MonoBehaviour
         this.conveyorTexture = conveyorTexture;
         this.conveyorMaterial = conveyorMaterial;
 
-        Debug.Log($"UICell.Init({x}, {y}) - cell ready for machine setup");
+        Debug.Log($"UICell.Init({x}, {y}) - cell ready for machine setup and drag interactions");
     }
 
     public void SetCellRole(CellRole role)
@@ -53,7 +74,6 @@ public class UICell : MonoBehaviour
         Debug.Log($"Cell ({x}, {y}) role set to: {role}");
     }
 
-    // This method now receives all its state data and creates MachineRenderer for ALL visuals
     public void SetCellType(CellType type, Direction direction, string machineDefId = null)
     {
         cellType = type;
@@ -71,7 +91,6 @@ public class UICell : MonoBehaviour
         string defIdToUse = machineDefId;
         if (type == CellType.Blank)
         {
-            // Use different blank machine definitions based on cell role
             switch (cellRole)
             {
                 case CellRole.Top:
@@ -107,7 +126,6 @@ public class UICell : MonoBehaviour
 
     private void SetupMachineRenderer(MachineDef def, Direction direction)
     {
-        // Create MachineRenderer GameObject as child
         GameObject rendererObj = new GameObject("MachineRenderer");
         rendererObj.transform.SetParent(this.transform, false);
 
@@ -117,7 +135,6 @@ public class UICell : MonoBehaviour
         rendererRT.offsetMin = Vector2.zero;
         rendererRT.offsetMax = Vector2.zero;
 
-        // Add ConveyorBelt component if this machine has moving parts that need animation
         if (def.isMoving)
         {
             ConveyorBelt conveyorBelt = rendererObj.AddComponent<ConveyorBelt>();
@@ -139,39 +156,318 @@ public class UICell : MonoBehaviour
         Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
     }
 
-    private float GetCellDirectionRotation(Direction direction)
+    #region Pointer Event Handlers
+
+    public void OnPointerDown(PointerEventData eventData)
     {
-        switch (direction)
+        pointerDownPosition = eventData.position;
+        pointerDownTime = Time.time;
+        dragStartPosition = eventData.position;
+
+        Debug.Log($"Pointer down on cell ({x}, {y}) at position {eventData.position}");
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        // Check if we have a machine that can be dragged
+        if (!GameManager.Instance.CanStartDrag(x, y))
         {
-            case Direction.Up: return 0f;
-            case Direction.Right: return -90f;
-            case Direction.Down: return -180f;
-            case Direction.Left: return -270f;
-            default: return 0f;
+            Debug.Log($"Cannot start drag on cell ({x}, {y}) - no draggable machine");
+            return;
+        }
+
+        // Check if we've moved far enough to start dragging
+        float dragDistance = Vector2.Distance(eventData.position, dragStartPosition);
+        if (dragDistance < dragThreshold)
+        {
+            return;
+        }
+
+        isDragging = true;
+        GameManager.Instance.OnCellDragStarted(x, y);
+
+        CreateDragVisual();
+
+        // Position drag visual at current mouse position immediately
+        if (dragVisual != null)
+        {
+            UpdateDragVisualPosition(eventData);
+        }
+
+        // Make the ORIGINAL cell semi-transparent, not the drag visual
+        SetOriginalCellAlpha(0.3f);
+
+        Debug.Log($"Started dragging machine from cell ({x}, {y})");
+        UnityEditor.EditorApplication.isPaused = true;
+    }
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (!isDragging) return;
+
+        // Update drag visual position
+        UpdateDragVisualPosition(eventData);
+
+        // Highlight potential drop targets
+        UICell hoveredCell = GetCellUnderPointer(eventData);
+        HighlightDropTarget(hoveredCell);
+    }
+
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (!isDragging) return;
+
+        isDragging = false;
+        ClearDragVisual();
+        ClearDropTargetHighlights();
+
+        // Restore original cell visibility
+        SetOriginalCellAlpha(1.0f);
+
+        // Determine where we dropped
+        UICell targetCell = GetCellUnderPointer(eventData);
+
+        if (targetCell != null)
+        {
+            // Dropped on another cell - attempt to move machine
+            if (targetCell != this) // Don't move to same cell
+            {
+                GameManager.Instance.OnCellDropped(x, y, targetCell.x, targetCell.y);
+                Debug.Log($"Dropped machine from ({x}, {y}) to ({targetCell.x}, {targetCell.y})");
+            }
+            else
+            {
+                // Dropped on same cell - trigger rotation
+                GameManager.Instance.OnCellClicked(x, y);
+                Debug.Log($"Dropped machine on same cell ({x}, {y}) - rotating");
+            }
+        }
+        else
+        {
+            // Dropped outside grid - delete machine
+            GameManager.Instance.OnMachineDraggedOutsideGrid(x, y);
+            Debug.Log($"Dropped machine from ({x}, {y}) outside grid - deleting");
         }
     }
 
-    void OnCellClicked()
+    private void SetOriginalCellAlpha(float alpha)
     {
-        GameManager.Instance.OnCellClicked(x, y);
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = alpha;
+        }
     }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        // If we never started dragging, treat as click
+        if (!isDragging)
+        {
+            float clickTime = Time.time - pointerDownTime;
+            float clickDistance = Vector2.Distance(eventData.position, pointerDownPosition);
+
+            if (clickTime <= clickTimeThreshold && clickDistance <= dragThreshold)
+            {
+                Debug.Log($"Treating as click on cell ({x}, {y})");
+                GameManager.Instance.OnCellClicked(x, y);
+            }
+        }
+    }
+
+    #endregion
+
+    #region Drag Visual Methods
+
+    private void CreateDragVisual()
+    {
+        if (machineRenderer == null) return;
+
+        // Find the main Canvas in the scene
+        Canvas mainCanvas = FindObjectOfType<Canvas>();
+        if (mainCanvas == null)
+        {
+            Debug.LogError("Could not find main Canvas for drag visual");
+            return;
+        }
+
+        // Create a simple GameObject for the drag visual
+        dragVisual = new GameObject("DragVisual");
+        dragVisual.transform.SetParent(mainCanvas.transform, false);
+
+        // Add RectTransform
+        RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
+
+        // Set up anchoring - use screen space positioning
+        dragRT.anchorMin = Vector2.zero;
+        dragRT.anchorMax = Vector2.zero;
+        dragRT.pivot = new Vector2(0.5f, 0.5f);
+
+        // Size it similar to a grid cell
+        Vector2 cellSize = GetComponent<RectTransform>().sizeDelta;
+        dragRT.sizeDelta = cellSize;
+
+        // Copy the visual appearance from the machine renderer
+        if (machineRenderer != null)
+        {
+            // Get all Image components from the machine renderer
+            Image[] sourceImages = machineRenderer.GetComponentsInChildren<Image>();
+
+            foreach (Image sourceImage in sourceImages)
+            {
+                // Create a copy of each image
+                GameObject imageObj = new GameObject(sourceImage.name + "_Copy");
+                imageObj.transform.SetParent(dragVisual.transform, false);
+
+                Image copyImage = imageObj.AddComponent<Image>();
+                copyImage.sprite = sourceImage.sprite;
+                copyImage.color = Color.red;
+               // copyImage.color = sourceImage.color;
+                copyImage.material = sourceImage.material;
+
+                // Copy the RectTransform properties
+                RectTransform sourceRT = sourceImage.GetComponent<RectTransform>();
+                RectTransform copyRT = imageObj.GetComponent<RectTransform>();
+
+                copyRT.anchorMin = sourceRT.anchorMin;
+                copyRT.anchorMax = sourceRT.anchorMax;
+                copyRT.anchoredPosition = sourceRT.anchoredPosition;
+                copyRT.sizeDelta = sourceRT.sizeDelta;
+                copyRT.pivot = sourceRT.pivot;
+            }
+        }
+
+        // Make it slightly transparent
+        CanvasGroup dragCanvasGroup = dragVisual.AddComponent<CanvasGroup>();
+        dragCanvasGroup.alpha = 0.8f;
+        dragCanvasGroup.blocksRaycasts = false; // Important: don't block raycasts
+
+        // Make sure it renders on top
+        dragVisual.transform.SetAsLastSibling();
+
+        Debug.Log($"Created drag visual with size: {dragRT.sizeDelta}");
+    }
+
+    private void UpdateDragVisualPosition(PointerEventData eventData)
+    {
+        if (dragVisual == null) return;
+
+        RectTransform dragRT = dragVisual.GetComponent<RectTransform>();
+        if (dragRT == null) return;
+
+        // Get the canvas
+        Canvas canvas = dragVisual.GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+
+        // Convert screen position to canvas position
+        Vector2 canvasPosition;
+        RectTransform canvasRT = canvas.transform as RectTransform;
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRT,
+            eventData.position,
+            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            out canvasPosition))
+        {
+            // Set the position directly
+            dragRT.anchoredPosition = canvasPosition;
+            Debug.Log($"Drag visual positioned at: {canvasPosition}");
+        }
+    }
+
+
+    private void ClearDragVisual()
+{
+    if (dragVisual != null)
+    {
+        DestroyImmediate(dragVisual);
+        dragVisual = null;
+    }
+}
+
+    private void SetDragVisualAlpha(float alpha)
+    {
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = alpha;
+        }
+    }
+
+    private UICell GetCellUnderPointer(PointerEventData eventData)
+    {
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, results);
+
+        foreach (RaycastResult result in results)
+        {
+            // Check if this GameObject has a UICell component
+            UICell cell = result.gameObject.GetComponent<UICell>();
+            if (cell != null)
+            {
+                Debug.Log($"Found UICell at ({cell.x}, {cell.y}) under pointer");
+                return cell;
+            }
+
+            // Also check parent objects in case the raycast hit a child
+            UICell parentCell = result.gameObject.GetComponentInParent<UICell>();
+            if (parentCell != null)
+            {
+                Debug.Log($"Found UICell in parent at ({parentCell.x}, {parentCell.y}) under pointer");
+                return parentCell;
+            }
+        }
+
+        Debug.Log("No UICell found under pointer - will be treated as outside grid");
+        return null;
+    }
+
+    private void HighlightDropTarget(UICell cell)
+    {
+        // Clear previous highlights
+        ClearDropTargetHighlights();
+
+        if (cell != null && cell != this)
+        {
+            // Check if this is a valid drop target
+            bool canDrop = GameManager.Instance.CanDropMachine(x, y, cell.x, cell.y);
+
+            // Add visual highlight
+            cell.SetHighlight(canDrop);
+        }
+    }
+
+    private void ClearDropTargetHighlights()
+    {
+        // Find all cells and clear their highlights
+        UICell[] allCells = FindObjectsOfType<UICell>();
+        foreach (UICell cell in allCells)
+        {
+            cell.SetHighlight(false);
+        }
+    }
+
+    private void SetHighlight(bool highlight)
+    {
+        // Simple highlight implementation - could be enhanced with better visuals
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = highlight ? 1.2f : 1.0f;
+        }
+    }
+
+    #endregion
+
+    #region Existing Methods (unchanged)
 
     public RectTransform GetItemSpawnPoint()
     {
-        // Items should spawn in the ItemsContainer, positioned at this cell's location
         RectTransform itemsContainer = gridManager?.GetItemsContainer();
         if (itemsContainer != null)
         {
-            // Create a virtual spawn point positioned at this cell
             Vector3 cellPosition = gridManager.GetCellWorldPosition(x, y);
-            
-            // For now, return the cell's own transform as the spawn reference
-            // The actual item positioning will be handled by UIGridManager.CreateVisualItem
             Debug.Log($"GetItemSpawnPoint for cell ({x}, {y}) using ItemsContainer positioning");
             return this.GetComponent<RectTransform>();
         }
 
-        // Fallback to original behavior if ItemsContainer not available
         if (machineRenderer != null)
         {
             Transform spawnPointTransform = machineRenderer.transform.Find("ItemSpawnPoint");
@@ -207,4 +503,6 @@ public class UICell : MonoBehaviour
         }
         return null;
     }
+
+    #endregion
 }

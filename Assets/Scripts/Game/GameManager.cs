@@ -12,19 +12,19 @@ public class GameManager : MonoBehaviour
     [Header("Manager References")]
     [Tooltip("Resource loading and initialization manager")]
     public ResourceManager resourceManager;
-    
+
     [Tooltip("Credits and economy system manager")]
     public CreditsManager creditsManager;
-    
+
     [Tooltip("Grid operations manager")]
     public GridManager gridManager;
-    
+
     [Tooltip("Save and load system manager")]
     public SaveLoadManager saveLoadManager;
-    
+
     [Tooltip("Machine placement and rotation manager")]
     public MachineManager machineManager;
-    
+
     [Tooltip("Item movement processing manager")]
     public ItemMovementManager itemMovementManager;
 
@@ -46,7 +46,7 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        
+
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
@@ -65,19 +65,19 @@ public class GameManager : MonoBehaviour
         // Find or create managers if not assigned
         if (resourceManager == null)
             resourceManager = GetComponent<ResourceManager>() ?? gameObject.AddComponent<ResourceManager>();
-            
+
         if (creditsManager == null)
             creditsManager = GetComponent<CreditsManager>() ?? gameObject.AddComponent<CreditsManager>();
-            
+
         if (gridManager == null)
             gridManager = GetComponent<GridManager>() ?? gameObject.AddComponent<GridManager>();
-            
+
         if (saveLoadManager == null)
             saveLoadManager = GetComponent<SaveLoadManager>() ?? gameObject.AddComponent<SaveLoadManager>();
-            
+
         if (machineManager == null)
             machineManager = GetComponent<MachineManager>() ?? gameObject.AddComponent<MachineManager>();
-            
+
         if (itemMovementManager == null)
             itemMovementManager = GetComponent<ItemMovementManager>() ?? gameObject.AddComponent<ItemMovementManager>();
 
@@ -87,7 +87,7 @@ public class GameManager : MonoBehaviour
 
         // Initialize resource manager first
         resourceManager.Initialize();
-        
+
         // Initialize other managers
         creditsManager.Initialize(resourceManager.GetCreditsUI(), resourceManager.GetMachineBarManager());
         gridManager.Initialize(activeGridManager);
@@ -117,10 +117,10 @@ public class GameManager : MonoBehaviour
         {
             StartNewGame();
         }
-        
+
         // Update legacy activeGrids for backward compatibility
         activeGrids = gridManager.GetActiveGrids();
-        
+
         // Initialize UI
         gridManager.InitializeUIGrid();
         creditsManager.UpdateCreditsDisplay();
@@ -133,7 +133,7 @@ public class GameManager : MonoBehaviour
     {
         creditsManager.InitializeNewGame();
         gridManager.CreateDefaultGrid();
-        
+
         // Update legacy compatibility
         activeGrids = gridManager.GetActiveGrids();
     }
@@ -144,7 +144,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator InitializeFromSave()
     {
         yield return saveLoadManager.InitializeMachinesFromSave();
-        
+
         // Update legacy compatibility
         activeGrids = gridManager.GetActiveGrids();
     }
@@ -153,7 +153,7 @@ public class GameManager : MonoBehaviour
     {
         GridData gridData = GetCurrentGrid();
         if (gridData == null) return;
-        
+
         // Update machine logic - delegates to machine objects
         foreach (var cell in gridData.cells)
         {
@@ -162,7 +162,7 @@ public class GameManager : MonoBehaviour
                 cell.machine.UpdateLogic();
             }
         }
-        
+
         // Process item movement
         itemMovementManager.ProcessItemMovement();
     }
@@ -186,6 +186,62 @@ public class GameManager : MonoBehaviour
     public void OnCellClicked(int x, int y)
     {
         machineManager.OnCellClicked(x, y);
+    }
+
+    // <summary>
+    /// Check if a cell contains a machine that can be dragged
+    /// </summary>
+    /// <param name="x">X coordinate of the cell</param>
+    /// <param name="y">Y coordinate of the cell</param>
+    /// <returns>True if the cell contains a draggable machine</returns>
+    public bool CanStartDrag(int x, int y)
+    {
+        return machineManager.CanStartDrag(x, y);
+    }
+
+    /// <summary>
+    /// Called when a drag operation starts on a cell
+    /// </summary>
+    /// <param name="x">X coordinate of the cell being dragged</param>
+    /// <param name="y">Y coordinate of the cell being dragged</param>
+    public void OnCellDragStarted(int x, int y)
+    {
+        machineManager.StartMachineDrag(x, y);
+    }
+
+    /// <summary>
+    /// Check if a machine can be dropped at the target location
+    /// </summary>
+    /// <param name="fromX">Source X coordinate</param>
+    /// <param name="fromY">Source Y coordinate</param>
+    /// <param name="toX">Target X coordinate</param>
+    /// <param name="toY">Target Y coordinate</param>
+    /// <returns>True if the machine can be dropped at the target location</returns>
+    public bool CanDropMachine(int fromX, int fromY, int toX, int toY)
+    {
+        return machineManager.CanDropMachine(fromX, fromY, toX, toY);
+    }
+
+    /// <summary>
+    /// Called when a machine is dropped on another cell
+    /// </summary>
+    /// <param name="fromX">Source X coordinate</param>
+    /// <param name="fromY">Source Y coordinate</param>
+    /// <param name="toX">Target X coordinate</param>
+    /// <param name="toY">Target Y coordinate</param>
+    public void OnCellDropped(int fromX, int fromY, int toX, int toY)
+    {
+        machineManager.MoveMachine(fromX, fromY, toX, toY);
+    }
+
+    /// <summary>
+    /// Called when a machine is dragged outside the grid (should be deleted)
+    /// </summary>
+    /// <param name="x">X coordinate of the machine to delete</param>
+    /// <param name="y">Y coordinate of the machine to delete</param>
+    public void OnMachineDraggedOutsideGrid(int x, int y)
+    {
+        machineManager.DeleteMachine(x, y);
     }
 
     /// <summary>

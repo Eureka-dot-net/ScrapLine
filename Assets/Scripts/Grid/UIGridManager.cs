@@ -75,6 +75,13 @@ public class UIGridManager : MonoBehaviour
                 UICell cellScript = cellObj.GetComponent<UICell>();
                 cellScripts[x, y] = cellScript;
 
+                if (cellObj.GetComponent<Image>() == null)
+                {
+                    var image = cellObj.AddComponent<Image>();
+                    image.color = new Color(0, 0, 0, 0); // Fully transparent
+                    image.raycastTarget = true; // Must be true for UI events!
+                }
+
                 // *** Pass shared resources to cell ***
                 cellScript.Init(x, y, this, conveyorSharedTexture, conveyorSharedMaterial);
 
@@ -141,7 +148,7 @@ public class UIGridManager : MonoBehaviour
         bordersContainer.sizeDelta = gridPanel.sizeDelta;
 
         gridPanel.SetSiblingIndex(0);
-        
+
         bordersObj.transform.SetSiblingIndex(1);
 
         // Create ItemsContainer (index 2) - ABOVE GridPanel for moving items
@@ -426,7 +433,7 @@ public class UIGridManager : MonoBehaviour
     {
         return visualItems.TryGetValue(itemId, out GameObject item) && item != null;
     }
-    
+
     public GameObject GetVisualItem(string itemId)
     {
         visualItems.TryGetValue(itemId, out GameObject item);
@@ -459,7 +466,7 @@ public class UIGridManager : MonoBehaviour
 
         // Check if this item is waiting and should be stacked
         Vector3 targetPos = Vector3.Lerp(startPos, endPos, progress);
-        
+
         // If the item is at the halfway point (progress 0.5) and moving to a processor, apply stacking
         if (progress >= 0.5f && endCell.GetComponent<UICell>() != null)
         {
@@ -496,7 +503,7 @@ public class UIGridManager : MonoBehaviour
         }
         return null;
     }
-    
+
     /// <summary>
     /// Calculates the visual offset for stacking items based on their stack index
     /// </summary>
@@ -504,19 +511,19 @@ public class UIGridManager : MonoBehaviour
     {
         if (stackIndex == 0)
             return Vector3.zero; // Center item
-            
+
         Vector2 cellSize = GetCellSize();
         float itemSize = cellSize.x / 2f; // Items are 1/2 of cell size (corrected from 1/3)
         float maxStackOffset = (cellSize.x / 2f) - (itemSize / 2f); // Don't go beyond cell boundary
-        
+
         // Alternate left and right: 1=left, 2=right, 3=left2, 4=right2, etc.
         bool isLeft = (stackIndex % 2 == 1);
         int stackLevel = (stackIndex + 1) / 2; // How far from center (1, 2, 3...)
-        
+
         // Use much smaller spacing - just a few pixels between items
         float smallSpacing = itemSize * 0.15f; // 15% of item size for minimal spacing
         float requestedOffset = stackLevel * smallSpacing;
-        
+
         // If the requested offset would go beyond boundaries, stack items on top of each other
         float offsetDistance;
         if (requestedOffset > maxStackOffset)
@@ -528,11 +535,11 @@ public class UIGridManager : MonoBehaviour
         {
             offsetDistance = requestedOffset;
         }
-        
+
         float xOffset = isLeft ? -offsetDistance : offsetDistance;
-        
+
         Debug.Log($"Stack index {stackIndex}: isLeft={isLeft}, level={stackLevel}, requested={requestedOffset:F1}, actual offset=({xOffset:F1}, 0), itemSize={itemSize}, maxOffset={maxStackOffset}");
-        
+
         return new Vector3(xOffset, 0, 0);
     }
 
@@ -570,11 +577,11 @@ public class UIGridManager : MonoBehaviour
         {
             Vector2 cellSize = layout.cellSize;
             Vector2 spacing = layout.spacing;
-            
+
             // Calculate position within grid (using grid coordinates)
             float xPos = x * (cellSize.x + spacing.x);
             float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
-            
+
             // Get grid panel's world position and add offset
             Vector3 gridWorldPos = gridPanel.transform.position;
             Vector3 calculatedPos = new Vector3(
@@ -582,7 +589,7 @@ public class UIGridManager : MonoBehaviour
                 gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
                 gridWorldPos.z
             );
-            
+
             Debug.Log($"GetCellWorldPosition({x}, {y}) calculated: {calculatedPos} (cellSize: {cellSize}, spacing: {spacing})");
             return calculatedPos;
         }
@@ -595,7 +602,7 @@ public class UIGridManager : MonoBehaviour
             Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform fallback: {position}");
             return position;
         }
-        
+
         Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
         return Vector3.zero;
     }
