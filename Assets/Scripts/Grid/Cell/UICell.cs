@@ -400,6 +400,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     {
         if (string.IsNullOrEmpty(draggedMachineDefId) || dragVisual == null)
         {
+            Debug.LogError("CreateMachineVisualFromDefinition: Missing machine ID or drag visual");
             return false;
         }
 
@@ -407,8 +408,11 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         var machineDef = FactoryRegistry.Instance.GetMachine(draggedMachineDefId);
         if (machineDef == null)
         {
+            Debug.LogError($"CreateMachineVisualFromDefinition: Could not find machine definition for {draggedMachineDefId}");
             return false;
         }
+
+        Debug.Log($"CreateMachineVisualFromDefinition: Creating visual for {draggedMachineDefId} with sprites: main={machineDef.sprite}, building={machineDef.buildingSprite}, border={machineDef.borderSprite}");
 
         // Create a temporary MachineRenderer to generate the visual
         GameObject tempRenderer = new GameObject("TempMachineRenderer");
@@ -424,6 +428,9 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Add MachineRenderer component and set it up
         MachineRenderer tempMachineRenderer = tempRenderer.AddComponent<MachineRenderer>();
         
+        // Set isInMenu = true so the renderer keeps all sprites locally instead of using separated containers
+        tempMachineRenderer.isInMenu = true;
+        
         // Find the grid manager to get shared resources
         var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
@@ -437,10 +444,12 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
                 gridManager.conveyorSharedMaterial
             );
             
+            Debug.Log($"CreateMachineVisualFromDefinition: Successfully created visual for {draggedMachineDefId}");
             return true;
         }
         else
         {
+            Debug.LogError("CreateMachineVisualFromDefinition: Could not find UIGridManager");
             DestroyImmediate(tempRenderer);
             return false;
         }
