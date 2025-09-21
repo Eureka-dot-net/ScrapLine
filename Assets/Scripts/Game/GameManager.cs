@@ -259,6 +259,19 @@ public class GameManager : MonoBehaviour
         return machineManager.CanDropMachineWithDefId(x, y, machineDefId);
     }
 
+    public void RefundMachineWithId(string machineDefId)
+    {
+        var machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
+        if (machineDef != null)
+        {
+            creditsManager.RefundMachine(machineDef.cost);
+        }
+        else
+        {
+            Debug.LogWarning($"RefundMachineWithId: Invalid machineDefId '{machineDefId}'");
+        }
+    }
+
     /// <summary>
     /// Set the selected machine for placement
     /// </summary>

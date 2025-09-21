@@ -256,9 +256,9 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         {
             // Dropped on another cell - attempt to place machine using stored data
             bool placementSuccess = GameManager.Instance.PlaceDraggedMachine(
-                targetCell.x, 
-                targetCell.y, 
-                draggedMachineDefId, 
+                targetCell.x,
+                targetCell.y,
+                draggedMachineDefId,
                 draggedMachineDirection
             );
 
@@ -277,6 +277,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         else
         {
             // Dropped outside grid - machine is deleted (no need to restore)
+            GameManager.Instance.RefundMachineWithId(draggedMachineDefId);
         }
 
         // Clear stored drag data
@@ -306,8 +307,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             Debug.Log($"Restored machine {draggedMachineDefId} to original cell ({x}, {y})");
         }
     }
-
-
 
     public void OnPointerUp(PointerEventData eventData)
     {
@@ -591,17 +590,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
 
         return fallbackSpawn.GetComponent<RectTransform>();
-    }
-
-    private string GetMachineDefId()
-    {
-        var gridManager = FindFirstObjectByType<UIGridManager>();
-        if (gridManager != null)
-        {
-            var cellData = gridManager.GetCellData(x, y);
-            return cellData?.machineDefId;
-        }
-        return null;
     }
 
     #endregion

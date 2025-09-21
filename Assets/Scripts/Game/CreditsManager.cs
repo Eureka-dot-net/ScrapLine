@@ -113,7 +113,7 @@ public class CreditsManager : MonoBehaviour
         currentCredits += refundAmount;
         
         if (enableCreditsLogs)
-            Debug.Log($"Refunded {refundAmount} credits ({machineRefundPercentage:P0} of {machineCost}) for machine disposal");
+            Debug.Log($"Refunded {refundAmount} credits ({machineRefundPercentage:P0} of {machineCost}) for machine disposal. New credits are {currentCredits}.");
         
         UpdateCreditsDisplay();
         return refundAmount;
