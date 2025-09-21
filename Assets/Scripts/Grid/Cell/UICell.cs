@@ -31,8 +31,9 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     // Visual feedback during drag
     private CanvasGroup canvasGroup;
-    private GameObject dragVisual;
-    private Canvas dragCanvas;
+    private Transform originalParent; // Store original parent during drag
+    private Vector3 originalPosition; // Store original position during drag
+    private int originalSiblingIndex; // Store original sibling index during drag
 
     public enum CellType { Blank, Machine }
     public enum CellRole { Grid, Top, Bottom }
@@ -153,7 +154,31 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             movingPartMaterial: conveyorMaterial
         );
 
+        // Ensure child images don't block raycasts
+        EnsureChildImageRaycastSettings();
+
         Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
+    }
+
+    private void EnsureChildImageRaycastSettings()
+    {
+        // Ensure the root cell has an invisible Image with raycastTarget=true
+        Image rootImage = GetComponent<Image>();
+        if (rootImage != null)
+        {
+            rootImage.raycastTarget = true;
+        }
+
+        // Ensure all child Image components have raycastTarget=false to avoid blocking events
+        if (machineRenderer != null)
+        {
+            Image[] childImages = machineRenderer.GetComponentsInChildren<Image>();
+            foreach (Image childImage in childImages)
+            {
+                childImage.raycastTarget = false;
+                Debug.Log($"Set raycastTarget=false for child image: {childImage.name}");
+            }
+        }
     }
 
     #region Pointer Event Handlers
@@ -186,26 +211,26 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         isDragging = true;
         GameManager.Instance.OnCellDragStarted(x, y);
 
-        CreateDragVisual();
+        // Move the actual machine renderer instead of creating a copy
+        MoveMachineToMovingContainer();
 
-        // Position drag visual at current mouse position immediately
-        if (dragVisual != null)
+        // Position machine renderer at current mouse position immediately
+        if (machineRenderer != null)
         {
-            UpdateDragVisualPosition(eventData);
+            UpdateMachinePosition(eventData);
         }
 
-        // Make the ORIGINAL cell semi-transparent, not the drag visual
+        // Make the ORIGINAL cell semi-transparent (it's now empty)
         SetOriginalCellAlpha(0.3f);
 
         Debug.Log($"Started dragging machine from cell ({x}, {y})");
-        UnityEditor.EditorApplication.isPaused = true;
     }
     public void OnDrag(PointerEventData eventData)
     {
         if (!isDragging) return;
 
-        // Update drag visual position
-        UpdateDragVisualPosition(eventData);
+        // Update machine renderer position
+        UpdateMachinePosition(eventData);
 
         // Highlight potential drop targets
         UICell hoveredCell = GetCellUnderPointer(eventData);
@@ -218,7 +243,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         if (!isDragging) return;
 
         isDragging = false;
-        ClearDragVisual();
         ClearDropTargetHighlights();
 
         // Restore original cell visibility
@@ -232,12 +256,25 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             // Dropped on another cell - attempt to move machine
             if (targetCell != this) // Don't move to same cell
             {
-                GameManager.Instance.OnCellDropped(x, y, targetCell.x, targetCell.y);
-                Debug.Log($"Dropped machine from ({x}, {y}) to ({targetCell.x}, {targetCell.y})");
+                // Check if the move is valid before attempting it
+                if (GameManager.Instance.CanDropMachine(x, y, targetCell.x, targetCell.y))
+                {
+                    // Move is valid, perform the move
+                    GameManager.Instance.OnCellDropped(x, y, targetCell.x, targetCell.y);
+                    Debug.Log($"Successfully moved machine from ({x}, {y}) to ({targetCell.x}, {targetCell.y})");
+                    // Machine was moved successfully, don't restore to original position
+                }
+                else
+                {
+                    // Move is invalid, restore machine to original position
+                    RestoreMachineToOriginalPosition();
+                    Debug.Log($"Invalid move from ({x}, {y}) to ({targetCell.x}, {targetCell.y}) - restored to original position");
+                }
             }
             else
             {
-                // Dropped on same cell - trigger rotation
+                // Dropped on same cell - restore position and trigger rotation
+                RestoreMachineToOriginalPosition();
                 GameManager.Instance.OnCellClicked(x, y);
                 Debug.Log($"Dropped machine on same cell ({x}, {y}) - rotating");
             }
@@ -247,6 +284,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             // Dropped outside grid - delete machine
             GameManager.Instance.OnMachineDraggedOutsideGrid(x, y);
             Debug.Log($"Dropped machine from ({x}, {y}) outside grid - deleting");
+            // Don't restore position since machine is being deleted
         }
     }
 
@@ -276,86 +314,57 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     #endregion
 
-    #region Drag Visual Methods
+    #region Machine Movement Methods
 
-    private void CreateDragVisual()
+    private void MoveMachineToMovingContainer()
     {
         if (machineRenderer == null) return;
 
-        // Find the main Canvas in the scene
-        Canvas mainCanvas = FindObjectOfType<Canvas>();
-        if (mainCanvas == null)
+        // Store original transform information
+        originalParent = machineRenderer.transform.parent;
+        originalPosition = machineRenderer.transform.position;
+        originalSiblingIndex = machineRenderer.transform.GetSiblingIndex();
+
+        // Get the moving items container from gridManager
+        RectTransform movingContainer = gridManager.GetItemsContainer();
+        if (movingContainer == null)
         {
-            Debug.LogError("Could not find main Canvas for drag visual");
+            movingContainer = gridManager.movingItemsContainer;
+        }
+        
+        if (movingContainer == null)
+        {
+            Debug.LogError("No moving container available for drag operation");
             return;
         }
 
-        // Create a simple GameObject for the drag visual
-        dragVisual = new GameObject("DragVisual");
-        dragVisual.transform.SetParent(mainCanvas.transform, false);
+        // Move machine renderer to the moving container
+        machineRenderer.transform.SetParent(movingContainer, true);
+        
+        // Ensure it renders on top
+        machineRenderer.transform.SetAsLastSibling();
 
-        // Add RectTransform
-        RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
-
-        // Set up anchoring - use screen space positioning
-        dragRT.anchorMin = Vector2.zero;
-        dragRT.anchorMax = Vector2.zero;
-        dragRT.pivot = new Vector2(0.5f, 0.5f);
-
-        // Size it similar to a grid cell
-        Vector2 cellSize = GetComponent<RectTransform>().sizeDelta;
-        dragRT.sizeDelta = cellSize;
-
-        // Copy the visual appearance from the machine renderer
-        if (machineRenderer != null)
+        // Add visual feedback during drag
+        CanvasGroup machineCanvasGroup = machineRenderer.GetComponent<CanvasGroup>();
+        if (machineCanvasGroup == null)
         {
-            // Get all Image components from the machine renderer
-            Image[] sourceImages = machineRenderer.GetComponentsInChildren<Image>();
-
-            foreach (Image sourceImage in sourceImages)
-            {
-                // Create a copy of each image
-                GameObject imageObj = new GameObject(sourceImage.name + "_Copy");
-                imageObj.transform.SetParent(dragVisual.transform, false);
-
-                Image copyImage = imageObj.AddComponent<Image>();
-                copyImage.sprite = sourceImage.sprite;
-                copyImage.color = Color.red;
-               // copyImage.color = sourceImage.color;
-                copyImage.material = sourceImage.material;
-
-                // Copy the RectTransform properties
-                RectTransform sourceRT = sourceImage.GetComponent<RectTransform>();
-                RectTransform copyRT = imageObj.GetComponent<RectTransform>();
-
-                copyRT.anchorMin = sourceRT.anchorMin;
-                copyRT.anchorMax = sourceRT.anchorMax;
-                copyRT.anchoredPosition = sourceRT.anchoredPosition;
-                copyRT.sizeDelta = sourceRT.sizeDelta;
-                copyRT.pivot = sourceRT.pivot;
-            }
+            machineCanvasGroup = machineRenderer.gameObject.AddComponent<CanvasGroup>();
         }
+        machineCanvasGroup.alpha = 0.8f;
+        machineCanvasGroup.blocksRaycasts = false; // Don't block raycasts during drag
 
-        // Make it slightly transparent
-        CanvasGroup dragCanvasGroup = dragVisual.AddComponent<CanvasGroup>();
-        dragCanvasGroup.alpha = 0.8f;
-        dragCanvasGroup.blocksRaycasts = false; // Important: don't block raycasts
-
-        // Make sure it renders on top
-        dragVisual.transform.SetAsLastSibling();
-
-        Debug.Log($"Created drag visual with size: {dragRT.sizeDelta}");
+        Debug.Log($"Moved machine renderer to moving container: {movingContainer.name}");
     }
 
-    private void UpdateDragVisualPosition(PointerEventData eventData)
+    private void UpdateMachinePosition(PointerEventData eventData)
     {
-        if (dragVisual == null) return;
+        if (machineRenderer == null) return;
 
-        RectTransform dragRT = dragVisual.GetComponent<RectTransform>();
-        if (dragRT == null) return;
+        RectTransform machineRT = machineRenderer.GetComponent<RectTransform>();
+        if (machineRT == null) return;
 
         // Get the canvas
-        Canvas canvas = dragVisual.GetComponentInParent<Canvas>();
+        Canvas canvas = machineRenderer.GetComponentInParent<Canvas>();
         if (canvas == null) return;
 
         // Convert screen position to canvas position
@@ -369,20 +378,38 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             out canvasPosition))
         {
             // Set the position directly
-            dragRT.anchoredPosition = canvasPosition;
-            Debug.Log($"Drag visual positioned at: {canvasPosition}");
+            machineRT.anchoredPosition = canvasPosition;
+            Debug.Log($"Machine positioned at: {canvasPosition}");
         }
     }
 
-
-    private void ClearDragVisual()
-{
-    if (dragVisual != null)
+    private void RestoreMachineToOriginalPosition()
     {
-        DestroyImmediate(dragVisual);
-        dragVisual = null;
+        if (machineRenderer == null || originalParent == null) return;
+
+        // Remove drag visual feedback
+        CanvasGroup machineCanvasGroup = machineRenderer.GetComponent<CanvasGroup>();
+        if (machineCanvasGroup != null)
+        {
+            machineCanvasGroup.alpha = 1.0f;
+            machineCanvasGroup.blocksRaycasts = true;
+        }
+
+        // Restore original parent and position
+        machineRenderer.transform.SetParent(originalParent, false);
+        machineRenderer.transform.SetSiblingIndex(originalSiblingIndex);
+        
+        // Reset anchored position to center
+        RectTransform machineRT = machineRenderer.GetComponent<RectTransform>();
+        if (machineRT != null)
+        {
+            machineRT.anchoredPosition = Vector2.zero;
+        }
+
+        Debug.Log($"Restored machine renderer to original position in cell ({x}, {y})");
     }
-}
+
+    #endregion
 
     private void SetDragVisualAlpha(float alpha)
     {
