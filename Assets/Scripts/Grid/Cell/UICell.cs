@@ -30,8 +30,7 @@ public class UICell : MonoBehaviour
     void Awake()
     {
         if (cellButton == null) cellButton = GetComponent<Button>();
-        cellButton.onClick.AddListener(OnCellClicked);
-
+        // Remove the click listener - drag-drop manager handles all input now
         Debug.Log($"UICell Awake() - cell will be initialized with MachineRenderer for ALL visuals");
     }
 
@@ -151,10 +150,7 @@ public class UICell : MonoBehaviour
         }
     }
 
-    void OnCellClicked()
-    {
-        GameManager.Instance.OnCellClicked(x, y);
-    }
+    // Note: OnCellClicked removed - all input now handled by MachineDragDropManager
 
     public RectTransform GetItemSpawnPoint()
     {
