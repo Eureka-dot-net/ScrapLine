@@ -223,10 +223,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             Debug.LogError("Failed to create drag visual!");
             return;
         }
-
         // Now blank the original cell immediately (both data and visuals)
         // This prevents phantom machine effects
         GameManager.Instance.OnCellDragStarted(x, y);
+
     }
     public void OnDrag(PointerEventData eventData)
     {
