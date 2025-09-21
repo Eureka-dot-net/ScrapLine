@@ -130,6 +130,13 @@ public class ItemMovementManager : MonoBehaviour
             return;
         }
 
+        // Update visual position to completion BEFORE calling OnItemArrived
+        // This prevents teleporting when OnItemArrived immediately starts next movement
+        if (activeGridManager.HasVisualItem(item.id))
+        {
+            activeGridManager.UpdateItemVisualPosition(item.id, 1f, item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
+        }
+
         sourceCell.items.Remove(item);
         targetCell.items.Add(item);
 
@@ -141,11 +148,6 @@ public class ItemMovementManager : MonoBehaviour
         if (targetCell.machine != null)
         {
             targetCell.machine.OnItemArrived(item);
-        }
-
-        if (activeGridManager.HasVisualItem(item.id))
-        {
-            activeGridManager.UpdateItemVisualPosition(item.id, 1f, item.sourceX, item.sourceY, item.targetX, item.targetY, sourceCell.direction);
         }
     }
 
