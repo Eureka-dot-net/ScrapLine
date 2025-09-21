@@ -314,13 +314,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
     }
 
-    private void SetOriginalCellAlpha(float alpha)
-    {
-        if (canvasGroup != null)
-        {
-            canvasGroup.alpha = alpha;
-        }
-    }
+
 
     public void OnPointerUp(PointerEventData eventData)
     {
@@ -361,9 +355,9 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Add RectTransform
         RectTransform dragRT = dragVisual.AddComponent<RectTransform>();
 
-        // Set up anchoring - use screen space positioning
-        dragRT.anchorMin = Vector2.zero;
-        dragRT.anchorMax = Vector2.zero;
+        // Set up anchoring to center-center for proper positioning
+        dragRT.anchorMin = new Vector2(0.5f, 0.5f);
+        dragRT.anchorMax = new Vector2(0.5f, 0.5f);
         dragRT.pivot = new Vector2(0.5f, 0.5f);
 
         // Size it similar to a grid cell
@@ -422,18 +416,17 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         if (canvas == null) return;
 
         // Convert screen position to canvas position
-        Vector2 canvasPosition;
+        Vector2 localPoint;
         RectTransform canvasRT = canvas.transform as RectTransform;
 
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvasRT,
             eventData.position,
             canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
-            out canvasPosition))
+            out localPoint))
         {
-            // Set the position directly
-            dragRT.anchoredPosition = canvasPosition;
-            Debug.Log($"Drag visual positioned at: {canvasPosition}");
+            // Set the position directly in canvas space
+            dragRT.anchoredPosition = localPoint;
         }
     }
 
@@ -447,13 +440,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     }
 }
 
-    private void SetDragVisualAlpha(float alpha)
-    {
-        if (canvasGroup != null)
-        {
-            canvasGroup.alpha = alpha;
-        }
-    }
+
 
     private UICell GetCellUnderPointer(PointerEventData eventData)
     {
@@ -488,10 +475,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Clear previous highlights
         ClearDropTargetHighlights();
 
-        if (cell != null && cell != this)
+        if (cell != null && cell != this && !string.IsNullOrEmpty(draggedMachineDefId))
         {
-            // Check if this is a valid drop target
-            bool canDrop = GameManager.Instance.CanDropMachine(x, y, cell.x, cell.y);
+            // Use the new validation method that works with stored machine data
+            bool canDrop = GameManager.Instance.CanDropMachineWithDefId(cell.x, cell.y, draggedMachineDefId);
 
             // Add visual highlight
             cell.SetHighlight(canDrop);
