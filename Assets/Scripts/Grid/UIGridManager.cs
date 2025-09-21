@@ -271,7 +271,7 @@ public class UIGridManager : MonoBehaviour
                 // Position the overlay at the correct grid cell location
                 RectTransform rt = overlay.GetComponent<RectTransform>();
                 Vector2 cellSize = GetCellSize();
-                Vector2 cellPosition = GetCellWorldPosition(x, y);
+                Vector3 cellPosition = GetCellWorldPosition(x, y);
                 
                 rt.sizeDelta = cellSize;
                 rt.anchorMin = new Vector2(0, 0);
@@ -426,24 +426,48 @@ public class UIGridManager : MonoBehaviour
     // Helper methods for drag-drop manager
     public Vector2 GetCellSize()
     {
-        if (gridData == null) return Vector2.zero;
-        
-        Vector2 gridSize = gridPanel.rect.size;
-        return new Vector2(gridSize.x / gridData.width, gridSize.y / gridData.height);
+        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
+        Vector2 cellSize = layout != null ? layout.cellSize : Vector2.zero;
+        Debug.Log($"GetCellSize() returning: {cellSize}");
+        return cellSize;
     }
 
-    public Vector2 GetCellWorldPosition(int x, int y)
+    public Vector3 GetCellWorldPosition(int x, int y)
     {
-        if (gridData == null) return Vector2.zero;
+        // Always use calculated position to ensure accuracy during initialization
+        GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
+        if (layout != null && gridData != null)
+        {
+            Vector2 cellSize = layout.cellSize;
+            Vector2 spacing = layout.spacing;
+            
+            // Calculate position within grid (using grid coordinates)
+            float xPos = x * (cellSize.x + spacing.x);
+            float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
+            
+            // Get grid panel's world position and add offset
+            Vector3 gridWorldPos = gridPanel.transform.position;
+            Vector3 calculatedPos = new Vector3(
+                gridWorldPos.x + xPos - (gridData.width * (cellSize.x + spacing.x)) / 2 + cellSize.x / 2,
+                gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
+                gridWorldPos.z
+            );
+            
+            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated: {calculatedPos} (cellSize: {cellSize}, spacing: {spacing})");
+            return calculatedPos;
+        }
+
+        // Fallback to cell transform if grid layout calculation fails
+        UICell cell = GetCell(x, y);
+        if (cell != null)
+        {
+            Vector3 position = cell.transform.position;
+            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform fallback: {position}");
+            return position;
+        }
         
-        Vector2 cellSize = GetCellSize();
-        Vector2 gridSize = gridPanel.rect.size;
-        
-        // Calculate position relative to grid panel center
-        float posX = (x - (gridData.width - 1) * 0.5f) * cellSize.x;
-        float posY = (y - (gridData.height - 1) * 0.5f) * cellSize.y;
-        
-        return new Vector2(posX, posY);
+        Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
+        return Vector3.zero;
     }
 
 
