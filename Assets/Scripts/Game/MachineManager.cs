@@ -131,16 +131,38 @@ public class MachineManager : MonoBehaviour
 
     /// <summary>
     /// Prepare a machine for dragging (called when drag starts)
+    /// This immediately blanks the original cell to prevent phantom machines
     /// </summary>
     /// <param name="x">X coordinate of the machine being dragged</param>
     /// <param name="y">Y coordinate of the machine being dragged</param>
     public void StartMachineDrag(int x, int y)
     {
         if (enableMachineLogs)
-            Debug.Log($"Starting machine drag from cell ({x}, {y})");
+            Debug.Log($"Starting machine drag from cell ({x}, {y}) - blanking original cell");
 
-        // Could add visual feedback here if needed
-        // For now, just log the action
+        CellData cellData = gridManager.GetCellData(x, y);
+        if (cellData == null || cellData.cellType != CellType.Machine)
+        {
+            if (enableMachineLogs)
+                Debug.LogWarning($"StartMachineDrag({x}, {y}): No machine to drag");
+            return;
+        }
+
+        // Immediately blank the original cell (both logic and visuals)
+        // This prevents phantom machine effects during drag
+        cellData.cellType = CellType.Blank;
+        cellData.machineDefId = null;
+        cellData.direction = Direction.Up;
+        cellData.machine = null;
+
+        // Update visuals to show cell as blank
+        if (activeGridManager != null)
+        {
+            activeGridManager.UpdateCellVisuals(x, y, cellData.cellType, cellData.direction, null);
+        }
+
+        if (enableMachineLogs)
+            Debug.Log($"Successfully blanked original cell ({x}, {y}) for drag operation");
     }
 
     /// <summary>
@@ -201,6 +223,50 @@ public class MachineManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Check if a machine can be placed at the target location using machine definition ID
+    /// Used for drag-and-drop operations where source cell is already blanked
+    /// </summary>
+    /// <param name="toX">Target X coordinate</param>
+    /// <param name="toY">Target Y coordinate</param>
+    /// <param name="machineDefId">Machine definition ID to check</param>
+    /// <returns>True if the machine can be dropped at the target location</returns>
+    public bool CanDropMachineWithDefId(int toX, int toY, string machineDefId)
+    {
+        CellData targetCellData = gridManager.GetCellData(toX, toY);
+
+        if (targetCellData == null)
+        {
+            if (enableMachineLogs)
+                Debug.LogError($"CanDropMachineWithDefId: Invalid target coordinates ({toX}, {toY})");
+            return false;
+        }
+
+        // Check if target cell is empty
+        if (targetCellData.cellType != CellType.Blank)
+        {
+            if (enableMachineLogs)
+                Debug.Log($"CanDropMachineWithDefId: Target cell ({toX}, {toY}) is not empty");
+            return false;
+        }
+
+        // Check if machine can be placed at target location
+        MachineDef machineDef = FactoryRegistry.Instance.GetMachine(machineDefId);
+        if (machineDef == null)
+        {
+            if (enableMachineLogs)
+                Debug.LogError($"CanDropMachineWithDefId: Cannot find machine definition for {machineDefId}");
+            return false;
+        }
+
+        bool canPlace = IsValidMachinePlacement(targetCellData, machineDef);
+
+        if (enableMachineLogs)
+            Debug.Log($"CanDropMachineWithDefId({toX}, {toY}) for {machineDefId}: {canPlace}");
+
+        return canPlace;
+    }
+
+    /// <summary>
     /// Move a machine from one cell to another
     /// </summary>
     /// <param name="fromX">Source X coordinate</param>
@@ -253,6 +319,59 @@ public class MachineManager : MonoBehaviour
 
         if (enableMachineLogs)
             Debug.Log($"Successfully moved machine from ({fromX}, {fromY}) to ({toX}, {toY})");
+    }
+
+    /// <summary>
+    /// Place a dragged machine at the target location using stored machine data
+    /// Used when completing a successful drag-and-drop operation
+    /// </summary>
+    /// <param name="x">Target X coordinate</param>
+    /// <param name="y">Target Y coordinate</param>
+    /// <param name="machineDefId">Machine definition ID to place</param>
+    /// <param name="direction">Direction of the machine</param>
+    /// <returns>True if placement was successful, false otherwise</returns>
+    public bool PlaceDraggedMachine(int x, int y, string machineDefId, Direction direction)
+    {
+        // Use the new validation method that doesn't require source cell data
+        if (!CanDropMachineWithDefId(x, y, machineDefId))
+        {
+            if (enableMachineLogs)
+                Debug.LogWarning($"PlaceDraggedMachine({x}, {y}): Cannot place {machineDefId} at target location");
+            return false;
+        }
+
+        CellData targetCellData = gridManager.GetCellData(x, y);
+        if (targetCellData == null)
+        {
+            if (enableMachineLogs)
+                Debug.LogError($"PlaceDraggedMachine({x}, {y}): No cell data found");
+            return false;
+        }
+
+        if (enableMachineLogs)
+            Debug.Log($"Placing dragged machine {machineDefId} at ({x}, {y}) with direction {direction}");
+
+        // Place the machine (no cost since it's being moved, not newly placed)
+        targetCellData.cellType = CellType.Machine;
+        targetCellData.machineDefId = machineDefId;
+        targetCellData.direction = direction;
+        targetCellData.machine = MachineFactory.CreateMachine(targetCellData);
+        
+        if (targetCellData.machine == null)
+        {
+            Debug.LogError($"Failed to create machine object for dragged {machineDefId}");
+        }
+
+        // Update visuals
+        if (activeGridManager != null)
+        {
+            activeGridManager.UpdateCellVisuals(x, y, targetCellData.cellType, targetCellData.direction, targetCellData.machineDefId);
+        }
+
+        if (enableMachineLogs)
+            Debug.Log($"Successfully placed dragged machine {machineDefId} at ({x}, {y})");
+
+        return true;
     }
 
     /// <summary>

@@ -234,6 +234,32 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Place a dragged machine at the target location
+    /// </summary>
+    /// <param name="x">Target X coordinate</param>
+    /// <param name="y">Target Y coordinate</param>
+    /// <param name="machineDefId">Machine definition ID to place</param>
+    /// <param name="direction">Direction of the machine</param>
+    /// <returns>True if placement was successful, false otherwise</returns>
+    public bool PlaceDraggedMachine(int x, int y, string machineDefId, UICell.Direction direction)
+    {
+        return machineManager.PlaceDraggedMachine(x, y, machineDefId, direction);
+    }
+
+    /// <summary>
+    /// Check if a machine can be dropped at the target location using machine definition ID
+    /// Used for drag-and-drop validation when source cell is already blanked
+    /// </summary>
+    /// <param name="x">Target X coordinate</param>
+    /// <param name="y">Target Y coordinate</param>
+    /// <param name="machineDefId">Machine definition ID to check</param>
+    /// <returns>True if the machine can be dropped at the target location</returns>
+    public bool CanDropMachineWithDefId(int x, int y, string machineDefId)
+    {
+        return machineManager.CanDropMachineWithDefId(x, y, machineDefId);
+    }
+
+    /// <summary>
     /// Set the selected machine for placement
     /// </summary>
     /// <param name="machine">Machine definition to select</param>

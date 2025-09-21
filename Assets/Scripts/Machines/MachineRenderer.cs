@@ -75,12 +75,10 @@ public class MachineRenderer : MonoBehaviour
         // --- Moving Part: create RawImage in BordersContainer ---
         if (def.isMoving && movingPartTexture != null && !isInMenu && gridManager != null)
         {
-            Debug.Log($"Creating separated moving part for machine '{def.id}' - texture: {(movingPartTexture != null ? movingPartTexture.name : "NULL")}");
             CreateSeparatedMovingPart(def, cellDirection);
         }
         else if (def.isMoving && movingPartTexture != null)
         {
-            Debug.Log($"Creating local moving part for machine '{def.id}' - isInMenu: {isInMenu}, gridManager: {(gridManager != null ? "present" : "null")}");
             // For menu context, keep moving parts in local renderer
             GameObject rawImageObj = new GameObject("MovingPartRawImage");
             rawImageObj.transform.SetParent(this.transform, false);
@@ -102,20 +100,14 @@ public class MachineRenderer : MonoBehaviour
 
             movingPartRawImage.transform.SetSiblingIndex(0);
         }
-        else
-        {
-            Debug.Log($"No moving part for machine '{def.id}' - isMoving: {def.isMoving}, texture: {(movingPartTexture != null ? "present" : "null")}");
-        }
 
         // --- Border: create in BordersContainer ---
         if (!string.IsNullOrEmpty(def.borderSprite) && !isInMenu && gridManager != null)
         {
-            Debug.Log($"Creating separated border for machine '{def.id}' - borderSprite: '{def.borderSprite}'");
             CreateSeparatedBorder(def, cellDirection);
         }
         else if (!string.IsNullOrEmpty(def.borderSprite))
         {
-            Debug.Log($"Creating local border for machine '{def.id}' - isInMenu: {isInMenu}, gridManager: {(gridManager != null ? "present" : "null")}");
             // For menu context, keep border in local renderer
             var border = CreateImageChild("Border", def.borderSprite);
 
@@ -126,7 +118,6 @@ public class MachineRenderer : MonoBehaviour
                 if (ColorUtility.TryParseHtmlString(def.borderColor, out borderColor))
                 {
                     border.color = borderColor;
-                    Debug.Log($"Applied border color '{def.borderColor}' to border image");
                 }
                 else
                 {
@@ -134,10 +125,6 @@ public class MachineRenderer : MonoBehaviour
                 }
             }
             border.transform.SetSiblingIndex(1);
-        }
-        else
-        {
-            Debug.Log($"No border sprite for machine '{def.id}' - borderSprite is empty");
         }
 
         // --- Building: separated sprite in BuildingsContainer ---
@@ -166,11 +153,6 @@ public class MachineRenderer : MonoBehaviour
         {
             float cellRotation = GetCellDirectionRotation(cellDirection);
             transform.rotation = Quaternion.Euler(0, 0, cellRotation);
-            Debug.Log($"MachineRenderer applying rotation {cellRotation} for cell direction {cellDirection}");
-        }
-        else
-        {
-            Debug.Log($"ConveyorBelt component found on same GameObject - skipping MachineRenderer rotation for {def.id}");
         }
     }
 
@@ -206,7 +188,6 @@ public class MachineRenderer : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Successfully loaded building sprite: {spritePath}");
             buildingImage.color = Color.white;
         }
 
@@ -221,14 +202,10 @@ public class MachineRenderer : MonoBehaviour
         // Apply rotations: building direction + cell direction
         float totalRotation = def.buildingDirection + GetCellDirectionRotation(cellDirection);
         buildingRT.rotation = Quaternion.Euler(0, 0, totalRotation);
-
-        Debug.Log($"Created separated building sprite for cell ({cellX}, {cellY}) in BuildingsContainer");
     }
 
     private void CreateSeparatedBorder(MachineDef def, UICell.Direction cellDirection)
     {
-        Debug.Log($"CreateSeparatedBorder called for machine '{def.id}' at cell ({cellX}, {cellY})");
-        
         RectTransform bordersContainer = gridManager?.GetBordersContainer();
         if (bordersContainer == null)
         {
@@ -242,7 +219,6 @@ public class MachineRenderer : MonoBehaviour
                 if (ColorUtility.TryParseHtmlString(def.borderColor, out borderColor))
                 {
                     border.color = borderColor;
-                    Debug.Log($"Applied border color '{def.borderColor}' to border image");
                 }
                 else
                 {
@@ -252,8 +228,6 @@ public class MachineRenderer : MonoBehaviour
             border.transform.SetSiblingIndex(1);
             return;
         }
-
-        Debug.Log($"BordersContainer found: {bordersContainer.name}, creating separated border sprite");
 
         // Create border sprite in separate container
         borderSprite = new GameObject($"Border_{cellX}_{cellY}");
@@ -275,7 +249,6 @@ public class MachineRenderer : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Successfully loaded border sprite: {spritePath}");
             borderImage.color = Color.white;
         }
 
@@ -286,7 +259,6 @@ public class MachineRenderer : MonoBehaviour
             if (ColorUtility.TryParseHtmlString(def.borderColor, out borderColor))
             {
                 borderImage.color = borderColor;
-                Debug.Log($"Applied border color '{def.borderColor}' to separated border image");
             }
             else
             {
@@ -299,8 +271,6 @@ public class MachineRenderer : MonoBehaviour
         Vector3 cellPosition = gridManager.GetCellWorldPosition(cellX, cellY);
         Vector2 cellSize = gridManager.GetCellSize();
 
-        Debug.Log($"Setting border position to: {cellPosition}, size to: {cellSize}");
-
         // Use same positioning approach as building sprites (which work)
         borderRT.position = cellPosition;
         borderRT.sizeDelta = cellSize;
@@ -308,15 +278,10 @@ public class MachineRenderer : MonoBehaviour
         // Apply cell direction rotation
         float cellRotation = GetCellDirectionRotation(cellDirection);
         borderRT.rotation = Quaternion.Euler(0, 0, cellRotation);
-
-        Debug.Log($"Created separated border sprite for cell ({cellX}, {cellY}) in BordersContainer with rotation {cellRotation}");
-        Debug.Log($"Final border sprite transform - position: {borderRT.position}, sizeDelta: {borderRT.sizeDelta}, parent: {borderRT.parent?.name}");
     }
 
     private void CreateSeparatedMovingPart(MachineDef def, UICell.Direction cellDirection)
     {
-        Debug.Log($"CreateSeparatedMovingPart called for machine '{def.id}' at cell ({cellX}, {cellY})");
-        
         RectTransform bordersContainer = gridManager?.GetBordersContainer();
         if (bordersContainer == null)
         {
@@ -341,8 +306,6 @@ public class MachineRenderer : MonoBehaviour
             return;
         }
 
-        Debug.Log($"BordersContainer found: {bordersContainer.name}, creating separated moving part");
-
         // Create moving part RawImage in separate container
         movingPartSprite = new GameObject($"MovingPart_{cellX}_{cellY}");
         movingPartSprite.transform.SetParent(bordersContainer, false);
@@ -355,13 +318,10 @@ public class MachineRenderer : MonoBehaviour
         movingPartCanvasGroup.blocksRaycasts = false;
         movingPartCanvasGroup.interactable = false;
 
-        Debug.Log($"MovingPart texture assigned: {(movingPartTexture != null ? movingPartTexture.name : "NULL")}");
-
         // Assign material for conveyor animation
         if (movingPartMaterial != null)
         {
             movingPartRawImage.material = movingPartMaterial;
-            Debug.Log($"MovingPart material assigned: {movingPartMaterial.name}");
         }
         else
         {
@@ -373,8 +333,6 @@ public class MachineRenderer : MonoBehaviour
         Vector3 cellPosition = gridManager.GetCellWorldPosition(cellX, cellY);
         Vector2 cellSize = gridManager.GetCellSize();
 
-        Debug.Log($"Setting moving part position to: {cellPosition}, size to: {cellSize}");
-
         // Use same positioning approach as building sprites (which work)
         movingPartRT.position = cellPosition;
         movingPartRT.sizeDelta = cellSize;
@@ -382,9 +340,6 @@ public class MachineRenderer : MonoBehaviour
         // Apply cell direction rotation
         float cellRotation = GetCellDirectionRotation(cellDirection);
         movingPartRT.rotation = Quaternion.Euler(0, 0, cellRotation);
-
-        Debug.Log($"Created separated moving part for cell ({cellX}, {cellY}) in BordersContainer with rotation {cellRotation}");
-        Debug.Log($"Final moving part transform - position: {movingPartRT.position}, sizeDelta: {movingPartRT.sizeDelta}, parent: {movingPartRT.parent?.name}");
     }
 
     private Image CreateImageChild(string name, string spriteResource)
@@ -405,7 +360,6 @@ public class MachineRenderer : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Successfully loaded sprite: {spritePath} for '{name}'");
             img.color = Color.white;
         }
 
