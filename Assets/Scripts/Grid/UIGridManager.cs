@@ -234,8 +234,8 @@ public class UIGridManager : MonoBehaviour
             {
                 if (IsValidPlacement(x, y, machineDef))
                 {
-                    HighlightCell(x, y, true);
-                    HighlightSlot(x, y, true); // Also highlight the machine slot
+                    // Only highlight the machine slot (not the grid)
+                    HighlightSlot(x, y, true);
                 }
             }
         }
@@ -249,8 +249,8 @@ public class UIGridManager : MonoBehaviour
         {
             for (int x = 0; x < gridData.width; x++)
             {
-                HighlightCell(x, y, false);
-                HighlightSlot(x, y, false); // Also clear slot highlights
+                // Only clear slot highlights (not grid highlights)
+                HighlightSlot(x, y, false);
             }
         }
     }
@@ -317,12 +317,12 @@ public class UIGridManager : MonoBehaviour
                 overlay.transform.SetParent(bordersContainer, false);
 
                 Image overlayImage = overlay.AddComponent<Image>();
-                overlayImage.color = new Color(0f, 1f, 0f, 0.7f); // More opaque green for better visibility
+                overlayImage.color = new Color(0f, 1f, 0f, 0.2f); // Much more subtle green overlay
                 
-                // Add outline for better visibility
+                // Add subtle outline for visibility without being overwhelming
                 Outline outline = overlay.AddComponent<Outline>();
-                outline.effectColor = new Color(1f, 1f, 0f, 1f); // Bright yellow outline
-                outline.effectDistance = new Vector2(4, 4); // Larger outline for visibility
+                outline.effectColor = new Color(0f, 1f, 0f, 0.8f); // Green outline instead of yellow
+                outline.effectDistance = new Vector2(2, 2); // Smaller outline for subtlety
 
                 // Position and size the overlay to match the cell
                 RectTransform overlayRT = overlay.GetComponent<RectTransform>();
