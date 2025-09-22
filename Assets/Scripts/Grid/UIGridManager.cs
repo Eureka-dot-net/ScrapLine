@@ -234,7 +234,8 @@ public class UIGridManager : MonoBehaviour
             {
                 if (IsValidPlacement(x, y, machineDef))
                 {
-                    HighlightCell(x, y, true);
+                    // Only highlight the machine slot (not the grid)
+                    HighlightSlot(x, y, true);
                 }
             }
         }
@@ -248,52 +249,64 @@ public class UIGridManager : MonoBehaviour
         {
             for (int x = 0; x < gridData.width; x++)
             {
-                HighlightCell(x, y, false);
+                // Only clear slot highlights (not grid highlights)
+                HighlightSlot(x, y, false);
             }
         }
     }
 
-    private void HighlightCell(int x, int y, bool highlight)
-    {
-        UICell cell = GetCell(x, y);
-        if (cell == null) return;
 
-        // Create or get highlight overlay
-        Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
+    private void HighlightSlot(int x, int y, bool highlight)
+    {
+        if (bordersContainer == null) return;
+
+        // Create highlighting overlay in BordersContainer or higher layer to ensure visibility
+        string overlayName = $"SlotHighlight_{x}_{y}";
+        Transform existingOverlay = bordersContainer.Find(overlayName);
 
         if (highlight)
         {
-            if (highlightOverlay == null)
+            if (existingOverlay == null)
             {
-                // Create highlight overlay
-                GameObject overlay = new GameObject("HighlightOverlay");
-                overlay.transform.SetParent(cell.transform, false);
+                // Create slot highlight overlay in BordersContainer (above grid but below buildings)
+                GameObject overlay = new GameObject(overlayName);
+                overlay.transform.SetParent(bordersContainer, false);
 
                 Image overlayImage = overlay.AddComponent<Image>();
-                overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
+                overlayImage.color = new Color(0.5f, 1f, 0.7f, 0.15f); // Much more subtle green overlay
+                
+                // Add subtle outline for visibility without being overwhelming
+                // Outline outline = overlay.AddComponent<Outline>();
+                // outline.effectColor = new Color(0f, 1f, 0f, 0.8f); // Green outline instead of yellow
+                // outline.effectDistance = new Vector2(2, 2); // Smaller outline for subtlety
 
-                // Make it fill the cell
-                RectTransform rt = overlay.GetComponent<RectTransform>();
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                rt.anchoredPosition = Vector2.zero;
-                rt.sizeDelta = Vector2.zero;
+                // Position and size the overlay to match the cell
+                RectTransform overlayRT = overlay.GetComponent<RectTransform>();
+                Vector3 cellPosition = GetCellWorldPosition(x, y);
+                Vector2 cellSize = GetCellSize();
+                overlayRT.position = cellPosition;
+                overlayRT.sizeDelta = cellSize;
 
-                // Put it on top but behind any items
-                overlay.transform.SetSiblingIndex(cell.transform.childCount - 1);
+                // Make it non-interactive to avoid blocking clicks
+                CanvasGroup overlayCanvasGroup = overlay.AddComponent<CanvasGroup>();
+                overlayCanvasGroup.blocksRaycasts = false;
+                overlayCanvasGroup.interactable = false;
+
+                // Put it on top within BordersContainer
+                overlay.transform.SetAsLastSibling();
             }
             else
             {
-                highlightOverlay.gameObject.SetActive(true);
+                existingOverlay.gameObject.SetActive(true);
+                // Ensure it's still on top
+                existingOverlay.SetAsLastSibling();
             }
         }
         else
         {
-            if (highlightOverlay != null)
+            if (existingOverlay != null)
             {
-                highlightOverlay.gameObject.SetActive(false);
+                existingOverlay.gameObject.SetActive(false);
             }
         }
     }
@@ -303,6 +316,12 @@ public class UIGridManager : MonoBehaviour
         // Get the cell data
         CellData cellData = GetCellData(x, y);
         if (cellData == null) return false;
+
+        // First check if cell is empty (blank) - same logic as CanDropMachineWithDefId
+        if (cellData.cellType != CellType.Blank)
+        {
+            return false;
+        }
 
         // Check if machine's grid placement rules allow this cell
         foreach (string placement in machineDef.gridPlacement)
