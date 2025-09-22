@@ -137,7 +137,46 @@ public class MachineRenderer : MonoBehaviour
             // For menu context, keep building sprites in local renderer
             var building = CreateImageChild("Building", def.buildingSprite);
             building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
+            
+            // Apply building sprite color tinting if specified
+            if (!string.IsNullOrEmpty(def.buildingSpriteColour))
+            {
+                Color buildingColor;
+                if (ColorUtility.TryParseHtmlString(def.buildingSpriteColour, out buildingColor))
+                {
+                    building.color = buildingColor;
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'");
+                }
+            }
+            
             building.transform.SetSiblingIndex(3);
+            
+            // Add icon sprite if specified
+            if (!string.IsNullOrEmpty(def.buildingIconSprite))
+            {
+                var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
+                icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
+                
+                // Apply icon size scaling - for menu context, scale relative to the cell size
+                RectTransform iconRT = icon.rectTransform;
+                iconRT.anchorMin = new Vector2(0.5f, 0.5f);
+                iconRT.anchorMax = new Vector2(0.5f, 0.5f);
+                iconRT.anchoredPosition = Vector2.zero;
+                
+                // Get current size and scale it
+                Vector2 currentSize = iconRT.sizeDelta;
+                if (currentSize == Vector2.zero)
+                {
+                    // If sizeDelta is zero (likely due to anchoring), use parent size as reference
+                    RectTransform parentRT = iconRT.parent.GetComponent<RectTransform>();
+                    currentSize = parentRT.sizeDelta;
+                }
+                iconRT.sizeDelta = currentSize * def.buildingIconSpriteSize;
+                icon.transform.SetSiblingIndex(4);
+            }
         }
 
         // --- Main sprite stays in local renderer if needed ---
@@ -164,7 +203,46 @@ public class MachineRenderer : MonoBehaviour
             Debug.LogWarning("BuildingsContainer not found, falling back to local building sprite");
             var building = CreateImageChild("Building", def.buildingSprite);
             building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
+            
+            // Apply building sprite color tinting if specified
+            if (!string.IsNullOrEmpty(def.buildingSpriteColour))
+            {
+                Color buildingColor;
+                if (ColorUtility.TryParseHtmlString(def.buildingSpriteColour, out buildingColor))
+                {
+                    building.color = buildingColor;
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'");
+                }
+            }
+            
             building.transform.SetSiblingIndex(3);
+            
+            // Add icon sprite if specified
+            if (!string.IsNullOrEmpty(def.buildingIconSprite))
+            {
+                var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
+                icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
+                
+                // Apply icon size scaling - for fallback context, scale relative to the cell size
+                RectTransform iconRT = icon.rectTransform;
+                iconRT.anchorMin = new Vector2(0.5f, 0.5f);
+                iconRT.anchorMax = new Vector2(0.5f, 0.5f);
+                iconRT.anchoredPosition = Vector2.zero;
+                
+                // Get current size and scale it
+                Vector2 currentSize = iconRT.sizeDelta;
+                if (currentSize == Vector2.zero)
+                {
+                    // If sizeDelta is zero (likely due to anchoring), use parent size as reference
+                    RectTransform parentRT = iconRT.parent.GetComponent<RectTransform>();
+                    currentSize = parentRT.sizeDelta;
+                }
+                iconRT.sizeDelta = currentSize * def.buildingIconSpriteSize;
+                icon.transform.SetSiblingIndex(4);
+            }
             return;
         }
 
@@ -191,6 +269,20 @@ public class MachineRenderer : MonoBehaviour
             buildingImage.color = Color.white;
         }
 
+        // Apply building sprite color tinting if specified
+        if (!string.IsNullOrEmpty(def.buildingSpriteColour))
+        {
+            Color buildingColor;
+            if (ColorUtility.TryParseHtmlString(def.buildingSpriteColour, out buildingColor))
+            {
+                buildingImage.color = buildingColor;
+            }
+            else
+            {
+                Debug.LogWarning($"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'");
+            }
+        }
+
         // Position and size the building sprite to match this cell
         RectTransform buildingRT = buildingSprite.GetComponent<RectTransform>();
         Vector3 cellPosition = gridManager.GetCellWorldPosition(cellX, cellY);
@@ -202,6 +294,44 @@ public class MachineRenderer : MonoBehaviour
         // Apply rotations: building direction + cell direction
         float totalRotation = def.buildingDirection + GetCellDirectionRotation(cellDirection);
         buildingRT.rotation = Quaternion.Euler(0, 0, totalRotation);
+
+        // Create icon sprite if specified (as a child of the building sprite)
+        if (!string.IsNullOrEmpty(def.buildingIconSprite))
+        {
+            GameObject iconSprite = new GameObject($"BuildingIcon_{cellX}_{cellY}");
+            iconSprite.transform.SetParent(buildingSprite.transform, false);
+
+            Image iconImage = iconSprite.AddComponent<Image>();
+            string iconPath = "Sprites/Machines/" + def.buildingIconSprite;
+            iconImage.sprite = Resources.Load<Sprite>(iconPath);
+
+            // Make icon non-interactive
+            CanvasGroup iconCanvasGroup = iconSprite.AddComponent<CanvasGroup>();
+            iconCanvasGroup.blocksRaycasts = false;
+            iconCanvasGroup.interactable = false;
+
+            if (iconImage.sprite == null)
+            {
+                Debug.LogWarning($"Building icon sprite not found! Tried to load: {iconPath}");
+                iconImage.color = Color.yellow; // Fallback color
+            }
+            else
+            {
+                iconImage.color = Color.white;
+            }
+
+            // Position and size the icon sprite
+            RectTransform iconRT = iconSprite.GetComponent<RectTransform>();
+            
+            // Center the icon within the building sprite
+            iconRT.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRT.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRT.anchoredPosition = Vector2.zero;
+            
+            // Apply icon size scaling
+            Vector2 scaledSize = cellSize * def.buildingIconSpriteSize;
+            iconRT.sizeDelta = scaledSize;
+        }
     }
 
     private void CreateSeparatedBorder(MachineDef def, UICell.Direction cellDirection)

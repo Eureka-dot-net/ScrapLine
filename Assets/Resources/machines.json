@@ -146,6 +146,9 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
+            "buildingIconSprite": "can",
+            "buildingIconSpriteSize": 0.6,
+            "buildingSpriteColour": "#FF8888",
             "baseProcessTime": 10,
             "upgradeMultipliers": [
                 {
@@ -181,7 +184,10 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-             "buildingDirection": 180,
+            "buildingDirection": 180,
+            "buildingIconSprite": "plasticBottle",
+            "buildingIconSpriteSize": 0.5,
+            "buildingSpriteColour": "#88FF88",
             "upgradeMultipliers": [
                 {
                     "multiplier": 0.8,
