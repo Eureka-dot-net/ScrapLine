@@ -66,7 +66,9 @@ public class SortingMachine : BaseMachine
             ItemData item = cellData.items[i];
             if (item.state == ItemState.Idle)
             {
-                TryStartMoveWithSorting(item);
+                // Use the enhanced TryStartMove with sorting direction
+                Direction sortingDirection = GetSortingDirection(item);
+                TryStartMove(item, sortingDirection);
             }
         }
     }
@@ -76,54 +78,9 @@ public class SortingMachine : BaseMachine
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        // Immediately try to start movement of the arrived item with sorting logic
-        TryStartMoveWithSorting(item);
-    }
-
-    /// <summary>
-    /// Attempts to start the movement of an item from this sorting machine with directional sorting logic.
-    /// Items are sorted based on the configured left/right item types.
-    /// </summary>
-    private void TryStartMoveWithSorting(ItemData item)
-    {
-        if (item.state != ItemState.Idle || item.x != cellData.x || item.y != cellData.y)
-        {
-            // Only allow items in the Idle state at their current cell to be moved.
-            if (item.state == ItemState.Waiting) 
-            {
-                // Allow items being "pulled" from a waiting queue
-            }
-            else
-            {
-                return;
-            }
-        }
-
-        // Determine the direction based on sorting configuration
+        // Use the enhanced TryStartMove with sorting direction
         Direction sortingDirection = GetSortingDirection(item);
-        
-        int nextX, nextY;
-        GetNextCellCoordinatesForDirection(sortingDirection, out nextX, out nextY);
-
-        if (nextX == -1 || nextY == -1)
-        {
-            return;
-        }
-
-        item.state = ItemState.Moving;
-        item.sourceX = cellData.x;
-        item.sourceY = cellData.y;
-        item.targetX = nextX;
-        item.targetY = nextY;
-        item.moveStartTime = Time.time;
-        
-        Debug.Log($"SortingMachine: Item {item.id} ({item.itemType}) started moving from ({cellData.x},{cellData.y}) to ({nextX},{nextY}) in direction {sortingDirection}");
-
-        // Create visual item if it doesn't exist
-        if (!GameManager.Instance.activeGridManager.HasVisualItem(item.id))
-        {
-            GameManager.Instance.activeGridManager.CreateVisualItem(item.id, item.x, item.y, item.itemType);
-        }
+        TryStartMove(item, sortingDirection);
     }
 
     /// <summary>
@@ -161,51 +118,6 @@ public class SortingMachine : BaseMachine
         // Item doesn't match any configuration, continue straight
         Debug.Log($"SortingMachine: Item {item.itemType} doesn't match config, going straight");
         return baseDirection;
-    }
-
-    /// <summary>
-    /// Rotates a direction by the specified number of 90-degree steps
-    /// </summary>
-    /// <param name="currentDirection">Current direction</param>
-    /// <param name="steps">Number of 90-degree steps (positive = clockwise, negative = counter-clockwise)</param>
-    private Direction RotateDirection(Direction currentDirection, int steps)
-    {
-        int directionCount = 4; // Up, Right, Down, Left
-        int currentIndex = (int)currentDirection;
-        int newIndex = (currentIndex + steps + directionCount) % directionCount;
-        return (Direction)newIndex;
-    }
-
-    /// <summary>
-    /// Gets the next cell coordinates for a specific direction
-    /// </summary>
-    private void GetNextCellCoordinatesForDirection(Direction direction, out int nextX, out int nextY)
-    {
-        nextX = cellData.x;
-        nextY = cellData.y;
-
-        switch (direction)
-        {
-            case Direction.Up:
-                nextY -= 1;
-                break;
-            case Direction.Down:
-                nextY += 1;
-                break;
-            case Direction.Left:
-                nextX -= 1;
-                break;
-            case Direction.Right:
-                nextX += 1;
-                break;
-        }
-
-        var grid = GameManager.Instance.GetCurrentGrid();
-        if (nextX < 0 || nextX >= grid.width || nextY < 0 || nextY >= grid.height)
-        {
-            nextX = -1;
-            nextY = -1;
-        }
     }
     
     /// <summary>
