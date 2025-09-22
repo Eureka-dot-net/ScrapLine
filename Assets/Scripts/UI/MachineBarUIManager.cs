@@ -4,6 +4,11 @@ using UnityEngine.UI;
 public class MachineBarUIManager : MonoBehaviour
 {
     public GameObject machineButtonPrefab;
+    public Button buildTabButton;
+    public Button manageTabButton;
+    public GameObject buildPanel;
+    public GameObject managePanel;
+
     public Transform machineBarPanel;
 
     // --- ADD THESE FIELDS ---
@@ -25,6 +30,26 @@ public class MachineBarUIManager : MonoBehaviour
     {
         // Get reference to grid manager
         gridManager = FindAnyObjectByType<UIGridManager>();
+        buildTabButton.onClick.AddListener(() => OnTabSelected(buildTabButton));
+        manageTabButton.onClick.AddListener(() => OnTabSelected(manageTabButton));
+        OnTabSelected(buildTabButton); // Default tab
+    }
+
+    public void OnTabSelected(Button selectedTab)
+    {
+        var tabs = new[] { buildTabButton, manageTabButton };
+        foreach (var tab in tabs)
+        {
+            var colors = tab.colors;
+            colors.normalColor = (tab == selectedTab) ? Color.gray : Color.white;
+            tab.colors = colors;
+        }
+
+        buildPanel.SetActive(selectedTab == buildTabButton);
+        managePanel.SetActive(selectedTab == manageTabButton);
+
+        buildTabButton.interactable = selectedTab != buildTabButton;
+        manageTabButton.interactable = selectedTab != manageTabButton;
     }
 
     public void InitBar()
@@ -202,7 +227,7 @@ public class MachineBarUIManager : MonoBehaviour
         }
 
         // Find all machine buttons in the panel
-        MachineButton[] machineButtons = machineBarPanel.GetComponentsInChildren<MachineButton>();
+        MachineButton[] machineButtons = managePanel.GetComponentsInChildren<MachineButton>();
 
         foreach (var machineButton in machineButtons)
         {
