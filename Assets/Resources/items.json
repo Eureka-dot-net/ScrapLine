@@ -2,6 +2,7 @@
   "items": [
     { "id": "can", "displayName": "Aluminum Can", "sprite": "can", "sellValue": 5 },
     { "id": "plasticBottle", "displayName": "Plastic Bottle", "sprite": "plasticBottle", "sellValue": 5 },
-    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shreddedAluminum", "sellValue": 15 }
+    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shreddedAluminum", "sellValue": 15 },
+    { "id": "granulatedPlastic", "displayName": "Granulated Plastic", "sprite": "granulatedPlastic", "sellValue": 15 }
   ]
 }

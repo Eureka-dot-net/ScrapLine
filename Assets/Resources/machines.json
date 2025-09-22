@@ -129,6 +129,8 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
+            "buildingIconSprite": "seller",
+            "buildingIconSpriteSize": 0.8,
             "buildingDirection": 180,
             "upgradeMultipliers": [],
             "gridPlacement": [
@@ -186,6 +188,8 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
+            "buildingIconSprite": "sorter",
+            "buildingIconSpriteSize": 0.5,
             "buildingDirection": 180,
             "buildingSpriteColour": "#A7FF85",
             "upgradeMultipliers": [
@@ -222,8 +226,6 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-            "buildingIconSprite": "aluminium_plate",
-            "buildingIconSpriteSize": 0.6,
             "buildingSpriteColour": "#008080",
             "baseProcessTime": 15,
             "gridPlacement": [
@@ -241,8 +243,8 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-            "buildingIconSprite": "plastic_pellets",
-            "buildingIconSpriteSize": 0.6,
+            "buildingIconSprite": "granulator",
+            "buildingIconSpriteSize": 0.8,
             "buildingSpriteColour": "#008080",
             "baseProcessTime": 15,
             "gridPlacement": [

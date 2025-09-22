@@ -20,6 +20,16 @@
     "processMultiplier": 2
   },
   {
+    "machineId": "granulator",
+    "inputItems": [
+      { "item": "plasticBottle", "count": 1 }
+    ],
+    "outputItems": [
+      { "item": "granulatedPlastic", "count": 1 }
+    ],
+    "processMultiplier": 2
+  },
+  {
     "machineId": "crafter",
     "inputItems": [
       { "item": "plastic", "count": 1 },
