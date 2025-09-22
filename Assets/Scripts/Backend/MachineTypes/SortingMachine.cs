@@ -18,7 +18,7 @@ public class SortingMachine : BaseMachine
         Debug.Log($"SortingMachine at ({cellData.x}, {cellData.y}) configured.");
 
         // Find the sorting configuration UI in the scene
-        SortingMachineConfigUI configUI = FindAnyObjectByType<SortingMachineConfigUI>();
+        SortingMachineConfigUI configUI = Object.FindFirstObjectByType<SortingMachineConfigUI>(FindObjectsInactive.Include); //this returns null
         if (configUI != null)
         {
             configUI.ShowConfiguration(cellData, OnConfigurationConfirmed);
