@@ -15,6 +15,9 @@ public class SpawnerMachine : BaseMachine
         // Set spawn interval from machine definition
         spawnInterval = machineDef.baseProcessTime;
         lastSpawnTime = Time.time;
+        
+        // Assign the starter waste crate to this spawner when created
+        InitializeWasteCrate();
     }
     
     /// <summary>
@@ -22,8 +25,8 @@ public class SpawnerMachine : BaseMachine
     /// </summary>
     public override void UpdateLogic()
     {
-        // Check if it's time to spawn and if the cell is empty
-        if (Time.time - lastSpawnTime >= spawnInterval && cellData.items.Count == 0)
+        // Check if it's time to spawn and if the cell is empty and waste crate has items
+        if (Time.time - lastSpawnTime >= spawnInterval && cellData.items.Count == 0 && HasItemsInWasteCrate())
         {
             SpawnItem();
             lastSpawnTime = Time.time;
@@ -31,17 +34,78 @@ public class SpawnerMachine : BaseMachine
     }
     
     /// <summary>
+    /// Initialize the waste crate for this spawner
+    /// </summary>
+    private void InitializeWasteCrate()
+    {
+        // For now, assign the starter crate to all spawners when they are created
+        var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate("starter_crate");
+        if (starterCrateDef != null && cellData.wasteCrate == null)
+        {
+            cellData.wasteCrate = new WasteCrateInstance
+            {
+                wasteCrateDefId = starterCrateDef.id,
+                remainingItems = new List<WasteCrateItemDef>()
+            };
+            
+            // Copy items from definition to instance
+            foreach (var item in starterCrateDef.items)
+            {
+                cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
+                {
+                    itemType = item.itemType,
+                    count = item.count
+                });
+            }
+            
+            Debug.Log($"Assigned starter waste crate to spawner at ({cellData.x}, {cellData.y}) with {GetTotalItemsInWasteCrate()} items");
+        }
+    }
+    
+    /// <summary>
+    /// Check if the waste crate has any items remaining
+    /// </summary>
+    private bool HasItemsInWasteCrate()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
+            return false;
+            
+        foreach (var item in cellData.wasteCrate.remainingItems)
+        {
+            if (item.count > 0)
+                return true;
+        }
+        return false;
+    }
+    
+    /// <summary>
+    /// Get total count of items in waste crate (for debugging)
+    /// </summary>
+    private int GetTotalItemsInWasteCrate()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
+            return 0;
+            
+        int total = 0;
+        foreach (var item in cellData.wasteCrate.remainingItems)
+        {
+            total += item.count;
+        }
+        return total;
+    }
+    
+    /// <summary>
     /// Spawns a new item at this spawner's location
     /// </summary>
     private void SpawnItem()
     {
-        // Determine what item to spawn
-        string itemType = "can"; // Default item type
+        // Get a random item from the waste crate
+        string itemType = GetRandomItemFromWasteCrate();
         
-        // Use first spawnable item from spawner definition if available
-        if (machineDef.spawnableItems != null && machineDef.spawnableItems.Count > 0)
+        if (string.IsNullOrEmpty(itemType))
         {
-            itemType = machineDef.spawnableItems[0]; // Use first spawnable item for now
+            Debug.LogWarning($"Spawner at ({cellData.x}, {cellData.y}) has no items in waste crate to spawn");
+            return;
         }
 
         // Create new item with proper ItemData structure
@@ -60,7 +124,7 @@ public class SpawnerMachine : BaseMachine
 
         cellData.items.Add(newItem);
 
-        Debug.Log($"Created item {newItem.id} ({itemType}) at spawner ({cellData.x}, {cellData.y})");
+        Debug.Log($"Created item {newItem.id} ({itemType}) at spawner ({cellData.x}, {cellData.y}). Remaining items in crate: {GetTotalItemsInWasteCrate()}");
 
         // Tell visual manager to create visual representation
         UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
@@ -71,6 +135,35 @@ public class SpawnerMachine : BaseMachine
         
         // Immediately try to start movement of the newly spawned item
         TryStartMove(newItem);
+    }
+    
+    /// <summary>
+    /// Gets a random item from the waste crate and removes one count from it
+    /// </summary>
+    private string GetRandomItemFromWasteCrate()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
+            return null;
+            
+        // Create list of available items (with counts > 0)
+        var availableItems = new List<WasteCrateItemDef>();
+        foreach (var item in cellData.wasteCrate.remainingItems)
+        {
+            if (item.count > 0)
+                availableItems.Add(item);
+        }
+        
+        if (availableItems.Count == 0)
+            return null;
+            
+        // Select random item from available items
+        int randomIndex = Random.Range(0, availableItems.Count);
+        var selectedItem = availableItems[randomIndex];
+        
+        // Decrease count by 1
+        selectedItem.count--;
+        
+        return selectedItem.itemType;
     }
     
     /// <summary>

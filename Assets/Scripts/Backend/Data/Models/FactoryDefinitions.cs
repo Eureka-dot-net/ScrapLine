@@ -61,3 +61,16 @@ public class ItemDef {
     public string sprite;
     public int sellValue = 0; // Credits earned when this item is sold
 }
+
+[System.Serializable]
+public class WasteCrateItemDef {
+    public string itemType;
+    public int count;
+}
+
+[System.Serializable]
+public class WasteCrateDef {
+    public string id;
+    public string displayName;
+    public List<WasteCrateItemDef> items;
+}
