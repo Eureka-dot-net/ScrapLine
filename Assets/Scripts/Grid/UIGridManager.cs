@@ -273,12 +273,12 @@ public class UIGridManager : MonoBehaviour
                 overlay.transform.SetParent(bordersContainer, false);
 
                 Image overlayImage = overlay.AddComponent<Image>();
-                overlayImage.color = new Color(0f, 1f, 0f, 0.2f); // Much more subtle green overlay
+                overlayImage.color = new Color(0.5f, 1f, 0.7f, 0.15f); // Much more subtle green overlay
                 
                 // Add subtle outline for visibility without being overwhelming
-                Outline outline = overlay.AddComponent<Outline>();
-                outline.effectColor = new Color(0f, 1f, 0f, 0.8f); // Green outline instead of yellow
-                outline.effectDistance = new Vector2(2, 2); // Smaller outline for subtlety
+                // Outline outline = overlay.AddComponent<Outline>();
+                // outline.effectColor = new Color(0f, 1f, 0f, 0.8f); // Green outline instead of yellow
+                // outline.effectDistance = new Vector2(2, 2); // Smaller outline for subtlety
 
                 // Position and size the overlay to match the cell
                 RectTransform overlayRT = overlay.GetComponent<RectTransform>();

@@ -173,12 +173,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        var machineBarManager = FindAnyObjectByType<MachineBarUIManager>();
-        if (machineBarManager != null)
-        {
-            machineBarManager.ClearSelection();
-        }
-
         // Check if we have a machine that can be dragged
         if (!GameManager.Instance.CanStartDrag(x, y))
         {
@@ -190,6 +184,12 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         if (dragDistance < dragThreshold)
         {
             return;
+        }
+
+        var machineBarManager = FindAnyObjectByType<MachineBarUIManager>();
+        if (machineBarManager != null)
+        {
+            machineBarManager.ClearSelection();
         }
 
         // Store the machine data before blanking the cell
@@ -212,6 +212,19 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         {
             Debug.LogError("Could not find UIGridManager for storing machine data");
             return;
+        }
+
+        if (!string.IsNullOrEmpty(draggedMachineDefId))
+        {
+            var machineDef = FactoryRegistry.Instance.GetMachine(draggedMachineDefId);
+            if (machineDef != null)
+            {
+                var uiGridManager = FindAnyObjectByType<UIGridManager>();
+                if (uiGridManager != null)
+                {
+                    uiGridManager.HighlightValidPlacements(machineDef);
+                }
+            }
         }
 
         isDragging = true;
@@ -254,6 +267,12 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         isDragging = false;
         ClearDragVisual();
         ClearDropTargetHighlights();
+
+        var uiGridManager = FindAnyObjectByType<UIGridManager>();
+        if (uiGridManager != null)
+        {
+            uiGridManager.ClearHighlights();
+        }
 
         // Determine where we dropped
         UICell targetCell = GetCellUnderPointer(eventData);
