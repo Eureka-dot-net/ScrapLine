@@ -101,7 +101,9 @@ public abstract class BaseMachine
     /// Attempts to start the movement of an item from this machine's cell.
     /// This method is now concrete because the movement logic is generic.
     /// </summary>
-    public void TryStartMove(ItemData item)
+    /// <param name="item">The item to move</param>
+    /// <param name="overrideDirection">Optional direction override. If null, uses machine's direction</param>
+    public void TryStartMove(ItemData item, Direction? overrideDirection = null)
     {
         if (item.state != ItemState.Idle || item.x != cellData.x || item.y != cellData.y)
         {
@@ -121,7 +123,9 @@ public abstract class BaseMachine
         }
 
         int nextX, nextY;
-        GetNextCellCoordinates(out nextX, out nextY);
+        // Use override direction if provided, otherwise use machine's direction
+        Direction moveDirection = overrideDirection ?? cellData.direction;
+        GetNextCellCoordinatesForDirection(moveDirection, out nextX, out nextY);
 
         if (nextX == -1 || nextY == -1)
         {
@@ -135,7 +139,8 @@ public abstract class BaseMachine
         item.targetY = nextY;
         item.moveStartTime = Time.time;
         
-        Debug.Log($"Item {item.id} ({item.itemType}) started moving from ({cellData.x},{cellData.y}) to ({nextX},{nextY})");
+        string directionInfo = overrideDirection.HasValue ? $" (direction override: {moveDirection})" : "";
+        Debug.Log($"Item {item.id} ({item.itemType}) started moving from ({cellData.x},{cellData.y}) to ({nextX},{nextY}){directionInfo}");
 
         // Fix: Pass the individual properties of the item instead of the object itself.
         if (!GameManager.Instance.activeGridManager.HasVisualItem(item.id))
@@ -150,10 +155,21 @@ public abstract class BaseMachine
     // This is the correct logic for moving items upwards in the UI. 
     protected void GetNextCellCoordinates(out int nextX, out int nextY)
     {
+        GetNextCellCoordinatesForDirection(cellData.direction, out nextX, out nextY);
+    }
+
+    /// <summary>
+    /// Gets the next cell coordinates for a specific direction
+    /// </summary>
+    /// <param name="direction">The direction to move in</param>
+    /// <param name="nextX">Output X coordinate</param>
+    /// <param name="nextY">Output Y coordinate</param>
+    protected void GetNextCellCoordinatesForDirection(Direction direction, out int nextX, out int nextY)
+    {
         nextX = cellData.x;
         nextY = cellData.y;
 
-        switch (cellData.direction)
+        switch (direction)
         {
             case Direction.Up:
                 nextY -= 1;
@@ -175,5 +191,19 @@ public abstract class BaseMachine
             nextX = -1;
             nextY = -1;
         }
+    }
+
+    /// <summary>
+    /// Rotates a direction by the specified number of 90-degree steps
+    /// </summary>
+    /// <param name="currentDirection">Current direction</param>
+    /// <param name="steps">Number of 90-degree steps (positive = clockwise, negative = counter-clockwise)</param>
+    /// <returns>The rotated direction</returns>
+    protected Direction RotateDirection(Direction currentDirection, int steps)
+    {
+        int directionCount = 4; // Up, Right, Down, Left
+        int currentIndex = (int)currentDirection;
+        int newIndex = (currentIndex + steps + directionCount) % directionCount;
+        return (Direction)newIndex;
     }
 }

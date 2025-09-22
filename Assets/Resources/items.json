@@ -1,11 +1,6 @@
 {
   "items": [
     { "id": "can", "displayName": "Aluminum Can", "sprite": "can", "sellValue": 5 },
-    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shredded_aluminum", "sellValue": 15 },
-    { "id": "toaster", "displayName": "Toaster", "sprite": "toaster", "sellValue": 20 },
-    { "id": "shreddedIron", "displayName": "Shredded Iron", "sprite": "shredded_iron", "sellValue": 25 },
-    { "id": "plastic", "displayName": "Plastic", "sprite": "plastic", "sellValue": 10 },
-    { "id": "copper", "displayName": "Copper", "sprite": "copper", "sellValue": 30 },
-    { "id": "motherboard", "displayName": "Motherboard", "sprite": "motherboard", "sellValue": 100 }
+    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shreddedAluminum", "sellValue": 15 }
   ]
 }
