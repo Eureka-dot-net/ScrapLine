@@ -302,12 +302,57 @@ public class UIGridManager : MonoBehaviour
 
     private void HighlightSlot(int x, int y, bool highlight)
     {
-        UICell cell = GetCell(x, y);
-        if (cell == null) return;
+        if (bordersContainer == null) return;
 
-        // Call the enhanced SetHighlight method on the UICell
-        // This will handle slot-level highlighting that's visible on top of machine renderers
-        cell.SetSlotHighlight(highlight);
+        // Create highlighting overlay in BordersContainer or higher layer to ensure visibility
+        string overlayName = $"SlotHighlight_{x}_{y}";
+        Transform existingOverlay = bordersContainer.Find(overlayName);
+
+        if (highlight)
+        {
+            if (existingOverlay == null)
+            {
+                // Create slot highlight overlay in BordersContainer (above grid but below buildings)
+                GameObject overlay = new GameObject(overlayName);
+                overlay.transform.SetParent(bordersContainer, false);
+
+                Image overlayImage = overlay.AddComponent<Image>();
+                overlayImage.color = new Color(0f, 1f, 0f, 0.7f); // More opaque green for better visibility
+                
+                // Add outline for better visibility
+                Outline outline = overlay.AddComponent<Outline>();
+                outline.effectColor = new Color(1f, 1f, 0f, 1f); // Bright yellow outline
+                outline.effectDistance = new Vector2(4, 4); // Larger outline for visibility
+
+                // Position and size the overlay to match the cell
+                RectTransform overlayRT = overlay.GetComponent<RectTransform>();
+                Vector3 cellPosition = GetCellWorldPosition(x, y);
+                Vector2 cellSize = GetCellSize();
+                overlayRT.position = cellPosition;
+                overlayRT.sizeDelta = cellSize;
+
+                // Make it non-interactive to avoid blocking clicks
+                CanvasGroup overlayCanvasGroup = overlay.AddComponent<CanvasGroup>();
+                overlayCanvasGroup.blocksRaycasts = false;
+                overlayCanvasGroup.interactable = false;
+
+                // Put it on top within BordersContainer
+                overlay.transform.SetAsLastSibling();
+            }
+            else
+            {
+                existingOverlay.gameObject.SetActive(true);
+                // Ensure it's still on top
+                existingOverlay.SetAsLastSibling();
+            }
+        }
+        else
+        {
+            if (existingOverlay != null)
+            {
+                existingOverlay.gameObject.SetActive(false);
+            }
+        }
     }
 
     private bool IsValidPlacement(int x, int y, MachineDef machineDef)

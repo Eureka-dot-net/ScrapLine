@@ -553,59 +553,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
     }
 
-    /// <summary>
-    /// Enhanced highlighting for empty machine slots - creates a visible outline/glow effect
-    /// that is always visible on top of machine renderers, particularly for blank slots
-    /// </summary>
-    public void SetSlotHighlight(bool highlight)
-    {
-        // Create or get slot highlight overlay - more prominent than grid highlight
-        Transform slotHighlightOverlay = transform.Find("SlotHighlightOverlay");
-
-        if (highlight)
-        {
-            if (slotHighlightOverlay == null)
-            {
-                // Create slot highlight overlay
-                GameObject overlay = new GameObject("SlotHighlightOverlay");
-                overlay.transform.SetParent(transform, false);
-
-                Image overlayImage = overlay.AddComponent<Image>();
-                overlayImage.color = new Color(0f, 1f, 0f, 0.6f); // More opaque green for better visibility
-                
-                // Add outline for better visibility
-                Outline outline = overlay.AddComponent<Outline>();
-                outline.effectColor = new Color(1f, 1f, 0f, 1f); // Bright yellow outline
-                outline.effectDistance = new Vector2(3, 3); // Larger outline for visibility
-
-                // Make it fill the cell
-                RectTransform rt = overlay.GetComponent<RectTransform>();
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                rt.anchoredPosition = Vector2.zero;
-                rt.sizeDelta = Vector2.zero;
-
-                // Put it on top of everything (highest sibling index)
-                overlay.transform.SetAsLastSibling();
-            }
-            else
-            {
-                slotHighlightOverlay.gameObject.SetActive(true);
-                // Ensure it's still on top
-                slotHighlightOverlay.SetAsLastSibling();
-            }
-        }
-        else
-        {
-            if (slotHighlightOverlay != null)
-            {
-                slotHighlightOverlay.gameObject.SetActive(false);
-            }
-        }
-    }
-
     #endregion
 
     #region Existing Methods (unchanged)
