@@ -8,11 +8,11 @@ public class MachineBarUIManager : MonoBehaviour
 
     // --- ADD THESE FIELDS ---
     public Texture conveyorPanelTexture;
-    
+
     // Selection state
     private MachineDef selectedMachine;
     private GameObject selectedButtonObj;
-    
+
     // Reference to grid manager for highlighting
     private UIGridManager gridManager;
 
@@ -38,21 +38,32 @@ public class MachineBarUIManager : MonoBehaviour
                 Debug.Log($"Skipping machine '{machine.id}' - displayInPanel is false");
                 continue;
             }
-            
+
             Debug.Log($"Creating machine: {machine.id}");
             GameObject buttonObj = Instantiate(machineButtonPrefab, machineBarPanel);
 
             RectTransform parentRect = machineBarPanel.GetComponent<RectTransform>();
-            float targetSize = parentRect.rect.height; // Use parent height for square size
+            float unscaledHeight = parentRect.rect.height;
+            float scale = parentRect.lossyScale.y; // Get the actual scale factor
+            float targetSize = unscaledHeight * scale;
+
+            // targetSize = 200;
+            RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
+            buttonRect.sizeDelta = new Vector2(targetSize, targetSize);
 
             // Set fixed size instead of flexible + aspect ratio
-            LayoutElement layoutElement = buttonObj.GetComponent<LayoutElement>();
-            if (layoutElement == null)
-            {
-                layoutElement = buttonObj.AddComponent<LayoutElement>();
-            }
-            layoutElement.preferredWidth = targetSize;
-            layoutElement.preferredHeight = targetSize;
+            // LayoutElement layoutElement = buttonObj.GetComponent<LayoutElement>();
+            // if (layoutElement == null)
+            // {
+            //     layoutElement = buttonObj.AddComponent<LayoutElement>();
+            // }
+            // targetSize = 200;
+            // layoutElement.preferredWidth = targetSize;
+            // layoutElement.preferredHeight = targetSize;
+            // layoutElement.minHeight = targetSize;
+            // layoutElement.minWidth = targetSize;
+            Debug.Log($"Set button size to {targetSize}x{targetSize}");
+            // LayoutRebuilder.MarkLayoutForRebuild(buttonObj.GetComponent<RectTransform>());
 
             // Remove AspectRatioFitter to avoid conflicts
             AspectRatioFitter aspectFitter = buttonObj.GetComponent<AspectRatioFitter>();
@@ -90,37 +101,37 @@ public class MachineBarUIManager : MonoBehaviour
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)
     {
         Debug.Log($"Selected machine: {machineDef.id}");
-        
+
         // If the same machine is clicked again, clear selection
         if (selectedMachine == machineDef)
         {
             ClearSelection();
             return;
         }
-        
+
         // Clear previous selection visual feedback
         ClearSelectionHighlight();
-        
+
         // Set new selection
         selectedMachine = machineDef;
         selectedButtonObj = buttonObj;
-        
+
         // Highlight selected button
         HighlightSelectedButton(buttonObj);
-        
+
         // Highlight valid placement areas on grid (keep them visible)
         if (gridManager != null)
         {
             gridManager.HighlightValidPlacements(machineDef);
         }
-        
+
         // Notify GameManager about machine selection
         if (GameManager.Instance != null)
         {
             GameManager.Instance.SetSelectedMachine(machineDef);
         }
     }
-    
+
     private void HighlightSelectedButton(GameObject buttonObj)
     {
         // Add visual feedback to show this button is selected
@@ -131,7 +142,7 @@ public class MachineBarUIManager : MonoBehaviour
             colors.selectedColor = new Color(0.8f, 1f, 0.8f, 1f); // Light green
             button.colors = colors;
         }
-        
+
         // Add outline or border effect if desired
         var outline = buttonObj.GetComponent<Outline>();
         if (outline == null)
@@ -142,7 +153,7 @@ public class MachineBarUIManager : MonoBehaviour
         outline.effectDistance = new Vector2(2, 2);
         outline.enabled = true;
     }
-    
+
     private void ClearSelectionHighlight()
     {
         if (selectedButtonObj != null)
@@ -154,31 +165,31 @@ public class MachineBarUIManager : MonoBehaviour
                 outline.enabled = false;
             }
         }
-        
+
         // Clear grid highlighting
         if (gridManager != null)
         {
             gridManager.ClearHighlights();
         }
     }
-    
+
     public void ClearSelection()
     {
         ClearSelectionHighlight();
         selectedMachine = null;
         selectedButtonObj = null;
-        
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.SetSelectedMachine(null);
         }
     }
-    
+
     public MachineDef GetSelectedMachine()
     {
         return selectedMachine;
     }
-    
+
     /// <summary>
     /// Updates the affordability of all machine buttons based on current credits
     /// </summary>
@@ -189,32 +200,32 @@ public class MachineBarUIManager : MonoBehaviour
             Debug.LogWarning("GameManager.Instance is null, cannot update machine affordability");
             return;
         }
-        
+
         // Find all machine buttons in the panel
         MachineButton[] machineButtons = machineBarPanel.GetComponentsInChildren<MachineButton>();
-        
+
         foreach (var machineButton in machineButtons)
         {
             var button = machineButton.GetComponent<Button>();
             var machineDef = machineButton.GetMachineDef(); // We'll need to add this method to MachineButton
-            
+
             if (button != null && machineDef != null)
             {
                 bool canAfford = GameManager.Instance.CanAfford(machineDef.cost);
-                
+
                 // Enable/disable the button based on affordability
                 button.interactable = canAfford;
-                
+
                 // Visual feedback for unaffordable machines
                 var canvasGroup = machineButton.GetComponent<CanvasGroup>();
                 if (canvasGroup == null)
                 {
                     canvasGroup = machineButton.gameObject.AddComponent<CanvasGroup>();
                 }
-                
+
                 // Reduce opacity for unaffordable machines
                 canvasGroup.alpha = canAfford ? 1.0f : 0.5f;
-                
+
                 // Log affordability status
                 if (!canAfford)
                 {
