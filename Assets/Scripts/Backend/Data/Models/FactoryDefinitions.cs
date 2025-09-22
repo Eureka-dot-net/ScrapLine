@@ -18,6 +18,9 @@ public class MachineDef
     public string buildingSprite;          // building sprite (can be null)
     public string borderColor;             // hex color for border tint (can be null)
     public int buildingDirection;          // degrees (0, 90, 180, 270)
+    public string buildingIconSprite;      // icon sprite to overlay on building (can be null)
+    public float buildingIconSpriteSize = 1.0f;  // size multiplier for icon sprite (0-1)
+    public string buildingSpriteColour;    // hex color for building sprite tint (can be null)
     public List<UpgradeMultiplier> upgradeMultipliers;
     public List<string> gridPlacement;     // e.g., ["any"], ["bottom"]
     public int maxNumber;

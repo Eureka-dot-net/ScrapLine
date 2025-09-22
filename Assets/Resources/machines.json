@@ -41,11 +41,11 @@
         },
         {
             "id": "blank_bottom",
-            "type": "Blank", 
+            "type": "Blank",
             "sprite": "",
             "baseProcessTime": 0,
             "isMoving": false,
-            "borderSprite": "UICellSprite", 
+            "borderSprite": "UICellSprite",
             "buildingSprite": "",
             "buildingDirection": 0,
             "borderColor": "#AAFFAA",
@@ -118,7 +118,8 @@
             "displayInPanel": true,
             "cost": 50,
             "canRotate": false,
-            "className": "SpawnerMachine"
+            "className": "SpawnerMachine",
+            "buildingSpriteColour": "#7A00B7"
         },
         {
             "id": "seller",
@@ -128,6 +129,8 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
+            "buildingIconSprite": "seller",
+            "buildingIconSpriteSize": 0.8,
             "buildingDirection": 180,
             "upgradeMultipliers": [],
             "gridPlacement": [
@@ -137,7 +140,8 @@
             "displayInPanel": true,
             "cost": 50,
             "canRotate": false,
-            "className": "SellerMachine"
+            "className": "SellerMachine",
+            "buildingSpriteColour": "#7A00B7"
         },
         {
             "id": "shredder",
@@ -146,6 +150,9 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
+            "buildingIconSprite": "shredder",
+            "buildingIconSpriteSize": 0.8,
+            "buildingSpriteColour": "#008080",
             "baseProcessTime": 10,
             "upgradeMultipliers": [
                 {
@@ -181,7 +188,10 @@
             "isMoving": true,
             "borderSprite": "",
             "buildingSprite": "Machine_border",
-             "buildingDirection": 180,
+            "buildingIconSprite": "sorter",
+            "buildingIconSpriteSize": 0.5,
+            "buildingDirection": 180,
+            "buildingSpriteColour": "#A7FF85",
             "upgradeMultipliers": [
                 {
                     "multiplier": 0.8,
@@ -208,6 +218,42 @@
             "cost": 75,
             "canRotate": true,
             "className": "SortingMachine"
+        },
+        {
+            "id": "plate_press",
+            "type": "PlatePress",
+            "sprite": "",
+            "isMoving": true,
+            "borderSprite": "",
+            "buildingSprite": "Machine_border",
+            "buildingSpriteColour": "#008080",
+            "baseProcessTime": 15,
+            "gridPlacement": [
+                "grid"
+            ],
+            "displayInPanel": true,
+            "cost": 100,
+            "canRotate": true,
+            "className": "CraftingMachine"
+        },
+        {
+            "id": "granulator",
+            "type": "Granulator",
+            "sprite": "",
+            "isMoving": true,
+            "borderSprite": "",
+            "buildingSprite": "Machine_border",
+            "buildingIconSprite": "granulator",
+            "buildingIconSpriteSize": 0.8,
+            "buildingSpriteColour": "#008080",
+            "baseProcessTime": 15,
+            "gridPlacement": [
+                "grid"
+            ],
+            "displayInPanel": true,
+            "cost": 100,
+            "canRotate": true,
+            "className": "ProcessorMachine"
         }
     ]
 }
