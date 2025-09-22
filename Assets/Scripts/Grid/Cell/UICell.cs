@@ -210,27 +210,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         isDragging = true;
 
-        // Clear any machine selection from the machine bar when starting drag
-        var machineBarUI = FindAnyObjectByType<MachineBarUIManager>();
-        if (machineBarUI != null)
-        {
-            machineBarUI.ClearSelection();
-        }
-
-        // Show highlighting for valid drop zones using the dragged machine definition
-        if (!string.IsNullOrEmpty(draggedMachineDefId))
-        {
-            var machineDef = FactoryRegistry.Instance.GetMachine(draggedMachineDefId);
-            if (machineDef != null && gridManager != null)
-            {
-                var uiGridManager = FindAnyObjectByType<UIGridManager>();
-                if (uiGridManager != null)
-                {
-                    uiGridManager.HighlightValidPlacements(machineDef);
-                }
-            }
-        }
-
         // Create drag visual
         CreateDragVisual();
 
@@ -269,13 +248,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         isDragging = false;
         ClearDragVisual();
         ClearDropTargetHighlights();
-
-        // Clear highlighting for valid drop zones
-        var uiGridManager = FindAnyObjectByType<UIGridManager>();
-        if (uiGridManager != null)
-        {
-            uiGridManager.ClearHighlights();
-        }
 
         // Determine where we dropped
         UICell targetCell = GetCellUnderPointer(eventData);

@@ -255,6 +255,51 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
+    private void HighlightCell(int x, int y, bool highlight)
+    {
+        UICell cell = GetCell(x, y);
+        if (cell == null) return;
+
+        // Create or get highlight overlay
+        Transform highlightOverlay = cell.transform.Find("HighlightOverlay");
+
+        if (highlight)
+        {
+            if (highlightOverlay == null)
+            {
+                // Create highlight overlay
+                GameObject overlay = new GameObject("HighlightOverlay");
+                overlay.transform.SetParent(cell.transform, false);
+
+                Image overlayImage = overlay.AddComponent<Image>();
+                overlayImage.color = new Color(0f, 1f, 0f, 0.3f); // Semi-transparent green
+
+                // Make it fill the cell
+                RectTransform rt = overlay.GetComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = Vector2.zero;
+
+                // Put it on top but behind any items
+                overlay.transform.SetSiblingIndex(cell.transform.childCount - 1);
+            }
+            else
+            {
+                highlightOverlay.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            if (highlightOverlay != null)
+            {
+                highlightOverlay.gameObject.SetActive(false);
+            }
+        }
+    }
+
     private void HighlightSlot(int x, int y, bool highlight)
     {
         if (bordersContainer == null) return;
@@ -271,14 +316,13 @@ public class UIGridManager : MonoBehaviour
                 GameObject overlay = new GameObject(overlayName);
                 overlay.transform.SetParent(bordersContainer, false);
 
-                // Use transparent image as base for outline effect only
                 Image overlayImage = overlay.AddComponent<Image>();
-                overlayImage.color = new Color(0f, 0f, 0f, 0f); // Completely transparent - just for outline
+                overlayImage.color = new Color(0f, 1f, 0f, 0.2f); // Much more subtle green overlay
                 
-                // Add subtle green outline for minimal visual indication
+                // Add subtle outline for visibility without being overwhelming
                 Outline outline = overlay.AddComponent<Outline>();
-                outline.effectColor = new Color(0f, 0.8f, 0f, 1f); // Subtle green outline
-                outline.effectDistance = new Vector2(3, 3); // Moderate outline for visibility
+                outline.effectColor = new Color(0f, 1f, 0f, 0.8f); // Green outline instead of yellow
+                outline.effectDistance = new Vector2(2, 2); // Smaller outline for subtlety
 
                 // Position and size the overlay to match the cell
                 RectTransform overlayRT = overlay.GetComponent<RectTransform>();
