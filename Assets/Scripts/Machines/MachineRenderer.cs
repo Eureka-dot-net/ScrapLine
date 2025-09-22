@@ -160,21 +160,18 @@ public class MachineRenderer : MonoBehaviour
                 var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
                 icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
                 
-                // Apply icon size scaling - for menu context, scale relative to the cell size
+                // Apply icon size scaling - for menu context, use responsive anchors
                 RectTransform iconRT = icon.rectTransform;
-                iconRT.anchorMin = new Vector2(0.5f, 0.5f);
-                iconRT.anchorMax = new Vector2(0.5f, 0.5f);
-                iconRT.anchoredPosition = Vector2.zero;
                 
-                // Get current size and scale it
-                Vector2 currentSize = iconRT.sizeDelta;
-                if (currentSize == Vector2.zero)
-                {
-                    // If sizeDelta is zero (likely due to anchoring), use parent size as reference
-                    RectTransform parentRT = iconRT.parent.GetComponent<RectTransform>();
-                    currentSize = parentRT.sizeDelta;
-                }
-                iconRT.sizeDelta = currentSize * def.buildingIconSpriteSize;
+                // For responsive UI, use anchors to size the icon relative to its parent
+                float iconSizeRatio = def.buildingIconSpriteSize;
+                float margin = (1.0f - iconSizeRatio) * 0.5f; // Calculate margins to center the icon
+                
+                iconRT.anchorMin = new Vector2(margin, margin);
+                iconRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
+                iconRT.offsetMin = Vector2.zero;
+                iconRT.offsetMax = Vector2.zero;
+                iconRT.anchoredPosition = Vector2.zero;
                 icon.transform.SetSiblingIndex(4);
             }
         }
@@ -226,21 +223,18 @@ public class MachineRenderer : MonoBehaviour
                 var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
                 icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
                 
-                // Apply icon size scaling - for fallback context, scale relative to the cell size
+                // Apply icon size scaling - for fallback context, use responsive anchors
                 RectTransform iconRT = icon.rectTransform;
-                iconRT.anchorMin = new Vector2(0.5f, 0.5f);
-                iconRT.anchorMax = new Vector2(0.5f, 0.5f);
-                iconRT.anchoredPosition = Vector2.zero;
                 
-                // Get current size and scale it
-                Vector2 currentSize = iconRT.sizeDelta;
-                if (currentSize == Vector2.zero)
-                {
-                    // If sizeDelta is zero (likely due to anchoring), use parent size as reference
-                    RectTransform parentRT = iconRT.parent.GetComponent<RectTransform>();
-                    currentSize = parentRT.sizeDelta;
-                }
-                iconRT.sizeDelta = currentSize * def.buildingIconSpriteSize;
+                // For responsive UI, use anchors to size the icon relative to its parent
+                float iconSizeRatio = def.buildingIconSpriteSize;
+                float margin = (1.0f - iconSizeRatio) * 0.5f; // Calculate margins to center the icon
+                
+                iconRT.anchorMin = new Vector2(margin, margin);
+                iconRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
+                iconRT.offsetMin = Vector2.zero;
+                iconRT.offsetMax = Vector2.zero;
+                iconRT.anchoredPosition = Vector2.zero;
                 icon.transform.SetSiblingIndex(4);
             }
             return;
@@ -302,8 +296,25 @@ public class MachineRenderer : MonoBehaviour
             iconSprite.transform.SetParent(buildingSprite.transform, false);
 
             Image iconImage = iconSprite.AddComponent<Image>();
-            string iconPath = "Sprites/Machines/" + def.buildingIconSprite;
-            iconImage.sprite = Resources.Load<Sprite>(iconPath);
+            
+            // Try loading icon sprite from multiple possible locations
+            Sprite iconSpriteAsset = null;
+            string[] possiblePaths = {
+                "Sprites/Machines/" + def.buildingIconSprite,
+                "Sprites/Items/" + def.buildingIconSprite,
+                "Sprites/" + def.buildingIconSprite
+            };
+            
+            foreach (string iconPath in possiblePaths)
+            {
+                iconSpriteAsset = Resources.Load<Sprite>(iconPath);
+                if (iconSpriteAsset != null)
+                {
+                    break;
+                }
+            }
+            
+            iconImage.sprite = iconSpriteAsset;
 
             // Make icon non-interactive
             CanvasGroup iconCanvasGroup = iconSprite.AddComponent<CanvasGroup>();
@@ -312,7 +323,7 @@ public class MachineRenderer : MonoBehaviour
 
             if (iconImage.sprite == null)
             {
-                Debug.LogWarning($"Building icon sprite not found! Tried to load: {iconPath}");
+                Debug.LogWarning($"Building icon sprite '{def.buildingIconSprite}' not found! Tried paths: {string.Join(", ", possiblePaths)}");
                 iconImage.color = Color.yellow; // Fallback color
             }
             else
@@ -323,14 +334,15 @@ public class MachineRenderer : MonoBehaviour
             // Position and size the icon sprite
             RectTransform iconRT = iconSprite.GetComponent<RectTransform>();
             
-            // Center the icon within the building sprite
-            iconRT.anchorMin = new Vector2(0.5f, 0.5f);
-            iconRT.anchorMax = new Vector2(0.5f, 0.5f);
-            iconRT.anchoredPosition = Vector2.zero;
+            // For responsive UI, use anchors to size the icon relative to its parent
+            float iconSizeRatio = def.buildingIconSpriteSize;
+            float margin = (1.0f - iconSizeRatio) * 0.5f; // Calculate margins to center the icon
             
-            // Apply icon size scaling
-            Vector2 scaledSize = cellSize * def.buildingIconSpriteSize;
-            iconRT.sizeDelta = scaledSize;
+            iconRT.anchorMin = new Vector2(margin, margin);
+            iconRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
+            iconRT.offsetMin = Vector2.zero;
+            iconRT.offsetMax = Vector2.zero;
+            iconRT.anchoredPosition = Vector2.zero;
         }
     }
 
@@ -478,12 +490,47 @@ public class MachineRenderer : MonoBehaviour
         go.transform.SetParent(this.transform, false);
         Image img = go.AddComponent<Image>();
 
-        string spritePath = "Sprites/Machines/" + spriteResource;
-        img.sprite = Resources.Load<Sprite>(spritePath);
+        Sprite spriteAsset = null;
+        
+        // For BuildingIcon, try multiple paths
+        if (name == "BuildingIcon")
+        {
+            string[] possiblePaths = {
+                "Sprites/Machines/" + spriteResource,
+                "Sprites/Items/" + spriteResource,
+                "Sprites/" + spriteResource
+            };
+            
+            foreach (string spritePath in possiblePaths)
+            {
+                spriteAsset = Resources.Load<Sprite>(spritePath);
+                if (spriteAsset != null)
+                {
+                    break;
+                }
+            }
+            
+            if (spriteAsset == null)
+            {
+                Debug.LogWarning($"Building icon sprite '{spriteResource}' not found! Tried paths: {string.Join(", ", possiblePaths)}");
+            }
+        }
+        else
+        {
+            // For other sprites, use the default Machines path
+            string spritePath = "Sprites/Machines/" + spriteResource;
+            spriteAsset = Resources.Load<Sprite>(spritePath);
+            
+            if (spriteAsset == null)
+            {
+                Debug.LogWarning($"Sprite not found! Tried to load: {spritePath} for '{name}'");
+            }
+        }
+        
+        img.sprite = spriteAsset;
 
         if (img.sprite == null)
         {
-            Debug.LogWarning($"Sprite not found! Tried to load: {spritePath} for '{name}'");
             img.color = name == "Border" ? Color.red :
                        name == "Building" ? Color.blue :
                        name == "MovingPart" ? Color.green : Color.yellow;
