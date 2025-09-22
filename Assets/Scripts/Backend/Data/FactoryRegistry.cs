@@ -11,6 +11,7 @@ public class FactoryRegistry
     public Dictionary<string, MachineDef> Machines = new();
     public List<RecipeDef> Recipes = new();
     public Dictionary<string, ItemDef> Items = new();
+    public Dictionary<string, WasteCrateDef> WasteCrates = new();
 
     // Per-user machine progress
     public List<UserMachineProgress> UserMachines = new();
@@ -18,16 +19,16 @@ public class FactoryRegistry
     public bool IsLoaded()
     {
         // This is a simple check; you might want more robust logic
-        return Machines.Count > 0 && Recipes.Count > 0 && Items.Count > 0;
+        return Machines.Count > 0 && Recipes.Count > 0 && Items.Count > 0 && WasteCrates.Count > 0;
     }
 
     // --- Methods ---
 
     /// <summary>
-    /// Loads machine, recipe, and item definitions from JSON strings.
+    /// Loads machine, recipe, item, and wastecrate definitions from JSON strings.
     /// Call this from GameManager when starting the game.
     /// </summary>
-    public void LoadFromJson(string machinesJson, string recipesJson, string itemsJson)
+    public void LoadFromJson(string machinesJson, string recipesJson, string itemsJson, string wastecratesJson = null)
     {
         // Load Machines
         var machinesWrapper = JsonUtility.FromJson<MachineListWrapper>(machinesJson);
@@ -51,6 +52,22 @@ public class FactoryRegistry
         Items.Clear();
         foreach (var i in itemsWrapper.items)
             Items[i.id] = i;
+            
+        // Load WasteCrates
+        WasteCrates.Clear();
+        if (!string.IsNullOrEmpty(wastecratesJson))
+        {
+            try
+            {
+                var wastecratesWrapper = JsonUtility.FromJson<WasteCrateListWrapper>(wastecratesJson);
+                foreach (var wc in wastecratesWrapper.wasteCrates)
+                    WasteCrates[wc.id] = wc;
+            }
+            catch
+            {
+                Debug.LogWarning("Failed to load wastecrates from JSON, using empty dictionary");
+            }
+        }
     }
 
     [System.Serializable]
@@ -59,6 +76,8 @@ public class FactoryRegistry
     private class RecipeListWrapper { public List<RecipeDef> recipes; }
     [System.Serializable]
     private class ItemListWrapper { public List<ItemDef> items; }
+    [System.Serializable]
+    private class WasteCrateListWrapper { public List<WasteCrateDef> wasteCrates; }
 
     public UserMachineProgress FindMachineProgress(string machineId)
     {
@@ -75,6 +94,12 @@ public class FactoryRegistry
     {
         Items.TryGetValue(itemId, out var i);
         return i;
+    }
+    
+    public WasteCrateDef GetWasteCrate(string wasteCrateId)
+    {
+        WasteCrates.TryGetValue(wasteCrateId, out var wc);
+        return wc;
     }
 
     public RecipeDef GetRecipe(string machineId, string inputItemId)

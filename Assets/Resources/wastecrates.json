@@ -1,0 +1,18 @@
+{
+  "wasteCrates": [
+    {
+      "id": "starter_crate",
+      "displayName": "Starter Waste Crate",
+      "items": [
+        {
+          "itemType": "can",
+          "count": 50
+        },
+        {
+          "itemType": "plasticBottle",
+          "count": 50
+        }
+      ]
+    }
+  ]
+}

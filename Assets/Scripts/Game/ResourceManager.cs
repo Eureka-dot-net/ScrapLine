@@ -52,7 +52,19 @@ public class ResourceManager : MonoBehaviour
         }
         string itemsJson = itemsAsset.text;
 
-        FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson);
+        TextAsset wastecratesAsset = Resources.Load<TextAsset>("wastecrates");
+        string wastecratesJson = null;
+        if (wastecratesAsset != null)
+        {
+            wastecratesJson = wastecratesAsset.text;
+        }
+        else
+        {
+            if (enableResourceLogs)
+                Debug.LogWarning("wastecrates.json resource not found - WasteCrates will be disabled");
+        }
+
+        FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson, wastecratesJson);
     }
 
     /// <summary>

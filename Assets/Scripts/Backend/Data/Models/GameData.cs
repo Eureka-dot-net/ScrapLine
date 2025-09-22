@@ -46,6 +46,12 @@ public class ItemData
 }
 
 [System.Serializable]
+public class WasteCrateInstance {
+    public string wasteCrateDefId;
+    public List<WasteCrateItemDef> remainingItems = new List<WasteCrateItemDef>();
+}
+
+[System.Serializable]
 public class SortingMachineConfig
 {
     public string leftItemType = ""; // Item type that should go left
@@ -67,6 +73,7 @@ public class CellData
     public BaseMachine machine; // Runtime machine object that handles behavior
     public string selectedRecipeId; // Player's configuration choice for this machine
     public SortingMachineConfig sortingConfig = new SortingMachineConfig(); // Configuration for sorting machines
+    public WasteCrateInstance wasteCrate; // WasteCrate assigned to spawner machines
 }
 
 [System.Serializable]
