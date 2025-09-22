@@ -271,13 +271,14 @@ public class UIGridManager : MonoBehaviour
                 GameObject overlay = new GameObject(overlayName);
                 overlay.transform.SetParent(bordersContainer, false);
 
+                // Use transparent image as base for outline effect only
                 Image overlayImage = overlay.AddComponent<Image>();
-                overlayImage.color = new Color(0f, 1f, 0f, 0.2f); // Much more subtle green overlay
+                overlayImage.color = new Color(0f, 0f, 0f, 0f); // Completely transparent - just for outline
                 
-                // Add subtle outline for visibility without being overwhelming
+                // Add subtle green outline for minimal visual indication
                 Outline outline = overlay.AddComponent<Outline>();
-                outline.effectColor = new Color(0f, 1f, 0f, 0.8f); // Green outline instead of yellow
-                outline.effectDistance = new Vector2(2, 2); // Smaller outline for subtlety
+                outline.effectColor = new Color(0f, 0.8f, 0f, 1f); // Subtle green outline
+                outline.effectDistance = new Vector2(3, 3); // Moderate outline for visibility
 
                 // Position and size the overlay to match the cell
                 RectTransform overlayRT = overlay.GetComponent<RectTransform>();
