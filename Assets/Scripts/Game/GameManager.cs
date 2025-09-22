@@ -34,6 +34,10 @@ public class GameManager : MonoBehaviour
     public float spawnInterval = 5f;
     private float spawnTimer;
 
+    [Header("Edit Mode")]
+    [Tooltip("Whether the game is currently in edit mode")]
+    private bool isInEditMode = false;
+
     public UIGridManager activeGridManager;
 
     private void Awake()
@@ -342,6 +346,38 @@ public class GameManager : MonoBehaviour
     public bool CanAfford(int amount)
     {
         return creditsManager.CanAfford(amount);
+    }
+
+    /// <summary>
+    /// Set the edit mode state
+    /// </summary>
+    /// <param name="editMode">True to enable edit mode, false to disable</param>
+    public void SetEditMode(bool editMode)
+    {
+        isInEditMode = editMode;
+        Debug.Log($"GameManager: Edit mode set to {editMode}");
+        
+        // Update UI highlights based on edit mode
+        if (activeGridManager != null)
+        {
+            if (editMode)
+            {
+                activeGridManager.HighlightConfigurableMachines();
+            }
+            else
+            {
+                activeGridManager.ClearHighlights();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Get the current edit mode state
+    /// </summary>
+    /// <returns>True if in edit mode, false otherwise</returns>
+    public bool IsInEditMode()
+    {
+        return isInEditMode;
     }
 
     #endregion

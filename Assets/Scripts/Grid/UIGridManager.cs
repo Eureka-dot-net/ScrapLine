@@ -255,6 +255,38 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Highlight all machines on the grid that have CanConfigure = true
+    /// </summary>
+    public void HighlightConfigurableMachines()
+    {
+        if (cellScripts == null || gridData == null)
+        {
+            Debug.LogError("Cannot highlight configurable machines - grid not initialized");
+            return;
+        }
+
+        ClearHighlights(); // Clear any existing highlights
+
+        // Check each cell for configurable machines
+        for (int y = 0; y < gridData.height; y++)
+        {
+            for (int x = 0; x < gridData.width; x++)
+            {
+                CellData cellData = GetCellData(x, y);
+                if (cellData != null && cellData.cellType == CellType.Machine && cellData.machine != null)
+                {
+                    // Check if the machine can be configured
+                    if (cellData.machine.CanConfigure)
+                    {
+                        HighlightSlot(x, y, true);
+                        Debug.Log($"Highlighting configurable machine at ({x}, {y}): {cellData.machineDefId}");
+                    }
+                }
+            }
+        }
+    }
+
 
     private void HighlightSlot(int x, int y, bool highlight)
     {

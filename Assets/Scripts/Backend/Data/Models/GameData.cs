@@ -46,6 +46,13 @@ public class ItemData
 }
 
 [System.Serializable]
+public class SortingMachineConfig
+{
+    public string leftItemType = ""; // Item type that should go left
+    public string rightItemType = ""; // Item type that should go right
+}
+
+[System.Serializable]
 public class CellData
 {
     public int x;
@@ -59,6 +66,7 @@ public class CellData
     public MachineState machineState = MachineState.Idle; // Current state of the machine
     public BaseMachine machine; // Runtime machine object that handles behavior
     public string selectedRecipeId; // Player's configuration choice for this machine
+    public SortingMachineConfig sortingConfig = new SortingMachineConfig(); // Configuration for sorting machines
 }
 
 [System.Serializable]

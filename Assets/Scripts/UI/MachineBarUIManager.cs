@@ -294,9 +294,9 @@ public class MachineBarUIManager : MonoBehaviour
         }
 
         // Tell the GameManager about the state change
-        // if (GameManager.Instance != null)
-        // {
-        //     GameManager.Instance.SetEditMode(isInEditMode);
-        // }
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetEditMode(isInEditMode);
+        }
     }
 }

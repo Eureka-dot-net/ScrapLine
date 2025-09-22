@@ -15,8 +15,44 @@ public class SortingMachine : BaseMachine
     public override void OnConfigured()
     {
         // Configuration logic for sorting machine
-        // For example, set sorting direction or criteria
         Debug.Log($"SortingMachine at ({cellData.x}, {cellData.y}) configured.");
+
+        // Find the sorting configuration UI in the scene
+        SortingMachineConfigUI configUI = FindAnyObjectByType<SortingMachineConfigUI>();
+        if (configUI != null)
+        {
+            configUI.ShowConfiguration(cellData, OnConfigurationConfirmed);
+        }
+        else
+        {
+            Debug.LogWarning("SortingMachineConfigUI not found in scene. Please add the UI component to configure sorting machines.");
+            
+            // Fallback: Set some default configuration for testing
+            if (cellData.sortingConfig == null)
+                cellData.sortingConfig = new SortingMachineConfig();
+            
+            cellData.sortingConfig.leftItemType = "can";
+            cellData.sortingConfig.rightItemType = "shreddedAluminum";
+            Debug.Log($"Applied default sorting configuration: Left=can, Right=shreddedAluminum");
+        }
+    }
+
+    /// <summary>
+    /// Called when the sorting configuration is confirmed by the user
+    /// </summary>
+    private void OnConfigurationConfirmed(string leftItemType, string rightItemType)
+    {
+        Debug.Log($"Sorting machine configured: Left={leftItemType}, Right={rightItemType}");
+        
+        // Update the cell data configuration (this is already done by the UI, but let's be explicit)
+        if (cellData.sortingConfig == null)
+            cellData.sortingConfig = new SortingMachineConfig();
+            
+        cellData.sortingConfig.leftItemType = leftItemType;
+        cellData.sortingConfig.rightItemType = rightItemType;
+        
+        // TODO: Implement sorting logic based on the configuration
+        // This would be used in the item movement logic to determine which direction items should go
     }
     
     /// <summary>

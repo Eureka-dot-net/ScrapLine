@@ -67,6 +67,25 @@ public class MachineManager : MonoBehaviour
             if (enableMachineLogs)
                 Debug.Log($"Cell clicked at ({x}, {y}): cellType={cellData.cellType}, machineDefId={cellData.machineDefId}, selectedMachine={selectedMachine?.id ?? "null"}");
 
+        // Check if we're in edit mode
+        if (GameManager.Instance != null && GameManager.Instance.IsInEditMode())
+        {
+            // In edit mode, only handle configuration of machines that can be configured
+            if (cellData.cellType == CellType.Machine && cellData.machine != null && cellData.machine.CanConfigure)
+            {
+                Debug.Log($"Configuring machine at ({x}, {y}): {cellData.machineDefId}");
+                cellData.machine.OnConfigured();
+                return;
+            }
+            else
+            {
+                if (enableMachineLogs)
+                    Debug.Log($"Cell ({x}, {y}) cannot be configured in edit mode");
+                return;
+            }
+        }
+
+        // Normal mode behavior (not in edit mode)
         // If clicking on an existing machine, rotate it
         if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
         {
