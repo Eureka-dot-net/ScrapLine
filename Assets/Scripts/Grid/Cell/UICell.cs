@@ -173,6 +173,12 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        var machineBarManager = FindAnyObjectByType<MachineBarUIManager>();
+        if (machineBarManager != null)
+        {
+            machineBarManager.ClearSelection();
+        }
+
         // Check if we have a machine that can be dragged
         if (!GameManager.Instance.CanStartDrag(x, y))
         {
@@ -337,9 +343,9 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
 
         // Find the UI Canvas
-        Canvas targetCanvas = FindFirstObjectByType<UIGridManager>()?.gridPanel?.GetComponentInParent<Canvas>() 
+        Canvas targetCanvas = FindFirstObjectByType<UIGridManager>()?.gridPanel?.GetComponentInParent<Canvas>()
                              ?? FindFirstObjectByType<Canvas>();
-        
+
         if (targetCanvas == null)
         {
             Debug.LogError("Could not find Canvas for drag visual");
@@ -384,7 +390,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         // Create MachineRenderer in menu mode (keeps sprites local)
         GameObject tempRenderer = new GameObject("TempMachineRenderer");
         tempRenderer.transform.SetParent(dragVisual.transform, false);
-        
+
         RectTransform tempRT = tempRenderer.AddComponent<RectTransform>();
         tempRT.anchorMin = Vector2.zero;
         tempRT.anchorMax = Vector2.one;
@@ -393,7 +399,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         MachineRenderer machineRenderer = tempRenderer.AddComponent<MachineRenderer>();
         machineRenderer.isInMenu = true;  // Keep sprites local, don't use grid containers
-        
+
         var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {
@@ -401,7 +407,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
                                 gridManager.conveyorSharedTexture, gridManager.conveyorSharedMaterial);
             return true;
         }
-        
+
         DestroyImmediate(tempRenderer);
         return false;
     }
@@ -418,24 +424,24 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         Image fallbackImage = fallbackObj.AddComponent<Image>();
         fallbackImage.color = new Color(1f, 1f, 0f, 0.8f); // Semi-transparent yellow
-        
+
         RectTransform fallbackRT = fallbackObj.GetComponent<RectTransform>();
         fallbackRT.anchorMin = Vector2.zero;
         fallbackRT.anchorMax = Vector2.one;
         fallbackRT.offsetMin = Vector2.zero;
         fallbackRT.offsetMax = Vector2.zero;
-        
+
         // Add a simple text to show what machine this represents
         GameObject textObj = new GameObject("MachineText");
         textObj.transform.SetParent(fallbackObj.transform, false);
-        
+
         Text machineText = textObj.AddComponent<Text>();
         machineText.text = draggedMachineDefId ?? "Machine";
         machineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         machineText.fontSize = 12;
         machineText.color = Color.black;
         machineText.alignment = TextAnchor.MiddleCenter;
-        
+
         RectTransform textRT = textObj.GetComponent<RectTransform>();
         textRT.anchorMin = Vector2.zero;
         textRT.anchorMax = Vector2.one;
@@ -470,7 +476,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             // we can use the converted local position directly as anchored position
             // since the anchor is at the center and local position is relative to center
             dragRT.anchoredPosition = localPosition;
-            
+
             // Only log position updates when user is actively dragging (not on every frame)
             if (isDragging && Time.frameCount % 30 == 0) // Log every 30 frames (~0.5 sec)
             {
@@ -481,13 +487,13 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
 
     private void ClearDragVisual()
-{
-    if (dragVisual != null)
     {
-        DestroyImmediate(dragVisual);
-        dragVisual = null;
+        if (dragVisual != null)
+        {
+            DestroyImmediate(dragVisual);
+            dragVisual = null;
+        }
     }
-}
 
 
 
