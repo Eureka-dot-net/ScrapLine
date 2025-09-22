@@ -30,6 +30,16 @@
     "processMultiplier": 2
   },
   {
+    "machineId": "platePress",
+    "inputItems": [
+      { "item": "shreddedAluminum", "count": 1 }
+    ],
+    "outputItems": [
+      { "item": "aluminumPlate", "count": 1 }
+    ],
+    "processMultiplier": 2
+  },
+  {
     "machineId": "crafter",
     "inputItems": [
       { "item": "plastic", "count": 1 },
