@@ -40,7 +40,7 @@ public class SpawnerMachine : BaseMachine
     {
         // For now, assign the starter crate to all spawners when they are created
         var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate("starter_crate");
-        if (starterCrateDef != null && cellData.wasteCrate.wasteCrateDefId == null)
+        if (starterCrateDef != null && (cellData.wasteCrate == null || cellData.wasteCrate.wasteCrateDefId == null))
         {
             cellData.wasteCrate = new WasteCrateInstance
             {
