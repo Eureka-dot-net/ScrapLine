@@ -187,7 +187,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
 
         // Store the machine data before blanking the cell
-        var gridManager = FindFirstObjectByType<UIGridManager>();
+        var gridManager = GameManager.Instance.GetGridManager();
         if (gridManager != null)
         {
             var cellData = gridManager.GetCellData(x, y);
@@ -338,7 +338,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         // Find the UI Canvas
         Canvas targetCanvas = FindFirstObjectByType<UIGridManager>()?.gridPanel?.GetComponentInParent<Canvas>() 
-                             ?? FindObjectOfType<Canvas>();
+                             ?? FindFirstObjectByType<Canvas>();
         
         if (targetCanvas == null)
         {
@@ -537,7 +537,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     private void ClearDropTargetHighlights()
     {
         // Find all cells and clear their highlights
-        UICell[] allCells = FindObjectsOfType<UICell>();
+        UICell[] allCells = Object.FindObjectsByType<UICell>(FindObjectsSortMode.None);
         foreach (UICell cell in allCells)
         {
             cell.SetHighlight(false);
