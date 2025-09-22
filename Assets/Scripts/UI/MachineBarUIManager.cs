@@ -21,6 +21,10 @@ public class MachineBarUIManager : MonoBehaviour
     // Reference to grid manager for highlighting
     private UIGridManager gridManager;
 
+    public Button editButton;
+
+    private bool isInEditMode = false;
+
     void Awake()
     {
         Debug.Log("Awake called on MachineBarUIManager");
@@ -33,10 +37,15 @@ public class MachineBarUIManager : MonoBehaviour
         buildTabButton.onClick.AddListener(() => OnTabSelected(buildTabButton));
         manageTabButton.onClick.AddListener(() => OnTabSelected(manageTabButton));
         OnTabSelected(buildTabButton); // Default tab
+        if (editButton != null)
+        {
+            editButton.onClick.AddListener(OnEditModeToggled);
+        }
     }
 
     public void OnTabSelected(Button selectedTab)
     {
+        ClearSelection();
         var tabs = new[] { buildTabButton, manageTabButton };
         foreach (var tab in tabs)
         {
@@ -191,6 +200,7 @@ public class MachineBarUIManager : MonoBehaviour
             }
         }
 
+
         // Clear grid highlighting
         if (gridManager != null)
         {
@@ -258,5 +268,35 @@ public class MachineBarUIManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void OnEditModeToggled()
+    {
+        // Toggle the state
+        isInEditMode = !isInEditMode;
+        Debug.Log($"Edit Mode is now: {isInEditMode}");
+
+        if (isInEditMode)
+        {
+            HighlightSelectedButton(editButton.gameObject);
+        }
+        else
+        {
+            ClearSelectionHighlight();
+            // reset button visual
+            
+            // Remove outline
+            var outline = editButton.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
+        }
+
+        // Tell the GameManager about the state change
+        // if (GameManager.Instance != null)
+        // {
+        //     GameManager.Instance.SetEditMode(isInEditMode);
+        // }
     }
 }

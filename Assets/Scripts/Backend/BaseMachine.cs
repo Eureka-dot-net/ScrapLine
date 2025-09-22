@@ -12,6 +12,8 @@ public abstract class BaseMachine
     protected CellData cellData;
     protected MachineDef machineDef;
 
+    public bool CanConfigure = false;
+
     /// <summary>
     /// Constructor that injects required data dependencies
     /// </summary>
@@ -21,6 +23,17 @@ public abstract class BaseMachine
     {
         this.cellData = cellData;
         this.machineDef = machineDef;
+    }
+
+    /// <summary>
+    /// Called when the machine is configured
+    /// </summary>
+    public virtual void OnConfigured()
+    {
+        if (!CanConfigure)
+            return;
+        // Default implementation: do nothing
+        // Subclasses override for specific behavior
     }
 
     /// <summary>

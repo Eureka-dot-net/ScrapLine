@@ -20,7 +20,8 @@ public static class MachineFactory
         { "ProcessorMachine", typeof(ProcessorMachine) },
         { "SellerMachine", typeof(SellerMachine) },
         { "BlankCellMachine", typeof(BlankCellMachine) },
-        { "ConveyorMachine", typeof(ConveyorMachine) }
+        { "ConveyorMachine", typeof(ConveyorMachine) },
+        { "SortingMachine", typeof(SortingMachine) }
     };
 
     /// <summary>

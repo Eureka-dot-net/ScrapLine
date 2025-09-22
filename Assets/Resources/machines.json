@@ -173,6 +173,41 @@
             "cost": 75,
             "canRotate": true,
             "className": "ProcessorMachine"
+        },
+        {
+            "id": "sorter",
+            "type": "Sorter",
+            "sprite": "",
+            "isMoving": true,
+            "borderSprite": "",
+            "buildingSprite": "Machine_border",
+             "buildingDirection": 180,
+            "upgradeMultipliers": [
+                {
+                    "multiplier": 0.8,
+                    "cost": 100,
+                    "upgradeTime": 200
+                },
+                {
+                    "multiplier": 0.6,
+                    "cost": 500,
+                    "upgradeTime": 300
+                },
+                {
+                    "multiplier": 0.4,
+                    "cost": 1500,
+                    "upgradeTime": 400
+                }
+            ],
+            "gridPlacement": [
+                "grid"
+            ],
+            "maxNumber": -1,
+            "upgradeMaxNumbers": [],
+            "displayInPanel": true,
+            "cost": 75,
+            "canRotate": true,
+            "className": "SortingMachine"
         }
     ]
 }
