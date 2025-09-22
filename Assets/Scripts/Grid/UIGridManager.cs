@@ -235,6 +235,7 @@ public class UIGridManager : MonoBehaviour
                 if (IsValidPlacement(x, y, machineDef))
                 {
                     HighlightCell(x, y, true);
+                    HighlightSlot(x, y, true); // Also highlight the machine slot
                 }
             }
         }
@@ -249,6 +250,7 @@ public class UIGridManager : MonoBehaviour
             for (int x = 0; x < gridData.width; x++)
             {
                 HighlightCell(x, y, false);
+                HighlightSlot(x, y, false); // Also clear slot highlights
             }
         }
     }
@@ -298,11 +300,27 @@ public class UIGridManager : MonoBehaviour
         }
     }
 
+    private void HighlightSlot(int x, int y, bool highlight)
+    {
+        UICell cell = GetCell(x, y);
+        if (cell == null) return;
+
+        // Call the enhanced SetHighlight method on the UICell
+        // This will handle slot-level highlighting that's visible on top of machine renderers
+        cell.SetSlotHighlight(highlight);
+    }
+
     private bool IsValidPlacement(int x, int y, MachineDef machineDef)
     {
         // Get the cell data
         CellData cellData = GetCellData(x, y);
         if (cellData == null) return false;
+
+        // First check if cell is empty (blank) - same logic as CanDropMachineWithDefId
+        if (cellData.cellType != CellType.Blank)
+        {
+            return false;
+        }
 
         // Check if machine's grid placement rules allow this cell
         foreach (string placement in machineDef.gridPlacement)
