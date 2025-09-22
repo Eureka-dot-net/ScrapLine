@@ -24,7 +24,7 @@ This implementation adds edit mode functionality that allows players to configur
 - **SortingMachineConfig**: New data class for left/right item type settings
 - **CellData**: Extended with `sortingConfig` field for persistence
 - **SortingMachine**: Enhanced `OnConfigured()` to show configuration UI
-- **Configuration UI**: `SortingMachineConfigUI` component for dropdown-based configuration
+- **Configuration UI**: `SortingMachineConfigUI` component for button-based item selection with visual feedback
 
 ## Unity Scene/Prefab Setup Required
 
@@ -32,44 +32,58 @@ This implementation adds edit mode functionality that allows players to configur
 
 ### 1. SortingMachine Configuration UI Panel
 
-**Step 1: Create the Configuration Panel**
+**Step 1: Create the Main Configuration Panel**
 1. In the Unity scene, create a new UI Canvas if one doesn't exist
 2. Right-click the Canvas → UI → Panel
 3. Name the panel "SortingConfigPanel"
 4. Position it in the center of the screen
 5. Add the `SortingMachineConfigUI` component to this panel
 
-**Step 2: Add Dropdown Components**
-1. Right-click SortingConfigPanel → UI → Dropdown - TextMeshPro
-2. Name it "LeftItemDropdown" 
-3. Right-click SortingConfigPanel → UI → Dropdown - TextMeshPro  
-4. Name it "RightItemDropdown"
-5. Position them appropriately (left side and right side of panel)
+**Step 2: Add Configuration Buttons**
+1. Right-click SortingConfigPanel → UI → Button - TextMeshPro
+2. Name it "LeftConfigButton", set text to "Left"
+3. Right-click SortingConfigPanel → UI → Button - TextMeshPro  
+4. Name it "RightConfigButton", set text to "Right"
+5. Position them side by side in the panel
+6. These buttons will show selected item pictures when configured
 
-**Step 3: Add Button Components**
+**Step 3: Create Item Selection Panel**
+1. Right-click SortingConfigPanel → UI → Panel
+2. Name it "ItemSelectionPanel"
+3. Add a Scroll View inside for better item browsing
+4. Create an empty GameObject as "ItemButtonContainer" inside the scroll view content
+
+**Step 4: Create Item Button Prefab**
+1. Create → UI → Button - TextMeshPro in the scene (not as child of any panel)
+2. Name it "ItemButtonPrefab"
+3. Configure it to show both image and text for items
+4. Convert to prefab and remove from scene
+5. This will be instantiated dynamically for each item
+
+**Step 5: Add Control Buttons**
 1. Right-click SortingConfigPanel → UI → Button - TextMeshPro
 2. Name it "ConfirmButton", set text to "Confirm"
 3. Right-click SortingConfigPanel → UI → Button - TextMeshPro
 4. Name it "CancelButton", set text to "Cancel"
 5. Position them at the bottom of the panel
 
-**Step 4: Add Labels (Optional)**
-1. Add Text components with labels like "Left Item:", "Right Item:"
-2. Position above respective dropdowns for clarity
-
-**Step 5: Configure the SortingMachineConfigUI Component**
+**Step 6: Configure the SortingMachineConfigUI Component**
 1. Select the SortingConfigPanel
 2. In the Inspector, find the SortingMachineConfigUI component
 3. Assign the following fields:
-   - **Left Item Dropdown**: Drag LeftItemDropdown from hierarchy
-   - **Right Item Dropdown**: Drag RightItemDropdown from hierarchy  
+   - **Left Config Button**: Drag LeftConfigButton from hierarchy
+   - **Right Config Button**: Drag RightConfigButton from hierarchy  
    - **Confirm Button**: Drag ConfirmButton from hierarchy
    - **Cancel Button**: Drag CancelButton from hierarchy
    - **Config Panel**: Drag SortingConfigPanel itself from hierarchy
+   - **Item Selection Panel**: Drag ItemSelectionPanel from hierarchy
+   - **Item Button Container**: Drag ItemButtonContainer from hierarchy
+   - **Item Button Prefab**: Drag ItemButtonPrefab from project assets
 
-**Step 6: Set Initial State**
+**Step 7: Set Initial State**
 1. Set the SortingConfigPanel to **inactive** in the hierarchy (uncheck the checkbox)
-2. The panel will be automatically activated when configuration is needed
+2. Set the ItemSelectionPanel to **inactive** as well
+3. The panels will be automatically activated when configuration is needed
 
 ### 2. Edit Button Setup
 
@@ -91,9 +105,14 @@ This implementation adds edit mode functionality that allows players to configur
 1. Place a SortingMachine on the grid (should use className "SortingMachine" from machines.json)
 2. Enable Edit mode
 3. Click the highlighted SortingMachine
-4. **Expected**: Configuration panel should appear with dropdowns for left/right items
-5. Select items and click Confirm
-6. **Expected**: Panel should close and configuration should be saved
+4. **Expected**: Main configuration panel should appear with Left and Right buttons
+5. Click the Left button
+6. **Expected**: Item selection panel should appear showing all available items as buttons with pictures
+7. Click an item (e.g., "Aluminum Can")
+8. **Expected**: Item selection panel should close and Left button should show the selected item picture and name
+9. Repeat for Right button with different item
+10. Click Confirm
+11. **Expected**: Configuration panel should close and settings should be saved
 
 **Test Scenario 3: Non-Configurable Machines**
 1. Place other machine types (Conveyor, Spawner, etc.)

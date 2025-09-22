@@ -3,27 +3,30 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 
 /// <summary>
-/// UI component for configuring sorting machines.
+/// UI component for configuring sorting machines with button-based item selection.
 /// This component should be attached to a UI panel that contains:
-/// - Two dropdowns for left and right item selection
+/// - Two buttons for left and right item configuration (showing selected item pictures)
+/// - A secondary panel for item selection with item buttons
 /// - Confirm and Cancel buttons
 /// 
 /// UNITY SETUP REQUIRED:
-/// 1. Create a UI Panel GameObject in the scene
-/// 2. Add this component to the panel
-/// 3. Add two Dropdown components for leftItemDropdown and rightItemDropdown
-/// 4. Add two Button components for confirmButton and cancelButton
-/// 5. Assign all UI components in the inspector
-/// 6. Set the panel inactive by default (will be activated when configuration is needed)
+/// 1. Create a main UI Panel GameObject in the scene
+/// 2. Add this component to the main panel
+/// 3. Add two Button components for leftConfigButton and rightConfigButton
+/// 4. Add a secondary Panel for item selection (itemSelectionPanel)
+/// 5. Add Button prefab for item buttons (itemButtonPrefab)
+/// 6. Add two Button components for confirmButton and cancelButton
+/// 7. Assign all UI components in the inspector
+/// 8. Set the panels inactive by default (will be activated when configuration is needed)
 /// </summary>
 public class SortingMachineConfigUI : MonoBehaviour
 {
-    [Header("UI Components - MUST BE ASSIGNED IN INSPECTOR")]
-    [Tooltip("Dropdown for selecting item that goes left")]
-    public Dropdown leftItemDropdown;
+    [Header("Main Configuration UI Components")]
+    [Tooltip("Button for configuring item that goes left (shows selected item picture)")]
+    public Button leftConfigButton;
     
-    [Tooltip("Dropdown for selecting item that goes right")]
-    public Dropdown rightItemDropdown;
+    [Tooltip("Button for configuring item that goes right (shows selected item picture)")]
+    public Button rightConfigButton;
     
     [Tooltip("Button to confirm configuration")]
     public Button confirmButton;
@@ -31,12 +34,25 @@ public class SortingMachineConfigUI : MonoBehaviour
     [Tooltip("Button to cancel configuration")]
     public Button cancelButton;
     
+    [Header("Item Selection Panel")]
+    [Tooltip("Panel that shows when selecting items")]
+    public GameObject itemSelectionPanel;
+    
+    [Tooltip("Container for item selection buttons")]
+    public Transform itemButtonContainer;
+    
+    [Tooltip("Prefab for item buttons")]
+    public GameObject itemButtonPrefab;
+    
     [Header("Configuration")]
-    [Tooltip("Panel to show/hide for configuration")]
+    [Tooltip("Main panel to show/hide for configuration")]
     public GameObject configPanel;
 
     private CellData currentCellData;
     private System.Action<string, string> onConfigurationConfirmed;
+    private bool isSelectingForLeft; // Track whether we're selecting for left or right
+    private string selectedLeftItemId = "";
+    private string selectedRightItemId = "";
 
     void Start()
     {
@@ -47,9 +63,18 @@ public class SortingMachineConfigUI : MonoBehaviour
         if (cancelButton != null)
             cancelButton.onClick.AddListener(OnCancelClicked);
 
-        // Hide the configuration panel initially
+        if (leftConfigButton != null)
+            leftConfigButton.onClick.AddListener(() => ShowItemSelection(true));
+
+        if (rightConfigButton != null)
+            rightConfigButton.onClick.AddListener(() => ShowItemSelection(false));
+
+        // Hide the configuration panels initially
         if (configPanel != null)
             configPanel.SetActive(false);
+        
+        if (itemSelectionPanel != null)
+            itemSelectionPanel.SetActive(false);
     }
 
     /// <summary>
@@ -62,17 +87,22 @@ public class SortingMachineConfigUI : MonoBehaviour
         currentCellData = cellData;
         onConfigurationConfirmed = onConfirmed;
 
-        // Populate dropdowns with available item types
-        PopulateItemDropdowns();
-
-        // Set current values if any
+        // Load current configuration if any
         if (cellData.sortingConfig != null)
         {
-            SetDropdownValue(leftItemDropdown, cellData.sortingConfig.leftItemType);
-            SetDropdownValue(rightItemDropdown, cellData.sortingConfig.rightItemType);
+            selectedLeftItemId = cellData.sortingConfig.leftItemType;
+            selectedRightItemId = cellData.sortingConfig.rightItemType;
+        }
+        else
+        {
+            selectedLeftItemId = "";
+            selectedRightItemId = "";
         }
 
-        // Show the configuration panel
+        // Update button visuals with current selection
+        UpdateConfigButtonVisuals();
+
+        // Show the main configuration panel
         if (configPanel != null)
             configPanel.SetActive(true);
         else
@@ -82,106 +112,199 @@ public class SortingMachineConfigUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Populate dropdown with available item types from the FactoryRegistry
+    /// Show the item selection panel
     /// </summary>
-    private void PopulateItemDropdowns()
+    /// <param name="forLeft">True if selecting for left, false for right</param>
+    private void ShowItemSelection(bool forLeft)
     {
-        if (leftItemDropdown == null || rightItemDropdown == null)
+        isSelectingForLeft = forLeft;
+        
+        // Populate item selection buttons
+        PopulateItemSelectionButtons();
+        
+        // Show the item selection panel
+        if (itemSelectionPanel != null)
+            itemSelectionPanel.SetActive(true);
+        
+        Debug.Log($"Showing item selection for {(forLeft ? "left" : "right")} configuration");
+    }
+
+    /// <summary>
+    /// Hide the item selection panel
+    /// </summary>
+    private void HideItemSelection()
+    {
+        if (itemSelectionPanel != null)
+            itemSelectionPanel.SetActive(false);
+    }
+
+    /// <summary>
+    /// Populate the item selection panel with item buttons
+    /// </summary>
+    private void PopulateItemSelectionButtons()
+    {
+        if (itemButtonContainer == null || itemButtonPrefab == null)
         {
-            Debug.LogError("SortingMachineConfigUI: Dropdowns not assigned in inspector!");
+            Debug.LogError("SortingMachineConfigUI: Item button container or prefab not assigned!");
             return;
         }
 
-        List<string> itemOptions = new List<string>();
-        itemOptions.Add("None"); // Default option
+        // Clear existing buttons
+        foreach (Transform child in itemButtonContainer)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Add "None" option
+        CreateItemButton("", "None", null);
 
         // Get available item types from FactoryRegistry
         if (FactoryRegistry.Instance != null)
         {
             foreach (var item in FactoryRegistry.Instance.Items.Values)
             {
-                itemOptions.Add(item.displayName ?? item.id);
+                CreateItemButton(item.id, item.displayName, item.sprite);
             }
         }
         else
         {
             // Fallback if FactoryRegistry is not available
-            itemOptions.Add("can");
-            itemOptions.Add("shreddedAluminum");
-            itemOptions.Add("plastic");
+            CreateItemButton("can", "Aluminum Can", "can");
+            CreateItemButton("shreddedAluminum", "Shredded Aluminum", "shredded_aluminum");
+            CreateItemButton("plastic", "Plastic", "plastic");
         }
-
-        // Populate both dropdowns
-        leftItemDropdown.ClearOptions();
-        leftItemDropdown.AddOptions(itemOptions);
-
-        rightItemDropdown.ClearOptions();
-        rightItemDropdown.AddOptions(itemOptions);
     }
 
     /// <summary>
-    /// Set dropdown value by item type string
+    /// Create an item selection button
     /// </summary>
-    private void SetDropdownValue(Dropdown dropdown, string itemType)
+    private void CreateItemButton(string itemId, string displayName, string spriteName)
     {
-        if (dropdown == null || string.IsNullOrEmpty(itemType)) 
-            return;
-
-        for (int i = 0; i < dropdown.options.Count; i++)
+        GameObject buttonObj = Instantiate(itemButtonPrefab, itemButtonContainer);
+        Button button = buttonObj.GetComponent<Button>();
+        
+        if (button != null)
         {
-            if (dropdown.options[i].text == itemType || 
-                (FactoryRegistry.Instance != null && 
-                 FactoryRegistry.Instance.Items.ContainsKey(itemType) &&
-                 dropdown.options[i].text == FactoryRegistry.Instance.Items[itemType].displayName))
+            // Set up button click listener
+            button.onClick.AddListener(() => OnItemSelected(itemId));
+            
+            // Try to find and set the sprite
+            Image buttonImage = button.GetComponent<Image>();
+            if (buttonImage == null)
+                buttonImage = button.GetComponentInChildren<Image>();
+            
+            if (buttonImage != null && !string.IsNullOrEmpty(spriteName))
             {
-                dropdown.value = i;
-                return;
+                Sprite itemSprite = Resources.Load<Sprite>($"Sprites/Items/{spriteName}");
+                if (itemSprite != null)
+                {
+                    buttonImage.sprite = itemSprite;
+                }
+            }
+            
+            // Set text if there's a Text component
+            Text buttonText = button.GetComponentInChildren<Text>();
+            if (buttonText != null)
+            {
+                buttonText.text = displayName;
             }
         }
     }
 
     /// <summary>
-    /// Get item type ID from dropdown selection
+    /// Called when an item is selected from the item selection panel
     /// </summary>
-    private string GetItemTypeFromDropdown(Dropdown dropdown)
+    private void OnItemSelected(string itemId)
     {
-        if (dropdown == null || dropdown.value == 0) // 0 is "None"
-            return "";
-
-        string selectedText = dropdown.options[dropdown.value].text;
-        
-        // Try to find the item ID by display name
-        if (FactoryRegistry.Instance != null)
+        if (isSelectingForLeft)
         {
-            foreach (var kvp in FactoryRegistry.Instance.Items)
+            selectedLeftItemId = itemId;
+        }
+        else
+        {
+            selectedRightItemId = itemId;
+        }
+
+        // Update the configuration button visuals
+        UpdateConfigButtonVisuals();
+        
+        // Hide the item selection panel
+        HideItemSelection();
+        
+        Debug.Log($"Selected item '{itemId}' for {(isSelectingForLeft ? "left" : "right")} configuration");
+    }
+
+    /// <summary>
+    /// Update the left and right configuration buttons to show selected items
+    /// </summary>
+    private void UpdateConfigButtonVisuals()
+    {
+        UpdateConfigButtonVisual(leftConfigButton, selectedLeftItemId, "Left");
+        UpdateConfigButtonVisual(rightConfigButton, selectedRightItemId, "Right");
+    }
+
+    /// <summary>
+    /// Update a single configuration button to show the selected item
+    /// </summary>
+    private void UpdateConfigButtonVisual(Button configButton, string itemId, string defaultText)
+    {
+        if (configButton == null) return;
+
+        // Get button image and text components
+        Image buttonImage = configButton.GetComponent<Image>();
+        if (buttonImage == null)
+            buttonImage = configButton.GetComponentInChildren<Image>();
+        
+        Text buttonText = configButton.GetComponentInChildren<Text>();
+
+        if (string.IsNullOrEmpty(itemId))
+        {
+            // No item selected - show default text
+            if (buttonText != null)
+                buttonText.text = defaultText;
+            
+            // Reset to default button appearance
+            if (buttonImage != null)
+                buttonImage.sprite = null;
+        }
+        else
+        {
+            // Item selected - show item info
+            ItemDef itemDef = FactoryRegistry.Instance?.GetItem(itemId);
+            string displayName = itemDef?.displayName ?? itemId;
+            string spriteName = itemDef?.sprite ?? itemId;
+
+            if (buttonText != null)
+                buttonText.text = displayName;
+
+            // Load and set the item sprite
+            if (buttonImage != null && !string.IsNullOrEmpty(spriteName))
             {
-                if (kvp.Value.displayName == selectedText || kvp.Value.id == selectedText)
+                Sprite itemSprite = Resources.Load<Sprite>($"Sprites/Items/{spriteName}");
+                if (itemSprite != null)
                 {
-                    return kvp.Value.id;
+                    buttonImage.sprite = itemSprite;
                 }
             }
         }
-
-        // Fallback - return the text as-is
-        return selectedText.ToLower();
     }
 
     private void OnConfirmClicked()
     {
-        string leftItemType = GetItemTypeFromDropdown(leftItemDropdown);
-        string rightItemType = GetItemTypeFromDropdown(rightItemDropdown);
-
-        Debug.Log($"Sorting configuration confirmed: Left={leftItemType}, Right={rightItemType}");
+        Debug.Log($"Sorting configuration confirmed: Left={selectedLeftItemId}, Right={selectedRightItemId}");
 
         // Update the cell data
-        if (currentCellData != null && currentCellData.sortingConfig != null)
+        if (currentCellData != null)
         {
-            currentCellData.sortingConfig.leftItemType = leftItemType;
-            currentCellData.sortingConfig.rightItemType = rightItemType;
+            if (currentCellData.sortingConfig == null)
+                currentCellData.sortingConfig = new SortingMachineConfig();
+            
+            currentCellData.sortingConfig.leftItemType = selectedLeftItemId;
+            currentCellData.sortingConfig.rightItemType = selectedRightItemId;
         }
 
         // Call the callback
-        onConfigurationConfirmed?.Invoke(leftItemType, rightItemType);
+        onConfigurationConfirmed?.Invoke(selectedLeftItemId, selectedRightItemId);
 
         // Hide the configuration panel
         HideConfiguration();
@@ -199,6 +322,9 @@ public class SortingMachineConfigUI : MonoBehaviour
             configPanel.SetActive(false);
         else
             gameObject.SetActive(false);
+
+        if (itemSelectionPanel != null)
+            itemSelectionPanel.SetActive(false);
 
         currentCellData = null;
         onConfigurationConfirmed = null;
