@@ -124,8 +124,9 @@ public class LoggingSystemDemo : MonoBehaviour
     public void DemonstrateComponentIdPatterns()
     {
         // Machine components: "MachineType_X_Y"
-        string fabricatorId = "Fabricator_5_3"; // Machine at grid position (5,3)
-        string conveyorId = "Conveyor_2_1";     // Conveyor at grid position (2,1)
+        // Example IDs that would be used in actual game scenarios
+        var fabricatorPosition = new { x = 5, y = 3 };
+        var conveyorPosition = new { x = 2, y = 1 };
         
         // Manager components: "ManagerName_InstanceId"
         string gridManagerId = $"GridManager_{GetInstanceID()}";

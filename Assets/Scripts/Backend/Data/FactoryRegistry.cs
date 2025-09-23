@@ -7,6 +7,11 @@ public class FactoryRegistry
     private static FactoryRegistry _instance;
     public static FactoryRegistry Instance => _instance ??= new FactoryRegistry();
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"FactoryRegistry_{GetHashCode()}";
+
     // --- Data Members ---
     public Dictionary<string, MachineDef> Machines = new();
     public List<RecipeDef> Recipes = new();

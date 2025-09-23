@@ -18,6 +18,11 @@ public class CreditsManager : MonoBehaviour
     [Tooltip("Enable debug logs for credits operations")]
     public bool enableCreditsLogs = true;
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"CreditsManager_{GetInstanceID()}";
+
     private int currentCredits = 0;
     private CreditsUI creditsUI;
     private MachineBarUIManager machineBarManager;

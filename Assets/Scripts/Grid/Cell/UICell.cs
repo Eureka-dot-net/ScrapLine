@@ -14,6 +14,11 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     public int x, y;
     private UIGridManager gridManager;
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"UICell_{x}_{y}";
+
     // Shared visual resources for moving parts
     private Texture conveyorTexture;
     private Material conveyorMaterial;

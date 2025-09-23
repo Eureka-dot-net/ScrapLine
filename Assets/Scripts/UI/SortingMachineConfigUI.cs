@@ -33,6 +33,11 @@ public class SortingMachineConfigUI : MonoBehaviour
     
     [Tooltip("Button to cancel configuration")]
     public Button cancelButton;
+
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"SortingMachineConfigUI_{GetInstanceID()}";
     
     [Header("Item Selection Panel")]
     [Tooltip("Panel that shows when selecting items")]

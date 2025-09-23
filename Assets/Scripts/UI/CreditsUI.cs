@@ -6,6 +6,11 @@ public class CreditsUI : MonoBehaviour
     [SerializeField] private string displayFormat = "Credits: {0}";
     private TMP_Text creditsText;
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"CreditsUI_{GetInstanceID()}";
+
     private void Awake()
     {
         // Automatically grabs the TMP_Text on the same GameObject

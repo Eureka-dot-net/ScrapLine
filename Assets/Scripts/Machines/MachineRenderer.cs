@@ -11,6 +11,11 @@ public class MachineRenderer : MonoBehaviour
     [Header("Context")]
     public bool isInMenu = false; // Set to true when used in UI panels to disable materials
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"MachineRenderer_{GetInstanceID()}";
+
     // For separated building rendering
     private UIGridManager gridManager;
     private int cellX, cellY;

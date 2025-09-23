@@ -11,6 +11,11 @@ public class ResourceManager : MonoBehaviour
     [Tooltip("Enable debug logs for resource loading")]
     public bool enableResourceLogs = true;
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"ResourceManager_{GetInstanceID()}";
+
     private MachineBarUIManager machineBarManager;
     private CreditsUI creditsUI;
 

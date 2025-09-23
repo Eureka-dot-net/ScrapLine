@@ -11,6 +11,11 @@ using UnityEngine;
 public static class MachineFactory
 {
     /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private static string ComponentId => "MachineFactory_Static";
+    
+    /// <summary>
     /// Static dictionary that maps class names to their corresponding Type objects
     /// for efficient machine instantiation
     /// </summary>
@@ -68,7 +73,7 @@ public static class MachineFactory
         }
         catch (Exception ex)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Debug, "Failed to create machine instance for {machineDef.className}: {ex.Message}", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, $"Failed to create machine instance for {machineDef.className}: {ex.Message}", ComponentId);
             return null;
         }
     }
