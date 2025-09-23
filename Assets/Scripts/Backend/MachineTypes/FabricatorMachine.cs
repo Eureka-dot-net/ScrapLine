@@ -181,8 +181,12 @@ public class FabricatorMachine : ProcessorMachine
         foreach (var recipe in FactoryRegistry.Instance.Recipes)
         {
             if (GetRecipeId(recipe) == cellData.selectedRecipeId)
+            {
                 return recipe;
+            }
         }
+        
+        Debug.LogWarning($"[FABRICATOR] Could not find recipe with ID: {cellData.selectedRecipeId}");
         return null;
     }
 
@@ -275,10 +279,12 @@ public class FabricatorMachine : ProcessorMachine
         RecipeDef selectedRecipe = GetSelectedRecipe();
         if (selectedRecipe == null) return;
         
+        Debug.Log($"[FABRICATOR] Using recipe: {string.Join(", ", selectedRecipe.inputItems.Select(i => $"{i.count}x {i.item}"))} → {string.Join(", ", selectedRecipe.outputItems.Select(o => $"{o.count}x {o.item}"))}");
+        
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
         if (neededItems.Count == 0)
         {
-            Debug.Log($"[FABRICATOR] All inputs ready - starting processing");
+            Debug.Log($"[FABRICATOR] All inputs ready - starting processing. Current inventory: {string.Join(", ", cellData.items.Select(i => i.itemType))}");
             // We have all items needed - start processing
             StartFabricatorProcessing(selectedRecipe);
         }
@@ -353,7 +359,7 @@ public class FabricatorMachine : ProcessorMachine
         
         // Reset machine state to Idle so it can start the next recipe cycle
         cellData.machineState = MachineState.Idle;
-        Debug.Log($"[FABRICATOR] Ready for next recipe cycle");
+        Debug.Log($"[FABRICATOR] Ready for next recipe cycle. Inventory now: {string.Join(", ", cellData.items.Select(i => i.itemType))}");
     }
 
     /// <summary>
