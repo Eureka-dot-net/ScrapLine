@@ -66,26 +66,104 @@ public class SpawnerMachine : BaseMachine
     /// </summary>
     private void InitializeWasteCrate()
     {
+        GameLogger.LogSpawning("=== InitializeWasteCrate called ===", ComponentId);
+        
+        // Check if waste crate already exists (loaded from save)
+        if (cellData.wasteCrate != null && cellData.wasteCrate.wasteCrateDefId != null)
+        {
+            int currentItems = GetTotalItemsInWasteCrate();
+            GameLogger.LogSpawning($"Existing waste crate found: ID='{cellData.wasteCrate.wasteCrateDefId}', Items={currentItems}", ComponentId);
+            
+            // If waste crate is empty, refill it from definition
+            if (currentItems == 0)
+            {
+                GameLogger.LogSpawning("Waste crate is empty, attempting refill from definition", ComponentId);
+                RefillWasteCrateFromDefinition();
+                int itemsAfterRefill = GetTotalItemsInWasteCrate();
+                GameLogger.LogSpawning($"After refill attempt: {itemsAfterRefill} items", ComponentId);
+            }
+            return;
+        }
+
+        GameLogger.LogSpawning("No existing waste crate found, creating new one", ComponentId);
+
         // For now, assign the starter crate to all spawners when they are created
         var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate("starter_crate");
-        if (starterCrateDef != null && (cellData.wasteCrate == null || cellData.wasteCrate.wasteCrateDefId == null))
+        if (starterCrateDef == null)
         {
-            cellData.wasteCrate = new WasteCrateInstance
-            {
-                wasteCrateDefId = starterCrateDef.id,
-                remainingItems = new List<WasteCrateItemDef>()
-            };
-            
-            // Copy items from definition to instance
-            foreach (var item in starterCrateDef.items)
-            {
-                cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
-                {
-                    itemType = item.itemType,
-                    count = item.count
-                });
-            }
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, "Failed to get starter_crate definition from FactoryRegistry!", ComponentId);
+            return;
         }
+
+        cellData.wasteCrate = new WasteCrateInstance
+        {
+            wasteCrateDefId = starterCrateDef.id,
+            remainingItems = new List<WasteCrateItemDef>()
+        };
+        
+        // Copy items from definition to instance
+        foreach (var item in starterCrateDef.items)
+        {
+            cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
+            {
+                itemType = item.itemType,
+                count = item.count
+            });
+        }
+        
+        GameLogger.LogSpawning($"Initialized new waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
+    }
+    
+    /// <summary>
+    /// Refill empty waste crate from its definition
+    /// </summary>
+    private void RefillWasteCrateFromDefinition()
+    {
+        GameLogger.LogSpawning("=== RefillWasteCrateFromDefinition called ===", ComponentId);
+        
+        if (cellData.wasteCrate == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, "Cannot refill: cellData.wasteCrate is null", ComponentId);
+            return;
+        }
+        
+        if (string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId))
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, "Cannot refill: wasteCrateDefId is null or empty", ComponentId);
+            return;
+        }
+            
+        GameLogger.LogSpawning($"Attempting to get waste crate definition for: '{cellData.wasteCrate.wasteCrateDefId}'", ComponentId);
+        var wasteCrateDef = FactoryRegistry.Instance.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
+        if (wasteCrateDef == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, $"Failed to get waste crate definition '{cellData.wasteCrate.wasteCrateDefId}' for refill", ComponentId);
+            return;
+        }
+        
+        GameLogger.LogSpawning($"Found waste crate definition with {wasteCrateDef.items?.Count ?? 0} item types", ComponentId);
+        
+        // Clear existing items and refill from definition
+        if (cellData.wasteCrate.remainingItems == null)
+        {
+            cellData.wasteCrate.remainingItems = new List<WasteCrateItemDef>();
+        }
+        else
+        {
+            cellData.wasteCrate.remainingItems.Clear();
+        }
+        
+        foreach (var item in wasteCrateDef.items)
+        {
+            cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
+            {
+                itemType = item.itemType,
+                count = item.count
+            });
+            GameLogger.LogSpawning($"Added {item.count} x {item.itemType} to waste crate", ComponentId);
+        }
+        
+        GameLogger.LogSpawning($"Refilled waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
     }
     
     /// <summary>
@@ -118,6 +196,91 @@ public class SpawnerMachine : BaseMachine
             total += item.count;
         }
         return total;
+    }
+    
+    /// <summary>
+    /// Get tooltip text for waste crate contents display
+    /// </summary>
+    public string GetWasteCrateTooltip()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
+            return "No waste crate assigned";
+            
+        var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
+        if (starterCrateDef == null)
+            return "Unknown waste crate";
+            
+        string tooltip = starterCrateDef.displayName + "\n";
+        
+        foreach (var item in cellData.wasteCrate.remainingItems)
+        {
+            var itemDef = FactoryRegistry.Instance.GetItem(item.itemType);
+            string displayName = itemDef != null ? itemDef.displayName : item.itemType;
+            tooltip += $"  {displayName}: {item.count}\n";
+        }
+        
+        return tooltip.TrimEnd('\n');
+    }
+    
+    /// <summary>
+    /// Get the appropriate junkyard sprite name based on waste crate fullness
+    /// Returns sprite names for different fullness levels (0%, 33%, 66%, 100%)
+    /// </summary>
+    public string GetJunkyardSpriteName()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
+            return "junkYard_0";
+            
+        int totalItems = GetTotalItemsInWasteCrate();
+        
+        // Calculate initial total from waste crate definition
+        var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
+        int initialTotal = 0;
+        if (starterCrateDef != null)
+        {
+            foreach (var item in starterCrateDef.items)
+            {
+                initialTotal += item.count;
+            }
+        }
+        
+        if (initialTotal == 0) return "junkYard_0";
+        
+        float percentageFull = (float)totalItems / initialTotal;
+        
+        // Use 25% intervals but bias towards higher sprites
+        // 100% sprite shows from 75-100% (was 100+ items, now 75+)
+        // 66% sprite shows from 50-75% (was 75-99 items, now 50-74)
+        // 33% sprite shows from 25-50% (was 25-74 items, now 25-49)
+        // 0% sprite shows from 0-25% (was 0-24 items, now 0-24)
+        
+        if (percentageFull >= 0.75f)
+            return "junkYard_100";
+        else if (percentageFull >= 0.50f)
+            return "junkYard_66";
+        else if (percentageFull >= 0.25f)
+            return "junkYard_33";
+        else
+            return "junkYard_0";
+    }
+    
+    /// <summary>
+    /// Get spawn progress as a value between 0 and 1 for progress bar display
+    /// </summary>
+    public float GetSpawnProgress()
+    {
+        if (spawnInterval <= 0) 
+        {
+            GameLogger.LogSpawning("GetSpawnProgress: spawnInterval <= 0, returning 1.0", ComponentId);
+            return 1.0f;
+        }
+        
+        float elapsed = Time.time - lastSpawnTime;
+        float progress = Mathf.Clamp01(elapsed / spawnInterval);
+        
+        GameLogger.LogSpawning($"GetSpawnProgress: elapsed={elapsed:F2}s, interval={spawnInterval:F2}s, progress={progress:F2}", ComponentId);
+        
+        return progress;
     }
     
     /// <summary>
@@ -200,7 +363,60 @@ public class SpawnerMachine : BaseMachine
         // Decrease count by 1
         selectedItem.count--;
         
+        GameLogger.LogSpawning($"Consumed {selectedItem.itemType}, remaining: {selectedItem.count}", ComponentId);
+        
+        // Notify renderer to update sprite since items changed
+        NotifyItemsChanged();
+        
         return selectedItem.itemType;
+    }
+    
+    /// <summary>
+    /// Notify the machine renderer that items have changed so sprite should be updated
+    /// </summary>
+    private void NotifyItemsChanged()
+    {
+        // Find the renderer and force it to update the sprite on next frame
+        var gridManager = UnityEngine.Object.FindObjectOfType<UIGridManager>();
+        if (gridManager != null)
+        {
+            var cell = gridManager.GetCell(cellData.x, cellData.y);
+            if (cell != null)
+            {
+                var renderer = cell.GetComponent<MachineRenderer>();
+                if (renderer != null)
+                {
+                    renderer.ForceUpdateSprite();
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Override base class method to provide spawn progress information
+    /// </summary>
+    public override float GetProgress()
+    {
+        return GetSpawnProgress();
+    }
+    
+    /// <summary>
+    /// Override base class method to provide waste crate tooltip information
+    /// </summary>
+    public override string GetTooltip()
+    {
+        return GetWasteCrateTooltip();
+    }
+    
+    /// <summary>
+    /// Public method to ensure waste crate is initialized (called after save load if needed)
+    /// </summary>
+    public void EnsureWasteCrateInitialized()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.wasteCrateDefId == null)
+        {
+            InitializeWasteCrate();
+        }
     }
     
     /// <summary>

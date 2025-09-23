@@ -22,11 +22,18 @@ public class MachineRenderer : MonoBehaviour
     private GameObject buildingSprite; // Track building sprite separately
     private GameObject borderSprite; // Track border sprite separately
     private GameObject movingPartSprite; // Track moving part sprite separately
+    private GameObject progressBarSprite; // Track progress bar sprite separately
 
     // Moving part visual references (created internally)
     [NonSerialized] private RawImage movingPartRawImage;
     [NonSerialized] private Texture movingPartTexture;
     [NonSerialized] private Material movingPartMaterial;
+    
+    // Progress bar references
+    [NonSerialized] private Image progressBarFill;
+    [NonSerialized] private BaseMachine cachedMachine;
+    [NonSerialized] private string lastSpriteName = ""; // Cache last sprite name to avoid constant updates
+    [NonSerialized] private float lastUpdateTime = 0f; // Track when we last updated to reduce frequency
 
     /// <summary>
     /// Setup the renderer. Pass in Texture and Material for moving part if needed.
@@ -556,6 +563,231 @@ public class MachineRenderer : MonoBehaviour
 
         return img;
     }
+    
+    /// <summary>
+    /// Update the building icon sprite dynamically (e.g., for spawner junkyard levels)
+    /// </summary>
+    /// <param name="newIconSprite">New icon sprite name</param>
+    public void UpdateBuildingIconSprite(string newIconSprite)
+    {
+        if (buildingSprite == null || string.IsNullOrEmpty(newIconSprite))
+            return;
+            
+        // Find the icon child of the building sprite
+        Transform iconTransform = buildingSprite.transform.Find($"BuildingIcon_{cellX}_{cellY}");
+        if (iconTransform != null)
+        {
+            Image iconImage = iconTransform.GetComponent<Image>();
+            if (iconImage != null)
+            {
+                // Try loading new icon sprite from multiple possible locations
+                Sprite iconSpriteAsset = null;
+                string[] possiblePaths = {
+                    "Sprites/Machines/" + newIconSprite,
+                    "Sprites/Items/" + newIconSprite,
+                    "Sprites/" + newIconSprite
+                };
+                
+                foreach (string iconPath in possiblePaths)
+                {
+                    iconSpriteAsset = Resources.Load<Sprite>(iconPath);
+                    if (iconSpriteAsset != null)
+                    {
+                        break;
+                    }
+                }
+                
+                if (iconSpriteAsset != null)
+                {
+                    iconImage.sprite = iconSpriteAsset;
+                    iconImage.color = Color.white;
+                    GameLogger.LogMachine($"Updated building icon to: {newIconSprite}", ComponentId);
+                }
+                else
+                {
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to load new icon sprite '{newIconSprite}'. Tried paths: {string.Join(", ", possiblePaths)}", ComponentId);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Create a progress bar below the border sprite or building sprite
+    /// </summary>
+    public void CreateProgressBar()
+    {
+        if (isInMenu || gridManager == null)
+            return;
+        
+        // Use border sprite if available, otherwise use building sprite
+        GameObject parentSprite = borderSprite ?? buildingSprite;
+        if (parentSprite == null)
+            return;
+            
+        // Create progress bar container
+        progressBarSprite = new GameObject($"ProgressBar_{cellX}_{cellY}");
+        progressBarSprite.transform.SetParent(parentSprite.transform, false);
+        
+        // Position at the bottom of the parent sprite
+        RectTransform progressRT = progressBarSprite.AddComponent<RectTransform>();
+        progressRT.anchorMin = new Vector2(0.1f, -0.15f);
+        progressRT.anchorMax = new Vector2(0.9f, -0.05f);
+        progressRT.offsetMin = Vector2.zero;
+        progressRT.offsetMax = Vector2.zero;
+        progressRT.anchoredPosition = Vector2.zero;
+        
+        // Create background
+        Image progressBackground = progressBarSprite.AddComponent<Image>();
+        progressBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
+        
+        // Create fill (as child)
+        GameObject fillObject = new GameObject("ProgressFill");
+        fillObject.transform.SetParent(progressBarSprite.transform, false);
+        
+        progressBarFill = fillObject.AddComponent<Image>();
+        progressBarFill.color = new Color(0.0f, 0.7f, 0.0f, 0.9f); // Green fill
+        progressBarFill.type = Image.Type.Filled;
+        progressBarFill.fillMethod = Image.FillMethod.Horizontal;
+        
+        RectTransform fillRT = fillObject.GetComponent<RectTransform>();
+        fillRT.anchorMin = Vector2.zero;
+        fillRT.anchorMax = Vector2.one;
+        fillRT.offsetMin = Vector2.zero;
+        fillRT.offsetMax = Vector2.zero;
+        fillRT.anchoredPosition = Vector2.zero;
+        
+        // Make non-interactive
+        CanvasGroup progressCanvasGroup = progressBarSprite.AddComponent<CanvasGroup>();
+        progressCanvasGroup.blocksRaycasts = false;
+        progressCanvasGroup.interactable = false;
+        
+        GameLogger.LogMachine($"Created progress bar for machine at ({cellX}, {cellY}) - parent: {parentSprite.name}", ComponentId);
+    }
+    
+    /// <summary>
+    /// Update the progress bar fill amount
+    /// </summary>
+    /// <param name="progress">Progress value between 0 and 1</param>
+    public void UpdateProgressBar(float progress)
+    {
+        if (progressBarFill != null)
+        {
+            float clampedProgress = Mathf.Clamp01(progress);
+            progressBarFill.fillAmount = clampedProgress;
+        }
+    }
+    
+    /// <summary>
+    /// Force an immediate sprite update on the next update cycle (called when items are consumed)
+    /// </summary>
+    public void ForceUpdateSprite()
+    {
+        lastUpdateTime = 0f; // Reset timer to force immediate update
+        lastSpriteName = ""; // Clear cached sprite name to force update
+    }
+    
+    /// <summary>
+    /// Update dynamic elements based on machine state (called from Update loop)
+    /// </summary>
+    public void UpdateDynamicElements()
+    {
+        if (isInMenu) return;
+        
+        // Only update at most once per second to reduce performance impact
+        if (Time.time - lastUpdateTime < 1.0f) return;
+        lastUpdateTime = Time.time;
+        
+        // Update machine reference if needed
+        if (cachedMachine == null && gridManager != null)
+        {
+            var cellData = gridManager.GetCellData(cellX, cellY);
+            if (cellData != null)
+            {
+                cachedMachine = cellData.machine;
+                if (cachedMachine != null)
+                {
+                    GameLogger.LogMachine($"Machine found: {cachedMachine.GetType().Name} at ({cellX}, {cellY})", ComponentId);
+                }
+            }
+        }
+        else if (cachedMachine == null && gridManager == null)
+        {
+            GameLogger.LogMachine($"GridManager is null for cell ({cellX}, {cellY})", ComponentId);
+        }
+        
+        if (cachedMachine == null) 
+        {
+            GameLogger.LogMachine($"No machine available for cell ({cellX}, {cellY})", ComponentId);
+            return;
+        }
+        
+        // Update progress bar
+        float progress = cachedMachine.GetProgress();
+        
+        if (progress >= 0)
+        {
+            // Create progress bar if it doesn't exist
+            if (progressBarSprite == null)
+            {
+                CreateProgressBar();
+            }
+            
+            // Update progress bar if it exists
+            if (progressBarFill != null)
+            {
+                progressBarSprite.SetActive(true);
+                UpdateProgressBar(progress);
+            }
+        }
+        else if (progressBarSprite != null)
+        {
+            // Hide progress bar if no progress to show
+            progressBarSprite.SetActive(false);
+        }
+        
+        // Update dynamic sprites for spawner machines (only once per second)
+        if (cachedMachine is SpawnerMachine spawner)
+        {
+            string newSprite = spawner.GetJunkyardSpriteName();
+            // Only update if sprite has changed (to avoid unnecessary resource loading)
+            if (newSprite != lastSpriteName)
+            {
+                UpdateBuildingIconSprite(newSprite);
+                lastSpriteName = newSprite;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Update method called by Unity every frame
+    /// </summary>
+    void Update()
+    {
+        if (!isInMenu)
+        {
+            // Update progress bar every frame for smooth animation
+            UpdateProgressBarFrequently();
+            
+            // Update expensive operations (sprites, machine detection) less frequently
+            UpdateDynamicElements();
+        }
+    }
+    
+    /// <summary>
+    /// Update progress bar every frame for smooth progress animation
+    /// </summary>
+    private void UpdateProgressBarFrequently()
+    {
+        if (cachedMachine != null && progressBarFill != null)
+        {
+            float progress = cachedMachine.GetProgress();
+            if (progress >= 0)
+            {
+                progressBarSprite.SetActive(true);
+                UpdateProgressBar(progress);
+            }
+        }
+    }
 
     void OnDestroy()
     {
@@ -575,6 +807,12 @@ public class MachineRenderer : MonoBehaviour
         {
             Destroy(movingPartSprite);
             movingPartSprite = null;
+        }
+        
+        if (progressBarSprite != null)
+        {
+            Destroy(progressBarSprite);
+            progressBarSprite = null;
         }
     }
 

@@ -45,6 +45,9 @@ namespace UnityEngine
         public static Object Instantiate(Object original, Vector3 position, Quaternion rotation) => original;
         public static Object Instantiate(Object original, Vector3 position, Quaternion rotation, Transform parent) => original;
         
+        // Global Unity functions
+        public static void DontDestroyOnLoad(Object obj) { }
+        
         public int GetInstanceID() => GetHashCode();
     }
 

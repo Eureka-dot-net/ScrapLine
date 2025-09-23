@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IBeginDragHandler, IEndDragHandler
+public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
     // Data/state properties
     public CellType cellType = CellType.Blank;
@@ -450,7 +450,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         machineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         machineText.fontSize = 12;
         machineText.color = Color.black;
-        machineText.alignment = UnityEngine.UI.Text.TextAnchor.MiddleCenter;
+        machineText.alignment = TextAnchor.MiddleCenter;
 
         RectTransform textRT = textObj.GetComponent<RectTransform>();
         textRT.anchorMin = Vector2.zero;
@@ -477,7 +477,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvasRT,
             eventData.position,
-            canvas.renderMode == Canvas.RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
             out localPosition);
 
         if (converted)
@@ -602,6 +602,47 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         return fallbackSpawn.GetComponent<RectTransform>();
     }
+    
+    #region Hover/Tooltip Implementation
+    
+    /// <summary>
+    /// Called when pointer enters the cell - show tooltip if machine has one
+    /// </summary>
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (cellType == CellType.Machine && gridManager != null)
+        {
+            CellData cellData = gridManager.GetCellData(x, y);
+            if (cellData?.machine != null)
+            {
+                string tooltip = cellData.machine.GetTooltip();
+                if (!string.IsNullOrEmpty(tooltip))
+                {
+                    // Log tooltip content via GameLogger only
+                    GameLogger.LogUI($"Tooltip for cell ({x},{y}): {tooltip}", ComponentId);
+                }
+                else
+                {
+                    GameLogger.LogUI($"Machine at ({x},{y}) has no tooltip content", ComponentId);
+                }
+            }
+            else
+            {
+                GameLogger.LogUI($"No machine found at cell ({x},{y}) for tooltip", ComponentId);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Called when pointer exits the cell - hide tooltip
+    /// </summary>
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        // TODO: Hide tooltip UI element
+        // Example: TooltipManager.Instance.HideTooltip();
+    }
+    
+    #endregion
 
     #endregion
 }

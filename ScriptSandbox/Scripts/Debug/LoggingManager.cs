@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
-using static UnityEngine.UnityGlobals;
 
 /// <summary>
 /// Central logging manager that provides category-based logging with state-change detection.
@@ -19,9 +18,9 @@ public class LoggingManager : MonoBehaviour
     [SerializeField] private bool enableGridLogs = false;
     [SerializeField] private bool enableUILogs = false;
     [SerializeField] private bool enableSaveLoadLogs = false;
-    [SerializeField] private bool enableMachineLogs = false;
+    [SerializeField] private bool enableMachineLogs = true;
     [SerializeField] private bool enableEconomyLogs = false;
-    [SerializeField] private bool enableSpawningLogs = false;
+    [SerializeField] private bool enableSpawningLogs = true;
     [SerializeField] private bool enableSellingLogs = false;
     [SerializeField] private bool enableDebugLogs = true;
 

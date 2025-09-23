@@ -193,6 +193,28 @@ public abstract class BaseMachine
     }
 
     /// <summary>
+    /// Gets the progress of the current operation as a value between 0 and 1.
+    /// Override this method in subclasses to provide progress information for UI display.
+    /// </summary>
+    /// <returns>Progress value between 0 and 1, or -1 if no progress to display</returns>
+    public virtual float GetProgress()
+    {
+        // Default implementation: no progress to display
+        return -1f;
+    }
+    
+    /// <summary>
+    /// Gets a tooltip text for this machine when hovered.
+    /// Override this method in subclasses to provide machine-specific information.
+    /// </summary>
+    /// <returns>Tooltip text to display, or null if no tooltip</returns>
+    public virtual string GetTooltip()
+    {
+        // Default implementation: basic machine info
+        return machineDef?.id ?? "Unknown Machine";
+    }
+    
+    /// <summary>
     /// Rotates a direction by the specified number of 90-degree steps
     /// </summary>
     /// <param name="currentDirection">Current direction</param>
