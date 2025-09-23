@@ -26,7 +26,7 @@ public class BlankCellMachine : BaseMachine
     /// </summary>
     private void CheckItemTimeouts()
     {
-        UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+        UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
         
         for (int i = cellData.items.Count - 1; i >= 0; i--)
         {

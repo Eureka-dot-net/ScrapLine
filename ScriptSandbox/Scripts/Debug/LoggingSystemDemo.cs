@@ -1,4 +1,5 @@
 using UnityEngine;
+using static UnityEngine.UnityGlobals;
 
 /// <summary>
 /// Demonstration script showing how to use the new central logging system.
