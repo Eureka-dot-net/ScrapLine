@@ -66,20 +66,26 @@ public class SpawnerMachine : BaseMachine
     /// </summary>
     private void InitializeWasteCrate()
     {
+        GameLogger.LogSpawning("=== InitializeWasteCrate called ===", ComponentId);
+        
         // Check if waste crate already exists (loaded from save)
         if (cellData.wasteCrate != null && cellData.wasteCrate.wasteCrateDefId != null)
         {
             int currentItems = GetTotalItemsInWasteCrate();
-            GameLogger.LogSpawning($"Existing waste crate found with {currentItems} items", ComponentId);
+            GameLogger.LogSpawning($"Existing waste crate found: ID='{cellData.wasteCrate.wasteCrateDefId}', Items={currentItems}", ComponentId);
             
             // If waste crate is empty, refill it from definition
             if (currentItems == 0)
             {
-                GameLogger.LogSpawning("Waste crate is empty, refilling from definition", ComponentId);
+                GameLogger.LogSpawning("Waste crate is empty, attempting refill from definition", ComponentId);
                 RefillWasteCrateFromDefinition();
+                int itemsAfterRefill = GetTotalItemsInWasteCrate();
+                GameLogger.LogSpawning($"After refill attempt: {itemsAfterRefill} items", ComponentId);
             }
             return;
         }
+
+        GameLogger.LogSpawning("No existing waste crate found, creating new one", ComponentId);
 
         // For now, assign the starter crate to all spawners when they are created
         var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate("starter_crate");
@@ -113,9 +119,21 @@ public class SpawnerMachine : BaseMachine
     /// </summary>
     private void RefillWasteCrateFromDefinition()
     {
-        if (cellData.wasteCrate == null || string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId))
+        GameLogger.LogSpawning("=== RefillWasteCrateFromDefinition called ===", ComponentId);
+        
+        if (cellData.wasteCrate == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, "Cannot refill: cellData.wasteCrate is null", ComponentId);
             return;
+        }
+        
+        if (string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId))
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, "Cannot refill: wasteCrateDefId is null or empty", ComponentId);
+            return;
+        }
             
+        GameLogger.LogSpawning($"Attempting to get waste crate definition for: '{cellData.wasteCrate.wasteCrateDefId}'", ComponentId);
         var wasteCrateDef = FactoryRegistry.Instance.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
         if (wasteCrateDef == null)
         {
@@ -123,8 +141,18 @@ public class SpawnerMachine : BaseMachine
             return;
         }
         
+        GameLogger.LogSpawning($"Found waste crate definition with {wasteCrateDef.items?.Count ?? 0} item types", ComponentId);
+        
         // Clear existing items and refill from definition
-        cellData.wasteCrate.remainingItems.Clear();
+        if (cellData.wasteCrate.remainingItems == null)
+        {
+            cellData.wasteCrate.remainingItems = new List<WasteCrateItemDef>();
+        }
+        else
+        {
+            cellData.wasteCrate.remainingItems.Clear();
+        }
+        
         foreach (var item in wasteCrateDef.items)
         {
             cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
@@ -132,6 +160,7 @@ public class SpawnerMachine : BaseMachine
                 itemType = item.itemType,
                 count = item.count
             });
+            GameLogger.LogSpawning($"Added {item.count} x {item.itemType} to waste crate", ComponentId);
         }
         
         GameLogger.LogSpawning($"Refilled waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
@@ -240,10 +269,18 @@ public class SpawnerMachine : BaseMachine
     /// </summary>
     public float GetSpawnProgress()
     {
-        if (spawnInterval <= 0) return 1.0f;
+        if (spawnInterval <= 0) 
+        {
+            GameLogger.LogSpawning("GetSpawnProgress: spawnInterval <= 0, returning 1.0", ComponentId);
+            return 1.0f;
+        }
         
         float elapsed = Time.time - lastSpawnTime;
-        return Mathf.Clamp01(elapsed / spawnInterval);
+        float progress = Mathf.Clamp01(elapsed / spawnInterval);
+        
+        GameLogger.LogSpawning($"GetSpawnProgress: elapsed={elapsed:F2}s, interval={spawnInterval:F2}s, progress={progress:F2}", ComponentId);
+        
+        return progress;
     }
     
     /// <summary>

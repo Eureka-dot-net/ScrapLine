@@ -672,7 +672,13 @@ public class MachineRenderer : MonoBehaviour
     {
         if (progressBarFill != null)
         {
-            progressBarFill.fillAmount = Mathf.Clamp01(progress);
+            float clampedProgress = Mathf.Clamp01(progress);
+            progressBarFill.fillAmount = clampedProgress;
+            GameLogger.LogMachine($"Updated progress bar fill: {clampedProgress:F2} for machine at ({cellX}, {cellY})", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Progress bar fill is null for machine at ({cellX}, {cellY})", ComponentId);
         }
     }
     
@@ -707,6 +713,8 @@ public class MachineRenderer : MonoBehaviour
         
         // Update progress bar
         float progress = cachedMachine.GetProgress();
+        GameLogger.LogMachine($"Progress bar update: progress={progress:F2} for machine at ({cellX}, {cellY})", ComponentId);
+        
         if (progress >= 0 && progressBarFill != null)
         {
             UpdateProgressBar(progress);
