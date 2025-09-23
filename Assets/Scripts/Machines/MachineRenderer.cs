@@ -126,7 +126,7 @@ public class MachineRenderer : MonoBehaviour
                 }
                 else
                 {
-                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Failed to parse border color '{def.borderColor}' for machine '{def.id}'", ComponentId);
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse border color '{def.borderColor}' for machine '{def.id}'", ComponentId);
                 }
             }
             border.transform.SetSiblingIndex(1);
@@ -153,7 +153,7 @@ public class MachineRenderer : MonoBehaviour
                 }
                 else
                 {
-                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
                 }
             }
             
@@ -202,7 +202,7 @@ public class MachineRenderer : MonoBehaviour
         RectTransform buildingsContainer = gridManager?.GetBuildingsContainer();
         if (buildingsContainer == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "BuildingsContainer not found, falling back to local building sprite", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"BuildingsContainer not found, falling back to local building sprite", ComponentId);
             var building = CreateImageChild("Building", def.buildingSprite);
             building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
             
@@ -216,7 +216,7 @@ public class MachineRenderer : MonoBehaviour
                 }
                 else
                 {
-                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
                 }
             }
             
@@ -260,7 +260,7 @@ public class MachineRenderer : MonoBehaviour
 
         if (buildingImage.sprite == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Building sprite not found! Tried to load: {spritePath}", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Building sprite not found! Tried to load: {spritePath}", ComponentId);
             buildingImage.color = Color.blue; // Fallback color
         }
         else
@@ -278,7 +278,7 @@ public class MachineRenderer : MonoBehaviour
             }
             else
             {
-                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
             }
         }
 
@@ -328,7 +328,7 @@ public class MachineRenderer : MonoBehaviour
 
             if (iconImage.sprite == null)
             {
-                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Building icon sprite '{def.buildingIconSprite}' not found! Tried paths: {string.Join(", ", possiblePaths)}", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Building icon sprite " + def.buildingIconSprite + " not found! Tried paths: " + string.Join(", ", possiblePaths), ComponentId);
                 iconImage.color = Color.yellow; // Fallback color
             }
             else
@@ -356,7 +356,7 @@ public class MachineRenderer : MonoBehaviour
         RectTransform bordersContainer = gridManager?.GetBordersContainer();
         if (bordersContainer == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "BordersContainer not found, falling back to local border sprite", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"BordersContainer not found, falling back to local border sprite", ComponentId);
             var border = CreateImageChild("Border", def.borderSprite);
             
             // Apply border color tinting if specified
@@ -369,7 +369,7 @@ public class MachineRenderer : MonoBehaviour
                 }
                 else
                 {
-                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Failed to parse border color '{def.borderColor}' for machine '{def.id}'", ComponentId);
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse border color '{def.borderColor}' for machine '{def.id}'", ComponentId);
                 }
             }
             border.transform.SetSiblingIndex(1);
@@ -391,7 +391,7 @@ public class MachineRenderer : MonoBehaviour
 
         if (borderImage.sprite == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Border sprite not found! Tried to load: {spritePath}", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Border sprite not found! Tried to load: {spritePath}", ComponentId);
             borderImage.color = Color.red; // Fallback color
         }
         else
@@ -409,7 +409,7 @@ public class MachineRenderer : MonoBehaviour
             }
             else
             {
-                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Failed to parse border color '{def.borderColor}' for machine '{def.id}'", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse border color '{def.borderColor}' for machine '{def.id}'", ComponentId);
             }
         }
 
@@ -517,7 +517,7 @@ public class MachineRenderer : MonoBehaviour
             
             if (spriteAsset == null)
             {
-                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Building icon sprite '{spriteResource}' not found! Tried paths: {string.Join(", ", possiblePaths)}", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Building icon sprite '{spriteResource}' not found! Tried paths: {string.Join(", ", possiblePaths)}", ComponentId);
             }
         }
         else
@@ -528,7 +528,7 @@ public class MachineRenderer : MonoBehaviour
             
             if (spriteAsset == null)
             {
-                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Sprite not found! Tried to load: {spritePath} for '{name}'", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Sprite not found! Tried to load: {spritePath} for '{name}'", ComponentId);
             }
         }
         

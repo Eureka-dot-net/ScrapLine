@@ -119,7 +119,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             }
             else
             {
-                GameLogger.LogError(LoggingManager.LogCategory.Grid, "Could not find machine definition for: {defIdToUse}", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Could not find machine definition for: {defIdToUse}", ComponentId);
             }
         }
     }
@@ -197,13 +197,13 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             }
             else
             {
-                GameLogger.LogError(LoggingManager.LogCategory.Grid, "Failed to get machine data for cell ({x}, {y})", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Failed to get machine data for cell ({x}, {y})", ComponentId);
                 return;
             }
         }
         else
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Could not find UIGridManager for storing machine data", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Could not find UIGridManager for storing machine data", ComponentId);
             return;
         }
 
@@ -311,14 +311,14 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     {
         if (string.IsNullOrEmpty(draggedMachineDefId))
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Cannot restore machine to cell ({x}, {y}) - no stored machine data", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"Cannot restore machine to cell ({x}, {y}) - no stored machine data", ComponentId);
             return;
         }
 
         bool restoreSuccess = GameManager.Instance.PlaceDraggedMachine(x, y, draggedMachineDefId, draggedMachineDirection);
         if (!restoreSuccess)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Failed to restore machine {draggedMachineDefId} to original cell ({x}, {y})", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Failed to restore machine {draggedMachineDefId} to original cell ({x}, {y})", ComponentId);
         }
         else
         {

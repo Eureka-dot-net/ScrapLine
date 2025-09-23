@@ -92,7 +92,7 @@ public class CreditsManager : MonoBehaviour
         else
         {
             if (enableCreditsLogs)
-                GameLogger.LogWarning(LoggingManager.LogCategory.Economy, "Insufficient credits! Need {amount}, have {currentCredits}", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Insufficient credits! Need {amount}, have {currentCredits}", ComponentId);
             return false;
         }
     }

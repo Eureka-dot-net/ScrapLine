@@ -99,7 +99,7 @@ public class SaveLoadManager : MonoBehaviour
             
             if (data == null)
             {
-                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to deserialize save data!", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to deserialize save data!", ComponentId);
                 return false;
             }
 
@@ -131,7 +131,7 @@ public class SaveLoadManager : MonoBehaviour
         GridData currentGrid = gridManager.GetCurrentGrid();
         if (currentGrid == null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "No current grid available for machine initialization!", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"No current grid available for machine initialization!", ComponentId);
             yield break;
         }
 

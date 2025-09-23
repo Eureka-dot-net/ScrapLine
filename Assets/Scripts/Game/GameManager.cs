@@ -110,7 +110,7 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to load save file. Starting new game.");
+                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to load save file. Starting new game.");
                 StartNewGame();
             }
         }

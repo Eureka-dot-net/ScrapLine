@@ -447,13 +447,13 @@ public class UIGridManager : MonoBehaviour
             else
             {
                 // Sprite not found - set fallback color and log warning
-                GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Sprite not found for item type '{itemType}' at path: {spritePath}", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"Sprite not found for item type '{itemType}' at path: {spritePath}", ComponentId);
                 itemImage.color = Color.magenta; // Make it obvious something is wrong
             }
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "No Image component found on item prefab for item type: {itemType}", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"No Image component found on item prefab for item type: {itemType}", ComponentId);
         }
     }
 
@@ -467,7 +467,7 @@ public class UIGridManager : MonoBehaviour
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Cannot destroy visual item {itemId} - not found", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"Cannot destroy visual item {itemId} - not found", ComponentId);
         }
     }
 
@@ -486,7 +486,7 @@ public class UIGridManager : MonoBehaviour
     {
         if (!visualItems.TryGetValue(itemId, out GameObject item) || item == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Cannot update position for visual item {itemId} - not found", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"Cannot update position for visual item {itemId} - not found", ComponentId);
             return;
         }
 
@@ -495,7 +495,7 @@ public class UIGridManager : MonoBehaviour
 
         if (startCell == null || endCell == null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot update item position - invalid cell coordinates", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Cannot update item position - invalid cell coordinates", ComponentId);
             return;
         }
 

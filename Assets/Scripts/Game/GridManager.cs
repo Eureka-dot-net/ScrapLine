@@ -197,12 +197,12 @@ public class GridManager : MonoBehaviour
             }
             else
             {
-                GameLogger.LogError(LoggingManager.LogCategory.Grid, "No current grid available for UI initialization!", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, $"No current grid available for UI initialization!", ComponentId);
             }
         }
         else
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Grid, "No active grid manager available for UI initialization!", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"No active grid manager available for UI initialization!", ComponentId);
         }
     }
 }

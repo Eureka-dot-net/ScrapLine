@@ -129,7 +129,7 @@ public class ItemMovementManager : MonoBehaviour
         CellData targetCell = gridManager.GetCellData(item.targetX, item.targetY);
         if (targetCell == null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Movement, "Target cell not found at ({item.targetX}, {item.targetY})", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Movement, $"Target cell not found at ({item.targetX}, {item.targetY})", ComponentId);
             sourceCell.items.Remove(item);
             if (activeGridManager.HasVisualItem(item.id))
             {
