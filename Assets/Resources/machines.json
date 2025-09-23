@@ -259,5 +259,25 @@
             "canRotate": true,
             "className": "ProcessorMachine"
         }
+        ,
+        {
+            "id": "fabricator",
+            "type": "Fabricator",
+            "sprite": "",
+            "isMoving": true,
+            "borderSprite": "",
+            "buildingSprite": "Machine_border",
+            "buildingIconSprite": "fabricator",
+            "buildingIconSpriteSize": 0.6,
+            "buildingSpriteColour": "#008080",
+            "baseProcessTime": 10,
+            "gridPlacement": [
+                "grid"
+            ],
+            "displayInPanel": true,
+            "cost": 100,
+            "canRotate": true,
+            "className": "FabricatorMachine"
+        }
     ]
 }
