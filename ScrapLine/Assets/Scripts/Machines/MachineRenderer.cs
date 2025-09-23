@@ -707,12 +707,17 @@ public class MachineRenderer : MonoBehaviour
         {
             var cellData = gridManager.GetCellData(cellX, cellY);
             cachedMachine = cellData?.machine;
+            if (cachedMachine != null)
+            {
+                GameLogger.LogMachine($"Cached machine for renderer at ({cellX}, {cellY}): {cachedMachine.GetType().Name}", ComponentId);
+            }
         }
         
         if (cachedMachine == null) return;
         
         // Update progress bar
         float progress = cachedMachine.GetProgress();
+        GameLogger.LogMachine($"Machine type: {cachedMachine.GetType().Name}, progress: {progress:F2} at ({cellX}, {cellY})", ComponentId);
         
         if (progress >= 0 && progressBarFill != null)
         {
@@ -727,12 +732,17 @@ public class MachineRenderer : MonoBehaviour
         else if (progress >= 0 && progressBarSprite == null)
         {
             // Create progress bar if needed
+            GameLogger.LogMachine($"Creating progress bar for machine at ({cellX}, {cellY}) with progress {progress:F2}", ComponentId);
             CreateProgressBar();
         }
         else if (progress >= 0 && progressBarSprite != null)
         {
             // Show progress bar if hidden
             progressBarSprite.SetActive(true);
+        }
+        else
+        {
+            GameLogger.LogMachine($"Progress bar state: progress={progress:F2}, progressBarSprite={progressBarSprite != null}, progressBarFill={progressBarFill != null} at ({cellX}, {cellY})", ComponentId);
         }
         
         // Update dynamic sprites for spawner machines (only once per second)
