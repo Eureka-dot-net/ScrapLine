@@ -618,13 +618,21 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
                 string tooltip = cellData.machine.GetTooltip();
                 if (!string.IsNullOrEmpty(tooltip))
                 {
-                    // For now, use Unity's Debug.Log. In a full implementation, 
-                    // you'd show a proper UI tooltip here
+                    // Make tooltip more visible by using both GameLogger and Debug.Log
                     GameLogger.LogUI($"Tooltip for cell ({x},{y}): {tooltip}", ComponentId);
+                    UnityEngine.Debug.Log($"[TOOLTIP] {tooltip}");
                     
                     // TODO: Show actual tooltip UI element at cursor position
                     // Example: TooltipManager.Instance.ShowTooltip(tooltip, Input.mousePosition);
                 }
+                else
+                {
+                    GameLogger.LogUI($"Machine at ({x},{y}) has no tooltip content", ComponentId);
+                }
+            }
+            else
+            {
+                GameLogger.LogUI($"No machine found at cell ({x},{y}) for tooltip", ComponentId);
             }
         }
     }

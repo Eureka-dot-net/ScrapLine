@@ -69,7 +69,15 @@ public class SpawnerMachine : BaseMachine
         // Check if waste crate already exists (loaded from save)
         if (cellData.wasteCrate != null && cellData.wasteCrate.wasteCrateDefId != null)
         {
-            GameLogger.LogSpawning($"Existing waste crate found with {GetTotalItemsInWasteCrate()} items", ComponentId);
+            int currentItems = GetTotalItemsInWasteCrate();
+            GameLogger.LogSpawning($"Existing waste crate found with {currentItems} items", ComponentId);
+            
+            // If waste crate is empty, refill it from definition
+            if (currentItems == 0)
+            {
+                GameLogger.LogSpawning("Waste crate is empty, refilling from definition", ComponentId);
+                RefillWasteCrateFromDefinition();
+            }
             return;
         }
 
@@ -98,6 +106,35 @@ public class SpawnerMachine : BaseMachine
         }
         
         GameLogger.LogSpawning($"Initialized new waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
+    }
+    
+    /// <summary>
+    /// Refill empty waste crate from its definition
+    /// </summary>
+    private void RefillWasteCrateFromDefinition()
+    {
+        if (cellData.wasteCrate == null || string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId))
+            return;
+            
+        var wasteCrateDef = FactoryRegistry.Instance.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
+        if (wasteCrateDef == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, $"Failed to get waste crate definition '{cellData.wasteCrate.wasteCrateDefId}' for refill", ComponentId);
+            return;
+        }
+        
+        // Clear existing items and refill from definition
+        cellData.wasteCrate.remainingItems.Clear();
+        foreach (var item in wasteCrateDef.items)
+        {
+            cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
+            {
+                itemType = item.itemType,
+                count = item.count
+            });
+        }
+        
+        GameLogger.LogSpawning($"Refilled waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
     }
     
     /// <summary>
@@ -289,7 +326,33 @@ public class SpawnerMachine : BaseMachine
         // Decrease count by 1
         selectedItem.count--;
         
+        GameLogger.LogSpawning($"Consumed {selectedItem.itemType}, remaining: {selectedItem.count}", ComponentId);
+        
+        // Notify renderer to update sprite since items changed
+        NotifyItemsChanged();
+        
         return selectedItem.itemType;
+    }
+    
+    /// <summary>
+    /// Notify the machine renderer that items have changed so sprite should be updated
+    /// </summary>
+    private void NotifyItemsChanged()
+    {
+        // Find the renderer and force it to update the sprite on next frame
+        var gridManager = UnityEngine.Object.FindObjectOfType<UIGridManager>();
+        if (gridManager != null)
+        {
+            var cell = gridManager.GetCell(cellData.x, cellData.y);
+            if (cell != null)
+            {
+                var renderer = cell.GetComponent<MachineRenderer>();
+                if (renderer != null)
+                {
+                    renderer.ForceUpdateSprite();
+                }
+            }
+        }
     }
     
     /// <summary>

@@ -33,6 +33,7 @@ public class MachineRenderer : MonoBehaviour
     [NonSerialized] private Image progressBarFill;
     [NonSerialized] private BaseMachine cachedMachine;
     [NonSerialized] private string lastSpriteName = ""; // Cache last sprite name to avoid constant updates
+    [NonSerialized] private float lastUpdateTime = 0f; // Track when we last updated to reduce frequency
 
     /// <summary>
     /// Setup the renderer. Pass in Texture and Material for moving part if needed.
@@ -627,24 +628,24 @@ public class MachineRenderer : MonoBehaviour
         progressBarSprite = new GameObject($"ProgressBar_{cellX}_{cellY}");
         progressBarSprite.transform.SetParent(parentSprite.transform, false);
         
-        // Position below the parent sprite
+        // Position at the bottom of the parent sprite
         RectTransform progressRT = progressBarSprite.AddComponent<RectTransform>();
-        progressRT.anchorMin = new Vector2(0.1f, -0.2f);
-        progressRT.anchorMax = new Vector2(0.9f, -0.1f);
+        progressRT.anchorMin = new Vector2(0.1f, -0.15f);
+        progressRT.anchorMax = new Vector2(0.9f, -0.05f);
         progressRT.offsetMin = Vector2.zero;
         progressRT.offsetMax = Vector2.zero;
         progressRT.anchoredPosition = Vector2.zero;
         
         // Create background
         Image progressBackground = progressBarSprite.AddComponent<Image>();
-        progressBackground.color = new Color(0.3f, 0.3f, 0.3f, 0.8f);
+        progressBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
         
         // Create fill (as child)
         GameObject fillObject = new GameObject("ProgressFill");
         fillObject.transform.SetParent(progressBarSprite.transform, false);
         
         progressBarFill = fillObject.AddComponent<Image>();
-        progressBarFill.color = new Color(0.0f, 0.8f, 0.0f, 0.9f); // Green fill
+        progressBarFill.color = new Color(0.0f, 0.7f, 0.0f, 0.9f); // Green fill
         progressBarFill.type = Image.Type.Filled;
         progressBarFill.fillMethod = Image.FillMethod.Horizontal;
         
@@ -676,11 +677,24 @@ public class MachineRenderer : MonoBehaviour
     }
     
     /// <summary>
+    /// Force an immediate sprite update on the next update cycle (called when items are consumed)
+    /// </summary>
+    public void ForceUpdateSprite()
+    {
+        lastUpdateTime = 0f; // Reset timer to force immediate update
+        lastSpriteName = ""; // Clear cached sprite name to force update
+    }
+    
+    /// <summary>
     /// Update dynamic elements based on machine state (called from Update loop)
     /// </summary>
     public void UpdateDynamicElements()
     {
         if (isInMenu) return;
+        
+        // Only update at most once per second to reduce performance impact
+        if (Time.time - lastUpdateTime < 1.0f) return;
+        lastUpdateTime = Time.time;
         
         // Update machine reference if needed
         if (cachedMachine == null && gridManager != null)
@@ -713,7 +727,7 @@ public class MachineRenderer : MonoBehaviour
             progressBarSprite.SetActive(true);
         }
         
-        // Update dynamic sprites for spawner machines
+        // Update dynamic sprites for spawner machines (only once per second)
         if (cachedMachine is SpawnerMachine spawner)
         {
             string newSprite = spawner.GetJunkyardSpriteName();
