@@ -32,6 +32,7 @@ public class MachineRenderer : MonoBehaviour
     // Progress bar references
     [NonSerialized] private Image progressBarFill;
     [NonSerialized] private BaseMachine cachedMachine;
+    [NonSerialized] private string lastSpriteName = ""; // Cache last sprite name to avoid constant updates
 
     /// <summary>
     /// Setup the renderer. Pass in Texture and Material for moving part if needed.
@@ -610,18 +611,23 @@ public class MachineRenderer : MonoBehaviour
     }
     
     /// <summary>
-    /// Create a progress bar below the border sprite
+    /// Create a progress bar below the border sprite or building sprite
     /// </summary>
     public void CreateProgressBar()
     {
-        if (isInMenu || gridManager == null || borderSprite == null)
+        if (isInMenu || gridManager == null)
+            return;
+        
+        // Use border sprite if available, otherwise use building sprite
+        GameObject parentSprite = borderSprite ?? buildingSprite;
+        if (parentSprite == null)
             return;
             
         // Create progress bar container
         progressBarSprite = new GameObject($"ProgressBar_{cellX}_{cellY}");
-        progressBarSprite.transform.SetParent(borderSprite.transform, false);
+        progressBarSprite.transform.SetParent(parentSprite.transform, false);
         
-        // Position below the border
+        // Position below the parent sprite
         RectTransform progressRT = progressBarSprite.AddComponent<RectTransform>();
         progressRT.anchorMin = new Vector2(0.1f, -0.2f);
         progressRT.anchorMax = new Vector2(0.9f, -0.1f);
@@ -654,7 +660,7 @@ public class MachineRenderer : MonoBehaviour
         progressCanvasGroup.blocksRaycasts = false;
         progressCanvasGroup.interactable = false;
         
-        GameLogger.LogMachine($"Created progress bar for machine at ({cellX}, {cellY})", ComponentId);
+        GameLogger.LogMachine($"Created progress bar for machine at ({cellX}, {cellY}) - parent: {parentSprite.name}", ComponentId);
     }
     
     /// <summary>
@@ -712,21 +718,10 @@ public class MachineRenderer : MonoBehaviour
         {
             string newSprite = spawner.GetJunkyardSpriteName();
             // Only update if sprite has changed (to avoid unnecessary resource loading)
-            if (buildingSprite != null)
+            if (newSprite != lastSpriteName)
             {
-                Transform iconTransform = buildingSprite.transform.Find($"BuildingIcon_{cellX}_{cellY}");
-                if (iconTransform != null)
-                {
-                    Image iconImage = iconTransform.GetComponent<Image>();
-                    if (iconImage != null && iconImage.sprite != null)
-                    {
-                        string currentSpriteName = iconImage.sprite.name;
-                        if (currentSpriteName != newSprite)
-                        {
-                            UpdateBuildingIconSprite(newSprite);
-                        }
-                    }
-                }
+                UpdateBuildingIconSprite(newSprite);
+                lastSpriteName = newSprite;
             }
         }
     }

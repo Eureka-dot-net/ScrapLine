@@ -66,33 +66,38 @@ public class SpawnerMachine : BaseMachine
     /// </summary>
     private void InitializeWasteCrate()
     {
+        // Check if waste crate already exists (loaded from save)
+        if (cellData.wasteCrate != null && cellData.wasteCrate.wasteCrateDefId != null)
+        {
+            GameLogger.LogSpawning($"Existing waste crate found with {GetTotalItemsInWasteCrate()} items", ComponentId);
+            return;
+        }
+
         // For now, assign the starter crate to all spawners when they are created
         var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate("starter_crate");
-        if (starterCrateDef != null && (cellData.wasteCrate == null || cellData.wasteCrate.wasteCrateDefId == null))
+        if (starterCrateDef == null)
         {
-            cellData.wasteCrate = new WasteCrateInstance
-            {
-                wasteCrateDefId = starterCrateDef.id,
-                remainingItems = new List<WasteCrateItemDef>()
-            };
-            
-            // Copy items from definition to instance
-            foreach (var item in starterCrateDef.items)
-            {
-                cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
-                {
-                    itemType = item.itemType,
-                    count = item.count
-                });
-            }
-            
-            GameLogger.LogSpawning($"Initialized new waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, "Failed to get starter_crate definition from FactoryRegistry!", ComponentId);
+            return;
         }
-        else if (cellData.wasteCrate != null && cellData.wasteCrate.wasteCrateDefId != null)
+
+        cellData.wasteCrate = new WasteCrateInstance
         {
-            // Waste crate already exists (loaded from save), just log the status
-            GameLogger.LogSpawning($"Existing waste crate found with {GetTotalItemsInWasteCrate()} items", ComponentId);
+            wasteCrateDefId = starterCrateDef.id,
+            remainingItems = new List<WasteCrateItemDef>()
+        };
+        
+        // Copy items from definition to instance
+        foreach (var item in starterCrateDef.items)
+        {
+            cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
+            {
+                itemType = item.itemType,
+                count = item.count
+            });
         }
+        
+        GameLogger.LogSpawning($"Initialized new waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
     }
     
     /// <summary>
@@ -301,6 +306,17 @@ public class SpawnerMachine : BaseMachine
     public override string GetTooltip()
     {
         return GetWasteCrateTooltip();
+    }
+    
+    /// <summary>
+    /// Public method to ensure waste crate is initialized (called after save load if needed)
+    /// </summary>
+    public void EnsureWasteCrateInitialized()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.wasteCrateDefId == null)
+        {
+            InitializeWasteCrate();
+        }
     }
     
     /// <summary>
