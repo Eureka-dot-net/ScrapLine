@@ -5,6 +5,20 @@ using System.Collections.Generic;
 
 namespace UnityEngine
 {
+    // Enum for FindObjects search options
+    public enum FindObjectsInactive
+    {
+        Exclude,
+        Include
+    }
+
+    // Enum for FindObjects sort mode
+    public enum FindObjectsSortMode
+    {
+        None,
+        InstanceID
+    }
+
     // Base Unity object class
     public class Object
     {
@@ -14,8 +28,10 @@ namespace UnityEngine
         public static void DestroyImmediate(Object obj) { }
         public static T FindAnyObjectByType<T>() where T : Object => default(T);
         public static T FindFirstObjectByType<T>() where T : Object => default(T);
+        public static T FindFirstObjectByType<T>(FindObjectsInactive findObjectsInactive) where T : Object => default(T);
         public static T FindObjectOfType<T>() where T : Object => default(T);
         public static T[] FindObjectsOfType<T>() where T : Object => new T[0];
+        public static T[] FindObjectsByType<T>(FindObjectsSortMode sortMode) where T : Object => new T[0];
         
         // Instantiate methods
         public static T Instantiate<T>(T original) where T : Object => original;
@@ -535,20 +551,6 @@ namespace UnityEngine
         Alpha0, Alpha1, Alpha2, Alpha3, Alpha4, Alpha5, Alpha6, Alpha7, Alpha8, Alpha9,
         Mouse0, Mouse1, Mouse2, Mouse3, Mouse4, Mouse5, Mouse6
     }
-
-    // Text anchor enum  
-    public enum TextAnchor 
-    { 
-        UpperLeft, UpperCenter, UpperRight,
-        MiddleLeft, MiddleCenter, MiddleRight,
-        LowerLeft, LowerCenter, LowerRight
-    }
-
-    // Render mode enum
-    public enum RenderMode { ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace }
-
-    // FindObjectsSortMode enum
-    public enum FindObjectsSortMode { None, InstanceID }
 
     // RectTransformUtility class
     public static class RectTransformUtility

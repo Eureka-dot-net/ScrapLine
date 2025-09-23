@@ -84,7 +84,7 @@ public class ProcessorMachine : BaseMachine
     /// </summary>
     protected void UpdateWaitingItemVisualPositions()
     {
-        UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+        UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
         if (gridManager == null) return;
         
         foreach (var item in cellData.waitingItems)
@@ -104,7 +104,7 @@ public class ProcessorMachine : BaseMachine
     /// </summary>
     protected void CheckWaitingItemTimeouts()
     {
-        ItemMovementManager itemMovementManager = Object.FindAnyObjectByType<ItemMovementManager>();
+        ItemMovementManager itemMovementManager = UnityEngine.Object.FindAnyObjectByType<ItemMovementManager>();
         if (itemMovementManager == null) return;
         
         float waitingTimeout = itemMovementManager.GetItemWaitingTimeout();
@@ -125,14 +125,14 @@ public class ProcessorMachine : BaseMachine
                     anyItemRemoved = true;
                     
                     // Find and remove from source cell's items list
-                    CellData sourceCell = Object.FindAnyObjectByType<GridManager>()?.GetCellData(item.x, item.y);
+                    CellData sourceCell = UnityEngine.Object.FindAnyObjectByType<GridManager>()?.GetCellData(item.x, item.y);
                     if (sourceCell != null)
                     {
                         sourceCell.items.Remove(item);
                     }
                     
                     // Destroy visual item
-                    UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+                    UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
                     if (gridManager != null && gridManager.HasVisualItem(item.id))
                     {
                         gridManager.DestroyVisualItem(item.id);
@@ -169,7 +169,7 @@ public class ProcessorMachine : BaseMachine
             cellData.machineState = MachineState.Processing;
             
             // Destroy visual item when it enters processing
-            UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+            UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
             if (gridManager != null)
             {
                 gridManager.DestroyVisualItem(item.id);
@@ -214,7 +214,7 @@ public class ProcessorMachine : BaseMachine
             // Remove input item
             cellData.items.Remove(item);
             
-            UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+            UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
             if (gridManager != null)
             {
                 gridManager.DestroyVisualItem(item.id);
