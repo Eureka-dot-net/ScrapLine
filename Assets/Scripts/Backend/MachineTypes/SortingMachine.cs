@@ -7,7 +7,11 @@ using static UICell;
 /// </summary>
 public class SortingMachine : BaseMachine
 {
-    /// <summary>    /// Get the component ID for logging purposes    /// </summary>    protected string ComponentId => $"Sorting_{cellData.x}_{cellData.y}"; 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    protected string ComponentId => $"Sorting_{cellData.x}_{cellData.y}";
+    
     public SortingMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
         // Sorting machines can be configured 

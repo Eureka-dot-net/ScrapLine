@@ -10,7 +10,11 @@ public class SpawnerMachine : BaseMachine
     private float lastSpawnTime;
     private float spawnInterval;
     
-    /// <summary>    /// Get the component ID for logging purposes    /// </summary>    protected string ComponentId => $"Spawner_{cellData.x}_{cellData.y}"; 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    protected string ComponentId => $"Spawner_{cellData.x}_{cellData.y}";
+    
     public SpawnerMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
         // Set spawn interval from machine definition

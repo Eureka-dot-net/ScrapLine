@@ -6,7 +6,11 @@ using UnityEngine;
 /// </summary>
 public class ConveyorMachine : BaseMachine
 {
-    /// <summary>    /// Get the component ID for logging purposes    /// </summary>    protected string ComponentId => $"Conveyor_{cellData.x}_{cellData.y}"; 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    protected string ComponentId => $"Conveyor_{cellData.x}_{cellData.y}";
+    
     public ConveyorMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
     }
