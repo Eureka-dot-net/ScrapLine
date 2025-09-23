@@ -29,8 +29,31 @@ public class SpawnerMachine : BaseMachine
         // Check if it's time to spawn and if the cell is empty and waste crate has items
         if (Time.time - lastSpawnTime >= spawnInterval && cellData.items.Count == 0 && HasItemsInWasteCrate())
         {
+            GameLogger.NotifyStateChange(ComponentId); // State change for spawning
+            GameLogger.LogSpawning($"Spawn conditions met - triggering spawn", ComponentId);
             SpawnItem();
             lastSpawnTime = Time.time;
+        }
+        else if (GameLogger.IsCategoryEnabled(LoggingManager.LogCategory.Spawning))
+        {
+            // Only log blocking reasons if spawning logs are enabled to avoid spam
+            float timeUntilNext = spawnInterval - (Time.time - lastSpawnTime);
+            if (timeUntilNext > 0)
+            {
+                // Don't spam - only log occasionally when close to spawn time
+                if (timeUntilNext < 1.0f)
+                {
+                    GameLogger.LogSpawning($"Spawn in {timeUntilNext:F1}s", ComponentId);
+                }
+            }
+            else if (cellData.items.Count > 0)
+            {
+                GameLogger.LogSpawning($"Cell occupied - {cellData.items.Count} items present", ComponentId);
+            }
+            else if (!HasItemsInWasteCrate())
+            {
+                GameLogger.LogSpawning("Waste crate empty - no items to spawn", ComponentId);
+            }
         }
     }
     
@@ -103,9 +126,11 @@ public class SpawnerMachine : BaseMachine
         
         if (string.IsNullOrEmpty(itemType))
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "Spawner at ({cellData.x}, {cellData.y}) has no items in waste crate to spawn", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, $"Spawner at ({cellData.x}, {cellData.y}) has no items in waste crate to spawn", ComponentId);
             return;
         }
+
+        GameLogger.LogSpawning($"Spawning {itemType} after {spawnInterval}s interval", ComponentId);
 
         // Create new item with proper ItemData structure
         ItemData newItem = new ItemData
@@ -120,6 +145,8 @@ public class SpawnerMachine : BaseMachine
             processingDuration = 0f,
             waitingStartTime = 0f,
         };
+        
+        GameLogger.LogSpawning($"Created new item: {newItem.itemType} (id: {newItem.id})", ComponentId);
 
         cellData.items.Add(newItem);
 
@@ -128,10 +155,19 @@ public class SpawnerMachine : BaseMachine
         if (gridManager != null)
         {
             gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
+            GameLogger.LogSpawning($"Visual created for spawned item {newItem.itemType}", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "No UIGridManager found to create visual for spawned item", ComponentId);
         }
         
         // Immediately try to start movement of the newly spawned item
         TryStartMove(newItem);
+        
+        // Update spawn timing
+        lastSpawnTime = Time.time;
+        GameLogger.LogSpawning($"Spawn complete, next spawn in {spawnInterval}s", ComponentId);
     }
     
     /// <summary>
@@ -170,7 +206,7 @@ public class SpawnerMachine : BaseMachine
     {
         // Spawners don't handle incoming items
         // Items shouldn't arrive at spawners in normal gameplay
-        GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "Item {item.id} arrived at spawner - this shouldn't happen", ComponentId);
+        GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, $"Item {item.id} arrived at spawner - this shouldn't happen", ComponentId);
     }
     
     /// <summary>
@@ -179,6 +215,6 @@ public class SpawnerMachine : BaseMachine
     public override void ProcessItem(ItemData item)
     {
         // Spawners don't process items
-        GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "Attempted to process item {item.id} at spawner - this shouldn't happen", ComponentId);
+        GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, $"Attempted to process item {item.id} at spawner - this shouldn't happen", ComponentId);
     }
 }
