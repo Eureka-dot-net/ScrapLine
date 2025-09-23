@@ -277,7 +277,7 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        Debug.Log($"[FABRICATOR] Item {item.itemType} arrived");
+        Debug.Log($"[FABRICATOR] Item {item.itemType} (id: {item.id}) arrived");
         
         // Find and remove the item from waiting queue
         ItemData itemToProcess = cellData.waitingItems.Find(i => i.id == item.id);
@@ -287,8 +287,9 @@ public class FabricatorMachine : ProcessorMachine
             UpdateStackIndices();
             UpdateWaitingItemVisualPositions();
             
-            // Add the item to our inventory
-            cellData.items.Add(itemToProcess);
+            // NOTE: ItemMovementManager already added the item to cellData.items
+            // DO NOT add it again here or we'll get duplicates!
+            Debug.Log($"[FABRICATOR] ✓ Item {item.itemType} added to inventory (total items: {cellData.items.Count})");
             
             // Destroy visual item since it's now in the machine
             UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
@@ -308,7 +309,7 @@ public class FabricatorMachine : ProcessorMachine
         }
         else
         {
-            Debug.LogWarning($"[FABRICATOR] Could not find item {item.id} in waiting queue");
+            Debug.LogWarning($"[FABRICATOR] ❌ Could not find item {item.id} in waiting queue");
         }
     }
 
