@@ -157,7 +157,7 @@ public class FabricatorMachine : ProcessorMachine
                 // Temporarily set to receiving to prevent other items from being pulled immediately
                 cellData.machineState = MachineState.Receiving;
                 
-                Debug.Log($"[FABRICATOR] Pulling item: {waitingItem.itemType} (id: {waitingItem.id})");
+                Debug.Log($"[FABRICATOR] Pulling item: {waitingItem.itemType} (id: {waitingItem.id}). Items in queue: {cellData.waitingItems.Count}");
                 
                 // Break after pulling one item to avoid pulling all at once
                 // The machine state will reset to Idle when the item arrives
@@ -166,9 +166,12 @@ public class FabricatorMachine : ProcessorMachine
             else
             {
                 // No more processable items available
+                Debug.Log($"[FABRICATOR] No more processable items available (have {cellData.waitingItems.Count} waiting items)");
                 break;
             }
         }
+        
+        Debug.Log($"[FABRICATOR] UpdateLogic complete. State: {cellData.machineState}, Waiting: {cellData.waitingItems.Count}, Inventory: {cellData.items.Count}");
     }
 
     /// <summary>
@@ -209,12 +212,19 @@ public class FabricatorMachine : ProcessorMachine
             needed[input.item] = input.count;
         }
         
+        Debug.Log($"[FABRICATOR] Recipe requires: {string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
+        Debug.Log($"[FABRICATOR] Current inventory: {string.Join(", ", cellData.items.Select(i => i.itemType))}");
+        
         // Subtract items we already have in the machine
         foreach (var item in cellData.items)
         {
+            // Skip processing items - they don't count as inventory
+            if (item.state == ItemState.Processing) continue;
+            
             if (needed.ContainsKey(item.itemType))
             {
                 needed[item.itemType]--;
+                Debug.Log($"[FABRICATOR] Found {item.itemType} in inventory, now need {needed[item.itemType]} more");
                 if (needed[item.itemType] <= 0)
                 {
                     needed.Remove(item.itemType);
@@ -222,6 +232,7 @@ public class FabricatorMachine : ProcessorMachine
             }
         }
         
+        Debug.Log($"[FABRICATOR] After inventory check, still need: {string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
         return needed;
     }
 
@@ -283,9 +294,86 @@ public class FabricatorMachine : ProcessorMachine
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
         if (neededItems.Count == 0)
         {
+            Debug.Log($"[FABRICATOR] All inputs ready - starting processing");
             // We have all items needed - start processing
             StartFabricatorProcessing(selectedRecipe);
         }
+        else
+        {
+            Debug.Log($"[FABRICATOR] Not ready to process. Still need: {string.Join(", ", neededItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
+        }
+    }
+
+    /// <summary>
+    /// Override ProcessorMachine's CheckProcessingComplete to handle fabricator-specific completion
+    /// </summary>
+    protected void CheckProcessingComplete()
+    {
+        // Find the item being processed
+        foreach (var item in cellData.items)
+        {
+            if (item.state == ItemState.Processing)
+            {
+                float processingElapsed = Time.time - item.processingStartTime;
+                if (processingElapsed >= item.processingDuration)
+                {
+                    Debug.Log($"[FABRICATOR] Processing complete for {item.itemType}");
+                    CompleteFabricatorProcessing(item);
+                    return;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Complete fabricator processing and prepare for next recipe cycle
+    /// </summary>
+    private void CompleteFabricatorProcessing(ItemData processingItem)
+    {
+        // Remove the processing item
+        cellData.items.Remove(processingItem);
+        
+        // Create output items
+        RecipeDef selectedRecipe = GetSelectedRecipe();
+        if (selectedRecipe != null)
+        {
+            foreach (var outputItem in selectedRecipe.outputItems)
+            {
+                for (int i = 0; i < outputItem.count; i++)
+                {
+                    ItemData newItem = new ItemData
+                    {
+                        id = GameManager.Instance.GenerateItemId(),
+                        itemType = outputItem.item,
+                        x = cellData.x,
+                        y = cellData.y,
+                        state = ItemState.Idle,
+                        moveProgress = 0f,
+                        processingStartTime = 0f,
+                        processingDuration = 0f,
+                        waitingStartTime = 0f
+                    };
+                    
+                    cellData.items.Add(newItem);
+                    
+                    // Create visual representation
+                    UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
+                    if (gridManager != null)
+                    {
+                        gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
+                    }
+                    
+                    Debug.Log($"[FABRICATOR] Created output: {newItem.itemType} (id: {newItem.id})");
+                    
+                    // Try to start movement of the newly created item
+                    TryStartMove(newItem);
+                }
+            }
+        }
+        
+        // Reset machine state to Idle so it can start the next recipe cycle
+        cellData.machineState = MachineState.Idle;
+        Debug.Log($"[FABRICATOR] Ready for next recipe cycle");
     }
 
     /// <summary>

@@ -34,7 +34,6 @@ public class UIGridManager : MonoBehaviour
 
     public void InitGrid(GridData data)
     {
-        Debug.Log("UIGridManager InitGrid() called.");
         this.gridData = data;
 
         CreateRenderingLayers();
@@ -109,7 +108,6 @@ public class UIGridManager : MonoBehaviour
         if (movingItemsContainer == null && itemsContainer != null)
         {
             movingItemsContainer = itemsContainer;
-            Debug.Log("Updated movingItemsContainer to use new ItemsContainer");
         }
     }
 
@@ -181,11 +179,6 @@ public class UIGridManager : MonoBehaviour
         // Set as last sibling (index 3) - ABOVE everything
         buildingsObj.transform.SetSiblingIndex(3);
 
-        Debug.Log($"Created rendering layers: BordersContainer (0-bottom), GridPanel (1-middle), ItemsContainer (2-items), BuildingsContainer (3-top)");
-        Debug.Log($"BordersContainer parent: {bordersContainer.parent?.name}, position: {bordersContainer.position}, sizeDelta: {bordersContainer.sizeDelta}");
-        Debug.Log($"ItemsContainer parent: {itemsContainer.parent?.name}, position: {itemsContainer.position}, sizeDelta: {itemsContainer.sizeDelta}");
-        Debug.Log($"BuildingsContainer parent: {buildingsContainer.parent?.name}, position: {buildingsContainer.position}, sizeDelta: {buildingsContainer.sizeDelta}");
-        Debug.Log($"GridPanel parent: {gridPanel.parent?.name}, position: {gridPanel.position}, sizeDelta: {gridPanel.sizeDelta}");
     }
 
 
@@ -278,7 +271,6 @@ public class UIGridManager : MonoBehaviour
                     if (cellData.machine.CanConfigure)
                     {
                         HighlightSlot(x, y, true);
-                        Debug.Log($"Highlighting configurable machine at ({x}, {y}): {cellData.machineDefId}");
                     }
                 }
             }
@@ -416,7 +408,6 @@ public class UIGridManager : MonoBehaviour
         Vector2 itemSize = cellSize / 2f; // User requested 1/2 cell size
         itemRect.sizeDelta = itemSize;
 
-        Debug.Log($"Created visual item {itemId} in {targetContainer.name} at position {cellPosition} with size {itemSize}");
 
         // Set the item type on the UIItem component
         UIItem itemComponent = newItem.GetComponent<UIItem>();
@@ -426,7 +417,6 @@ public class UIGridManager : MonoBehaviour
             SetItemSprite(newItem, itemType);
         }
         visualItems[itemId] = newItem;
-        Debug.Log($"Created visual item {itemId} at ({x}, {y}) with size {itemSize} (1/2 of cell size {cellSize})");
     }
 
     private void SetItemSprite(GameObject itemObject, string itemType)
@@ -448,7 +438,6 @@ public class UIGridManager : MonoBehaviour
             {
                 itemImage.sprite = itemSprite;
                 itemImage.color = Color.white; // Reset to normal color
-                Debug.Log($"Successfully loaded sprite for item type: {itemType}");
             }
             else
             {
@@ -470,7 +459,6 @@ public class UIGridManager : MonoBehaviour
             if (item != null)
                 Destroy(item);
             visualItems.Remove(itemId);
-            Debug.Log($"Destroyed visual item {itemId}");
         }
         else
         {
@@ -537,7 +525,6 @@ public class UIGridManager : MonoBehaviour
 
         // Solution 1: Items always stay in grid hierarchy - no more parent switching!
         // The separate rendering layers ensure proper visual order without complex parent handovers
-        //Debug.Log($"Item {itemId} progress: {progress} - staying in grid hierarchy for consistent rendering");
     }
 
     /// <summary>
@@ -587,26 +574,22 @@ public class UIGridManager : MonoBehaviour
 
         float xOffset = isLeft ? -offsetDistance : offsetDistance;
 
-        Debug.Log($"Stack index {stackIndex}: isLeft={isLeft}, level={stackLevel}, requested={requestedOffset:F1}, actual offset=({xOffset:F1}, 0), itemSize={itemSize}, maxOffset={maxStackOffset}");
 
         return new Vector3(xOffset, 0, 0);
     }
 
     public RectTransform GetBordersContainer()
     {
-        Debug.Log($"GetBordersContainer() called - returning: {(bordersContainer != null ? bordersContainer.name : "NULL")}");
         return bordersContainer;
     }
 
     public RectTransform GetBuildingsContainer()
     {
-        Debug.Log($"GetBuildingsContainer() called - returning: {(buildingsContainer != null ? buildingsContainer.name : "NULL")}");
         return buildingsContainer;
     }
 
     public RectTransform GetItemsContainer()
     {
-        Debug.Log($"GetItemsContainer() called - returning: {(itemsContainer != null ? itemsContainer.name : "NULL")}");
         return itemsContainer;
     }
 
@@ -614,7 +597,6 @@ public class UIGridManager : MonoBehaviour
     {
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
         Vector2 cellSize = layout != null ? layout.cellSize : Vector2.zero;
-        Debug.Log($"GetCellSize() returning: {cellSize}");
         return cellSize;
     }
 
@@ -647,7 +629,6 @@ public class UIGridManager : MonoBehaviour
         if (cell != null)
         {
             Vector3 position = cell.transform.position;
-            Debug.Log($"GetCellWorldPosition({x}, {y}) from cell transform fallback: {position}");
             return position;
         }
 

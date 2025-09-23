@@ -16,7 +16,6 @@ public class SortingMachine : BaseMachine
     public override void OnConfigured()
     {
         // Configuration logic for sorting machine
-        Debug.Log($"SortingMachine at ({cellData.x}, {cellData.y}) configured.");
 
         // Find the sorting configuration UI in the scene
         SortingMachineConfigUI configUI = Object.FindFirstObjectByType<SortingMachineConfigUI>(FindObjectsInactive.Include); //this returns null
@@ -34,7 +33,6 @@ public class SortingMachine : BaseMachine
             
             cellData.sortingConfig.leftItemType = "can";
             cellData.sortingConfig.rightItemType = "shreddedAluminum";
-            Debug.Log($"Applied default sorting configuration: Left=can, Right=shreddedAluminum");
         }
     }
 
@@ -43,16 +41,12 @@ public class SortingMachine : BaseMachine
     /// </summary>
     private void OnConfigurationConfirmed(string leftItemType, string rightItemType)
     {
-        Debug.Log($"Sorting machine configured: Left={leftItemType}, Right={rightItemType}");
-        
         // Update the cell data configuration (this is already done by the UI, but let's be explicit)
         if (cellData.sortingConfig == null)
             cellData.sortingConfig = new SortingMachineConfig();
             
         cellData.sortingConfig.leftItemType = leftItemType;
         cellData.sortingConfig.rightItemType = rightItemType;
-        
-        Debug.Log($"Sorting logic applied: Left={leftItemType} will turn left, Right={rightItemType} will turn right, others go straight");
     }
     
     /// <summary>
@@ -93,7 +87,6 @@ public class SortingMachine : BaseMachine
         // Check if we have sorting configuration
         if (cellData.sortingConfig == null)
         {
-            Debug.Log($"SortingMachine: No sorting config found, item {item.itemType} going straight");
             return baseDirection;
         }
 
@@ -102,7 +95,6 @@ public class SortingMachine : BaseMachine
             item.itemType == cellData.sortingConfig.leftItemType)
         {
             Direction leftDirection = RotateDirection(baseDirection, -1); // -90 degrees (left turn)
-            Debug.Log($"SortingMachine: Item {item.itemType} matches left config, turning left to {leftDirection}");
             return leftDirection;
         }
 
@@ -111,12 +103,10 @@ public class SortingMachine : BaseMachine
             item.itemType == cellData.sortingConfig.rightItemType)
         {
             Direction rightDirection = RotateDirection(baseDirection, 1); // +90 degrees (right turn)
-            Debug.Log($"SortingMachine: Item {item.itemType} matches right config, turning right to {rightDirection}");
             return rightDirection;
         }
 
         // Item doesn't match any configuration, continue straight
-        Debug.Log($"SortingMachine: Item {item.itemType} doesn't match config, going straight");
         return baseDirection;
     }
     

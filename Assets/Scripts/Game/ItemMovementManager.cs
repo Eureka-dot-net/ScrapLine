@@ -98,7 +98,6 @@ public class ItemMovementManager : MonoBehaviour
                 item.isHalfway = true; // Set the flag for the second phase
                 item.waitingStartTime = Time.time; // Set the waiting start time for timeout tracking
                 (targetCell.machine as ProcessorMachine).AddToWaitingQueue(item);
-                Debug.Log($"Item {item.id} is now waiting at the halfway point.");
             }
         }
         if (item.moveProgress >= 1.0f)

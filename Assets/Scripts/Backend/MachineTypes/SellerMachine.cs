@@ -36,8 +36,6 @@ public class SellerMachine : BaseMachine
         ItemDef itemDef = FactoryRegistry.Instance.GetItem(item.itemType);
         int sellValue = itemDef?.sellValue ?? 0;
         
-        Debug.Log($"Item {item.id} sold for {sellValue} credits");
-        
         // Award credits to player
         if (sellValue > 0)
         {

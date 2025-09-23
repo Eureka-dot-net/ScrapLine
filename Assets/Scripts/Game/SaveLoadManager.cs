@@ -69,7 +69,6 @@ public class SaveLoadManager : MonoBehaviour
             File.WriteAllText(path, json);
             
             if (enableSaveLoadLogs)
-                Debug.Log($"Game saved with {data.credits} credits to location {path}!");
         }
         catch (System.Exception ex)
         {
@@ -111,7 +110,6 @@ public class SaveLoadManager : MonoBehaviour
             FactoryRegistry.Instance.LoadFromGameData(data);
 
             if (enableSaveLoadLogs)
-                Debug.Log("Save game loaded successfully.");
 
             return true;
         }

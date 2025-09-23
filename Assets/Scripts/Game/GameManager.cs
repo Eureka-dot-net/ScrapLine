@@ -355,7 +355,6 @@ public class GameManager : MonoBehaviour
     public void SetEditMode(bool editMode)
     {
         isInEditMode = editMode;
-        Debug.Log($"GameManager: Edit mode set to {editMode}");
         
         // Update UI highlights based on edit mode
         if (activeGridManager != null)

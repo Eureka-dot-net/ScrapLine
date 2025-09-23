@@ -115,8 +115,6 @@ public class ProcessorMachine : BaseMachine
                 
                 if (timeWaiting >= waitingTimeout)
                 {
-                    Debug.Log($"Item {item.id} timed out after waiting {timeWaiting:F1}s at processor {machineDef.id} - removing");
-                    
                     // Remove from waiting queue
                     cellData.waitingItems.RemoveAt(i);
                     anyItemRemoved = true;

@@ -16,7 +16,6 @@ public class CreditsUI : MonoBehaviour
 
     public void UpdateCredits(int amount)
     {
-        Debug.Log($"[CreditsUI] Updating credits display to: {amount}");
         creditsText.text = string.Format(displayFormat, amount);
     }
 

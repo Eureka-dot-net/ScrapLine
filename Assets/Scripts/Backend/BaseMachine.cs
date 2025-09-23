@@ -140,7 +140,6 @@ public abstract class BaseMachine
         item.moveStartTime = Time.time;
         
         string directionInfo = overrideDirection.HasValue ? $" (direction override: {moveDirection})" : "";
-        Debug.Log($"Item {item.id} ({item.itemType}) started moving from ({cellData.x},{cellData.y}) to ({nextX},{nextY}){directionInfo}");
 
         // Fix: Pass the individual properties of the item instead of the object itself.
         if (!GameManager.Instance.activeGridManager.HasVisualItem(item.id))

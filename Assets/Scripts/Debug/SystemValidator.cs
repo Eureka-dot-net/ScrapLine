@@ -181,17 +181,14 @@ public class SystemValidator : MonoBehaviour
 
     private void LogResults()
     {
-        Debug.Log("=== System Validation Results ===");
         int passed = 0;
         int total = results.Count;
         
         foreach (var result in results)
         {
             string status = result.passed ? "PASS" : "FAIL";
-            Debug.Log($"[{status}] {result.testName}: {result.message}");
             if (result.passed) passed++;
         }
         
-        Debug.Log($"=== Validation Complete: {passed}/{total} tests passed ===");
     }
 }
