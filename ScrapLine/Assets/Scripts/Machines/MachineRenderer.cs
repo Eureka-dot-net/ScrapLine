@@ -697,12 +697,9 @@ public class MachineRenderer : MonoBehaviour
         if (Time.time - lastUpdateTime < 1.0f) return;
         lastUpdateTime = Time.time;
         
-        GameLogger.LogMachine($"UpdateDynamicElements called for cell ({cellX}, {cellY})", ComponentId);
-        
         // Update machine reference if needed
         if (cachedMachine == null && gridManager != null)
         {
-            GameLogger.LogMachine($"Attempting to get cell data for ({cellX}, {cellY})", ComponentId);
             var cellData = gridManager.GetCellData(cellX, cellY);
             if (cellData != null)
             {
@@ -711,14 +708,6 @@ public class MachineRenderer : MonoBehaviour
                 {
                     GameLogger.LogMachine($"Machine found: {cachedMachine.GetType().Name} at ({cellX}, {cellY})", ComponentId);
                 }
-                else
-                {
-                    GameLogger.LogMachine($"Cell data found but machine is null at ({cellX}, {cellY})", ComponentId);
-                }
-            }
-            else
-            {
-                GameLogger.LogMachine($"Cell data is null for ({cellX}, {cellY})", ComponentId);
             }
         }
         else if (cachedMachine == null && gridManager == null)
@@ -776,12 +765,6 @@ public class MachineRenderer : MonoBehaviour
     {
         if (!isInMenu)
         {
-            // Log once every 60 frames to avoid spam but confirm Update is running
-            if (Time.frameCount % 60 == 0)
-            {
-                GameLogger.LogMachine($"Update() running for MachineRenderer at ({cellX}, {cellY})", ComponentId);
-            }
-            
             // Update progress bar every frame for smooth animation
             UpdateProgressBarFrequently();
             
