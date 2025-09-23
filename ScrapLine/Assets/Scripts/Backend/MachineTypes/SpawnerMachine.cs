@@ -85,6 +85,13 @@ public class SpawnerMachine : BaseMachine
                     count = item.count
                 });
             }
+            
+            GameLogger.LogSpawning($"Initialized new waste crate with {GetTotalItemsInWasteCrate()} items", ComponentId);
+        }
+        else if (cellData.wasteCrate != null && cellData.wasteCrate.wasteCrateDefId != null)
+        {
+            // Waste crate already exists (loaded from save), just log the status
+            GameLogger.LogSpawning($"Existing waste crate found with {GetTotalItemsInWasteCrate()} items", ComponentId);
         }
     }
     
@@ -118,6 +125,83 @@ public class SpawnerMachine : BaseMachine
             total += item.count;
         }
         return total;
+    }
+    
+    /// <summary>
+    /// Get tooltip text for waste crate contents display
+    /// </summary>
+    public string GetWasteCrateTooltip()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
+            return "No waste crate assigned";
+            
+        var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
+        if (starterCrateDef == null)
+            return "Unknown waste crate";
+            
+        string tooltip = starterCrateDef.displayName + "\n";
+        
+        foreach (var item in cellData.wasteCrate.remainingItems)
+        {
+            var itemDef = FactoryRegistry.Instance.GetItem(item.itemType);
+            string displayName = itemDef != null ? itemDef.displayName : item.itemType;
+            tooltip += $"  {displayName}: {item.count}\n";
+        }
+        
+        return tooltip.TrimEnd('\n');
+    }
+    
+    /// <summary>
+    /// Get the appropriate junkyard sprite name based on waste crate fullness
+    /// Returns sprite names for different fullness levels (0%, 33%, 66%, 100%)
+    /// </summary>
+    public string GetJunkyardSpriteName()
+    {
+        if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
+            return "junkYard_0";
+            
+        int totalItems = GetTotalItemsInWasteCrate();
+        
+        // Calculate initial total from waste crate definition
+        var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
+        int initialTotal = 0;
+        if (starterCrateDef != null)
+        {
+            foreach (var item in starterCrateDef.items)
+            {
+                initialTotal += item.count;
+            }
+        }
+        
+        if (initialTotal == 0) return "junkYard_0";
+        
+        float percentageFull = (float)totalItems / initialTotal;
+        
+        // Use 25% intervals but bias towards higher sprites
+        // 100% sprite shows from 75-100% (was 100+ items, now 75+)
+        // 66% sprite shows from 50-75% (was 75-99 items, now 50-74)
+        // 33% sprite shows from 25-50% (was 25-74 items, now 25-49)
+        // 0% sprite shows from 0-25% (was 0-24 items, now 0-24)
+        
+        if (percentageFull >= 0.75f)
+            return "junkYard_100";
+        else if (percentageFull >= 0.50f)
+            return "junkYard_66";
+        else if (percentageFull >= 0.25f)
+            return "junkYard_33";
+        else
+            return "junkYard_0";
+    }
+    
+    /// <summary>
+    /// Get spawn progress as a value between 0 and 1 for progress bar display
+    /// </summary>
+    public float GetSpawnProgress()
+    {
+        if (spawnInterval <= 0) return 1.0f;
+        
+        float elapsed = Time.time - lastSpawnTime;
+        return Mathf.Clamp01(elapsed / spawnInterval);
     }
     
     /// <summary>
@@ -201,6 +285,22 @@ public class SpawnerMachine : BaseMachine
         selectedItem.count--;
         
         return selectedItem.itemType;
+    }
+    
+    /// <summary>
+    /// Override base class method to provide spawn progress information
+    /// </summary>
+    public override float GetProgress()
+    {
+        return GetSpawnProgress();
+    }
+    
+    /// <summary>
+    /// Override base class method to provide waste crate tooltip information
+    /// </summary>
+    public override string GetTooltip()
+    {
+        return GetWasteCrateTooltip();
     }
     
     /// <summary>

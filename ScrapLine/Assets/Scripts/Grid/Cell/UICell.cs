@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IBeginDragHandler, IEndDragHandler
+public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
     // Data/state properties
     public CellType cellType = CellType.Blank;
@@ -602,6 +602,43 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         return fallbackSpawn.GetComponent<RectTransform>();
     }
+    
+    #region Hover/Tooltip Implementation
+    
+    /// <summary>
+    /// Called when pointer enters the cell - show tooltip if machine has one
+    /// </summary>
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (cellType == CellType.Machine && gridManager != null)
+        {
+            CellData cellData = gridManager.GetCellData(x, y);
+            if (cellData?.machine != null)
+            {
+                string tooltip = cellData.machine.GetTooltip();
+                if (!string.IsNullOrEmpty(tooltip))
+                {
+                    // For now, use Unity's Debug.Log. In a full implementation, 
+                    // you'd show a proper UI tooltip here
+                    GameLogger.LogUI($"Tooltip for cell ({x},{y}): {tooltip}", ComponentId);
+                    
+                    // TODO: Show actual tooltip UI element at cursor position
+                    // Example: TooltipManager.Instance.ShowTooltip(tooltip, Input.mousePosition);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Called when pointer exits the cell - hide tooltip
+    /// </summary>
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        // TODO: Hide tooltip UI element
+        // Example: TooltipManager.Instance.HideTooltip();
+    }
+    
+    #endregion
 
     #endregion
 }

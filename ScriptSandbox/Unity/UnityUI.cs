@@ -64,9 +64,11 @@ namespace UnityEngine.UI
         public Sprite sprite { get; set; }
         public Type type { get; set; } = Type.Simple;
         public float fillAmount { get; set; } = 1f;
+        public FillMethod fillMethod { get; set; } = FillMethod.Horizontal;
         public RectTransform rectTransform => GetComponent<RectTransform>();
         
         public enum Type { Simple, Sliced, Tiled, Filled }
+        public enum FillMethod { Horizontal, Vertical, Radial90, Radial180, Radial360 }
     }
 
     // RawImage class
