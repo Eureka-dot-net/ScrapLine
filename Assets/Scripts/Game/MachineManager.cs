@@ -9,7 +9,7 @@ public class MachineManager : MonoBehaviour
 {
     [Header("Machine Configuration")]
     [Tooltip("Enable debug logs for machine operations")]
-    public bool enableMachineLogs = true;
+    public bool enableMachineLogs = false;
 
     private MachineDef selectedMachine;
     private Direction lastMachineDirection = Direction.Up;
@@ -63,9 +63,6 @@ public class MachineManager : MonoBehaviour
             return;
         }
 
-        if (enableMachineLogs)
-            if (enableMachineLogs)
-
         // Check if we're in edit mode
         if (GameManager.Instance != null && GameManager.Instance.IsInEditMode())
         {
@@ -77,7 +74,6 @@ public class MachineManager : MonoBehaviour
             }
             else
             {
-                if (enableMachineLogs)
                 return;
             }
         }
@@ -108,12 +104,10 @@ public class MachineManager : MonoBehaviour
             }
             else
             {
-                if (enableMachineLogs)
                 return;
             }
         }
 
-        if (enableMachineLogs)
     }
 
     // Add these methods to your existing MachineManager class
@@ -130,13 +124,10 @@ public class MachineManager : MonoBehaviour
 
         if (cellData == null)
         {
-            if (enableMachineLogs)
             return false;
         }
 
         bool canDrag = cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId);
-
-        if (enableMachineLogs)
 
         return canDrag;
     }
@@ -149,7 +140,6 @@ public class MachineManager : MonoBehaviour
     /// <param name="y">Y coordinate of the machine being dragged</param>
     public void StartMachineDrag(int x, int y)
     {
-        if (enableMachineLogs)
 
         CellData cellData = gridManager.GetCellData(x, y);
         if (cellData == null || cellData.cellType != CellType.Machine)
@@ -172,7 +162,6 @@ public class MachineManager : MonoBehaviour
             activeGridManager.UpdateCellVisuals(x, y, cellData.cellType, cellData.direction, null);
         }
 
-        if (enableMachineLogs)
     }
 
     /// <summary>
@@ -194,21 +183,18 @@ public class MachineManager : MonoBehaviour
 
         if (sourceCellData == null || targetCellData == null)
         {
-            if (enableMachineLogs)
             return false;
         }
 
         // Source must have a machine
         if (sourceCellData.cellType != CellType.Machine || string.IsNullOrEmpty(sourceCellData.machineDefId))
         {
-            if (enableMachineLogs)
             return false;
         }
 
         // Target must be empty (blank cell)
         if (targetCellData.cellType != CellType.Blank)
         {
-            if (enableMachineLogs)
             return false;
         }
 
@@ -216,14 +202,11 @@ public class MachineManager : MonoBehaviour
         MachineDef machineDef = FactoryRegistry.Instance.GetMachine(sourceCellData.machineDefId);
         if (machineDef == null)
         {
-            if (enableMachineLogs)
-                Debug.LogError($"CanDropMachine: Cannot find machine definition for {sourceCellData.machineDefId}");
+            Debug.LogError($"CanDropMachine: Cannot find machine definition for {sourceCellData.machineDefId}");
             return false;
         }
 
         bool canPlace = IsValidMachinePlacement(targetCellData, machineDef);
-
-        if (enableMachineLogs)
 
         return canPlace;
     }
@@ -250,7 +233,6 @@ public class MachineManager : MonoBehaviour
         // Check if target cell is empty
         if (targetCellData.cellType != CellType.Blank)
         {
-            if (enableMachineLogs)
             return false;
         }
 
@@ -264,8 +246,6 @@ public class MachineManager : MonoBehaviour
         }
 
         bool canPlace = IsValidMachinePlacement(targetCellData, machineDef);
-
-        if (enableMachineLogs)
 
         return canPlace;
     }
@@ -288,8 +268,6 @@ public class MachineManager : MonoBehaviour
 
         CellData sourceCellData = gridManager.GetCellData(fromX, fromY);
         CellData targetCellData = gridManager.GetCellData(toX, toY);
-
-        if (enableMachineLogs)
 
         // Copy machine data to target cell
         targetCellData.cellType = sourceCellData.cellType;
@@ -320,7 +298,6 @@ public class MachineManager : MonoBehaviour
             activeGridManager.UpdateCellVisuals(fromX, fromY, sourceCellData.cellType, sourceCellData.direction, null);
         }
 
-        if (enableMachineLogs)
     }
 
     /// <summary>
@@ -350,14 +327,12 @@ public class MachineManager : MonoBehaviour
             return false;
         }
 
-        if (enableMachineLogs)
-
         // Place the machine (no cost since it's being moved, not newly placed)
         targetCellData.cellType = CellType.Machine;
         targetCellData.machineDefId = machineDefId;
         targetCellData.direction = direction;
         targetCellData.machine = MachineFactory.CreateMachine(targetCellData);
-        
+
         if (targetCellData.machine == null)
         {
             Debug.LogError($"Failed to create machine object for dragged {machineDefId}");
@@ -368,8 +343,6 @@ public class MachineManager : MonoBehaviour
         {
             activeGridManager.UpdateCellVisuals(x, y, targetCellData.cellType, targetCellData.direction, targetCellData.machineDefId);
         }
-
-        if (enableMachineLogs)
 
         return true;
     }
@@ -390,13 +363,11 @@ public class MachineManager : MonoBehaviour
             return;
         }
 
-        if (enableMachineLogs)
-
         // Clean up machine object if it exists
         if (cellData.machine != null)
         {
             // Assuming your machine objects need cleanup
-           // cellData.machine.Destroy();
+            // cellData.machine.Destroy();
             cellData.machine = null;
         }
 
@@ -411,10 +382,6 @@ public class MachineManager : MonoBehaviour
             activeGridManager.UpdateCellVisuals(x, y, cellData.cellType, cellData.direction, null);
         }
 
-        // Note: We don't refund credits for deleted machines
-        // This could be added as a feature if desired
-
-        if (enableMachineLogs)
     }
 
     /// <summary>
@@ -445,8 +412,6 @@ public class MachineManager : MonoBehaviour
     /// <param name="machineDef">The machine definition to place</param>
     private void PlaceMachine(CellData cellData, MachineDef machineDef)
     {
-        if (enableMachineLogs)
-
         if (!creditsManager.TrySpendCredits(machineDef.cost))
         {
             Debug.LogError($"Failed to place machine {machineDef.id} - insufficient credits!");
@@ -492,7 +457,6 @@ public class MachineManager : MonoBehaviour
 
         if (!machineDef.canRotate)
         {
-            if (enableMachineLogs)
             return;
         }
 

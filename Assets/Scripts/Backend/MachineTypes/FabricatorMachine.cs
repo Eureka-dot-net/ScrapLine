@@ -307,7 +307,7 @@ public class FabricatorMachine : ProcessorMachine
     /// <summary>
     /// Override ProcessorMachine's CheckProcessingComplete to handle fabricator-specific completion
     /// </summary>
-    protected void CheckProcessingComplete()
+    protected new void CheckProcessingComplete()
     {
         // Find the item being processed
         foreach (var item in cellData.items)
