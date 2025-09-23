@@ -27,6 +27,11 @@ public class FabricatorMachineConfigUI : MonoBehaviour
     
     [Tooltip("Button to confirm configuration")]
     public Button confirmButton;
+
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"FabricatorConfigUI_{GetInstanceID()}";
     
     [Tooltip("Button to cancel configuration")]
     public Button cancelButton;
@@ -91,7 +96,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
         else
             gameObject.SetActive(true);
 
-        GameLogger.Log(LoggingManager.LogCategory.UI, "Showing fabricator configuration UI for machine at ({cellData.x}, {cellData.y})", ComponentId);
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Showing fabricator configuration UI for machine at ({cellData.x}, {cellData.y})", ComponentId);
     }
 
     /// <summary>
@@ -226,7 +231,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
         // Hide the recipe selection panel
         HideRecipeSelection();
         
-        GameLogger.Log(LoggingManager.LogCategory.UI, "Selected recipe '{recipeId}' for fabricator configuration", ComponentId);
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Selected recipe '{recipeId}' for fabricator configuration", ComponentId);
     }
 
     /// <summary>

@@ -75,7 +75,7 @@ public class SaveLoadManager : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to save game: {ex.Message}", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to save game: {ex.Message}", ComponentId);
         }
     }
 
@@ -116,7 +116,7 @@ public class SaveLoadManager : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to load game: {ex.Message}", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to load game: {ex.Message}", ComponentId);
             return false;
         }
     }
@@ -163,7 +163,7 @@ public class SaveLoadManager : MonoBehaviour
             }
             catch (System.Exception ex)
             {
-                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to delete save file: {ex.Message}", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to delete save file: {ex.Message}", ComponentId);
             }
         }
     }

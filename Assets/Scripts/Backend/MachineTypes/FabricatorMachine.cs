@@ -14,7 +14,7 @@ public class FabricatorMachine : ProcessorMachine
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"Fabricator_{cellData.x}_{cellData.y}";
+    protected new string ComponentId => $"Fabricator_{cellData.x}_{cellData.y}";
     
     public FabricatorMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {

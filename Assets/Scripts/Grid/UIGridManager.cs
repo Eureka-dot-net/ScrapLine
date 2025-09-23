@@ -14,6 +14,11 @@ public class UIGridManager : MonoBehaviour
     public Texture conveyorSharedTexture;
     public Material conveyorSharedMaterial;
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"UIGridManager_{GetInstanceID()}";
+
     private GridData gridData;
     private UICell[,] cellScripts;
 
@@ -371,14 +376,14 @@ public class UIGridManager : MonoBehaviour
         UICell cell = GetCell(x, y);
         if (cell == null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot create visual item - cell at ({x}, {y}) not found", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Cannot create visual item - cell at ({x}, {y}) not found", ComponentId);
             return;
         }
 
         // Check if item already exists
         if (visualItems.ContainsKey(itemId))
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Visual item {itemId} already exists!", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"Visual item {itemId} already exists!", ComponentId);
             return;
         }
 
