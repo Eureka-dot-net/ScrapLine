@@ -17,7 +17,7 @@
     "outputItems": [
       { "item": "shreddedIron", "count": 3 }
     ],
-    "processMultiplier": 2
+    "processMultiplier": 1
   },
   {
     "machineId": "granulator",
@@ -27,7 +27,7 @@
     "outputItems": [
       { "item": "granulatedPlastic", "count": 1 }
     ],
-    "processMultiplier": 2
+    "processMultiplier": 1
   },
   {
     "machineId": "platePress",
@@ -37,7 +37,7 @@
     "outputItems": [
       { "item": "aluminumPlate", "count": 1 }
     ],
-    "processMultiplier": 2
+    "processMultiplier": 1
   },
   {
     "machineId": "fabricator",
@@ -48,6 +48,6 @@
     "outputItems": [
       { "item": "reinforcedAluminumPlate", "count": 1 }
     ],
-    "processMultiplier": 3
+    "processMultiplier": 1
   }
 ]

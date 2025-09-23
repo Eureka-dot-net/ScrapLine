@@ -238,7 +238,7 @@
             "displayInPanel": true,
             "cost": 100,
             "canRotate": true,
-            "className": "CraftingMachine"
+            "className": "ProcessorMachine"
         },
         {
             "id": "granulator",

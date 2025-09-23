@@ -69,7 +69,7 @@ public class ProcessorMachine : BaseMachine
     /// <summary>
     /// Updates stack indices for all waiting items after a change in the queue
     /// </summary>
-    private void UpdateStackIndices()
+    protected void UpdateStackIndices()
     {
         for (int i = 0; i < cellData.waitingItems.Count; i++)
         {
@@ -80,7 +80,7 @@ public class ProcessorMachine : BaseMachine
     /// <summary>
     /// Updates visual positions for all waiting items to reflect their current stack positions
     /// </summary>
-    private void UpdateWaitingItemVisualPositions()
+    protected void UpdateWaitingItemVisualPositions()
     {
         UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
         if (gridManager == null) return;
