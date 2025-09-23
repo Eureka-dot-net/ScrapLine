@@ -110,7 +110,7 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError("Failed to load save file. Starting new game.");
+                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to load save file. Starting new game.");
                 StartNewGame();
             }
         }
@@ -272,7 +272,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"RefundMachineWithId: Invalid machineDefId '{machineDefId}'");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"RefundMachineWithId: Invalid machineDefId '{machineDefId}'");
         }
     }
 

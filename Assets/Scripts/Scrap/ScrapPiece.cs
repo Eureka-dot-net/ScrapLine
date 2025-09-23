@@ -46,7 +46,7 @@
 //                 }
 //                 else
 //                 {
-//                     Debug.LogWarning($"ScrapPiece: ConveyorBelt component not found on '{other.gameObject.name}'.");
+//                     GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "ScrapPiece: ConveyorBelt component not found on '{other.gameObject.name}'.", ComponentId);
 //                 }
 //             }
 //             // else: do not update direction or onConveyor yet

@@ -31,6 +31,11 @@ public class ItemMovementManager : MonoBehaviour
     private int nextItemId = 1;
     private GridManager gridManager;
     private UIGridManager activeGridManager;
+    
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"ItemMovementManager_{GetInstanceID()}";
 
     /// <summary>
     /// Initialize the item movement manager
@@ -124,7 +129,7 @@ public class ItemMovementManager : MonoBehaviour
         CellData targetCell = gridManager.GetCellData(item.targetX, item.targetY);
         if (targetCell == null)
         {
-            Debug.LogError($"Target cell not found at ({item.targetX}, {item.targetY})");
+            GameLogger.LogError(LoggingManager.LogCategory.Movement, $"Target cell not found at ({item.targetX}, {item.targetY})", ComponentId);
             sourceCell.items.Remove(item);
             if (activeGridManager.HasVisualItem(item.id))
             {

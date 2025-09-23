@@ -1,0 +1,261 @@
+[{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 32,
+	"startColumn": 42,
+	"endLineNumber": 32,
+	"endColumn": 53,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 33,
+	"startColumn": 80,
+	"endLineNumber": 33,
+	"endColumn": 91,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 46,
+	"startColumn": 77,
+	"endLineNumber": 46,
+	"endColumn": 88,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 51,
+	"startColumn": 97,
+	"endLineNumber": 51,
+	"endColumn": 108,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 55,
+	"startColumn": 81,
+	"endLineNumber": 55,
+	"endColumn": 92,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 129,
+	"startColumn": 153,
+	"endLineNumber": 129,
+	"endColumn": 164,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 133,
+	"startColumn": 88,
+	"endLineNumber": 133,
+	"endColumn": 99,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 149,
+	"startColumn": 92,
+	"endLineNumber": 149,
+	"endColumn": 103,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 158,
+	"startColumn": 91,
+	"endLineNumber": 158,
+	"endColumn": 102,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 162,
+	"startColumn": 132,
+	"endLineNumber": 162,
+	"endColumn": 143,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 170,
+	"startColumn": 83,
+	"endLineNumber": 170,
+	"endColumn": 94,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 209,
+	"startColumn": 130,
+	"endLineNumber": 209,
+	"endColumn": 141,
+	"origin": "extHost1"
+},{
+	"resource": "/C:/Users/narik/source/repos/Unity/ScrapLine/ScrapLine/Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'ComponentId' does not exist in the current context",
+	"startLineNumber": 218,
+	"startColumn": 143,
+	"endLineNumber": 218,
+	"endColumn": 154,
+	"origin": "extHost1"
+}]

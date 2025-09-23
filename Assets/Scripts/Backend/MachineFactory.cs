@@ -11,6 +11,11 @@ using UnityEngine;
 public static class MachineFactory
 {
     /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private static string ComponentId => "MachineFactory_Static";
+    
+    /// <summary>
     /// Static dictionary that maps class names to their corresponding Type objects
     /// for efficient machine instantiation
     /// </summary>
@@ -42,21 +47,21 @@ public static class MachineFactory
         MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
         if (machineDef == null)
         {
-            Debug.LogError($"Machine definition not found for ID: {cellData.machineDefId}");
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, "Machine definition not found for ID: {cellData.machineDefId}", ComponentId);
             return null;
         }
 
         // Check if className is specified in the machine definition
         if (string.IsNullOrEmpty(machineDef.className))
         {
-            Debug.LogError($"Machine definition {cellData.machineDefId} is missing className field");
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, "Machine definition {cellData.machineDefId} is missing className field", ComponentId);
             return null;
         }
 
         // Look up the class type from our dictionary
         if (!MachineTypeMap.TryGetValue(machineDef.className, out Type machineType))
         {
-            Debug.LogError($"Unknown machine class name: {machineDef.className}");
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, "Unknown machine class name: {machineDef.className}", ComponentId);
             return null;
         }
 
@@ -68,7 +73,7 @@ public static class MachineFactory
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Failed to create machine instance for {machineDef.className}: {ex.Message}");
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, $"Failed to create machine instance for {machineDef.className}: {ex.Message}", ComponentId);
             return null;
         }
     }

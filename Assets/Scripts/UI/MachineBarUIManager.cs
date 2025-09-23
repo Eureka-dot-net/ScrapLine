@@ -14,6 +14,11 @@ public class MachineBarUIManager : MonoBehaviour
     // --- ADD THESE FIELDS ---
     public Texture conveyorPanelTexture;
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"MachineBarUIManager_{GetInstanceID()}";
+
     // Selection state
     private MachineDef selectedMachine;
     private GameObject selectedButtonObj;
@@ -124,7 +129,7 @@ public class MachineBarUIManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"MachineRenderer not found on prefab for machine '{machine.id}'");
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "MachineRenderer not found on prefab for machine '{machine.id}'", ComponentId);
             }
         }
     }
@@ -229,7 +234,7 @@ public class MachineBarUIManager : MonoBehaviour
     {
         if (GameManager.Instance == null)
         {
-            Debug.LogWarning("GameManager.Instance is null, cannot update machine affordability");
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "GameManager.Instance is null, cannot update machine affordability", ComponentId);
             return;
         }
 

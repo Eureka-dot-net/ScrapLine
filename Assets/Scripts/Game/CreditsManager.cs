@@ -18,6 +18,11 @@ public class CreditsManager : MonoBehaviour
     [Tooltip("Enable debug logs for credits operations")]
     public bool enableCreditsLogs = true;
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"CreditsManager_{GetInstanceID()}";
+
     private int currentCredits = 0;
     private CreditsUI creditsUI;
     private MachineBarUIManager machineBarManager;
@@ -87,7 +92,7 @@ public class CreditsManager : MonoBehaviour
         else
         {
             if (enableCreditsLogs)
-                Debug.LogWarning($"Insufficient credits! Need {amount}, have {currentCredits}");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Insufficient credits! Need {amount}, have {currentCredits}", ComponentId);
             return false;
         }
     }

@@ -21,6 +21,11 @@ public class GridManager : MonoBehaviour
 
     private List<GridData> activeGrids = new List<GridData>();
     private UIGridManager activeGridManager;
+    
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"GridManager_{GetInstanceID()}";
 
     /// <summary>
     /// Initialize the grid manager
@@ -29,6 +34,7 @@ public class GridManager : MonoBehaviour
     public void Initialize(UIGridManager gridManager)
     {
         this.activeGridManager = gridManager;
+        GameLogger.LogGrid("GridManager initialized", ComponentId);
     }
 
     /// <summary>
@@ -37,6 +43,8 @@ public class GridManager : MonoBehaviour
     /// <returns>The created grid data</returns>
     public GridData CreateDefaultGrid()
     {
+        GameLogger.LogGrid($"Creating default grid {defaultGridWidth}x{defaultGridHeight}", ComponentId);
+        
         GridData defaultGrid = new GridData();
         defaultGrid.width = defaultGridWidth;
         defaultGrid.height = defaultGridHeight;
@@ -65,6 +73,7 @@ public class GridManager : MonoBehaviour
         }
 
         activeGrids.Add(defaultGrid);
+        GameLogger.LogGrid($"Default grid created with {defaultGrid.cells.Count} cells", ComponentId);
         return defaultGrid;
     }
 
@@ -126,7 +135,7 @@ public class GridManager : MonoBehaviour
         GridData currentGrid = GetCurrentGrid();
         if (currentGrid == null)
         {
-            Debug.LogError("No current grid available!");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "No current grid available!", ComponentId);
             return null;
         }
         
@@ -138,16 +147,18 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public void ClearGrid()
     {
+        GameLogger.LogGrid("Starting grid clear operation", ComponentId);
+        
         GridData gridData = GetCurrentGrid();
         if (gridData == null)
         {
-            Debug.LogError("No current grid to clear!");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "No current grid to clear!", ComponentId);
             return;
         }
 
         if (activeGridManager == null)
         {
-            Debug.LogError("No active grid manager available!");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "No active grid manager available!", ComponentId);
             return;
         }
 
@@ -168,6 +179,7 @@ public class GridManager : MonoBehaviour
         }
 
         activeGridManager.UpdateAllVisuals();
+        GameLogger.LogGrid($"Grid cleared - reset {gridData.cells.Count} cells", ComponentId);
     }
 
     /// <summary>
@@ -181,15 +193,16 @@ public class GridManager : MonoBehaviour
             if (currentGrid != null)
             {
                 activeGridManager.InitGrid(currentGrid);
+                GameLogger.LogGrid("Grid UI initialized successfully", ComponentId);
             }
             else
             {
-                Debug.LogError("No current grid available for UI initialization!");
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, $"No current grid available for UI initialization!", ComponentId);
             }
         }
         else
         {
-            Debug.LogError("No active grid manager available for UI initialization!");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"No active grid manager available for UI initialization!", ComponentId);
         }
     }
 }

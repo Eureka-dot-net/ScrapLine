@@ -7,6 +7,11 @@ public class FactoryRegistry
     private static FactoryRegistry _instance;
     public static FactoryRegistry Instance => _instance ??= new FactoryRegistry();
 
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"FactoryRegistry_{GetHashCode()}";
+
     // --- Data Members ---
     public Dictionary<string, MachineDef> Machines = new();
     public List<RecipeDef> Recipes = new();
@@ -43,7 +48,7 @@ public class FactoryRegistry
         }
         catch
         {
-            Debug.LogWarning("Failed to load recipes from JSON, using empty list");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "Failed to load recipes from JSON, using empty list", ComponentId);
             Recipes = new List<RecipeDef>();
         }
 
@@ -65,7 +70,7 @@ public class FactoryRegistry
             }
             catch
             {
-                Debug.LogWarning("Failed to load wastecrates from JSON, using empty dictionary");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "Failed to load wastecrates from JSON, using empty dictionary", ComponentId);
             }
         }
     }

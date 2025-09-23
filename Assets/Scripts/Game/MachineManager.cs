@@ -16,6 +16,11 @@ public class MachineManager : MonoBehaviour
     private CreditsManager creditsManager;
     private GridManager gridManager;
     private UIGridManager activeGridManager;
+    
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"MachineManager_{GetInstanceID()}";
 
     /// <summary>
     /// Initialize the machine manager
@@ -59,7 +64,7 @@ public class MachineManager : MonoBehaviour
 
         if (cellData == null)
         {
-            Debug.LogError("Clicked cell is not in the data model! Coords: " + x + ", " + y);
+            GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Clicked cell is not in the data model! Coords: " + x + ", " + y, ComponentId);
             return;
         }
 
@@ -98,7 +103,7 @@ public class MachineManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning($"Cannot afford {selectedMachine.id} - costs {selectedMachine.cost}, have {creditsManager.GetCredits()} credits");
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Cannot afford {selectedMachine.id} - costs {selectedMachine.cost}, have {creditsManager.GetCredits()} credits", ComponentId);
                     return;
                 }
             }
@@ -145,7 +150,7 @@ public class MachineManager : MonoBehaviour
         if (cellData == null || cellData.cellType != CellType.Machine)
         {
             if (enableMachineLogs)
-                Debug.LogWarning($"StartMachineDrag({x}, {y}): No machine to drag");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"StartMachineDrag({x}, {y}): No machine to drag", ComponentId);
             return;
         }
 
@@ -202,7 +207,7 @@ public class MachineManager : MonoBehaviour
         MachineDef machineDef = FactoryRegistry.Instance.GetMachine(sourceCellData.machineDefId);
         if (machineDef == null)
         {
-            Debug.LogError($"CanDropMachine: Cannot find machine definition for {sourceCellData.machineDefId}");
+            GameLogger.LogError(LoggingManager.LogCategory.Machine, $"CanDropMachine: Cannot find machine definition for {sourceCellData.machineDefId}", ComponentId);
             return false;
         }
 
@@ -226,7 +231,7 @@ public class MachineManager : MonoBehaviour
         if (targetCellData == null)
         {
             if (enableMachineLogs)
-                Debug.LogError($"CanDropMachineWithDefId: Invalid target coordinates ({toX}, {toY})");
+                GameLogger.LogError(LoggingManager.LogCategory.Machine, $"CanDropMachineWithDefId: Invalid target coordinates ({toX}, {toY})", ComponentId);
             return false;
         }
 
@@ -241,7 +246,7 @@ public class MachineManager : MonoBehaviour
         if (machineDef == null)
         {
             if (enableMachineLogs)
-                Debug.LogError($"CanDropMachineWithDefId: Cannot find machine definition for {machineDefId}");
+                GameLogger.LogError(LoggingManager.LogCategory.Machine, $"CanDropMachineWithDefId: Cannot find machine definition for {machineDefId}", ComponentId);
             return false;
         }
 
@@ -262,7 +267,7 @@ public class MachineManager : MonoBehaviour
         if (!CanDropMachine(fromX, fromY, toX, toY))
         {
             if (enableMachineLogs)
-                Debug.LogWarning($"Cannot move machine from ({fromX}, {fromY}) to ({toX}, {toY}) - invalid move");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Cannot move machine from ({fromX}, {fromY}) to ({toX}, {toY}) - invalid move", ComponentId);
             return;
         }
 
@@ -315,7 +320,7 @@ public class MachineManager : MonoBehaviour
         if (!CanDropMachineWithDefId(x, y, machineDefId))
         {
             if (enableMachineLogs)
-                Debug.LogWarning($"PlaceDraggedMachine({x}, {y}): Cannot place {machineDefId} at target location");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"PlaceDraggedMachine({x}, {y}): Cannot place {machineDefId} at target location", ComponentId);
             return false;
         }
 
@@ -323,7 +328,7 @@ public class MachineManager : MonoBehaviour
         if (targetCellData == null)
         {
             if (enableMachineLogs)
-                Debug.LogError($"PlaceDraggedMachine({x}, {y}): No cell data found");
+                GameLogger.LogError(LoggingManager.LogCategory.Machine, $"PlaceDraggedMachine({x}, {y}): No cell data found", ComponentId);
             return false;
         }
 
@@ -335,7 +340,7 @@ public class MachineManager : MonoBehaviour
 
         if (targetCellData.machine == null)
         {
-            Debug.LogError($"Failed to create machine object for dragged {machineDefId}");
+            GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Failed to create machine object for dragged {machineDefId}", ComponentId);
         }
 
         // Update visuals
@@ -359,7 +364,7 @@ public class MachineManager : MonoBehaviour
         if (cellData == null || cellData.cellType != CellType.Machine)
         {
             if (enableMachineLogs)
-                Debug.LogWarning($"DeleteMachine({x}, {y}): No machine to delete");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"DeleteMachine({x}, {y}): No machine to delete", ComponentId);
             return;
         }
 
@@ -414,7 +419,7 @@ public class MachineManager : MonoBehaviour
     {
         if (!creditsManager.TrySpendCredits(machineDef.cost))
         {
-            Debug.LogError($"Failed to place machine {machineDef.id} - insufficient credits!");
+            GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Failed to place machine {machineDef.id} - insufficient credits!", ComponentId);
             return;
         }
 
@@ -433,7 +438,7 @@ public class MachineManager : MonoBehaviour
         cellData.machine = MachineFactory.CreateMachine(cellData);
         if (cellData.machine == null)
         {
-            Debug.LogError($"Failed to create machine object for {machineDef.id}");
+            GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Failed to create machine object for {machineDef.id}", ComponentId);
         }
 
         if (activeGridManager != null)
@@ -451,7 +456,7 @@ public class MachineManager : MonoBehaviour
         MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cellData.machineDefId);
         if (machineDef == null)
         {
-            Debug.LogError($"Cannot find machine definition for {cellData.machineDefId}");
+            GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Cannot find machine definition for {cellData.machineDefId}", ComponentId);
             return;
         }
 
