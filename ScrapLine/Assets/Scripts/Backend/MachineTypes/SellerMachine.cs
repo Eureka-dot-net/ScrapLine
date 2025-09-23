@@ -51,7 +51,7 @@ public class SellerMachine : BaseMachine
         cellData.items.Remove(item);
         
         // Destroy visual representation
-        UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+        UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
             gridManager.DestroyVisualItem(item.id);

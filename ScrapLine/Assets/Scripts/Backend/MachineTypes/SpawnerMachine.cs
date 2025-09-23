@@ -155,7 +155,7 @@ public class SpawnerMachine : BaseMachine
         cellData.items.Add(newItem);
 
         // Tell visual manager to create visual representation
-        UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
+        UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
             gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
@@ -194,7 +194,7 @@ public class SpawnerMachine : BaseMachine
             return null;
             
         // Select random item from available items
-        int randomIndex = Random.Range(0, availableItems.Count);
+        int randomIndex = UnityEngine.Random.Range(0, availableItems.Count);
         var selectedItem = availableItems[randomIndex];
         
         // Decrease count by 1

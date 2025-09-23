@@ -450,7 +450,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         machineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         machineText.fontSize = 12;
         machineText.color = Color.black;
-        machineText.alignment = TextAnchor.MiddleCenter;
+        machineText.alignment = UnityEngine.UI.Text.TextAnchor.MiddleCenter;
 
         RectTransform textRT = textObj.GetComponent<RectTransform>();
         textRT.anchorMin = Vector2.zero;
@@ -477,7 +477,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvasRT,
             eventData.position,
-            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            canvas.renderMode == Canvas.RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
             out localPosition);
 
         if (converted)
@@ -549,7 +549,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     private void ClearDropTargetHighlights()
     {
         // Find all cells and clear their highlights
-        UICell[] allCells = Object.FindObjectsByType<UICell>(FindObjectsSortMode.None);
+        UICell[] allCells = UnityEngine.Object.FindObjectsByType<UICell>(FindObjectsSortMode.None);
         foreach (UICell cell in allCells)
         {
             cell.SetHighlight(false);

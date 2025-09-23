@@ -1,4 +1,5 @@
 using UnityEngine;
+using static UnityEngine.UnityGlobals;
 
 /// <summary>
 /// Demonstration script showing how to use the new central logging system.
@@ -115,7 +116,7 @@ public class LoggingSystemDemo : MonoBehaviour
     private string GenerateMovementReport()
     {
         // Simulate expensive string generation that should only happen if logging is enabled
-        return $"Movement Report: {Random.Range(1, 100)} items processed, {Random.Range(0, 10)} items queued";
+        return $"Movement Report: {UnityEngine.Random.Range(1, 100)} items processed, {UnityEngine.Random.Range(0, 10)} items queued";
     }
 
     /// <summary>

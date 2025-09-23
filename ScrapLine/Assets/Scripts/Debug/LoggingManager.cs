@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using static UnityEngine.UnityGlobals;
 
 /// <summary>
 /// Central logging manager that provides category-based logging with state-change detection.
