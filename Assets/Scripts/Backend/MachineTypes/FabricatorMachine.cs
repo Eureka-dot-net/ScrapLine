@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 /// <summary>
 /// Handles fabricator machine behavior. These machines take input items,
@@ -216,7 +217,8 @@ public class FabricatorMachine : ProcessorMachine
         Debug.Log($"[FABRICATOR] Recipe requires: {string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
         Debug.Log($"[FABRICATOR] Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]");
         
-        // Subtract items we already have in the machine
+        // Count available items by type (excluding processing items)
+        var availableItems = new Dictionary<string, int>();
         foreach (var item in cellData.items)
         {
             // Skip processing items - they don't count as inventory
@@ -226,18 +228,40 @@ public class FabricatorMachine : ProcessorMachine
                 continue;
             }
             
-            if (needed.ContainsKey(item.itemType))
+            if (!availableItems.ContainsKey(item.itemType))
+                availableItems[item.itemType] = 0;
+            availableItems[item.itemType]++;
+        }
+        
+        Debug.Log($"[FABRICATOR] Available items: [{string.Join(", ", availableItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}]");
+        
+        // Subtract available items from needed items
+        foreach (var kvp in availableItems)
+        {
+            string itemType = kvp.Key;
+            int availableCount = kvp.Value;
+            
+            if (needed.ContainsKey(itemType))
             {
-                needed[item.itemType]--;
-                Debug.Log($"[FABRICATOR] Found {item.itemType}, now need {needed[item.itemType]} more");
-                if (needed[item.itemType] <= 0)
+                int neededCount = needed[itemType];
+                int usedCount = Math.Min(neededCount, availableCount);
+                needed[itemType] -= usedCount;
+                
+                Debug.Log($"[FABRICATOR] Using {usedCount}x {itemType} (have {availableCount}, need {neededCount}, remaining need: {needed[itemType]})");
+                
+                if (needed[itemType] <= 0)
                 {
-                    needed.Remove(item.itemType);
+                    needed.Remove(itemType);
+                }
+                
+                if (availableCount > neededCount)
+                {
+                    Debug.Log($"[FABRICATOR] Extra {itemType} in inventory: {availableCount - neededCount}x not needed for recipe");
                 }
             }
             else
             {
-                Debug.Log($"[FABRICATOR] Extra item in inventory (not needed for recipe): {item.itemType}");
+                Debug.Log($"[FABRICATOR] Extra item type in inventory (not needed for recipe): {availableCount}x {itemType}");
             }
         }
         
