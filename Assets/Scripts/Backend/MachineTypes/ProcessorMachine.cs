@@ -97,7 +97,7 @@ public class ProcessorMachine : BaseMachine
     /// <summary>
     /// Checks for items that have been waiting too long and removes them
     /// </summary>
-    private void CheckWaitingItemTimeouts()
+    protected void CheckWaitingItemTimeouts()
     {
         ItemMovementManager itemMovementManager = Object.FindAnyObjectByType<ItemMovementManager>();
         if (itemMovementManager == null) return;
@@ -183,7 +183,7 @@ public class ProcessorMachine : BaseMachine
     /// <summary>
     /// Checks if the current processing operation is complete
     /// </summary>
-    private void CheckProcessingComplete()
+    protected void CheckProcessingComplete()
     {
         // Find the item being processed
         foreach (var item in cellData.items)
