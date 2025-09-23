@@ -639,7 +639,6 @@ public class UIGridManager : MonoBehaviour
                 gridWorldPos.z
             );
 
-            Debug.Log($"GetCellWorldPosition({x}, {y}) calculated: {calculatedPos} (cellSize: {cellSize}, spacing: {spacing})");
             return calculatedPos;
         }
 

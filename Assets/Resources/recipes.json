@@ -59,6 +59,6 @@
     "outputItems": [
       { "item": "aluminumPlate", "count": 1 }
     ],
-    "processMultiplier": 1
+    "processMultiplier": 0.5
   }
 ]
