@@ -713,10 +713,10 @@ public class MachineRenderer : MonoBehaviour
         
         // Update progress bar
         float progress = cachedMachine.GetProgress();
-        GameLogger.LogMachine($"Progress bar update: progress={progress:F2} for machine at ({cellX}, {cellY})", ComponentId);
         
         if (progress >= 0 && progressBarFill != null)
         {
+            GameLogger.LogMachine($"Progress bar update: progress={progress:F2} for machine at ({cellX}, {cellY})", ComponentId);
             UpdateProgressBar(progress);
         }
         else if (progress < 0 && progressBarSprite != null)
