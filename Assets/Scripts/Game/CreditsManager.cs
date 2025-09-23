@@ -11,7 +11,7 @@ public class CreditsManager : MonoBehaviour
     public int startingCredits = 2000;
     
     [Tooltip("Percentage of machine cost refunded when dropped outside grid (0.0 to 1.0)")]
-    [Range(0f, 1f)]
+    [UnityEngine.Range(0f, 1f)]
     public float machineRefundPercentage = 0.8f;
     
     [Header("Debug")]
