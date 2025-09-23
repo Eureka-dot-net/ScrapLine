@@ -271,15 +271,11 @@ public class SpawnerMachine : BaseMachine
     {
         if (spawnInterval <= 0) 
         {
-            GameLogger.LogSpawning("GetSpawnProgress: spawnInterval <= 0, returning 1.0", ComponentId);
             return 1.0f;
         }
         
         float elapsed = Time.time - lastSpawnTime;
         float progress = Mathf.Clamp01(elapsed / spawnInterval);
-        
-        // Always log progress for debugging - this will be called frequently but helps debug the issue
-        GameLogger.LogSpawning($"GetSpawnProgress: elapsed={elapsed:F2}s, interval={spawnInterval:F2}s, progress={progress:F2}", ComponentId);
         
         return progress;
     }

@@ -674,11 +674,6 @@ public class MachineRenderer : MonoBehaviour
         {
             float clampedProgress = Mathf.Clamp01(progress);
             progressBarFill.fillAmount = clampedProgress;
-            GameLogger.LogMachine($"Updated progress bar fill: {clampedProgress:F2} for machine at ({cellX}, {cellY})", ComponentId);
-        }
-        else
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Progress bar fill is null for machine at ({cellX}, {cellY})", ComponentId);
         }
     }
     
@@ -707,42 +702,32 @@ public class MachineRenderer : MonoBehaviour
         {
             var cellData = gridManager.GetCellData(cellX, cellY);
             cachedMachine = cellData?.machine;
-            if (cachedMachine != null)
-            {
-                GameLogger.LogMachine($"Cached machine for renderer at ({cellX}, {cellY}): {cachedMachine.GetType().Name}", ComponentId);
-            }
         }
         
         if (cachedMachine == null) return;
         
         // Update progress bar
         float progress = cachedMachine.GetProgress();
-        GameLogger.LogMachine($"Machine type: {cachedMachine.GetType().Name}, progress: {progress:F2} at ({cellX}, {cellY})", ComponentId);
         
-        if (progress >= 0 && progressBarFill != null)
+        if (progress >= 0)
         {
-            GameLogger.LogMachine($"Progress bar update: progress={progress:F2} for machine at ({cellX}, {cellY})", ComponentId);
-            UpdateProgressBar(progress);
+            // Create progress bar if it doesn't exist
+            if (progressBarSprite == null)
+            {
+                CreateProgressBar();
+            }
+            
+            // Update progress bar if it exists
+            if (progressBarFill != null)
+            {
+                progressBarSprite.SetActive(true);
+                UpdateProgressBar(progress);
+            }
         }
-        else if (progress < 0 && progressBarSprite != null)
+        else if (progressBarSprite != null)
         {
             // Hide progress bar if no progress to show
             progressBarSprite.SetActive(false);
-        }
-        else if (progress >= 0 && progressBarSprite == null)
-        {
-            // Create progress bar if needed
-            GameLogger.LogMachine($"Creating progress bar for machine at ({cellX}, {cellY}) with progress {progress:F2}", ComponentId);
-            CreateProgressBar();
-        }
-        else if (progress >= 0 && progressBarSprite != null)
-        {
-            // Show progress bar if hidden
-            progressBarSprite.SetActive(true);
-        }
-        else
-        {
-            GameLogger.LogMachine($"Progress bar state: progress={progress:F2}, progressBarSprite={progressBarSprite != null}, progressBarFill={progressBarFill != null} at ({cellX}, {cellY})", ComponentId);
         }
         
         // Update dynamic sprites for spawner machines (only once per second)
@@ -765,7 +750,27 @@ public class MachineRenderer : MonoBehaviour
     {
         if (!isInMenu)
         {
+            // Update progress bar every frame for smooth animation
+            UpdateProgressBarFrequently();
+            
+            // Update expensive operations (sprites, machine detection) less frequently
             UpdateDynamicElements();
+        }
+    }
+    
+    /// <summary>
+    /// Update progress bar every frame for smooth progress animation
+    /// </summary>
+    private void UpdateProgressBarFrequently()
+    {
+        if (cachedMachine != null && progressBarFill != null)
+        {
+            float progress = cachedMachine.GetProgress();
+            if (progress >= 0)
+            {
+                progressBarSprite.SetActive(true);
+                UpdateProgressBar(progress);
+            }
         }
     }
 
