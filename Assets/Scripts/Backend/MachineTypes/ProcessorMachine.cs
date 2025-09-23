@@ -37,11 +37,11 @@ public class ProcessorMachine : BaseMachine
         // Implement pull system - if machine is idle and has waiting items, pull one
         if (cellData.machineState == MachineState.Idle && cellData.waitingItems.Count > 0)
         {
-            // Get the next item from the queue (always the first one, which is at center)
-            ItemData waitingItem = cellData.waitingItems[0];
+            // Find the first item in the queue that we can process
+            ItemData waitingItem = GetNextProcessableWaitingItem();
             
-            // If the item is waiting at the halfway point, the processor "pulls" it.
-            if (waitingItem.isHalfway)
+            // If we found a processable item and it's waiting at the halfway point, pull it
+            if (waitingItem != null && waitingItem.isHalfway)
             {
                 // Give the item permission to start moving again.
                 // The GameManager will handle the rest of the movement.
@@ -263,6 +263,22 @@ public class ProcessorMachine : BaseMachine
         
         // Set machine state back to idle so it can accept new items
         cellData.machineState = MachineState.Idle;
+    }
+    
+    /// <summary>
+    /// Gets the next waiting item that can be processed by this machine (has a valid recipe)
+    /// </summary>
+    protected virtual ItemData GetNextProcessableWaitingItem()
+    {
+        // For basic processors, find the first item that has a recipe
+        foreach (var item in cellData.waitingItems)
+        {
+            if (GetRecipeForItem(item.itemType) != null)
+            {
+                return item;
+            }
+        }
+        return null;
     }
     
     /// <summary>
