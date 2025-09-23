@@ -12,6 +12,60 @@ public class FabricatorMachine : ProcessorMachine
 {
     public FabricatorMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
+        // Fabricator machines can be configured to select specific recipes
+        CanConfigure = true;
+    }
+
+    /// <summary>
+    /// Called when the fabricator machine is configured by the player
+    /// </summary>
+    public override void OnConfigured()
+    {
+        Debug.Log($"FabricatorMachine at ({cellData.x}, {cellData.y}) configured.");
+
+        // Find the fabricator configuration UI in the scene
+        FabricatorMachineConfigUI configUI = UnityEngine.Object.FindFirstObjectByType<FabricatorMachineConfigUI>(FindObjectsInactive.Include);
+        if (configUI != null)
+        {
+            configUI.ShowConfiguration(cellData, OnConfigurationConfirmed);
+        }
+        else
+        {
+            Debug.LogWarning("FabricatorMachineConfigUI not found in scene. Please add the UI component to configure fabricator machines.");
+            
+            // Fallback: Set a default configuration for testing if there are any fabricator recipes
+            var fabricatorRecipes = FactoryRegistry.Instance.GetRecipesForMachine(cellData.machineDefId);
+            if (fabricatorRecipes.Count > 0)
+            {
+                var defaultRecipe = fabricatorRecipes[0];
+                cellData.selectedRecipeId = GetRecipeId(defaultRecipe);
+                Debug.Log($"Applied default fabricator recipe: {defaultRecipe.outputItems[0].item}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called when the fabricator configuration is confirmed by the user
+    /// </summary>
+    private void OnConfigurationConfirmed(string selectedRecipeId)
+    {
+        Debug.Log($"Fabricator machine configured with recipe: {selectedRecipeId}");
+        
+        // The configuration UI already updates cellData.selectedRecipeId, but let's be explicit
+        cellData.selectedRecipeId = selectedRecipeId;
+        
+        if (string.IsNullOrEmpty(selectedRecipeId))
+        {
+            Debug.Log("Fabricator recipe cleared - machine will not process items until recipe is selected");
+        }
+        else
+        {
+            RecipeDef recipe = GetSelectedRecipe();
+            if (recipe != null && recipe.outputItems.Count > 0)
+            {
+                Debug.Log($"Fabricator will now craft: {recipe.outputItems[0].item}");
+            }
+        }
     }
 
     /// <summary>

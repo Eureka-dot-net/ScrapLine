@@ -119,6 +119,45 @@ public class FactoryRegistry
         return null;
     }
 
+    /// <summary>
+    /// Get all recipes for a specific machine that produce a specific output item
+    /// </summary>
+    public List<RecipeDef> GetRecipesByOutput(string machineId, string outputItemId)
+    {
+        var matchingRecipes = new List<RecipeDef>();
+        foreach (var recipe in Recipes)
+        {
+            if (recipe.machineId == machineId)
+            {
+                foreach (var outputItem in recipe.outputItems)
+                {
+                    if (outputItem.item == outputItemId)
+                    {
+                        matchingRecipes.Add(recipe);
+                        break; // Found a match for this recipe, no need to check other outputs
+                    }
+                }
+            }
+        }
+        return matchingRecipes;
+    }
+
+    /// <summary>
+    /// Get all recipes for a specific machine
+    /// </summary>
+    public List<RecipeDef> GetRecipesForMachine(string machineId)
+    {
+        var machineRecipes = new List<RecipeDef>();
+        foreach (var recipe in Recipes)
+        {
+            if (recipe.machineId == machineId)
+            {
+                machineRecipes.Add(recipe);
+            }
+        }
+        return machineRecipes;
+    }
+
     public void UnlockMachine(string machineId)
     {
         var progress = FindMachineProgress(machineId);
