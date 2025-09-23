@@ -58,6 +58,16 @@ namespace UnityEngine.UI
         }
     }
 
+    // Enums that exist in the UnityEngine.UI namespace (outside of classes)
+    public enum TextAnchor 
+    { 
+        UpperLeft, UpperCenter, UpperRight,
+        MiddleLeft, MiddleCenter, MiddleRight,
+        LowerLeft, LowerCenter, LowerRight
+    }
+    
+    public enum RenderMode { ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace }
+
     // Image class
     public class Image : Graphic
     {
@@ -90,12 +100,6 @@ namespace UnityEngine.UI
         public bool supportRichText { get; set; } = true;
         
         public enum FontStyle { Normal, Bold, Italic, BoldAndItalic }
-        public enum TextAnchor 
-        { 
-            UpperLeft, UpperCenter, UpperRight,
-            MiddleLeft, MiddleCenter, MiddleRight,
-            LowerLeft, LowerCenter, LowerRight
-        }
     }
 
     // Graphic base class
@@ -418,12 +422,10 @@ namespace UnityEngine
     // Canvas class
     public class Canvas : Component
     {
-        public RenderMode renderMode { get; set; } = RenderMode.ScreenSpaceOverlay;
+        public UnityEngine.UI.RenderMode renderMode { get; set; } = UnityEngine.UI.RenderMode.ScreenSpaceOverlay;
         public Camera worldCamera { get; set; }
         public int sortingOrder { get; set; }
         public bool overrideSorting { get; set; }
-        
-        public enum RenderMode { ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace }
     }
 
     // CanvasRenderer class
