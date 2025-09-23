@@ -155,7 +155,7 @@
             "buildingIconSprite": "shredder",
             "buildingIconSpriteSize": 0.6,
             "buildingSpriteColour": "#008080",
-            "baseProcessTime": 10,
+            "baseProcessTime": 5,
             "upgradeMultipliers": [
                 {
                     "multiplier": 0.8,
