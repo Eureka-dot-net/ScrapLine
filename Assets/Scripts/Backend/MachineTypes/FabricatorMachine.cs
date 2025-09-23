@@ -21,8 +21,6 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     public override void OnConfigured()
     {
-        Debug.Log($"FabricatorMachine at ({cellData.x}, {cellData.y}) configured.");
-
         // Find the fabricator configuration UI in the scene
         FabricatorMachineConfigUI configUI = UnityEngine.Object.FindFirstObjectByType<FabricatorMachineConfigUI>(FindObjectsInactive.Include);
         if (configUI != null)
@@ -39,7 +37,7 @@ public class FabricatorMachine : ProcessorMachine
             {
                 var defaultRecipe = fabricatorRecipes[0];
                 cellData.selectedRecipeId = GetRecipeId(defaultRecipe);
-                Debug.Log($"Applied default fabricator recipe: {defaultRecipe.outputItems[0].item}");
+                Debug.Log($"[FABRICATOR] Applied default recipe for testing: {defaultRecipe.outputItems[0].item}");
             }
         }
     }
@@ -49,21 +47,21 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void OnConfigurationConfirmed(string selectedRecipeId)
     {
-        Debug.Log($"Fabricator machine configured with recipe: {selectedRecipeId}");
+        Debug.Log($"[FABRICATOR] Recipe selected: {selectedRecipeId}");
         
         // The configuration UI already updates cellData.selectedRecipeId, but let's be explicit
         cellData.selectedRecipeId = selectedRecipeId;
         
         if (string.IsNullOrEmpty(selectedRecipeId))
         {
-            Debug.Log("Fabricator recipe cleared - machine will not process items until recipe is selected");
+            Debug.Log("[FABRICATOR] Recipe cleared - machine will not process items");
         }
         else
         {
             RecipeDef recipe = GetSelectedRecipe();
             if (recipe != null && recipe.outputItems.Count > 0)
             {
-                Debug.Log($"Fabricator will now craft: {recipe.outputItems[0].item}");
+                Debug.Log($"[FABRICATOR] Will craft: {recipe.outputItems[0].item} (inputs: {string.Join(", ", recipe.inputItems.Select(i => $"{i.count}x {i.item}"))})");
             }
         }
     }
@@ -76,15 +74,14 @@ public class FabricatorMachine : ProcessorMachine
         // Check if a recipe is selected
         if (string.IsNullOrEmpty(cellData.selectedRecipeId))
         {
-            Debug.LogWarning($"Fabricator {machineDef.id} has no recipe selected - cannot process items");
-            return null;
+            return null; // Silently return null - we don't want to spam warnings
         }
 
         // Get the selected recipe
         RecipeDef selectedRecipe = GetSelectedRecipe();
         if (selectedRecipe == null)
         {
-            Debug.LogWarning($"Fabricator {machineDef.id} has invalid recipe selected: {cellData.selectedRecipeId}");
+            Debug.LogWarning($"[FABRICATOR] Invalid recipe selected: {cellData.selectedRecipeId}");
             return null;
         }
 
@@ -92,7 +89,7 @@ public class FabricatorMachine : ProcessorMachine
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
         if (neededItems.Count == 0)
         {
-            Debug.Log($"Fabricator {machineDef.id} has all items needed for recipe");
+            Debug.Log($"[FABRICATOR] All items collected for recipe, ready to process");
             return null; // We have everything we need
         }
 
@@ -101,11 +98,77 @@ public class FabricatorMachine : ProcessorMachine
         {
             if (neededItems.ContainsKey(waitingItem.itemType) && neededItems[waitingItem.itemType] > 0)
             {
+                Debug.Log($"[FABRICATOR] Pulling needed item: {waitingItem.itemType} (need {neededItems[waitingItem.itemType]} more)");
                 return waitingItem;
             }
         }
 
+        Debug.Log($"[FABRICATOR] No needed items in queue. Need: {string.Join(", ", neededItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
         return null; // No needed items are waiting
+    }
+
+    /// <summary>
+    /// Override UpdateLogic to handle multi-input recipes
+    /// Fabricators need to pull multiple items before they can start processing
+    /// </summary>
+    public override void UpdateLogic()
+    {
+        // Check for timed out waiting items first
+        CheckWaitingItemTimeouts();
+        
+        // If we're processing, check if complete
+        if (cellData.machineState == MachineState.Processing)
+        {
+            CheckProcessingComplete();
+            return;
+        }
+        
+        // If not idle, don't pull items
+        if (cellData.machineState != MachineState.Idle || cellData.waitingItems.Count == 0)
+            return;
+            
+        // Check if we have a recipe selected
+        if (string.IsNullOrEmpty(cellData.selectedRecipeId))
+            return;
+            
+        RecipeDef selectedRecipe = GetSelectedRecipe();
+        if (selectedRecipe == null)
+            return;
+            
+        // Check what items we still need
+        var neededItems = GetNeededItemsForRecipe(selectedRecipe);
+        if (neededItems.Count == 0)
+        {
+            // We have all items - let base class handle completion
+            return;
+        }
+        
+        // Pull items one by one until we have everything we need
+        // Keep pulling as long as we need items and have waiting items
+        while (neededItems.Count > 0 && cellData.waitingItems.Count > 0)
+        {
+            ItemData waitingItem = GetNextProcessableWaitingItem();
+            
+            if (waitingItem != null && waitingItem.isHalfway)
+            {
+                // Give the item permission to start moving again
+                waitingItem.state = ItemState.Moving;
+                
+                // Temporarily set to receiving to prevent other items from being pulled immediately
+                cellData.machineState = MachineState.Receiving;
+                
+                Debug.Log($"[FABRICATOR] Pulling item: {waitingItem.itemType} (id: {waitingItem.id})");
+                
+                // Break after pulling one item to avoid pulling all at once
+                // The machine state will reset to Idle when the item arrives
+                break;
+            }
+            else
+            {
+                // No more processable items available
+                break;
+            }
+        }
     }
 
     /// <summary>
@@ -167,7 +230,7 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        Debug.Log($"Item {item.id} has fully arrived at fabricator {machineDef.id}.");
+        Debug.Log($"[FABRICATOR] Item {item.itemType} (id: {item.id}) arrived");
         
         // Find and remove the item from waiting queue
         ItemData itemToProcess = cellData.waitingItems.Find(i => i.id == item.id);
@@ -187,12 +250,23 @@ public class FabricatorMachine : ProcessorMachine
                 gridManager.DestroyVisualItem(itemToProcess.id);
             }
             
-            // Check if we now have all items needed for the recipe
-            CheckIfReadyToProcess();
+            // Reset state to Idle so we can pull more items if needed
+            cellData.machineState = MachineState.Idle;
+            
+            // Check current inventory status
+            RecipeDef selectedRecipe = GetSelectedRecipe();
+            if (selectedRecipe != null)
+            {
+                var neededItems = GetNeededItemsForRecipe(selectedRecipe);
+                Debug.Log($"[FABRICATOR] Inventory updated. Still need: {string.Join(", ", neededItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
+                
+                // Check if we now have all items needed for the recipe
+                CheckIfReadyToProcess();
+            }
         }
         else
         {
-            Debug.LogWarning($"Could not find item {item.id} in waiting queue.");
+            Debug.LogWarning($"[FABRICATOR] Could not find item {item.id} in waiting queue");
         }
     }
 
@@ -219,7 +293,10 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void StartFabricatorProcessing(RecipeDef recipe)
     {
-        Debug.Log($"Fabricator {machineDef.id} starting processing for recipe with output {recipe.outputItems[0].item}");
+        Debug.Log($"[FABRICATOR] Starting processing for recipe: {recipe.outputItems[0].item}");
+        
+        // Log current inventory before consumption
+        Debug.Log($"[FABRICATOR] Current inventory: {string.Join(", ", cellData.items.Select(i => i.itemType))}");
         
         // Consume input items
         foreach (var inputReq in recipe.inputItems)
@@ -229,6 +306,7 @@ public class FabricatorMachine : ProcessorMachine
             {
                 if (cellData.items[i].itemType == inputReq.item)
                 {
+                    Debug.Log($"[FABRICATOR] Consuming {cellData.items[i].itemType} (id: {cellData.items[i].id})");
                     cellData.items.RemoveAt(i);
                     consumed++;
                 }
@@ -236,8 +314,12 @@ public class FabricatorMachine : ProcessorMachine
             
             if (consumed < inputReq.count)
             {
-                Debug.LogError($"Fabricator {machineDef.id} couldn't consume enough {inputReq.item} items (needed {inputReq.count}, got {consumed})");
+                Debug.LogError($"[FABRICATOR] ERROR: Couldn't consume enough {inputReq.item} items (needed {inputReq.count}, got {consumed})");
                 return;
+            }
+            else
+            {
+                Debug.Log($"[FABRICATOR] Successfully consumed {consumed}x {inputReq.item}");
             }
         }
         
@@ -256,6 +338,6 @@ public class FabricatorMachine : ProcessorMachine
         cellData.items.Add(processingItem);
         cellData.machineState = MachineState.Processing;
         
-        Debug.Log($"Fabricator processing started, will complete in {recipe.processTime}s");
+        Debug.Log($"[FABRICATOR] Processing started, will complete in {recipe.processTime}s and output {recipe.outputItems[0].item}");
     }
 }

@@ -89,13 +89,11 @@ public class UIGridManager : MonoBehaviour
                 CellData cellData = GetCellData(x, y);
                 if (cellData != null)
                 {
-                    Debug.Log($"Cell ({x}, {y}) has data: role={cellData.cellRole}, type={cellData.cellType}, machineDefId={cellData.machineDefId}");
                     cellScript.SetCellRole(cellData.cellRole);
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
                 }
                 else
                 {
-                    Debug.Log($"Cell ({x}, {y}) has no data - creating as blank cell");
                     cellScript.SetCellRole(CellRole.Grid);
                     cellScript.SetCellType(CellType.Blank, Direction.Up);
                 }

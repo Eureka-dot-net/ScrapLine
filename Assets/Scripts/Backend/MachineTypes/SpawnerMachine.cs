@@ -124,8 +124,6 @@ public class SpawnerMachine : BaseMachine
 
         cellData.items.Add(newItem);
 
-        Debug.Log($"Created item {newItem.id} ({itemType}) at spawner ({cellData.x}, {cellData.y}). Remaining items in crate: {GetTotalItemsInWasteCrate()}");
-
         // Tell visual manager to create visual representation
         UIGridManager gridManager = Object.FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)

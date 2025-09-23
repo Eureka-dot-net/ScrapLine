@@ -22,7 +22,6 @@ public class ProcessorMachine : BaseMachine
             // Assign stack index based on queue position
             item.stackIndex = cellData.waitingItems.Count;
             cellData.waitingItems.Add(item);
-            Debug.Log($"Item {item.id} has been added to the waiting queue of processor {machineDef.id}. Queue size: {cellData.waitingItems.Count}, Stack index: {item.stackIndex}");
         }
     }
     
@@ -49,9 +48,7 @@ public class ProcessorMachine : BaseMachine
                 //waitingItem.moveStartTime = Time.time; // Restart the timer
                 
                 // Set machine state to processing to prevent it from pulling another item
-                cellData.machineState = MachineState.Processing; 
-
-                Debug.Log($"Processor {machineDef.id} is pulling in item {waitingItem.id} from the border.");
+                cellData.machineState = MachineState.Processing;
                 
                 // Note: We don't remove the item from waitingItems here because it will be removed
                 // in OnItemArrived when it fully reaches the machine. This allows the visual
@@ -175,7 +172,7 @@ public class ProcessorMachine : BaseMachine
                 gridManager.DestroyVisualItem(item.id);
             }
             
-            Debug.Log($"Started processing item {item.id} ({item.itemType}) → {recipe.outputItems[0].item} in {item.processingDuration}s");
+            cellData.machineState = MachineState.Processing;
         }
         else
         {
@@ -208,8 +205,6 @@ public class ProcessorMachine : BaseMachine
     /// </summary>
     private void CompleteProcessing(ItemData item)
     {
-        Debug.Log($"Completed processing item {item.id} ({item.itemType}) after {item.processingDuration}s");
-        
         RecipeDef recipe = GetRecipeForItem(item.itemType);
         if (recipe != null)
         {
@@ -248,8 +243,6 @@ public class ProcessorMachine : BaseMachine
                     {
                         gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
                     }
-                    
-                    Debug.Log($"Created output item {newItem.id} ({outputItem.item}) from {item.itemType}");
                     
                     // Immediately try to start movement of the newly created item
                     TryStartMove(newItem);
@@ -296,7 +289,6 @@ public class ProcessorMachine : BaseMachine
     {
         // When an item fully arrives in this cell, it means it completed the second half of its move.
         // It is already in the waitingItems queue, so we just need to start processing it.
-        Debug.Log($"Item {item.id} has fully arrived at processor {machineDef.id}. Starting processing.");
         
         // We find the item in the waiting queue and process it
         ItemData itemToProcess = cellData.waitingItems.Find(i => i.id == item.id);
