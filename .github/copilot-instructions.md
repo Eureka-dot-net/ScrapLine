@@ -447,4 +447,93 @@ Based on Unity 6 LTS documentation and industry standards:
 - Conveyor materials use shared materials for performance
 - Grid cells are pooled objects, avoid creating/destroying frequently
 
+## Central Logging System (MANDATORY)
+
+**CRITICAL: Components MUST NOT use Debug.Log directly. All logging must go through the central LoggingManager.**
+
+### Logging Rules (STRICTLY ENFORCED)
+1. **NEVER use Debug.Log, Debug.LogWarning, or Debug.LogError directly in any component**
+2. **ALWAYS use GameLogger static methods for all logging**
+3. **ALWAYS provide a componentId for state-change detection when logging from machines/managers**
+4. **ALWAYS call GameLogger.NotifyStateChange() when component state changes significantly**
+
+### Required Logging Usage Patterns
+
+#### Basic Logging:
+```csharp
+// Use category-specific convenience methods
+GameLogger.LogMovement("Item moved to new position", componentId);
+GameLogger.LogFabricator("Recipe processing started", componentId);
+GameLogger.LogProcessor("Shredding aluminum can", componentId);
+GameLogger.LogGrid("Cell placement validated", componentId);
+GameLogger.LogMachine("Machine upgraded successfully", componentId);
+GameLogger.LogEconomy("Credits awarded for sale", componentId);
+
+// Or use generic method with category
+GameLogger.Log(LoggingManager.LogCategory.Movement, "Custom message", componentId);
+GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Invalid placement", componentId);
+GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "File corrupted", componentId);
+```
+
+#### Component ID Format:
+```csharp
+// For machines: "MachineType_X_Y" (grid coordinates)
+private string ComponentId => $"Fabricator_{cellData.x}_{cellData.y}";
+private string ComponentId => $"Conveyor_{cellData.x}_{cellData.y}";
+
+// For managers: "ManagerName_InstanceId" 
+private string ComponentId => $"GridManager_{GetInstanceID()}";
+private string ComponentId => $"SaveLoadManager_{GetInstanceID()}";
+
+// For UI: "UIComponent_SpecificId"
+private string ComponentId => $"MachineButton_{machineDefId}";
+```
+
+#### State Change Notification:
+```csharp
+// Call when significant state changes occur
+cellData.machineState = MachineState.Processing;
+GameLogger.NotifyStateChange(ComponentId); // Allows next log to show
+GameLogger.LogFabricator("Started processing recipe", ComponentId);
+```
+
+### Available Log Categories:
+- **Movement**: Item movement, conveyor logic, pathfinding
+- **Fabricator**: Complex recipe processing, multi-input logic  
+- **Processor**: Single-input processing (shredders, granulators)
+- **Grid**: Cell placement, rotation, validation, highlighting
+- **UI**: Button clicks, state changes, user interactions
+- **SaveLoad**: Data persistence, file operations, serialization
+- **Machine**: Placement, upgrades, state changes, refunds
+- **Economy**: Credits, costs, transactions, balance changes
+- **Spawning**: Item generation, spawn timing, spawn limits
+- **Selling**: Item removal, credit awarding, sell validation
+- **Debug**: General debugging, test scenarios, validation
+
+### LoggingManager Configuration:
+- Runtime enable/disable per category via Unity Inspector
+- State-change detection prevents duplicate messages
+- Configurable timeout for duplicate suppression
+- Timestamps and category prefixes available
+- Performance optimized with early exit when categories disabled
+
+### Testing Logging:
+```csharp
+// Check if category is enabled before expensive string operations
+if (GameLogger.IsCategoryEnabled(LoggingManager.LogCategory.Movement))
+{
+    string expensiveDebugInfo = GenerateDetailedMovementReport();
+    GameLogger.LogMovement(expensiveDebugInfo, ComponentId);
+}
+
+// Enable/disable categories at runtime for debugging
+GameLogger.SetCategoryEnabled(LoggingManager.LogCategory.Fabricator, true);
+```
+
+### Violation Detection:
+- Any PR using Debug.Log* directly will be rejected
+- Components must use GameLogger for ALL logging
+- Missing componentId for machine/manager logging is a code review violation
+- Failure to call NotifyStateChange for significant state changes reduces debugging effectiveness
+
 **FINAL REMINDER: Unity operations are time-intensive. NEVER cancel builds, imports, or compilation processes. Always allow adequate time for completion and set appropriate timeouts (60+ minutes for builds, 30+ minutes for tests).**

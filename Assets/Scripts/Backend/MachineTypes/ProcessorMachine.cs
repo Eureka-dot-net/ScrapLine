@@ -7,6 +7,11 @@ using System.Collections.Generic;
 /// </summary>
 public class ProcessorMachine : BaseMachine
 {
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    protected string ComponentId => $"Processor_{cellData.x}_{cellData.y}";
+    
     public ProcessorMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
     }

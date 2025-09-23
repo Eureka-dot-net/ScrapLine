@@ -11,6 +11,11 @@ using System;
 /// </summary>
 public class FabricatorMachine : ProcessorMachine
 {
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"Fabricator_{cellData.x}_{cellData.y}";
+    
     public FabricatorMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
         // Fabricator machines can be configured to select specific recipes
@@ -30,7 +35,7 @@ public class FabricatorMachine : ProcessorMachine
         }
         else
         {
-            Debug.LogWarning("FabricatorMachineConfigUI not found in scene. Please add the UI component to configure fabricator machines.");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, "FabricatorMachineConfigUI not found in scene. Please add the UI component to configure fabricator machines.", ComponentId);
             
             // Fallback: Set a default configuration for testing if there are any fabricator recipes
             var fabricatorRecipes = FactoryRegistry.Instance.GetRecipesForMachine(cellData.machineDefId);
@@ -38,7 +43,7 @@ public class FabricatorMachine : ProcessorMachine
             {
                 var defaultRecipe = fabricatorRecipes[0];
                 cellData.selectedRecipeId = GetRecipeId(defaultRecipe);
-                Debug.Log($"[FABRICATOR] Applied default recipe for testing: {defaultRecipe.outputItems[0].item}");
+                GameLogger.LogFabricator($"Applied default recipe for testing: {defaultRecipe.outputItems[0].item}", ComponentId);
             }
         }
     }
@@ -48,21 +53,24 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void OnConfigurationConfirmed(string selectedRecipeId)
     {
-        Debug.Log($"[FABRICATOR] Recipe selected: {selectedRecipeId}");
+        GameLogger.LogFabricator($"Recipe selected: {selectedRecipeId}", ComponentId);
         
         // The configuration UI already updates cellData.selectedRecipeId, but let's be explicit
         cellData.selectedRecipeId = selectedRecipeId;
         
+        // Notify state change since recipe selection is a significant state change
+        GameLogger.NotifyStateChange(ComponentId);
+        
         if (string.IsNullOrEmpty(selectedRecipeId))
         {
-            Debug.Log("[FABRICATOR] Recipe cleared - machine will not process items");
+            GameLogger.LogFabricator("Recipe cleared - machine will not process items", ComponentId);
         }
         else
         {
             RecipeDef recipe = GetSelectedRecipe();
             if (recipe != null && recipe.outputItems.Count > 0)
             {
-                Debug.Log($"[FABRICATOR] Will craft: {recipe.outputItems[0].item} (inputs: {string.Join(", ", recipe.inputItems.Select(i => $"{i.count}x {i.item}"))})");
+                GameLogger.LogFabricator($"Will craft: {recipe.outputItems[0].item} (inputs: {string.Join(", ", recipe.inputItems.Select(i => $"{i.count}x {i.item}"))})", ComponentId);
             }
         }
     }
@@ -82,7 +90,7 @@ public class FabricatorMachine : ProcessorMachine
         RecipeDef selectedRecipe = GetSelectedRecipe();
         if (selectedRecipe == null)
         {
-            Debug.LogWarning($"[FABRICATOR] Invalid recipe selected: {cellData.selectedRecipeId}");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, $"Invalid recipe selected: {cellData.selectedRecipeId}", ComponentId);
             return null;
         }
 
@@ -90,7 +98,7 @@ public class FabricatorMachine : ProcessorMachine
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
         if (neededItems.Count == 0)
         {
-            Debug.Log($"[FABRICATOR] All items collected for recipe, ready to process");
+            GameLogger.LogFabricator("All items collected for recipe, ready to process", ComponentId);
             return null; // We have everything we need
         }
 
@@ -99,7 +107,7 @@ public class FabricatorMachine : ProcessorMachine
         {
             if (neededItems.ContainsKey(waitingItem.itemType) && neededItems[waitingItem.itemType] > 0)
             {
-                Debug.Log($"[FABRICATOR] Found needed item: {waitingItem.itemType}");
+                GameLogger.LogFabricator($"Found needed item: {waitingItem.itemType}", ComponentId);
                 return waitingItem;
             }
         }
@@ -161,7 +169,7 @@ public class FabricatorMachine : ProcessorMachine
                 // Temporarily set to receiving to prevent other items from being pulled immediately
                 cellData.machineState = MachineState.Receiving;
                 
-                Debug.Log($"[FABRICATOR] Pulling {waitingItem.itemType}");
+                GameLogger.LogFabricator($"Pulling {waitingItem.itemType}", ComponentId);
                 
                 // Break after pulling one item to avoid pulling all at once
                 // The machine state will reset to Idle when the item arrives
@@ -190,7 +198,7 @@ public class FabricatorMachine : ProcessorMachine
             }
         }
         
-        Debug.LogWarning($"[FABRICATOR] Could not find recipe with ID: {cellData.selectedRecipeId}");
+        GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, "Could not find recipe with ID: {cellData.selectedRecipeId}", ComponentId);
         return null;
     }
 
@@ -217,8 +225,8 @@ public class FabricatorMachine : ProcessorMachine
             needed[input.item] = input.count;
         }
         
-        Debug.Log($"[FABRICATOR] Recipe requires: {string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
-        Debug.Log($"[FABRICATOR] Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]");
+        GameLogger.LogFabricator("Recipe requires: {string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}", ComponentId);
+        GameLogger.LogFabricator("Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]", ComponentId);
         
         // Count available items by type (excluding processing items)
         var availableItems = new Dictionary<string, int>();
@@ -227,7 +235,7 @@ public class FabricatorMachine : ProcessorMachine
             // Skip processing items - they don't count as inventory
             if (item.state == ItemState.Processing) 
             {
-                Debug.Log($"[FABRICATOR] Skipping processing item: {item.itemType}");
+                GameLogger.LogFabricator("Skipping processing item: {item.itemType}", ComponentId);
                 continue;
             }
             
@@ -236,7 +244,7 @@ public class FabricatorMachine : ProcessorMachine
             availableItems[item.itemType]++;
         }
         
-        Debug.Log($"[FABRICATOR] Available items: [{string.Join(", ", availableItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}]");
+        GameLogger.LogFabricator("Available items: [{string.Join(", ", availableItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}]", ComponentId);
         
         // Subtract available items from needed items
         foreach (var kvp in availableItems)
@@ -250,7 +258,7 @@ public class FabricatorMachine : ProcessorMachine
                 int usedCount = Math.Min(neededCount, availableCount);
                 needed[itemType] -= usedCount;
                 
-                Debug.Log($"[FABRICATOR] Using {usedCount}x {itemType} (have {availableCount}, need {neededCount}, remaining need: {needed[itemType]})");
+                GameLogger.LogFabricator("Using {usedCount}x {itemType} (have {availableCount}, need {neededCount}, remaining need: {needed[itemType]})", ComponentId);
                 
                 if (needed[itemType] <= 0)
                 {
@@ -259,16 +267,16 @@ public class FabricatorMachine : ProcessorMachine
                 
                 if (availableCount > neededCount)
                 {
-                    Debug.Log($"[FABRICATOR] Extra {itemType} in inventory: {availableCount - neededCount}x not needed for recipe");
+                    GameLogger.LogFabricator("Extra {itemType} in inventory: {availableCount - neededCount}x not needed for recipe", ComponentId);
                 }
             }
             else
             {
-                Debug.Log($"[FABRICATOR] Extra item type in inventory (not needed for recipe): {availableCount}x {itemType}");
+                GameLogger.LogFabricator("Extra item type in inventory (not needed for recipe): {availableCount}x {itemType}", ComponentId);
             }
         }
         
-        Debug.Log($"[FABRICATOR] Still need: [{string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}]");
+        GameLogger.LogFabricator("Still need: [{string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}]", ComponentId);
         return needed;
     }
 
@@ -277,7 +285,7 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     public override void OnItemArrived(ItemData item)
     {
-        Debug.Log($"[FABRICATOR] Item {item.itemType} (id: {item.id}) arrived");
+        GameLogger.LogFabricator("Item {item.itemType} (id: {item.id}) arrived", ComponentId);
         
         // Find and remove the item from waiting queue
         ItemData itemToProcess = cellData.waitingItems.Find(i => i.id == item.id);
@@ -289,7 +297,7 @@ public class FabricatorMachine : ProcessorMachine
             
             // NOTE: ItemMovementManager already added the item to cellData.items
             // DO NOT add it again here or we'll get duplicates!
-            Debug.Log($"[FABRICATOR] ✓ Item {item.itemType} added to inventory (total items: {cellData.items.Count})");
+            GameLogger.LogFabricator("✓ Item {item.itemType} added to inventory (total items: {cellData.items.Count})", ComponentId);
             
             // Destroy visual item since it's now in the machine
             UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
@@ -309,7 +317,7 @@ public class FabricatorMachine : ProcessorMachine
         }
         else
         {
-            Debug.LogWarning($"[FABRICATOR] ❌ Could not find item {item.id} in waiting queue");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, "❌ Could not find item {item.id} in waiting queue", ComponentId);
         }
     }
 
@@ -318,47 +326,47 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void CheckIfReadyToProcess()
     {
-        Debug.Log($"[FABRICATOR] === CHECKING READINESS ===");
-        Debug.Log($"[FABRICATOR] Machine state: {cellData.machineState}");
-        Debug.Log($"[FABRICATOR] Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
-        Debug.Log($"[FABRICATOR] Waiting queue: [{string.Join(", ", cellData.waitingItems.Select(i => $"{i.itemType} id:{i.id}"))}]");
+        GameLogger.LogFabricator("=== CHECKING READINESS ===", ComponentId);
+        GameLogger.LogFabricator("Machine state: {cellData.machineState}", ComponentId);
+        GameLogger.LogFabricator("Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]", ComponentId);
+        GameLogger.LogFabricator("Waiting queue: [{string.Join(", ", cellData.waitingItems.Select(i => $"{i.itemType} id:{i.id}"))}]", ComponentId);
         
         // CRITICAL: Double check machine state to prevent race conditions
         if (cellData.machineState != MachineState.Idle) 
         {
-            Debug.Log($"[FABRICATOR] ❌ BLOCKED - machine state is {cellData.machineState}, not Idle");
-            Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - MACHINE BUSY ===");
+            GameLogger.LogFabricator("❌ BLOCKED - machine state is {cellData.machineState}, not Idle", ComponentId);
+            GameLogger.LogFabricator("=== READINESS CHECK COMPLETE - MACHINE BUSY ===", ComponentId);
             return;
         }
         
         RecipeDef selectedRecipe = GetSelectedRecipe();
         if (selectedRecipe == null) 
         {
-            Debug.LogWarning($"[FABRICATOR] ❌ BLOCKED - No recipe selected");
-            Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - NO RECIPE ===");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, "❌ BLOCKED - No recipe selected", ComponentId);
+            GameLogger.LogFabricator("=== READINESS CHECK COMPLETE - NO RECIPE ===", ComponentId);
             return;
         }
         
-        Debug.Log($"[FABRICATOR] Recipe requirements: {string.Join(", ", selectedRecipe.inputItems.Select(i => $"{i.count}x {i.item}"))} → {string.Join(", ", selectedRecipe.outputItems.Select(o => $"{o.count}x {o.item}"))}");
+        GameLogger.LogFabricator("Recipe requirements: {string.Join(", ", selectedRecipe.inputItems.Select(i => $"{i.count}x {i.item}"))} → {string.Join(", ", selectedRecipe.outputItems.Select(o => $"{o.count}x {o.item}"))}", ComponentId);
         
         // CRITICAL: Validate ingredients one more time right before processing
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
-        Debug.Log($"[FABRICATOR] Ingredient validation result: need {neededItems.Count} more item types");
+        GameLogger.LogFabricator("Ingredient validation result: need {neededItems.Count} more item types", ComponentId);
         
         if (neededItems.Count == 0)
         {
             // CRITICAL: Set machine state IMMEDIATELY to prevent multiple processing starts
-            Debug.Log($"[FABRICATOR] ✓ All ingredients validated - SETTING MACHINE TO RECEIVING to prevent double processing");
+            GameLogger.LogFabricator("✓ All ingredients validated - SETTING MACHINE TO RECEIVING to prevent double processing", ComponentId);
             cellData.machineState = MachineState.Receiving;
             
-            Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - STARTING PROCESSING ===");
+            GameLogger.LogFabricator("=== READINESS CHECK COMPLETE - STARTING PROCESSING ===", ComponentId);
             // We have all items needed - start processing
             StartFabricatorProcessing(selectedRecipe);
         }
         else
         {
-            Debug.Log($"[FABRICATOR] ✗ Not ready to process - still missing: {string.Join(", ", neededItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
-            Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - NOT READY ===");
+            GameLogger.LogFabricator("✗ Not ready to process - still missing: {string.Join(", ", neededItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}", ComponentId);
+            GameLogger.LogFabricator("=== READINESS CHECK COMPLETE - NOT READY ===", ComponentId);
         }
     }
 
@@ -375,7 +383,7 @@ public class FabricatorMachine : ProcessorMachine
                 float processingElapsed = Time.time - item.processingStartTime;
                 if (processingElapsed >= item.processingDuration)
                 {
-                    Debug.Log($"[FABRICATOR] Processing complete for {item.itemType}");
+                    GameLogger.LogFabricator("Processing complete for {item.itemType}", ComponentId);
                     CompleteFabricatorProcessing(item);
                     return;
                 }
@@ -388,12 +396,12 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void CompleteFabricatorProcessing(ItemData processingItem)
     {
-        Debug.Log($"[FABRICATOR] === COMPLETION STARTED ===");
-        Debug.Log($"[FABRICATOR] Inventory before completion: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]");
+        GameLogger.LogFabricator("=== COMPLETION STARTED ===", ComponentId);
+        GameLogger.LogFabricator("Inventory before completion: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]", ComponentId);
         
         // Remove the processing item
         cellData.items.Remove(processingItem);
-        Debug.Log($"[FABRICATOR] Removed processing item: {processingItem.itemType} (id: {processingItem.id})");
+        GameLogger.LogFabricator("Removed processing item: {processingItem.itemType} (id: {processingItem.id})", ComponentId);
         
         // Create output items
         RecipeDef selectedRecipe = GetSelectedRecipe();
@@ -425,7 +433,7 @@ public class FabricatorMachine : ProcessorMachine
                         gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
                     }
                     
-                    Debug.Log($"[FABRICATOR] Created output: {newItem.itemType} (id: {newItem.id})");
+                    GameLogger.LogFabricator("Created output: {newItem.itemType} (id: {newItem.id})", ComponentId);
                     
                     // Try to start movement of the newly created item
                     TryStartMove(newItem);
@@ -435,9 +443,9 @@ public class FabricatorMachine : ProcessorMachine
         
         // Reset machine state to Idle so it can start the next recipe cycle
         cellData.machineState = MachineState.Idle;
-        Debug.Log($"[FABRICATOR] Inventory after completion: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]");
-        Debug.Log($"[FABRICATOR] Waiting queue: [{string.Join(", ", cellData.waitingItems.Select(i => i.itemType))}]");
-        Debug.Log($"[FABRICATOR] === COMPLETION FINISHED - READY FOR NEXT CYCLE ===");
+        GameLogger.LogFabricator("Inventory after completion: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]", ComponentId);
+        GameLogger.LogFabricator("Waiting queue: [{string.Join(", ", cellData.waitingItems.Select(i => i.itemType))}]", ComponentId);
+        GameLogger.LogFabricator("=== COMPLETION FINISHED - READY FOR NEXT CYCLE ===", ComponentId);
     }
 
     /// <summary>
@@ -445,44 +453,44 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void StartFabricatorProcessing(RecipeDef recipe)
     {
-        Debug.Log($"[FABRICATOR] === STARTING PROCESSING ===");
-        Debug.Log($"[FABRICATOR] Starting processing for recipe: {recipe.outputItems[0].item}");
-        Debug.Log($"[FABRICATOR] Machine state at start: {cellData.machineState}");
+        GameLogger.LogFabricator("=== STARTING PROCESSING ===", ComponentId);
+        GameLogger.LogFabricator("Starting processing for recipe: {recipe.outputItems[0].item}", ComponentId);
+        GameLogger.LogFabricator("Machine state at start: {cellData.machineState}", ComponentId);
         
         // CRITICAL: Final state check to prevent race conditions
         if (cellData.machineState == MachineState.Processing)
         {
-            Debug.LogError($"[FABRICATOR] CRITICAL ERROR: Already processing! Aborting to prevent duplicate processing.");
+            GameLogger.LogError(LoggingManager.LogCategory.Fabricator, "CRITICAL ERROR: Already processing! Aborting to prevent duplicate processing.", ComponentId);
             return;
         }
         
         // Log current inventory before consumption
-        Debug.Log($"[FABRICATOR] Inventory before consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
+        GameLogger.LogFabricator("Inventory before consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]", ComponentId);
         
         // CRITICAL: Final ingredient validation before consumption
         var finalValidation = GetNeededItemsForRecipe(recipe);
         if (finalValidation.Count > 0)
         {
-            Debug.LogError($"[FABRICATOR] CRITICAL ERROR: Ingredients missing at processing start! Missing: {string.Join(", ", finalValidation.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
-            Debug.LogError($"[FABRICATOR] This should NEVER happen - resetting machine to Idle");
+            GameLogger.LogError(LoggingManager.LogCategory.Fabricator, "CRITICAL ERROR: Ingredients missing at processing start! Missing: {string.Join(", ", finalValidation.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.Fabricator, "This should NEVER happen - resetting machine to Idle", ComponentId);
             cellData.machineState = MachineState.Idle;
             return;
         }
         
-        Debug.Log($"[FABRICATOR] ✓ Final ingredient validation passed - proceeding with consumption");
+        GameLogger.LogFabricator("✓ Final ingredient validation passed - proceeding with consumption", ComponentId);
         
         // Consume input items
         foreach (var inputReq in recipe.inputItems)
         {
             int consumed = 0;
-            Debug.Log($"[FABRICATOR] Need to consume {inputReq.count}x {inputReq.item}");
+            GameLogger.LogFabricator("Need to consume {inputReq.count}x {inputReq.item}", ComponentId);
             
             for (int i = cellData.items.Count - 1; i >= 0 && consumed < inputReq.count; i--)
             {
                 // Also ensure we only consume Idle items (not Processing items from previous cycles)
         if (cellData.items[i].itemType == inputReq.item && cellData.items[i].state == ItemState.Idle)
                 {
-                    Debug.Log($"[FABRICATOR] Consuming {cellData.items[i].itemType} (id: {cellData.items[i].id}, state: {cellData.items[i].state})");
+                    GameLogger.LogFabricator("Consuming {cellData.items[i].itemType} (id: {cellData.items[i].id}, state: {cellData.items[i].state})", ComponentId);
                     cellData.items.RemoveAt(i);
                     consumed++;
                 }
@@ -490,19 +498,19 @@ public class FabricatorMachine : ProcessorMachine
             
             if (consumed < inputReq.count)
             {
-                Debug.LogError($"[FABRICATOR] CRITICAL ERROR: Couldn't consume enough {inputReq.item} items (needed {inputReq.count}, got {consumed})");
-                Debug.LogError($"[FABRICATOR] Inventory during failed consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
-                Debug.LogError($"[FABRICATOR] Resetting machine to Idle state");
+                GameLogger.LogError(LoggingManager.LogCategory.Fabricator, "CRITICAL ERROR: Couldn't consume enough {inputReq.item} items (needed {inputReq.count}, got {consumed})", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.Fabricator, "Inventory during failed consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.Fabricator, "Resetting machine to Idle state", ComponentId);
                 cellData.machineState = MachineState.Idle;
                 return;
             }
             else
             {
-                Debug.Log($"[FABRICATOR] ✓ Successfully consumed {consumed}x {inputReq.item}");
+                GameLogger.LogFabricator("✓ Successfully consumed {consumed}x {inputReq.item}", ComponentId);
             }
         }
         
-        Debug.Log($"[FABRICATOR] Inventory after consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
+        GameLogger.LogFabricator("Inventory after consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]", ComponentId);
         
         // Create a processing item to track the operation
         ItemData processingItem = new ItemData
@@ -519,10 +527,10 @@ public class FabricatorMachine : ProcessorMachine
         cellData.items.Add(processingItem);
         cellData.machineState = MachineState.Processing;
         
-        Debug.Log($"[FABRICATOR] ✓ Created processing item: {processingItem.itemType} (id: {processingItem.id})");
-        Debug.Log($"[FABRICATOR] ✓ Machine state set to Processing");
-        Debug.Log($"[FABRICATOR] ✓ Processing will complete in {recipe.processTime}s and output {recipe.outputItems[0].item}");
-        Debug.Log($"[FABRICATOR] Final inventory after processing start: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
-        Debug.Log($"[FABRICATOR] === PROCESSING STARTED SUCCESSFULLY ===");
+        GameLogger.LogFabricator("✓ Created processing item: {processingItem.itemType} (id: {processingItem.id})", ComponentId);
+        GameLogger.LogFabricator("✓ Machine state set to Processing", ComponentId);
+        GameLogger.LogFabricator("✓ Processing will complete in {recipe.processTime}s and output {recipe.outputItems[0].item}", ComponentId);
+        GameLogger.LogFabricator("Final inventory after processing start: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]", ComponentId);
+        GameLogger.LogFabricator("=== PROCESSING STARTED SUCCESSFULLY ===", ComponentId);
     }
 }
