@@ -4,6 +4,7 @@
     { "id": "plasticBottle", "displayName": "Plastic Bottle", "sprite": "plasticBottle", "sellValue": 5 },
     { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shreddedAluminum", "sellValue": 15 },
     { "id": "granulatedPlastic", "displayName": "Granulated Plastic", "sprite": "granulatedPlastic", "sellValue": 15 },
-    { "id": "aluminumPlate", "displayName": "Aluminum Plate", "sprite": "aluminumPlate", "sellValue": 30 }
+    { "id": "aluminumPlate", "displayName": "Aluminum Plate", "sprite": "aluminumPlate", "sellValue": 30 },
+    { "id": "reinforcedAluminumPlate", "displayName": "Reinforced Aluminum Plate", "sprite": "reinforcedAluminumPlate", "sellValue": 75 }
   ]
 }

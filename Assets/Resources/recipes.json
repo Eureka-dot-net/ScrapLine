@@ -40,13 +40,13 @@
     "processMultiplier": 2
   },
   {
-    "machineId": "crafter",
+    "machineId": "fabricator",
     "inputItems": [
-      { "item": "plastic", "count": 1 },
-      { "item": "copper", "count": 2 }
+      { "item": "aluminumPlate", "count": 1 },
+      { "item": "granulatedPlastic", "count": 2 }
     ],
     "outputItems": [
-      { "item": "motherboard", "count": 1 }
+      { "item": "reinforcedAluminumPlate", "count": 1 }
     ],
     "processMultiplier": 3
   }
