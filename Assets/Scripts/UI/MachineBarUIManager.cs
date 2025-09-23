@@ -46,6 +46,8 @@ public class MachineBarUIManager : MonoBehaviour
     public void OnTabSelected(Button selectedTab)
     {
         ClearSelection();
+        GameManager.Instance.SetEditMode(false);
+
         var tabs = new[] { buildTabButton, manageTabButton };
         foreach (var tab in tabs)
         {
@@ -218,6 +220,7 @@ public class MachineBarUIManager : MonoBehaviour
         {
             GameManager.Instance.SetSelectedMachine(null);
         }
+        
     }
 
     public MachineDef GetSelectedMachine()

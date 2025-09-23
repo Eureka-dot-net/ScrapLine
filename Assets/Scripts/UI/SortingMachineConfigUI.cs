@@ -306,6 +306,8 @@ public class SortingMachineConfigUI : MonoBehaviour
         // Call the callback
         onConfigurationConfirmed?.Invoke(selectedLeftItemId, selectedRightItemId);
 
+       
+
         // Hide the configuration panel
         HideConfiguration();
     }

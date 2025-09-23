@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: fe8000d8b3d9923488bc62ae4db84516
+guid: 00b6c38eab73ab047be18014cac753eb
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5272407660488337665
-    second: reinforcedAluminiumPlate_0
+      213: 8711169661718987118
+    second: junkYard_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: reinforcedAluminiumPlate_0
+      name: junkYard_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 64
-        height: 64
+        y: 1
+        width: 63
+        height: 62
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 109a47235da5b2940800000000000000
-      internalID: 5272407660488337665
+      spriteID: e618be057aa44e870800000000000000
+      internalID: 8711169661718987118
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      reinforcedAluminiumPlate_0: 5272407660488337665
+      junkYard_0: 8711169661718987118
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

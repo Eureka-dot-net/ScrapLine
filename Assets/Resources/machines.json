@@ -85,6 +85,8 @@
             "isMoving": true,
             "borderSprite": null,
             "buildingSprite": "Machine_border",
+            "buildingIconSprite": "junkYard",
+            "buildingIconSpriteSize": 0.6,
             "buildingDirection": 0,
             "baseProcessTime": 5,
             "upgradeMultipliers": [
@@ -229,7 +231,7 @@
             "buildingIconSprite": "platePress",
              "buildingIconSpriteSize": 0.6,
             "buildingSpriteColour": "#008080",
-            "baseProcessTime": 15,
+            "baseProcessTime": 10,
             "gridPlacement": [
                 "grid"
             ],
@@ -248,7 +250,7 @@
             "buildingIconSprite": "granulator",
             "buildingIconSpriteSize": 0.6,
             "buildingSpriteColour": "#008080",
-            "baseProcessTime": 15,
+            "baseProcessTime": 10,
             "gridPlacement": [
                 "grid"
             ],

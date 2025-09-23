@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: a1b2dc3f997696b4ba3387b3f0aad187
+guid: cc0ffa4bd46add34797d7dc06c3f42ca
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6528714388833236115
-    second: aluminiumPlate_0
+      213: -8461994943457701942
+    second: reinforcedAluminumPlate_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: aluminiumPlate_0
+      name: reinforcedAluminumPlate_0
       rect:
         serializedVersion: 2
         x: 0
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d6b0d9d9ad85565a0800000000000000
-      internalID: -6528714388833236115
+      spriteID: acf4d08be64f09a80800000000000000
+      internalID: -8461994943457701942
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      aluminiumPlate_0: -6528714388833236115
+      reinforcedAluminumPlate_0: -8461994943457701942
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
