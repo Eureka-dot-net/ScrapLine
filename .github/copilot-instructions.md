@@ -8,9 +8,111 @@
 
 ScrapLine is a Unity 6000.2.3f1 (Unity 6 LTS) mobile-first factory automation game where players build conveyor belt systems to process scrap materials. The game features a touch-optimized grid-based building system with machines (shredders, spawners, sellers), conveyors, and item processing mechanics. Players can place items like aluminum cans and process them into shredded aluminum using various machines in a factory layout, all optimized for mobile devices.
 
+## CRITICAL: ScriptSandbox Development Workflow
+
+**ALL script changes are incomplete until ScriptSandbox compiles successfully.**
+
+### ScriptSandbox Project Structure
+The repository now contains two main projects:
+```
+/home/runner/work/ScrapLine/
+├── ScriptSandbox/          # C# compilation sandbox (REQUIRED)
+│   ├── Unity/              # Mock Unity classes
+│   ├── Scripts/            # All Unity scripts copied here
+│   ├── Tests/              # Unit tests for script logic
+│   └── ScriptSandbox.csproj
+└── ScrapLine/             # Unity project
+    └── Assets/Scripts/    # Original Unity scripts
+```
+
+### Mandatory Script Development Process
+
+1. **All script changes MUST be validated in ScriptSandbox first**
+2. **No script modifications are complete without ScriptSandbox compilation**
+3. **When modifying any Unity script:**
+   - Make changes in both `ScrapLine/Assets/Scripts/` AND `ScriptSandbox/Scripts/`
+   - Compile ScriptSandbox: `cd /home/runner/work/ScrapLine/ScriptSandbox && dotnet build`
+   - Add/update unit tests in `ScriptSandbox/Tests/`
+   - Ensure ScriptSandbox compiles without errors before proceeding
+
+### ScriptSandbox Commands
+
+**Build and validate scripts:**
+```bash
+cd /home/runner/work/ScrapLine/ScriptSandbox
+dotnet build --verbosity minimal
+```
+
+**Run unit tests:**
+```bash
+cd /home/runner/work/ScrapLine/ScriptSandbox
+dotnet test --verbosity minimal
+```
+
+**Update scripts after Unity changes:**
+```bash
+cd /home/runner/work/ScrapLine/ScriptSandbox
+cp -r ../ScrapLine/Assets/Scripts/* Scripts/
+dotnet build
+```
+
+### When to Update ScriptSandbox
+
+- **ALWAYS** after modifying any C# script in Unity
+- When adding new Unity scripts
+- When changing script dependencies or imports
+- Before committing any script changes
+- When encountering compilation errors in Unity
+
+### ScriptSandbox Mock Classes
+
+The ScriptSandbox contains comprehensive mock implementations of:
+- UnityEngine core classes (MonoBehaviour, GameObject, Transform, etc.)
+- Unity UI classes (Button, Image, Text, Canvas, etc.)  
+- TextMeshPro classes (TextMeshProUGUI, TMP_Text, etc.)
+- Unity utilities (Resources, Application, PlayerPrefs, etc.)
+
+If you encounter missing Unity classes during compilation:
+1. Add the missing class to the appropriate mock file in `ScriptSandbox/Unity/`
+2. Ensure the mock provides basic functionality needed by the scripts
+3. Test compilation after adding mocks
+
+### Required Testing in ScriptSandbox
+
+When changing scripts, MUST add basic unit tests covering:
+- Class instantiation works
+- Basic method calls don't throw exceptions
+- Core business logic functions correctly
+- Data model serialization/deserialization
+
+**Example test structure:**
+```csharp
+[Test]
+public void NewFeature_BasicFunctionality()
+{
+    // Arrange
+    var testData = new TestDataClass();
+    
+    // Act & Assert
+    Assert.DoesNotThrow(() => testData.NewMethod());
+    Assert.IsNotNull(testData.Result);
+}
+```
+
 ## Working Effectively
 
-### Unity Installation and Setup (CRITICAL - NEVER CANCEL)
+### Primary Development: ScriptSandbox Validation
+**ALWAYS use ScriptSandbox for script development and validation before Unity testing.**
+
+ScriptSandbox provides:
+- Fast compilation validation (seconds vs minutes)
+- Unit testing capability outside Unity
+- Continuous integration friendly
+- No Unity installation required for basic script validation
+
+### Secondary: Unity Installation and Setup (When Required)
+**Only needed for full Unity builds and scene testing. Use ScriptSandbox for daily script development.**
+
 **WARNING: Unity installation and builds can take 45+ minutes. NEVER CANCEL long-running operations.**
 
 - **Install Unity Hub:**
@@ -106,16 +208,35 @@ python3 -m json.tool /home/runner/work/ScrapLine/ScrapLine/Assets/Resources/mach
 python3 -m json.tool /home/runner/work/ScrapLine/ScrapLine/Assets/Resources/recipes.json > /dev/null && echo "recipes.json valid" || echo "recipes.json invalid"
 ```
 
-### Limited Environment Workarounds
-If Unity installation fails due to network restrictions:
+### ScriptSandbox Validation (Primary Method)
+**PREFERRED method for script validation - use this first.**
 
-1. **Documentation Review:** Always study existing scripts and configuration files
-2. **Syntax Validation:** Use .NET to validate C# syntax for basic errors
-3. **JSON Validation:** Always validate resource files before committing
-4. **Logic Review:** Manually trace through game logic in scripts
-5. **Configuration Validation:** Check Unity asset files for obvious syntax errors
+```bash
+# Comprehensive script validation (takes 5-15 seconds)
+cd /home/runner/work/ScrapLine/ScriptSandbox
+dotnet build --verbosity minimal
 
-**IMPORTANT:** In restricted environments, document installation limitations clearly but still provide complete instructions for normal development environments.
+# Run unit tests for logic validation
+dotnet test --verbosity minimal
+
+# Update scripts from Unity project
+cp -r ../ScrapLine/Assets/Scripts/* Scripts/
+dotnet build
+```
+
+### Legacy Validation Methods (Deprecated)
+~~Limited Environment Workarounds are replaced by ScriptSandbox which provides comprehensive validation without Unity installation.~~
+
+**ScriptSandbox replaces these old methods:**
+- ~~Documentation Review~~ → ScriptSandbox provides actual compilation validation
+- ~~Syntax Validation with basic .NET~~ → ScriptSandbox validates actual Unity scripts  
+- ~~Manual Logic Review~~ → ScriptSandbox supports unit testing of logic
+- ~~Configuration Validation~~ → ScriptSandbox validates script interdependencies
+
+**Still valid:**
+- JSON Validation for resource files (see above)
+
+**IMPORTANT:** ScriptSandbox works in all environments and provides superior validation to manual methods.
 
 ## Game-Specific Knowledge
 

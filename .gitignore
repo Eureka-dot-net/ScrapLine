@@ -1,32 +1,15 @@
-Library
-[Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
-[Ll]ogs/
-[Uu]ser[Ss]ettings/
-MemoryCaptures/
-*.csproj
-*.unityproj
-*.sln
-*.suo
-*.tmp
-*.user
-*.userprefs
-*.pidb
-*.booproj
-*.svd
-*.pdb
-*.mdb
-*.opendb
-*.VC.db
-*.pidb.meta
-*.pdb.meta
-*.mdb.meta
-*.opendb.meta
-*.VC.db.meta
-.vs/
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
+# Repository-level .gitignore for both projects
+
+# ScriptSandbox build artifacts
+ScriptSandbox/bin/
+ScriptSandbox/obj/
+
+# Unity-specific files (already in ScrapLine/.gitignore)
+ScrapLine/Library/
+ScrapLine/[Tt]emp/
+ScrapLine/[Oo]bj/
+ScrapLine/[Bb]uild/
+ScrapLine/[Bb]uilds/
+ScrapLine/[Ll]ogs/
+ScrapLine/[Uu]ser[Ss]ettings/
+ScrapLine/MemoryCaptures/

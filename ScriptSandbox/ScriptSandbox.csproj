@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+  </ItemGroup>
+
+  <!-- Unity Mock Classes -->
+  <ItemGroup>
+    <Compile Include="Unity\*.cs" />
+  </ItemGroup>
+
+  <!-- Unity Scripts (referenced, not copied) -->
+  <ItemGroup>
+    <Compile Include="Scripts\**\*.cs" Exclude="Scripts\**\*.meta" />
+  </ItemGroup>
+
+  <!-- Test Files -->
+  <ItemGroup>
+    <Compile Include="Tests\**\*.cs" />
+  </ItemGroup>
+
+</Project>
