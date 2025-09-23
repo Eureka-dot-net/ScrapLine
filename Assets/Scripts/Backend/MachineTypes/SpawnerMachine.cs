@@ -10,6 +10,7 @@ public class SpawnerMachine : BaseMachine
     private float lastSpawnTime;
     private float spawnInterval;
     
+    /// <summary>    /// Get the component ID for logging purposes    /// </summary>    protected string ComponentId => $"Spawner_{cellData.x}_{cellData.y}"; 
     public SpawnerMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
         // Set spawn interval from machine definition
@@ -102,7 +103,7 @@ public class SpawnerMachine : BaseMachine
         
         if (string.IsNullOrEmpty(itemType))
         {
-            Debug.LogWarning($"Spawner at ({cellData.x}, {cellData.y}) has no items in waste crate to spawn");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "Spawner at ({cellData.x}, {cellData.y}) has no items in waste crate to spawn", ComponentId);
             return;
         }
 
@@ -169,7 +170,7 @@ public class SpawnerMachine : BaseMachine
     {
         // Spawners don't handle incoming items
         // Items shouldn't arrive at spawners in normal gameplay
-        Debug.LogWarning($"Item {item.id} arrived at spawner - this shouldn't happen");
+        GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "Item {item.id} arrived at spawner - this shouldn't happen", ComponentId);
     }
     
     /// <summary>
@@ -178,6 +179,6 @@ public class SpawnerMachine : BaseMachine
     public override void ProcessItem(ItemData item)
     {
         // Spawners don't process items
-        Debug.LogWarning($"Attempted to process item {item.id} at spawner - this shouldn't happen");
+        GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "Attempted to process item {item.id} at spawner - this shouldn't happen", ComponentId);
     }
 }

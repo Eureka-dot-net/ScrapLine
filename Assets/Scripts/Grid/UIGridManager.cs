@@ -197,7 +197,7 @@ public class UIGridManager : MonoBehaviour
     {
         if (cellScripts == null || gridData == null)
         {
-            Debug.LogError("UIGridManager is not initialized. Cannot update visuals.");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "UIGridManager is not initialized. Cannot update visuals.", ComponentId);
             return;
         }
 
@@ -212,7 +212,7 @@ public class UIGridManager : MonoBehaviour
     {
         if (cellScripts == null || gridData == null)
         {
-            Debug.LogError("Cannot highlight - grid not initialized");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot highlight - grid not initialized", ComponentId);
             return;
         }
 
@@ -253,7 +253,7 @@ public class UIGridManager : MonoBehaviour
     {
         if (cellScripts == null || gridData == null)
         {
-            Debug.LogError("Cannot highlight configurable machines - grid not initialized");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot highlight configurable machines - grid not initialized", ComponentId);
             return;
         }
 
@@ -371,14 +371,14 @@ public class UIGridManager : MonoBehaviour
         UICell cell = GetCell(x, y);
         if (cell == null)
         {
-            Debug.LogError($"Cannot create visual item - cell at ({x}, {y}) not found");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot create visual item - cell at ({x}, {y}) not found", ComponentId);
             return;
         }
 
         // Check if item already exists
         if (visualItems.ContainsKey(itemId))
         {
-            Debug.LogWarning($"Visual item {itemId} already exists!");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Visual item {itemId} already exists!", ComponentId);
             return;
         }
 
@@ -386,7 +386,7 @@ public class UIGridManager : MonoBehaviour
         RectTransform targetContainer = itemsContainer != null ? itemsContainer : movingItemsContainer;
         if (targetContainer == null)
         {
-            Debug.LogError("No container available for visual items");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "No container available for visual items", ComponentId);
             return;
         }
 
@@ -442,13 +442,13 @@ public class UIGridManager : MonoBehaviour
             else
             {
                 // Sprite not found - set fallback color and log warning
-                Debug.LogWarning($"Sprite not found for item type '{itemType}' at path: {spritePath}");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Sprite not found for item type '{itemType}' at path: {spritePath}", ComponentId);
                 itemImage.color = Color.magenta; // Make it obvious something is wrong
             }
         }
         else
         {
-            Debug.LogWarning($"No Image component found on item prefab for item type: {itemType}");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "No Image component found on item prefab for item type: {itemType}", ComponentId);
         }
     }
 
@@ -462,7 +462,7 @@ public class UIGridManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"Cannot destroy visual item {itemId} - not found");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Cannot destroy visual item {itemId} - not found", ComponentId);
         }
     }
 
@@ -481,7 +481,7 @@ public class UIGridManager : MonoBehaviour
     {
         if (!visualItems.TryGetValue(itemId, out GameObject item) || item == null)
         {
-            Debug.LogWarning($"Cannot update position for visual item {itemId} - not found");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Cannot update position for visual item {itemId} - not found", ComponentId);
             return;
         }
 
@@ -490,7 +490,7 @@ public class UIGridManager : MonoBehaviour
 
         if (startCell == null || endCell == null)
         {
-            Debug.LogError($"Cannot update item position - invalid cell coordinates");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot update item position - invalid cell coordinates", ComponentId);
             return;
         }
 
@@ -632,7 +632,7 @@ public class UIGridManager : MonoBehaviour
             return position;
         }
 
-        Debug.LogWarning($"GetCellWorldPosition({x}, {y}) failed - returning zero");
+        GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "GetCellWorldPosition({x}, {y}) failed - returning zero", ComponentId);
         return Vector3.zero;
     }
 

@@ -11,7 +11,7 @@ public class CreditsUI : MonoBehaviour
         // Automatically grabs the TMP_Text on the same GameObject
         creditsText = GetComponent<TMP_Text>();
         if (creditsText == null)
-            Debug.LogError("[CreditsUI] No TMP_Text found on this GameObject!");
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "[CreditsUI] No TMP_Text found on this GameObject!", ComponentId);
     }
 
     public void UpdateCredits(int amount)

@@ -43,7 +43,7 @@ public class FactoryRegistry
         }
         catch
         {
-            Debug.LogWarning("Failed to load recipes from JSON, using empty list");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "Failed to load recipes from JSON, using empty list", ComponentId);
             Recipes = new List<RecipeDef>();
         }
 
@@ -65,7 +65,7 @@ public class FactoryRegistry
             }
             catch
             {
-                Debug.LogWarning("Failed to load wastecrates from JSON, using empty dictionary");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "Failed to load wastecrates from JSON, using empty dictionary", ComponentId);
             }
         }
     }

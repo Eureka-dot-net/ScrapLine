@@ -143,7 +143,7 @@ public class SortingMachineConfigUI : MonoBehaviour
     {
         if (itemButtonContainer == null || itemButtonPrefab == null)
         {
-            Debug.LogError("SortingMachineConfigUI: Item button container or prefab not assigned!");
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "SortingMachineConfigUI: Item button container or prefab not assigned!", ComponentId);
             return;
         }
 

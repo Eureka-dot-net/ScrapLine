@@ -114,7 +114,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             }
             else
             {
-                Debug.LogError($"Could not find machine definition for: {defIdToUse}");
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, "Could not find machine definition for: {defIdToUse}", ComponentId);
             }
         }
     }
@@ -192,13 +192,13 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             }
             else
             {
-                Debug.LogError($"Failed to get machine data for cell ({x}, {y})");
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, "Failed to get machine data for cell ({x}, {y})", ComponentId);
                 return;
             }
         }
         else
         {
-            Debug.LogError("Could not find UIGridManager for storing machine data");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Could not find UIGridManager for storing machine data", ComponentId);
             return;
         }
 
@@ -227,7 +227,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
         else
         {
-            Debug.LogError("Failed to create drag visual!");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Failed to create drag visual!", ComponentId);
             return;
         }
         // Now blank the original cell immediately (both data and visuals)
@@ -306,14 +306,14 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     {
         if (string.IsNullOrEmpty(draggedMachineDefId))
         {
-            Debug.LogWarning($"Cannot restore machine to cell ({x}, {y}) - no stored machine data");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, "Cannot restore machine to cell ({x}, {y}) - no stored machine data", ComponentId);
             return;
         }
 
         bool restoreSuccess = GameManager.Instance.PlaceDraggedMachine(x, y, draggedMachineDefId, draggedMachineDirection);
         if (!restoreSuccess)
         {
-            Debug.LogError($"Failed to restore machine {draggedMachineDefId} to original cell ({x}, {y})");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Failed to restore machine {draggedMachineDefId} to original cell ({x}, {y})", ComponentId);
         }
         else
         {
@@ -343,7 +343,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     {
         if (string.IsNullOrEmpty(draggedMachineDefId))
         {
-            Debug.LogError("CreateDragVisual: No machine data stored");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "CreateDragVisual: No machine data stored", ComponentId);
             return;
         }
 
@@ -353,7 +353,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         if (targetCanvas == null)
         {
-            Debug.LogError("Could not find Canvas for drag visual");
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, "Could not find Canvas for drag visual", ComponentId);
             return;
         }
 

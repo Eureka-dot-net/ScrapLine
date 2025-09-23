@@ -91,7 +91,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
         else
             gameObject.SetActive(true);
 
-        Debug.Log($"Showing fabricator configuration UI for machine at ({cellData.x}, {cellData.y})");
+        GameLogger.Log(LoggingManager.LogCategory.UI, "Showing fabricator configuration UI for machine at ({cellData.x}, {cellData.y})", ComponentId);
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
         if (recipeSelectionPanel != null)
             recipeSelectionPanel.SetActive(true);
         
-        Debug.Log("Showing recipe selection for fabricator configuration");
+        GameLogger.Log(LoggingManager.LogCategory.UI, "Showing recipe selection for fabricator configuration", ComponentId);
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
     {
         if (recipeButtonContainer == null || recipeButtonPrefab == null)
         {
-            Debug.LogError("FabricatorMachineConfigUI: Recipe button container or prefab not assigned!");
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "FabricatorMachineConfigUI: Recipe button container or prefab not assigned!", ComponentId);
             return;
         }
 
@@ -162,7 +162,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("FactoryRegistry not available or currentCellData is null");
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "FactoryRegistry not available or currentCellData is null", ComponentId);
         }
     }
 
@@ -226,7 +226,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
         // Hide the recipe selection panel
         HideRecipeSelection();
         
-        Debug.Log($"Selected recipe '{recipeId}' for fabricator configuration");
+        GameLogger.Log(LoggingManager.LogCategory.UI, "Selected recipe '{recipeId}' for fabricator configuration", ComponentId);
     }
 
     /// <summary>
@@ -297,7 +297,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
 
     private void OnConfirmClicked()
     {
-        Debug.Log($"Fabricator configuration confirmed: Recipe={selectedRecipeId}");
+        GameLogger.Log(LoggingManager.LogCategory.UI, "Fabricator configuration confirmed: Recipe={selectedRecipeId}", ComponentId);
 
         // Update the cell data
         if (currentCellData != null)
@@ -314,7 +314,7 @@ public class FabricatorMachineConfigUI : MonoBehaviour
 
     private void OnCancelClicked()
     {
-        Debug.Log("Fabricator configuration cancelled");
+        GameLogger.Log(LoggingManager.LogCategory.UI, "Fabricator configuration cancelled", ComponentId);
         HideConfiguration();
     }
 

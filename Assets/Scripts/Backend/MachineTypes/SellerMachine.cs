@@ -6,6 +6,7 @@ using UnityEngine;
 /// </summary>
 public class SellerMachine : BaseMachine
 {
+    /// <summary>    /// Get the component ID for logging purposes    /// </summary>    protected string ComponentId => $"Seller_{cellData.x}_{cellData.y}"; 
     public SellerMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
     }

@@ -179,7 +179,7 @@ public class ProcessorMachine : BaseMachine
         }
         else
         {
-            Debug.LogError($"No recipe found for item {item.itemType} in processor {machineDef.id}");
+            GameLogger.LogError(LoggingManager.LogCategory.Processor, $"No recipe found for item {item.itemType} in processor {machineDef.id}", ComponentId);
         }
     }
     
@@ -254,7 +254,7 @@ public class ProcessorMachine : BaseMachine
         }
         else
         {
-            Debug.LogError($"Recipe not found when completing processing for machine {machineDef.id} with item {item.itemType}");
+            GameLogger.LogError(LoggingManager.LogCategory.Processor, $"Recipe not found when completing processing for machine {machineDef.id} with item {item.itemType}", ComponentId);
         }
         
         // Set machine state back to idle so it can accept new items
@@ -310,7 +310,7 @@ public class ProcessorMachine : BaseMachine
         }
         else
         {
-            Debug.LogWarning($"Could not find item {item.id} in waiting queue to process.");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Processor, $"Could not find item {item.id} in waiting queue to process.", ComponentId);
         }
     }
     

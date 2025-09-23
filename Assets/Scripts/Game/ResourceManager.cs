@@ -31,7 +31,7 @@ public class ResourceManager : MonoBehaviour
         TextAsset machinesAsset = Resources.Load<TextAsset>("machines");
         if (machinesAsset == null)
         {
-            Debug.LogError("Failed to load machines.json resource!");
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, "Failed to load machines.json resource!", ComponentId);
             return;
         }
         string machinesJson = machinesAsset.text;
@@ -39,7 +39,7 @@ public class ResourceManager : MonoBehaviour
         TextAsset recipesAsset = Resources.Load<TextAsset>("recipes");
         if (recipesAsset == null)
         {
-            Debug.LogError("Failed to load recipes.json resource!");
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, "Failed to load recipes.json resource!", ComponentId);
             return;
         }
         string recipesJson = recipesAsset.text;
@@ -47,7 +47,7 @@ public class ResourceManager : MonoBehaviour
         TextAsset itemsAsset = Resources.Load<TextAsset>("items");
         if (itemsAsset == null)
         {
-            Debug.LogError("Failed to load items.json resource!");
+            GameLogger.LogError(LoggingManager.LogCategory.Debug, "Failed to load items.json resource!", ComponentId);
             return;
         }
         string itemsJson = itemsAsset.text;
@@ -61,7 +61,7 @@ public class ResourceManager : MonoBehaviour
         else
         {
             if (enableResourceLogs)
-                Debug.LogWarning("wastecrates.json resource not found - WasteCrates will be disabled");
+                GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "wastecrates.json resource not found - WasteCrates will be disabled", ComponentId);
         }
 
         FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson, wastecratesJson);
@@ -79,13 +79,13 @@ public class ResourceManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("MachineBarUIManager not found in scene!");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "MachineBarUIManager not found in scene!", ComponentId);
         }
 
         creditsUI = FindFirstObjectByType<CreditsUI>();
         if (creditsUI == null)
         {
-            Debug.LogWarning("CreditsUI not found in scene!");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "CreditsUI not found in scene!", ComponentId);
         }
     }
 

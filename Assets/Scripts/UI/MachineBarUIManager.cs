@@ -124,7 +124,7 @@ public class MachineBarUIManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"MachineRenderer not found on prefab for machine '{machine.id}'");
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "MachineRenderer not found on prefab for machine '{machine.id}'", ComponentId);
             }
         }
     }
@@ -229,7 +229,7 @@ public class MachineBarUIManager : MonoBehaviour
     {
         if (GameManager.Instance == null)
         {
-            Debug.LogWarning("GameManager.Instance is null, cannot update machine affordability");
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "GameManager.Instance is null, cannot update machine affordability", ComponentId);
             return;
         }
 

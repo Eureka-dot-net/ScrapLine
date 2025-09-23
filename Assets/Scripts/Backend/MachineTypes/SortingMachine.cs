@@ -7,6 +7,7 @@ using static UICell;
 /// </summary>
 public class SortingMachine : BaseMachine
 {
+    /// <summary>    /// Get the component ID for logging purposes    /// </summary>    protected string ComponentId => $"Sorting_{cellData.x}_{cellData.y}"; 
     public SortingMachine(CellData cellData, MachineDef machineDef) : base(cellData, machineDef)
     {
         // Sorting machines can be configured 
@@ -25,7 +26,7 @@ public class SortingMachine : BaseMachine
         }
         else
         {
-            Debug.LogWarning("SortingMachineConfigUI not found in scene. Please add the UI component to configure sorting machines.");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Processor, "SortingMachineConfigUI not found in scene. Please add the UI component to configure sorting machines.", ComponentId);
             
             // Fallback: Set some default configuration for testing
             if (cellData.sortingConfig == null)

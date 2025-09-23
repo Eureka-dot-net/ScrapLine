@@ -17,6 +17,11 @@ public class SaveLoadManager : MonoBehaviour
 
     private GridManager gridManager;
     private CreditsManager creditsManager;
+    
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"SaveLoadManager_{GetInstanceID()}";
 
     /// <summary>
     /// Initialize the save/load manager
@@ -70,7 +75,7 @@ public class SaveLoadManager : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Failed to save game: {ex.Message}");
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to save game: {ex.Message}", ComponentId);
         }
     }
 
@@ -94,7 +99,7 @@ public class SaveLoadManager : MonoBehaviour
             
             if (data == null)
             {
-                Debug.LogError("Failed to deserialize save data!");
+                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to deserialize save data!", ComponentId);
                 return false;
             }
 
@@ -111,7 +116,7 @@ public class SaveLoadManager : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Failed to load game: {ex.Message}");
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to load game: {ex.Message}", ComponentId);
             return false;
         }
     }
@@ -126,7 +131,7 @@ public class SaveLoadManager : MonoBehaviour
         GridData currentGrid = gridManager.GetCurrentGrid();
         if (currentGrid == null)
         {
-            Debug.LogError("No current grid available for machine initialization!");
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "No current grid available for machine initialization!", ComponentId);
             yield break;
         }
 
@@ -158,7 +163,7 @@ public class SaveLoadManager : MonoBehaviour
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"Failed to delete save file: {ex.Message}");
+                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, "Failed to delete save file: {ex.Message}", ComponentId);
             }
         }
     }
