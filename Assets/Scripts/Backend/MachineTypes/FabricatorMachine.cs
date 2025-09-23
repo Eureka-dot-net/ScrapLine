@@ -139,8 +139,11 @@ public class FabricatorMachine : ProcessorMachine
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
         if (neededItems.Count == 0)
         {
-            // We have all items - check if ready to process
-            CheckIfReadyToProcess();
+            // We have all items - check if ready to process (but only if machine is Idle)
+            if (cellData.machineState == MachineState.Idle)
+            {
+                CheckIfReadyToProcess();
+            }
             return;
         }
         
@@ -297,8 +300,11 @@ public class FabricatorMachine : ProcessorMachine
             // Reset state to Idle so we can pull more items if needed
             cellData.machineState = MachineState.Idle;
             
-            // Check if we now have all items needed for the recipe
-            CheckIfReadyToProcess();
+            // Check if we now have all items needed for the recipe (but only if machine is Idle)
+            if (cellData.machineState == MachineState.Idle)
+            {
+                CheckIfReadyToProcess();
+            }
         }
         else
         {
@@ -313,37 +319,44 @@ public class FabricatorMachine : ProcessorMachine
     {
         Debug.Log($"[FABRICATOR] === CHECKING READINESS ===");
         Debug.Log($"[FABRICATOR] Machine state: {cellData.machineState}");
-        Debug.Log($"[FABRICATOR] Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]");
-        Debug.Log($"[FABRICATOR] Waiting queue: [{string.Join(", ", cellData.waitingItems.Select(i => i.itemType))}]");
+        Debug.Log($"[FABRICATOR] Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
+        Debug.Log($"[FABRICATOR] Waiting queue: [{string.Join(", ", cellData.waitingItems.Select(i => $"{i.itemType} id:{i.id}"))}]");
         
+        // CRITICAL: Double check machine state to prevent race conditions
         if (cellData.machineState != MachineState.Idle) 
         {
-            Debug.Log($"[FABRICATOR] Not checking readiness - machine state is {cellData.machineState}");
+            Debug.Log($"[FABRICATOR] ❌ BLOCKED - machine state is {cellData.machineState}, not Idle");
+            Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - MACHINE BUSY ===");
             return;
         }
         
         RecipeDef selectedRecipe = GetSelectedRecipe();
         if (selectedRecipe == null) 
         {
-            Debug.LogWarning($"[FABRICATOR] No recipe selected - cannot process");
+            Debug.LogWarning($"[FABRICATOR] ❌ BLOCKED - No recipe selected");
+            Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - NO RECIPE ===");
             return;
         }
         
-        Debug.Log($"[FABRICATOR] Checking readiness for recipe: {string.Join(", ", selectedRecipe.inputItems.Select(i => $"{i.count}x {i.item}"))} → {string.Join(", ", selectedRecipe.outputItems.Select(o => $"{o.count}x {o.item}"))}");
+        Debug.Log($"[FABRICATOR] Recipe requirements: {string.Join(", ", selectedRecipe.inputItems.Select(i => $"{i.count}x {i.item}"))} → {string.Join(", ", selectedRecipe.outputItems.Select(o => $"{o.count}x {o.item}"))}");
         
+        // CRITICAL: Validate ingredients one more time right before processing
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
-        Debug.Log($"[FABRICATOR] Need {neededItems.Count} more item types to start processing");
+        Debug.Log($"[FABRICATOR] Ingredient validation result: need {neededItems.Count} more item types");
         
         if (neededItems.Count == 0)
         {
-            Debug.Log($"[FABRICATOR] ✓ All inputs ready - starting processing!");
+            // CRITICAL: Set machine state IMMEDIATELY to prevent multiple processing starts
+            Debug.Log($"[FABRICATOR] ✓ All ingredients validated - SETTING MACHINE TO RECEIVING to prevent double processing");
+            cellData.machineState = MachineState.Receiving;
+            
             Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - STARTING PROCESSING ===");
             // We have all items needed - start processing
             StartFabricatorProcessing(selectedRecipe);
         }
         else
         {
-            Debug.Log($"[FABRICATOR] ✗ Not ready to process - still missing items");
+            Debug.Log($"[FABRICATOR] ✗ Not ready to process - still missing: {string.Join(", ", neededItems.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
             Debug.Log($"[FABRICATOR] === READINESS CHECK COMPLETE - NOT READY ===");
         }
     }
@@ -433,9 +446,29 @@ public class FabricatorMachine : ProcessorMachine
     {
         Debug.Log($"[FABRICATOR] === STARTING PROCESSING ===");
         Debug.Log($"[FABRICATOR] Starting processing for recipe: {recipe.outputItems[0].item}");
+        Debug.Log($"[FABRICATOR] Machine state at start: {cellData.machineState}");
+        
+        // CRITICAL: Final state check to prevent race conditions
+        if (cellData.machineState == MachineState.Processing)
+        {
+            Debug.LogError($"[FABRICATOR] CRITICAL ERROR: Already processing! Aborting to prevent duplicate processing.");
+            return;
+        }
         
         // Log current inventory before consumption
         Debug.Log($"[FABRICATOR] Inventory before consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
+        
+        // CRITICAL: Final ingredient validation before consumption
+        var finalValidation = GetNeededItemsForRecipe(recipe);
+        if (finalValidation.Count > 0)
+        {
+            Debug.LogError($"[FABRICATOR] CRITICAL ERROR: Ingredients missing at processing start! Missing: {string.Join(", ", finalValidation.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
+            Debug.LogError($"[FABRICATOR] This should NEVER happen - resetting machine to Idle");
+            cellData.machineState = MachineState.Idle;
+            return;
+        }
+        
+        Debug.Log($"[FABRICATOR] ✓ Final ingredient validation passed - proceeding with consumption");
         
         // Consume input items
         foreach (var inputReq in recipe.inputItems)
@@ -445,9 +478,10 @@ public class FabricatorMachine : ProcessorMachine
             
             for (int i = cellData.items.Count - 1; i >= 0 && consumed < inputReq.count; i--)
             {
-                if (cellData.items[i].itemType == inputReq.item)
+                // Also ensure we only consume Idle items (not Processing items from previous cycles)
+        if (cellData.items[i].itemType == inputReq.item && cellData.items[i].state == ItemState.Idle)
                 {
-                    Debug.Log($"[FABRICATOR] Consuming {cellData.items[i].itemType} (id: {cellData.items[i].id})");
+                    Debug.Log($"[FABRICATOR] Consuming {cellData.items[i].itemType} (id: {cellData.items[i].id}, state: {cellData.items[i].state})");
                     cellData.items.RemoveAt(i);
                     consumed++;
                 }
@@ -455,13 +489,15 @@ public class FabricatorMachine : ProcessorMachine
             
             if (consumed < inputReq.count)
             {
-                Debug.LogError($"[FABRICATOR] ERROR: Couldn't consume enough {inputReq.item} items (needed {inputReq.count}, got {consumed})");
-                Debug.Log($"[FABRICATOR] Inventory during failed consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
+                Debug.LogError($"[FABRICATOR] CRITICAL ERROR: Couldn't consume enough {inputReq.item} items (needed {inputReq.count}, got {consumed})");
+                Debug.LogError($"[FABRICATOR] Inventory during failed consumption: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
+                Debug.LogError($"[FABRICATOR] Resetting machine to Idle state");
+                cellData.machineState = MachineState.Idle;
                 return;
             }
             else
             {
-                Debug.Log($"[FABRICATOR] Successfully consumed {consumed}x {inputReq.item}");
+                Debug.Log($"[FABRICATOR] ✓ Successfully consumed {consumed}x {inputReq.item}");
             }
         }
         
@@ -482,9 +518,10 @@ public class FabricatorMachine : ProcessorMachine
         cellData.items.Add(processingItem);
         cellData.machineState = MachineState.Processing;
         
-        Debug.Log($"[FABRICATOR] Created processing item: {processingItem.itemType} (id: {processingItem.id})");
-        Debug.Log($"[FABRICATOR] Processing started, will complete in {recipe.processTime}s and output {recipe.outputItems[0].item}");
+        Debug.Log($"[FABRICATOR] ✓ Created processing item: {processingItem.itemType} (id: {processingItem.id})");
+        Debug.Log($"[FABRICATOR] ✓ Machine state set to Processing");
+        Debug.Log($"[FABRICATOR] ✓ Processing will complete in {recipe.processTime}s and output {recipe.outputItems[0].item}");
         Debug.Log($"[FABRICATOR] Final inventory after processing start: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]");
-        Debug.Log($"[FABRICATOR] === PROCESSING STARTED ===");
+        Debug.Log($"[FABRICATOR] === PROCESSING STARTED SUCCESSFULLY ===");
     }
 }
