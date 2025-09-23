@@ -213,22 +213,35 @@ public class FabricatorMachine : ProcessorMachine
             needed[input.item] = input.count;
         }
         
+        Debug.Log($"[FABRICATOR] Recipe requires: {string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}");
+        Debug.Log($"[FABRICATOR] Current inventory: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state})"))}]");
+        
         // Subtract items we already have in the machine
         foreach (var item in cellData.items)
         {
             // Skip processing items - they don't count as inventory
-            if (item.state == ItemState.Processing) continue;
+            if (item.state == ItemState.Processing) 
+            {
+                Debug.Log($"[FABRICATOR] Skipping processing item: {item.itemType}");
+                continue;
+            }
             
             if (needed.ContainsKey(item.itemType))
             {
                 needed[item.itemType]--;
+                Debug.Log($"[FABRICATOR] Found {item.itemType}, now need {needed[item.itemType]} more");
                 if (needed[item.itemType] <= 0)
                 {
                     needed.Remove(item.itemType);
                 }
             }
+            else
+            {
+                Debug.Log($"[FABRICATOR] Extra item in inventory (not needed for recipe): {item.itemType}");
+            }
         }
         
+        Debug.Log($"[FABRICATOR] Still need: [{string.Join(", ", needed.Select(kvp => $"{kvp.Value}x {kvp.Key}"))}]");
         return needed;
     }
 
@@ -274,19 +287,33 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void CheckIfReadyToProcess()
     {
-        if (cellData.machineState != MachineState.Idle) return;
+        if (cellData.machineState != MachineState.Idle) 
+        {
+            Debug.Log($"[FABRICATOR] Not checking readiness - machine state is {cellData.machineState}");
+            return;
+        }
         
         RecipeDef selectedRecipe = GetSelectedRecipe();
-        if (selectedRecipe == null) return;
+        if (selectedRecipe == null) 
+        {
+            Debug.LogWarning($"[FABRICATOR] No recipe selected - cannot process");
+            return;
+        }
         
-        Debug.Log($"[FABRICATOR] Using recipe: {string.Join(", ", selectedRecipe.inputItems.Select(i => $"{i.count}x {i.item}"))} → {string.Join(", ", selectedRecipe.outputItems.Select(o => $"{o.count}x {o.item}"))}");
+        Debug.Log($"[FABRICATOR] Checking readiness for recipe: {string.Join(", ", selectedRecipe.inputItems.Select(i => $"{i.count}x {i.item}"))} → {string.Join(", ", selectedRecipe.outputItems.Select(o => $"{o.count}x {o.item}"))}");
         
         var neededItems = GetNeededItemsForRecipe(selectedRecipe);
+        Debug.Log($"[FABRICATOR] Need {neededItems.Count} more item types to start processing");
+        
         if (neededItems.Count == 0)
         {
-            Debug.Log($"[FABRICATOR] All inputs ready - starting processing. Current inventory: {string.Join(", ", cellData.items.Select(i => i.itemType))}");
+            Debug.Log($"[FABRICATOR] ✓ All inputs ready - starting processing!");
             // We have all items needed - start processing
             StartFabricatorProcessing(selectedRecipe);
+        }
+        else
+        {
+            Debug.Log($"[FABRICATOR] ✗ Not ready to process - still missing items");
         }
     }
 
