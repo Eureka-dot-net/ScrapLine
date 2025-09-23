@@ -17,7 +17,7 @@
     "outputItems": [
       { "item": "shreddedIron", "count": 3 }
     ],
-    "processMultiplier": 2
+    "processMultiplier": 1
   },
   {
     "machineId": "granulator",
@@ -27,17 +27,17 @@
     "outputItems": [
       { "item": "granulatedPlastic", "count": 1 }
     ],
-    "processMultiplier": 2
+    "processMultiplier": 1
   },
   {
-    "machineId": "platePress",
+    "machineId": "plate_press",
     "inputItems": [
       { "item": "shreddedAluminum", "count": 1 }
     ],
     "outputItems": [
       { "item": "aluminumPlate", "count": 1 }
     ],
-    "processMultiplier": 2
+    "processMultiplier": 1
   },
   {
     "machineId": "fabricator",
@@ -48,6 +48,17 @@
     "outputItems": [
       { "item": "reinforcedAluminumPlate", "count": 1 }
     ],
-    "processMultiplier": 3
+    "processMultiplier": 1
+  },
+  {
+    "machineId": "fabricator",
+    "inputItems": [
+      { "item": "can", "count": 1 },
+      { "item": "plasticBottle", "count": 1 }
+    ],
+    "outputItems": [
+      { "item": "aluminumPlate", "count": 1 }
+    ],
+    "processMultiplier": 0.5
   }
 ]

@@ -40,8 +40,6 @@ public class BlankCellMachine : BaseMachine
                 
                 if (timeOnCell >= itemTimeoutDuration)
                 {
-                    Debug.Log($"Item {item.id} timed out on blank cell at ({cellData.x}, {cellData.y}) - removing");
-                    
                     cellData.items.RemoveAt(i);
                     
                     if (gridManager != null && gridManager.HasVisualItem(item.id))

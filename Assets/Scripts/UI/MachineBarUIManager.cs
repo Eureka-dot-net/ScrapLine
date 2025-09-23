@@ -27,7 +27,6 @@ public class MachineBarUIManager : MonoBehaviour
 
     void Awake()
     {
-        Debug.Log("Awake called on MachineBarUIManager");
     }
 
     void Start()
@@ -65,17 +64,14 @@ public class MachineBarUIManager : MonoBehaviour
 
     public void InitBar()
     {
-        Debug.Log("Initializing Machine Bar UI");
         foreach (var machine in FactoryRegistry.Instance.Machines.Values)
         {
             // Skip machines that shouldn't be displayed in panel
             if (!machine.displayInPanel)
             {
-                Debug.Log($"Skipping machine '{machine.id}' - displayInPanel is false");
                 continue;
             }
 
-            Debug.Log($"Creating machine: {machine.id}");
             GameObject buttonObj = Instantiate(machineButtonPrefab, machineBarPanel);
 
             RectTransform parentRect = machineBarPanel.GetComponent<RectTransform>();
@@ -98,7 +94,6 @@ public class MachineBarUIManager : MonoBehaviour
             // layoutElement.preferredHeight = targetSize;
             // layoutElement.minHeight = targetSize;
             // layoutElement.minWidth = targetSize;
-            Debug.Log($"Set button size to {targetSize}x{targetSize}");
             // LayoutRebuilder.MarkLayoutForRebuild(buttonObj.GetComponent<RectTransform>());
 
             // Remove AspectRatioFitter to avoid conflicts
@@ -136,7 +131,6 @@ public class MachineBarUIManager : MonoBehaviour
 
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)
     {
-        Debug.Log($"Selected machine: {machineDef.id}");
 
         // If the same machine is clicked again, clear selection
         if (selectedMachine == machineDef)
@@ -267,7 +261,6 @@ public class MachineBarUIManager : MonoBehaviour
                 // Log affordability status
                 if (!canAfford)
                 {
-                    Debug.Log($"Machine {machineDef.id} disabled - costs {machineDef.cost}, player has {GameManager.Instance.GetCredits()} credits");
                 }
             }
         }
@@ -277,7 +270,6 @@ public class MachineBarUIManager : MonoBehaviour
     {
         // Toggle the state
         isInEditMode = !isInEditMode;
-        Debug.Log($"Edit Mode is now: {isInEditMode}");
 
         if (isInEditMode)
         {

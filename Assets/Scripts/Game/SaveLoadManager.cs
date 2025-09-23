@@ -14,7 +14,6 @@ public class SaveLoadManager : MonoBehaviour
     
     [Header("Debug")]
     [Tooltip("Enable debug logs for save/load operations")]
-    public bool enableSaveLoadLogs = true;
 
     private GridManager gridManager;
     private CreditsManager creditsManager;
@@ -68,8 +67,6 @@ public class SaveLoadManager : MonoBehaviour
             string path = GetSaveFilePath();
             File.WriteAllText(path, json);
             
-            if (enableSaveLoadLogs)
-                Debug.Log($"Game saved with {data.credits} credits to location {path}!");
         }
         catch (System.Exception ex)
         {
@@ -109,9 +106,6 @@ public class SaveLoadManager : MonoBehaviour
 
             // Load factory registry data
             FactoryRegistry.Instance.LoadFromGameData(data);
-
-            if (enableSaveLoadLogs)
-                Debug.Log("Save game loaded successfully.");
 
             return true;
         }

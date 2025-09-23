@@ -108,7 +108,6 @@ public class SortingMachineConfigUI : MonoBehaviour
         else
             gameObject.SetActive(true);
 
-        Debug.Log($"Showing sorting configuration UI for machine at ({cellData.x}, {cellData.y})");
     }
 
     /// <summary>
@@ -126,7 +125,6 @@ public class SortingMachineConfigUI : MonoBehaviour
         if (itemSelectionPanel != null)
             itemSelectionPanel.SetActive(true);
         
-        Debug.Log($"Showing item selection for {(forLeft ? "left" : "right")} configuration");
     }
 
     /// <summary>
@@ -231,7 +229,6 @@ public class SortingMachineConfigUI : MonoBehaviour
         // Hide the item selection panel
         HideItemSelection();
         
-        Debug.Log($"Selected item '{itemId}' for {(isSelectingForLeft ? "left" : "right")} configuration");
     }
 
     /// <summary>
@@ -291,7 +288,6 @@ public class SortingMachineConfigUI : MonoBehaviour
 
     private void OnConfirmClicked()
     {
-        Debug.Log($"Sorting configuration confirmed: Left={selectedLeftItemId}, Right={selectedRightItemId}");
 
         // Update the cell data
         if (currentCellData != null)
@@ -314,7 +310,6 @@ public class SortingMachineConfigUI : MonoBehaviour
 
     private void OnCancelClicked()
     {
-        Debug.Log("Sorting configuration cancelled");
         HideConfiguration();
     }
 

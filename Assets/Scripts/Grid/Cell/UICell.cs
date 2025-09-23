@@ -58,7 +58,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
 
-        Debug.Log($"UICell Awake() - cell will be initialized with drag and drop support");
     }
 
     public void Init(int x, int y, UIGridManager gridManager, Texture conveyorTexture, Material conveyorMaterial)
@@ -69,24 +68,20 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         this.conveyorTexture = conveyorTexture;
         this.conveyorMaterial = conveyorMaterial;
 
-        Debug.Log($"UICell.Init({x}, {y}) - cell ready for machine setup and drag interactions");
     }
 
     public void SetCellRole(CellRole role)
     {
         cellRole = role;
-        Debug.Log($"Cell ({x}, {y}) role set to: {role}");
     }
 
     public void SetCellType(CellType type, Direction direction, string machineDefId = null)
     {
         cellType = type;
-        Debug.Log($"Setting cell ({x}, {y}) to type: {type}, direction: {direction}, machineDefId: {machineDefId}");
 
         // Clean up any existing renderer
         if (machineRenderer != null)
         {
-            Debug.Log($"Removing existing MachineRenderer from cell ({x}, {y})");
             DestroyImmediate(machineRenderer.gameObject);
             machineRenderer = null;
         }
@@ -99,15 +94,12 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             {
                 case CellRole.Top:
                     defIdToUse = "blank_top";
-                    Debug.Log($"Cell ({x}, {y}) is blank type with Top role - using 'blank_top' machine definition");
                     break;
                 case CellRole.Bottom:
                     defIdToUse = "blank_bottom";
-                    Debug.Log($"Cell ({x}, {y}) is blank type with Bottom role - using 'blank_bottom' machine definition");
                     break;
                 default:
                     defIdToUse = "blank";
-                    Debug.Log($"Cell ({x}, {y}) is blank type with Grid role - using 'blank' machine definition");
                     break;
             }
         }
@@ -118,7 +110,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             var machineDef = FactoryRegistry.Instance.GetMachine(defIdToUse);
             if (machineDef != null)
             {
-                Debug.Log($"Creating MachineRenderer for cell ({x}, {y}) with definition: {defIdToUse}");
                 SetupMachineRenderer(machineDef, direction);
             }
             else
@@ -143,7 +134,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         {
             ConveyorBelt conveyorBelt = rendererObj.AddComponent<ConveyorBelt>();
             conveyorBelt.SetConveyorDirection(direction);
-            Debug.Log($"Set ConveyorBelt direction to {direction} for machine '{def.id}' at cell ({x}, {y})");
         }
 
         machineRenderer = rendererObj.AddComponent<MachineRenderer>();
@@ -157,7 +147,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             movingPartMaterial: conveyorMaterial
         );
 
-        Debug.Log($"MachineRenderer setup complete for cell ({x}, {y}) with definition: {def.id}");
     }
 
     #region Pointer Event Handlers
@@ -168,7 +157,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         pointerDownTime = Time.time;
         dragStartPosition = eventData.position;
 
-        Debug.Log($"Pointer down on cell ({x}, {y}) at position {eventData.position}");
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -329,7 +317,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
         else
         {
-            Debug.Log($"Restored machine {draggedMachineDefId} to original cell ({x}, {y})");
         }
     }
 
@@ -343,7 +330,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
             if (clickTime <= clickTimeThreshold && clickDistance <= dragThreshold)
             {
-                Debug.Log($"Treating as click on cell ({x}, {y})");
                 GameManager.Instance.OnCellClicked(x, y);
             }
         }
@@ -499,7 +485,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             // Only log position updates when user is actively dragging (not on every frame)
             if (isDragging && Time.frameCount % 30 == 0) // Log every 30 frames (~0.5 sec)
             {
-                Debug.Log($"Drag position: Screen({eventData.position.x:F0},{eventData.position.y:F0}) -> Canvas({localPosition.x:F0},{localPosition.y:F0})");
             }
         }
     }
@@ -527,7 +512,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             UICell cell = result.gameObject.GetComponent<UICell>();
             if (cell != null)
             {
-                Debug.Log($"Found UICell at ({cell.x}, {cell.y}) under pointer");
                 return cell;
             }
 
@@ -535,12 +519,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             UICell parentCell = result.gameObject.GetComponentInParent<UICell>();
             if (parentCell != null)
             {
-                Debug.Log($"Found UICell in parent at ({parentCell.x}, {parentCell.y}) under pointer");
                 return parentCell;
             }
         }
 
-        Debug.Log("No UICell found under pointer - will be treated as outside grid");
         return null;
     }
 
@@ -588,7 +570,6 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         if (itemsContainer != null)
         {
             Vector3 cellPosition = gridManager.GetCellWorldPosition(x, y);
-            Debug.Log($"GetItemSpawnPoint for cell ({x}, {y}) using ItemsContainer positioning");
             return this.GetComponent<RectTransform>();
         }
 
