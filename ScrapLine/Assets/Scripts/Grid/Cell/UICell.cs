@@ -450,7 +450,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         machineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         machineText.fontSize = 12;
         machineText.color = Color.black;
-        machineText.alignment = UnityEngine.UI.Text.TextAnchor.MiddleCenter;
+        machineText.alignment = Text.TextAnchor.MiddleCenter;
 
         RectTransform textRT = textObj.GetComponent<RectTransform>();
         textRT.anchorMin = Vector2.zero;
