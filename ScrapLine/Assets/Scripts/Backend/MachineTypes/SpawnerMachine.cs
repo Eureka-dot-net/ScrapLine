@@ -11,6 +11,11 @@ public class SpawnerMachine : BaseMachine
     private float spawnInterval;
     
     /// <summary>
+    /// Event fired whenever the waste crate item count changes
+    /// </summary>
+    public System.Action WasteCrateCountChanged;
+    
+    /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
     protected string ComponentId => $"Spawner_{cellData.x}_{cellData.y}";
@@ -87,6 +92,9 @@ public class SpawnerMachine : BaseMachine
                 });
             }
             GameLogger.LogSpawning($"Waste crate initialized with {cellData.wasteCrate.remainingItems.Count} item types", ComponentId);
+            
+            // Emit event after waste crate initialization
+            WasteCrateCountChanged?.Invoke();
         }
     }
     
@@ -120,6 +128,15 @@ public class SpawnerMachine : BaseMachine
             total += item.count;
         }
         return total;
+    }
+    
+    /// <summary>
+    /// Get the remaining count of items in the waste crate for UI display
+    /// </summary>
+    /// <returns>Total number of items remaining in the waste crate</returns>
+    public int GetRemainingWasteCount()
+    {
+        return GetTotalItemsInWasteCrate();
     }
     
     /// <summary>
@@ -201,6 +218,9 @@ public class SpawnerMachine : BaseMachine
         
         // Decrease count by 1
         selectedItem.count--;
+        
+        // Emit event after waste crate count changes
+        WasteCrateCountChanged?.Invoke();
         
         return selectedItem.itemType;
     }
