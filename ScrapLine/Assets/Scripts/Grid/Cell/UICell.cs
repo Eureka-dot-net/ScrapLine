@@ -446,7 +446,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         machineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         machineText.fontSize = 12;
         machineText.color = Color.black;
-        machineText.alignment = UnityEngine.UI.Text.TextAnchor.MiddleCenter;
+        machineText.alignment = TextAnchor.MiddleCenter;
 
         RectTransform textRT = textObj.GetComponent<RectTransform>();
         textRT.anchorMin = Vector2.zero;
@@ -473,7 +473,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvasRT,
             eventData.position,
-            canvas.renderMode == Canvas.RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
+            canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera,
             out localPosition);
 
         if (converted)
