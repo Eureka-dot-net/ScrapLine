@@ -51,6 +51,18 @@ public class WasteCrateInstance {
     public List<WasteCrateItemDef> remainingItems = new List<WasteCrateItemDef>();
 }
 
+/// <summary>
+/// Status information for waste crate queue (used for UI display)
+/// </summary>
+[System.Serializable]
+public class WasteCrateQueueStatus
+{
+    public string currentCrateId;
+    public List<string> queuedCrateIds;
+    public int maxQueueSize;
+    public bool canAddToQueue;
+}
+
 [System.Serializable]
 public class SortingMachineConfig
 {
