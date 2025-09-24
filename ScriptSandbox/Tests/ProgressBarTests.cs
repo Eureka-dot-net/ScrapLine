@@ -226,6 +226,32 @@ namespace ScrapLine.Tests
             Assert.IsTrue(spawner.TestShouldShowProgressBar(1.01f), "Spawner should show progress bar even at 101% due to timing delays");
         }
 
+        [Test]
+        public void MachineRenderer_CompletionDetection_WorksCorrectly()
+        {
+            // Test the completion detection logic that should show 100% briefly after cycle reset
+            // This simulates what happens in MachineRenderer when progress goes from high to low
+            
+            // Arrange - simulate progress values as seen in logs
+            float[] progressSequence = { 0.2f, 0.4f, 0.6f, 0.8f, 0.2f }; // Last value simulates cycle reset
+            
+            // Act & Assert
+            float lastProgress = -1f;
+            bool detectedCompletion = false;
+            
+            foreach (float progress in progressSequence)
+            {
+                // This simulates the completion detection logic from MachineRenderer
+                if (lastProgress > 0.8f && progress >= 0f && progress < 0.3f && progress < lastProgress)
+                {
+                    detectedCompletion = true;
+                }
+                lastProgress = progress;
+            }
+            
+            Assert.IsTrue(detectedCompletion, "Should detect completion when progress goes from >0.8 to <0.3");
+        }
+
         // Helper class for testing BaseMachine functionality
         private class TestBaseMachine : BaseMachine
         {
