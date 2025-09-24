@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// </summary>
 public class ProcessorMachine : BaseMachine
 {
-    private bool aboutToComplete = false; // Flag to force 100% progress right before completing
+    private float completionShowTime = -1f; // Time when completion should be shown (100% progress)
     
     /// <summary>
     /// Get the component ID for logging purposes
@@ -198,11 +198,9 @@ public class ProcessorMachine : BaseMachine
                 float processingElapsed = Time.time - item.processingStartTime;
                 if (processingElapsed >= item.processingDuration)
                 {
-                    // Set flag to show 100% progress before completing
-                    aboutToComplete = true;
+                    // Set time to show 100% completion (persists for progress bar to see)
+                    completionShowTime = Time.time;
                     CompleteProcessing(item);
-                    // Reset flag after completing
-                    aboutToComplete = false;
                     return;
                 }
             }
@@ -345,10 +343,10 @@ public class ProcessorMachine : BaseMachine
             return -1f; // No progress when idle or other states
         }
 
-        // Force 100% when we're about to complete processing
-        if (aboutToComplete)
+        // Force 100% when we just completed processing (show completion for 1.5 seconds)
+        if (completionShowTime >= 0f && (Time.time - completionShowTime) < 1.5f)
         {
-            GameLogger.LogProcessor("Forcing 100% progress - about to complete processing", ComponentId);
+            GameLogger.LogProcessor("Forcing 100% progress - showing completion", ComponentId);
             return 1.0f;
         }
 
