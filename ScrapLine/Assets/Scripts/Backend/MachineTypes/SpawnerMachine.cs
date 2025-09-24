@@ -11,7 +11,7 @@ public class SpawnerMachine : BaseMachine
     private float spawnInterval;
     private int initialWasteCrateTotal = -1; // Cache initial total for percentage calculations
     private string cachedIconSprite = null; // Cache current icon sprite to detect changes
-    private float completionShowTime = -1f; // Time when completion should be shown (100% progress)
+
     
     /// <summary>
     /// Get the component ID for logging purposes
@@ -36,9 +36,6 @@ public class SpawnerMachine : BaseMachine
         // Check if it's time to spawn and if the cell is empty and waste crate has items
         if (Time.time - lastSpawnTime >= spawnInterval && cellData.items.Count == 0 && HasItemsInWasteCrate())
         {
-            // Set time to show 100% completion (persists for progress bar to see)
-            completionShowTime = Time.time;
-            
             GameLogger.NotifyStateChange(ComponentId); // State change for spawning
             GameLogger.LogSpawning($"Spawn conditions met - triggering spawn", ComponentId);
             SpawnItem();
@@ -364,18 +361,17 @@ public class SpawnerMachine : BaseMachine
             return -1f; // No progress when can't spawn
         }
 
-        // Force 100% when we just completed spawning (show completion for 1.5 seconds)
-        if (completionShowTime >= 0f && (Time.time - completionShowTime) < 1.5f)
-        {
-            GameLogger.LogSpawning("Forcing 100% progress - showing completion", ComponentId);
-            return 1.0f;
-        }
-
         float timeSinceLastSpawn = Time.time - lastSpawnTime;
         float progress = timeSinceLastSpawn / spawnInterval;
         
+        // Show 100% when progress is 80% or higher (before spawning)
+        if (progress >= 0.8f)
+        {
+            GameLogger.LogSpawning("Showing 100% progress - ready to spawn", ComponentId);
+            return 1.0f;
+        }
+        
         GameLogger.LogSpawning($"Spawner progress: {progress:P1} (time since last spawn: {timeSinceLastSpawn:F1}s)", ComponentId);
-        // Clamp to 0-1 range
         return Mathf.Clamp01(progress);
     }
 

@@ -627,3 +627,9 @@ namespace UnityEngine
         public static void DontDestroyOnLoad(Object obj) => UnityGlobals.DontDestroyOnLoad(obj);
     }
 }
+
+// Global Unity methods - available without namespace outside the UnityEngine namespace
+public static class GlobalUnityMethods
+{
+    public static void DontDestroyOnLoad(UnityEngine.Object obj) { }
+}

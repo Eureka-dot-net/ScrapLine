@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using static GlobalUnityMethods;
 
 /// <summary>
 /// Central logging manager that provides category-based logging with state-change detection.
@@ -67,7 +68,7 @@ public class LoggingManager : MonoBehaviour
         }
 
         Instance = this;
-        UnityGlobals.DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
