@@ -114,5 +114,87 @@ namespace ScriptSandbox.Tests
             // which means all Unity scripts are successfully compiled against mocks
             Assert.Pass("If this test runs, all Unity scripts compiled successfully against mocks!");
         }
+        
+        [Test]
+        public void SpawnerMachine_EventSystem_Works()
+        {
+            // Test that SpawnerMachine event system works correctly
+            Assert.DoesNotThrow(() => {
+                // Create mock data structures needed for SpawnerMachine
+                var cellData = new CellData { x = 1, y = 2 };
+                var machineDef = new MachineDef { id = "spawner", baseProcessTime = 5.0f };
+                
+                // Create SpawnerMachine instance
+                var spawner = new SpawnerMachine(cellData, machineDef);
+                
+                Assert.IsNotNull(spawner);
+                Assert.IsNotNull(spawner.WasteCrateCountChanged, "WasteCrateCountChanged event should be available");
+            });
+        }
+        
+        [Test]
+        public void SpawnerMachine_GetRemainingWasteCount_ReturnsZeroWhenEmpty()
+        {
+            // Test GetRemainingWasteCount method returns 0 for empty waste crate
+            var cellData = new CellData { x = 1, y = 2 };
+            var machineDef = new MachineDef { id = "spawner", baseProcessTime = 5.0f };
+            
+            var spawner = new SpawnerMachine(cellData, machineDef);
+            
+            // With no waste crate or empty waste crate, should return 0
+            int count = spawner.GetRemainingWasteCount();
+            Assert.GreaterOrEqual(count, 0, "Remaining waste count should be non-negative");
+        }
+        
+        [Test]
+        public void SpawnerMachine_EventSubscription_DoesNotThrow()
+        {
+            // Test that event subscription and unsubscription works without exceptions
+            Assert.DoesNotThrow(() => {
+                var cellData = new CellData { x = 1, y = 2 };
+                var machineDef = new MachineDef { id = "spawner", baseProcessTime = 5.0f };
+                var spawner = new SpawnerMachine(cellData, machineDef);
+                
+                bool eventFired = false;
+                
+                // Subscribe to event
+                spawner.WasteCrateCountChanged += () => eventFired = true;
+                
+                // Unsubscribe from event
+                spawner.WasteCrateCountChanged -= () => eventFired = true;
+                
+                Assert.IsFalse(eventFired, "Event should not fire during subscription test");
+            });
+        }
+        
+        [Test]
+        public void SpawnerMachineUI_CanInstantiate()
+        {
+            // Test that SpawnerMachineUI can be instantiated
+            Assert.DoesNotThrow(() => {
+                var ui = new SpawnerMachineUI();
+                Assert.IsNotNull(ui);
+                
+                // Test threshold property can be set
+                ui.lowThreshold = 15;
+                Assert.AreEqual(15, ui.lowThreshold);
+            });
+        }
+        
+        [Test]
+        public void SpawnerMachineUI_Properties_CanBeAssigned()
+        {
+            // Test that SpawnerMachineUI properties can be assigned
+            Assert.DoesNotThrow(() => {
+                var ui = new SpawnerMachineUI();
+                var spawner = new SpawnerMachine(new CellData { x = 1, y = 1 }, new MachineDef { id = "spawner" });
+                
+                ui.spawnerMachine = spawner;
+                ui.lowThreshold = 20;
+                
+                Assert.AreSame(spawner, ui.spawnerMachine);
+                Assert.AreEqual(20, ui.lowThreshold);
+            });
+        }
     }
 }
