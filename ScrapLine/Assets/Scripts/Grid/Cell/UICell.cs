@@ -98,7 +98,36 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
         else
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"SetCellType called with null baseMachine at ({x},{y})", ComponentId);
+            // This should not happen with proper grid setup, but provide fallback
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"SetCellType called with null baseMachine at ({x},{y}) - attempting fallback", ComponentId);
+            
+            // Try to create a default blank machine as fallback
+            string defaultMachineId = cellRole switch
+            {
+                CellRole.Top => "blank_top",
+                CellRole.Bottom => "blank_bottom",
+                _ => "blank"
+            };
+            
+            var fallbackCellData = new CellData
+            {
+                x = x,
+                y = y,
+                cellType = CellType.Blank,
+                direction = direction,
+                cellRole = cellRole,
+                machineDefId = defaultMachineId
+            };
+            
+            var fallbackMachine = MachineFactory.CreateMachine(fallbackCellData);
+            if (fallbackMachine != null)
+            {
+                SetupMachineRenderer(fallbackMachine, direction);
+            }
+            else
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Failed to create fallback machine for cell at ({x},{y})", ComponentId);
+            }
         }
     }
 

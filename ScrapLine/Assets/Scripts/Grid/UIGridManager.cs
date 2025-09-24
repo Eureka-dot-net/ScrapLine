@@ -94,6 +94,26 @@ public class UIGridManager : MonoBehaviour
                 if (cellData != null)
                 {
                     cellScript.SetCellRole(cellData.cellRole);
+                    
+                    // Ensure the cell has a machine instance - create one if missing
+                    if (cellData.machine == null && !string.IsNullOrEmpty(cellData.machineDefId))
+                    {
+                        cellData.machine = MachineFactory.CreateMachine(cellData);
+                    }
+                    else if (cellData.machine == null)
+                    {
+                        // Fallback: create a blank machine based on cell role
+                        string defaultMachineId = cellData.cellRole switch
+                        {
+                            CellRole.Top => "blank_top",
+                            CellRole.Bottom => "blank_bottom", 
+                            _ => "blank"
+                        };
+                        cellData.machineDefId = defaultMachineId;
+                        cellData.cellType = CellType.Blank;
+                        cellData.machine = MachineFactory.CreateMachine(cellData);
+                    }
+                    
                     cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machine);
                 }
                 else
