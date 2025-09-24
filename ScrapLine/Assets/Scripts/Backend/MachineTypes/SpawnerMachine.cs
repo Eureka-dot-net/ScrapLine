@@ -11,6 +11,7 @@ public class SpawnerMachine : BaseMachine
     private float spawnInterval;
     private int initialWasteCrateTotal = -1; // Cache initial total for percentage calculations
     private string cachedIconSprite = null; // Cache current icon sprite to detect changes
+    private bool aboutToSpawn = false; // Flag to force 100% progress right before spawning
     
     /// <summary>
     /// Get the component ID for logging purposes
@@ -35,10 +36,16 @@ public class SpawnerMachine : BaseMachine
         // Check if it's time to spawn and if the cell is empty and waste crate has items
         if (Time.time - lastSpawnTime >= spawnInterval && cellData.items.Count == 0 && HasItemsInWasteCrate())
         {
+            // Set flag to show 100% progress before spawning
+            aboutToSpawn = true;
+            
             GameLogger.NotifyStateChange(ComponentId); // State change for spawning
             GameLogger.LogSpawning($"Spawn conditions met - triggering spawn", ComponentId);
             SpawnItem();
             lastSpawnTime = Time.time;
+            
+            // Reset flag after spawning
+            aboutToSpawn = false;
             
             // Check if icon changed after spawning and update visuals
             CheckAndUpdateIconVisual();
@@ -358,6 +365,13 @@ public class SpawnerMachine : BaseMachine
         if (!HasItemsInWasteCrate() || cellData.items.Count > 0)
         {
             return -1f; // No progress when can't spawn
+        }
+
+        // Force 100% when we're about to spawn (right before spawn occurs)
+        if (aboutToSpawn)
+        {
+            GameLogger.LogSpawning("Forcing 100% progress - about to spawn", ComponentId);
+            return 1.0f;
         }
 
         float timeSinceLastSpawn = Time.time - lastSpawnTime;

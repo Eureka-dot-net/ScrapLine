@@ -29,9 +29,6 @@ public class MachineRenderer : MonoBehaviour
     private UnityEngine.UI.Image progressBarFill; // Fill of progress bar
     private BaseMachine associatedMachine; // Reference to machine for progress updates
     private float lastProgressUpdate; // Track last update time for 1-second intervals
-    private float lastProgress = -1f;       // Track previous progress to detect completion
-    private float completionShowTime = 0f;  // Time to show 100% completion
-    private const float COMPLETION_DISPLAY_DURATION = 0.5f; // Show 100% for half a second
 
     // Moving part visual references (created internally)
     [NonSerialized] private RawImage movingPartRawImage;
@@ -712,24 +709,9 @@ public class MachineRenderer : MonoBehaviour
         }
         
         float progress = associatedMachine.GetProgress();
-        
-        // Detect completion: if we had high progress (>0.8) and now have low progress (<0.3),
-        // it means we completed a cycle and should show 100% briefly
-        if (lastProgress > 0.8f && progress >= 0f && progress < 0.3f && progress < lastProgress)
-        {
-            GameLogger.LogMachine($"Detected completion cycle: {lastProgress:F2} -> {progress:F2}, showing 100%", ComponentId);
-            completionShowTime = Time.time;
-        }
-        
-        // Store current progress for next frame comparison
-        lastProgress = progress;
 
-        // Determine what progress to display and use for visibility checks
-        bool inCompletionMode = (Time.time - completionShowTime) < COMPLETION_DISPLAY_DURATION;
-        float displayProgress = inCompletionMode ? 1.0f : progress;
-        
-        // Check if machine should show progress bar using the display progress
-        bool shouldShow = associatedMachine.ShouldShowProgressBar(displayProgress);
+        // Check if machine should still show progress bar
+        bool shouldShow = associatedMachine.ShouldShowProgressBar(progress);
         
         if (!shouldShow)
         {
@@ -745,19 +727,11 @@ public class MachineRenderer : MonoBehaviour
         }
 
         // Get current progress and update fill amount
-        if (displayProgress >= 0f)
+        if (progress >= 0f)
         {
-            if (inCompletionMode)
-            {
-                GameLogger.LogMachine($"Showing completion: 100% (actual progress: {progress:F2})", ComponentId);
-            }
-            else
-            {
-                GameLogger.LogMachine($"Updating progress bar: {displayProgress} for machine at ({cellX}, {cellY})", ComponentId);
-            }
-            
+            GameLogger.LogMachine($"Updating progress bar: {progress} for machine at ({cellX}, {cellY})", ComponentId);
             // Clamp to 1.0 to handle timing delays that might cause progress to exceed 100%
-            progressBarFill.fillAmount = Mathf.Clamp01(displayProgress);
+            progressBarFill.fillAmount = Mathf.Clamp01(progress);
             GameLogger.LogMachine($"fillAmount is now actually {progressBarFill.fillAmount}", ComponentId);
         }
     }
