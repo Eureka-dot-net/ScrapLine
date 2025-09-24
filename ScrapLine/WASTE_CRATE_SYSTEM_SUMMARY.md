@@ -152,23 +152,26 @@ private void ShowSpawnerWasteCrateMenu(int spawnerX, int spawnerY)
 
 ## Integration with Unity
 
-### Required UI Elements
+**DETAILED INSTRUCTIONS**: See `UNITY_FRONTEND_INTEGRATION.md` for complete step-by-step Unity setup guide.
+
+### Quick Reference - Required UI Elements
 - `WasteCratePanel` - Main menu container
-- `CurrentCratePanel` - Current crate info display
+- `CurrentCratePanel` - Current crate info display  
 - `PurchasePanel` - Purchase options grid
 - `PurchaseOptionPrefab` - Individual crate option button
 - Progress bars, text components for status display
 
-### Sprite Assets
+### Sprite Assets Required
 - `waste_1.png` - Starter crate sprite
 - `waste_2.png` - Medium crate sprite  
 - `waste_3.png` - Large crate sprite
 - `waste_4.png` - Premium crate sprite
 
-### Component Wiring
-1. Assign `WasteCrateUI` to `MachineManager.wasteCrateUI`
-2. Wire UI prefab references in `WasteCrateUI` inspector
-3. Set up button click events and text component references
+### Key Integration Points
+1. Assign `WasteCrateUI` component to scene
+2. Wire UI prefab references in inspector
+3. Connect `MachineManager.wasteCrateUI` to the UI component
+4. Test spawner click → menu opens functionality
 
 ## Future Enhancements
 
