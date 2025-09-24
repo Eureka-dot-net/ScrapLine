@@ -22,7 +22,7 @@ public class SpawnerMachine : BaseMachine
         lastSpawnTime = Time.time;
         GameLogger.LogSpawning($"Spawner created at ({cellData.x}, {cellData.y}) with interval {spawnInterval}s", ComponentId);
         // Assign the starter waste crate to this spawner when created
-        InitializeWasteCrate();
+       // InitializeWasteCrate();
     }
     
     /// <summary>
@@ -64,7 +64,7 @@ public class SpawnerMachine : BaseMachine
     /// <summary>
     /// Initialize the waste crate for this spawner
     /// </summary>
-    private void InitializeWasteCrate()
+    private void CreateWasteCrate()
     {
         // For now, assign the starter crate to all spawners when they are created
         var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate("starter_crate");
@@ -106,6 +106,15 @@ public class SpawnerMachine : BaseMachine
         return false;
     }
     
+    public override string GetBuildingIconSprite()
+    {
+        if (!HasItemsInWasteCrate())
+        {
+            return machineDef.buildingIconSprite + "_0"; // Use a different icon if the waste crate is empty
+        }
+        return machineDef.buildingIconSprite;
+    }
+    
     /// <summary>
     /// Get total count of items in waste crate (for debugging)
     /// </summary>
@@ -113,7 +122,7 @@ public class SpawnerMachine : BaseMachine
     {
         if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
             return 0;
-            
+
         int total = 0;
         foreach (var item in cellData.wasteCrate.remainingItems)
         {
@@ -155,18 +164,6 @@ public class SpawnerMachine : BaseMachine
         GameLogger.LogSpawning($"Created new item: {newItem.itemType} (id: {newItem.id})", ComponentId);
 
         cellData.items.Add(newItem);
-        
-        // Tell visual manager to create visual representation
-        UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
-        if (gridManager != null)
-        {
-            gridManager.CreateVisualItem(newItem.id, cellData.x, cellData.y, newItem.itemType);
-            GameLogger.LogSpawning($"Visual created for spawned item {newItem.itemType}", ComponentId);
-        }
-        else
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "No UIGridManager found to create visual for spawned item", ComponentId);
-        }
         
         // Immediately try to start movement of the newly spawned item
         TryStartMove(newItem);

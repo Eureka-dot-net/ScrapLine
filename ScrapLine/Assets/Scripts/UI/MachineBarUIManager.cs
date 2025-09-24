@@ -117,15 +117,33 @@ public class MachineBarUIManager : MonoBehaviour
             {
                 machineRenderer.isInMenu = true; // Prevent materials/animations in menu
 
-                // --- PASS TEXTURE & MATERIAL TO SETUP ---
-                machineRenderer.Setup(
-                    machine,
-                    UICell.Direction.Up,
-                    null,
-                    0,
-                    0,
-                    conveyorPanelTexture
-                );
+                // Create temporary CellData and BaseMachine for UI menu display
+                var tempCellData = new CellData
+                {
+                    x = 0,
+                    y = 0,
+                    cellType = UICell.CellType.Machine,
+                    direction = UICell.Direction.Up,
+                    machineDefId = machine.id
+                };
+                
+                var tempBaseMachine = MachineFactory.CreateMachine(tempCellData);
+                if (tempBaseMachine != null)
+                {
+                    // --- PASS TEXTURE & MATERIAL TO SETUP ---
+                    machineRenderer.Setup(
+                        tempBaseMachine,
+                        UICell.Direction.Up,
+                        null,
+                        0,
+                        0,
+                        conveyorPanelTexture
+                    );
+                }
+                else
+                {
+                    GameLogger.LogError(LoggingManager.LogCategory.UI, $"Failed to create temporary machine instance for UI button: {machine.id}", ComponentId);
+                }
             }
             else
             {

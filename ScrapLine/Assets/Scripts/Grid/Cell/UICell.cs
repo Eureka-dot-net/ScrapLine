@@ -80,7 +80,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         cellRole = role;
     }
 
-    public void SetCellType(CellType type, Direction direction, string machineDefId = null)
+    public void SetCellType(CellType type, Direction direction, BaseMachine baseMachine = null)
     {
         cellType = type;
 
@@ -91,40 +91,47 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             machineRenderer = null;
         }
 
-        // Determine which machine definition to use
-        string defIdToUse = machineDefId;
-        if (type == CellType.Blank)
-        {
-            switch (cellRole)
-            {
-                case CellRole.Top:
-                    defIdToUse = "blank_top";
-                    break;
-                case CellRole.Bottom:
-                    defIdToUse = "blank_bottom";
-                    break;
-                default:
-                    defIdToUse = "blank";
-                    break;
-            }
-        }
-
         // Create MachineRenderer for ALL cell types (including blanks)
-        if (!string.IsNullOrEmpty(defIdToUse))
+        if (baseMachine != null)
         {
-            var machineDef = FactoryRegistry.Instance.GetMachine(defIdToUse);
-            if (machineDef != null)
+            SetupMachineRenderer(baseMachine, direction);
+        }
+        else
+        {
+            // This should not happen with proper grid setup, but provide fallback
+            GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"SetCellType called with null baseMachine at ({x},{y}) - attempting fallback", ComponentId);
+            
+            // Try to create a default blank machine as fallback
+            string defaultMachineId = cellRole switch
             {
-                SetupMachineRenderer(machineDef, direction);
+                CellRole.Top => "blank_top",
+                CellRole.Bottom => "blank_bottom",
+                _ => "blank"
+            };
+            
+            var fallbackCellData = new CellData
+            {
+                x = x,
+                y = y,
+                cellType = CellType.Blank,
+                direction = direction,
+                cellRole = cellRole,
+                machineDefId = defaultMachineId
+            };
+            
+            var fallbackMachine = MachineFactory.CreateMachine(fallbackCellData);
+            if (fallbackMachine != null)
+            {
+                SetupMachineRenderer(fallbackMachine, direction);
             }
             else
             {
-                GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Could not find machine definition for: {defIdToUse}", ComponentId);
+                GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Failed to create fallback machine for cell at ({x},{y})", ComponentId);
             }
         }
     }
 
-    private void SetupMachineRenderer(MachineDef def, Direction direction)
+    private void SetupMachineRenderer(BaseMachine baseMachine, Direction direction)
     {
         GameObject rendererObj = new GameObject("MachineRenderer");
         rendererObj.transform.SetParent(this.transform, false);
@@ -135,7 +142,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         rendererRT.offsetMin = Vector2.zero;
         rendererRT.offsetMax = Vector2.zero;
 
-        if (def.isMoving)
+        if (baseMachine.MachineDef.isMoving)
         {
             ConveyorBelt conveyorBelt = rendererObj.AddComponent<ConveyorBelt>();
             conveyorBelt.SetConveyorDirection(direction);
@@ -143,7 +150,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
 
         machineRenderer = rendererObj.AddComponent<MachineRenderer>();
         machineRenderer.Setup(
-            def,
+            baseMachine,
             direction,
             gridManager,
             x,
@@ -413,9 +420,27 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {
-            machineRenderer.Setup(machineDef, draggedMachineDirection, gridManager, x, y,
-                                gridManager.conveyorSharedTexture, gridManager.conveyorSharedMaterial);
-            return true;
+            // Create temporary CellData and BaseMachine instance for drag visual
+            var tempCellData = new CellData
+            {
+                x = x,
+                y = y,
+                cellType = CellType.Machine,
+                direction = draggedMachineDirection,
+                machineDefId = draggedMachineDefId
+            };
+            
+            var tempBaseMachine = MachineFactory.CreateMachine(tempCellData);
+            if (tempBaseMachine != null)
+            {
+                machineRenderer.Setup(tempBaseMachine, draggedMachineDirection, gridManager, x, y,
+                                    gridManager.conveyorSharedTexture, gridManager.conveyorSharedMaterial);
+                return true;
+            }
+            else
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.UI, $"Failed to create temporary machine instance for drag visual: {draggedMachineDefId}", ComponentId);
+            }
         }
 
         DestroyImmediate(tempRenderer);

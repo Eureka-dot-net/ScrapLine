@@ -31,7 +31,7 @@ public class MachineRenderer : MonoBehaviour
     /// <summary>
     /// Setup the renderer. Pass in Texture and Material for moving part if needed.
     /// </summary>
-    /// <param name="def"></param>
+    /// <param name="baseMachine">The BaseMachine instance containing the definition and behavior</param>
     /// <param name="cellDirection"></param>
     /// <param name="gridManager"></param>
     /// <param name="cellX"></param>
@@ -39,7 +39,7 @@ public class MachineRenderer : MonoBehaviour
     /// <param name="movingPartTexture">Optional: assign this if using moving part</param>
     /// <param name="movingPartMaterial">Optional: assign this if using moving part</param>
     public void Setup(
-        MachineDef def,
+        BaseMachine baseMachine,
         UICell.Direction cellDirection = UICell.Direction.Up,
         UIGridManager gridManager = null,
         int cellX = 0,
@@ -53,6 +53,9 @@ public class MachineRenderer : MonoBehaviour
         this.cellY = cellY;
         this.movingPartTexture = movingPartTexture;
         this.movingPartMaterial = movingPartMaterial;
+
+        // Get the machine definition for easier access
+        MachineDef def = baseMachine.MachineDef;
 
         foreach (Transform child in transform) Destroy(child.gameObject);
 
@@ -106,6 +109,7 @@ public class MachineRenderer : MonoBehaviour
             movingPartRawImage.transform.SetSiblingIndex(0);
         }
 
+        
         // --- Border: create in BordersContainer ---
         if (!string.IsNullOrEmpty(def.borderSprite) && !isInMenu && gridManager != null)
         {
@@ -135,7 +139,7 @@ public class MachineRenderer : MonoBehaviour
         // --- Building: separated sprite in BuildingsContainer ---
         if (!string.IsNullOrEmpty(def.buildingSprite) && !isInMenu && gridManager != null)
         {
-            CreateSeparatedBuildingSprite(def, cellDirection);
+            CreateSeparatedBuildingSprite(baseMachine, cellDirection);
         }
         else if (!string.IsNullOrEmpty(def.buildingSprite) && isInMenu)
         {
@@ -159,19 +163,20 @@ public class MachineRenderer : MonoBehaviour
             
             building.transform.SetSiblingIndex(3);
             
+            string buildingIconSprite = def.buildingIconSprite;
             // Add icon sprite if specified
-            if (!string.IsNullOrEmpty(def.buildingIconSprite))
+            if (!string.IsNullOrEmpty(buildingIconSprite))
             {
-                var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
+                var icon = CreateImageChild("BuildingIcon", buildingIconSprite);
                 icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
-                
+
                 // Apply icon size scaling - for menu context, use responsive anchors
                 RectTransform iconRT = icon.rectTransform;
-                
+
                 // For responsive UI, use anchors to size the icon relative to its parent
                 float iconSizeRatio = def.buildingIconSpriteSize;
                 float margin = (1.0f - iconSizeRatio) * 0.5f; // Calculate margins to center the icon
-                
+
                 iconRT.anchorMin = new Vector2(margin, margin);
                 iconRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
                 iconRT.offsetMin = Vector2.zero;
@@ -197,8 +202,9 @@ public class MachineRenderer : MonoBehaviour
         }
     }
 
-    private void CreateSeparatedBuildingSprite(MachineDef def, UICell.Direction cellDirection)
+    private void CreateSeparatedBuildingSprite(BaseMachine baseMachine, UICell.Direction cellDirection)
     {
+        MachineDef def = baseMachine.MachineDef;
         RectTransform buildingsContainer = gridManager?.GetBuildingsContainer();
         if (buildingsContainer == null)
         {
@@ -295,21 +301,23 @@ public class MachineRenderer : MonoBehaviour
         buildingRT.rotation = Quaternion.Euler(0, 0, totalRotation);
 
         // Create icon sprite if specified (as a child of the building sprite)
-        if (!string.IsNullOrEmpty(def.buildingIconSprite))
+        string buildingIconSprite = baseMachine.GetBuildingIconSprite();
+        
+        if (!string.IsNullOrEmpty(buildingIconSprite))
         {
             GameObject iconSprite = new GameObject($"BuildingIcon_{cellX}_{cellY}");
             iconSprite.transform.SetParent(buildingSprite.transform, false);
 
             Image iconImage = iconSprite.AddComponent<Image>();
-            
+
             // Try loading icon sprite from multiple possible locations
             Sprite iconSpriteAsset = null;
             string[] possiblePaths = {
-                "Sprites/Machines/" + def.buildingIconSprite,
-                "Sprites/Items/" + def.buildingIconSprite,
-                "Sprites/" + def.buildingIconSprite
+                "Sprites/Machines/" + buildingIconSprite,
+                "Sprites/Items/" + buildingIconSprite,
+                "Sprites/" + buildingIconSprite
             };
-            
+
             foreach (string iconPath in possiblePaths)
             {
                 iconSpriteAsset = Resources.Load<Sprite>(iconPath);
@@ -318,7 +326,7 @@ public class MachineRenderer : MonoBehaviour
                     break;
                 }
             }
-            
+
             iconImage.sprite = iconSpriteAsset;
 
             // Make icon non-interactive
@@ -338,11 +346,11 @@ public class MachineRenderer : MonoBehaviour
 
             // Position and size the icon sprite
             RectTransform iconRT = iconSprite.GetComponent<RectTransform>();
-            
+
             // For responsive UI, use anchors to size the icon relative to its parent
             float iconSizeRatio = def.buildingIconSpriteSize;
             float margin = (1.0f - iconSizeRatio) * 0.5f; // Calculate margins to center the icon
-            
+
             iconRT.anchorMin = new Vector2(margin, margin);
             iconRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
             iconRT.offsetMin = Vector2.zero;
