@@ -106,6 +106,15 @@ public class FactoryRegistry
         WasteCrates.TryGetValue(wasteCrateId, out var wc);
         return wc;
     }
+    
+    /// <summary>
+    /// Get all available waste crates
+    /// </summary>
+    /// <returns>List of all waste crate definitions</returns>
+    public List<WasteCrateDef> GetAllWasteCrates()
+    {
+        return new List<WasteCrateDef>(WasteCrates.Values);
+    }
 
     public RecipeDef GetRecipe(string machineId, string inputItemId)
     {

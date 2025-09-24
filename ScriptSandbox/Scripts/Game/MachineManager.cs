@@ -11,6 +11,10 @@ public class MachineManager : MonoBehaviour
     [Tooltip("Enable debug logs for machine operations")]
     public bool enableMachineLogs = false;
 
+    [Header("UI References")]
+    [Tooltip("Reference to the waste crate UI manager")]
+    public WasteCrateUI wasteCrateUI;
+
     private MachineDef selectedMachine;
     private Direction lastMachineDirection = Direction.Up;
     private CreditsManager creditsManager;
@@ -84,9 +88,17 @@ public class MachineManager : MonoBehaviour
         }
 
         // Normal mode behavior (not in edit mode)
-        // If clicking on an existing machine, rotate it
+        // If clicking on an existing machine, handle special actions
         if (cellData.cellType == CellType.Machine && !string.IsNullOrEmpty(cellData.machineDefId))
         {
+            // Special handling for spawner machines - show waste crate menu
+            if (cellData.machineDefId == "spawner" && cellData.machine is SpawnerMachine)
+            {
+                ShowSpawnerWasteCrateMenu(x, y);
+                return;
+            }
+            
+            // For other machines, rotate them
             RotateMachine(cellData);
             return;
         }
@@ -490,5 +502,40 @@ public class MachineManager : MonoBehaviour
     public void SetLastMachineDirection(Direction direction)
     {
         lastMachineDirection = direction;
+    }
+    
+    /// <summary>
+    /// Show the waste crate menu for a spawner machine
+    /// </summary>
+    /// <param name="spawnerX">X coordinate of spawner</param>
+    /// <param name="spawnerY">Y coordinate of spawner</param>
+    private void ShowSpawnerWasteCrateMenu(int spawnerX, int spawnerY)
+    {
+        GameLogger.LogUI($"Showing waste crate menu for spawner at ({spawnerX}, {spawnerY})", ComponentId);
+        
+        // Get the spawner machine
+        var cellData = gridManager.GetCellData(spawnerX, spawnerY);
+        var spawner = cellData?.machine as SpawnerMachine;
+        
+        if (spawner == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, $"No spawner machine found at ({spawnerX}, {spawnerY})", ComponentId);
+            return;
+        }
+        
+        // Show UI if available
+        if (wasteCrateUI != null)
+        {
+            wasteCrateUI.ShowMenu(spawnerX, spawnerY);
+        }
+        else
+        {
+            // Fallback: Log information for now
+            var queueStatus = spawner.GetQueueStatus();
+            GameLogger.LogUI($"Current crate: {queueStatus.currentCrateId}", ComponentId);
+            GameLogger.LogUI($"Queue size: {queueStatus.queuedCrateIds.Count}/{queueStatus.maxQueueSize}", ComponentId);
+            GameLogger.LogUI($"Can add to queue: {queueStatus.canAddToQueue}", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteCrateUI not assigned to MachineManager", ComponentId);
+        }
     }
 }

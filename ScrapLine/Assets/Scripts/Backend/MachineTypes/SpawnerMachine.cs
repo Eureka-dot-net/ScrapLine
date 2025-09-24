@@ -141,9 +141,9 @@ public class SpawnerMachine : BaseMachine
     }
     
     /// <summary>
-    /// Get total count of items in waste crate (for debugging)
+    /// Get total count of items in waste crate (for debugging and UI)
     /// </summary>
-    private int GetTotalItemsInWasteCrate()
+    public int GetTotalItemsInWasteCrate()
     {
         if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
             return 0;
@@ -157,9 +157,9 @@ public class SpawnerMachine : BaseMachine
     }
     
     /// <summary>
-    /// Get initial total capacity of the waste crate (cached for performance)
+    /// Get initial total capacity of the waste crate (cached for performance, public for UI)
     /// </summary>
-    private int GetInitialWasteCrateTotal()
+    public int GetInitialWasteCrateTotal()
     {
         if (initialWasteCrateTotal >= 0)
             return initialWasteCrateTotal;
