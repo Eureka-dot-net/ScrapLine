@@ -600,6 +600,21 @@ namespace UnityEngine
         public static bool anyKeyDown => false;
     }
 
+    // Canvas render mode enum (in UnityEngine namespace)  
+    public enum RenderMode 
+    { 
+        ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace 
+    }
+
+    // Canvas class (in UnityEngine namespace)
+    public class Canvas : Component
+    {
+        public RenderMode renderMode { get; set; } = RenderMode.ScreenSpaceOverlay;
+        public Camera worldCamera { get; set; }
+        public int sortingOrder { get; set; }
+        public bool overrideSorting { get; set; }
+    }
+
     // Global functions
     public static class UnityGlobals
     {
