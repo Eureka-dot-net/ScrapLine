@@ -42,6 +42,14 @@ public abstract class BaseMachine
     }
 
     /// <summary>
+    /// Returns the machine sprite file name for rendering
+    /// </summary>
+    public virtual string GetBuildingIconSprite()
+    {
+        return machineDef.buildingIconSprite;
+    }
+
+    /// <summary>
     /// Called when an item arrives at this machine's cell
     /// </summary>
     /// <param name="item">The item that arrived</param>
