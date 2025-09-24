@@ -322,4 +322,46 @@ public class ProcessorMachine : BaseMachine
         // For processors, items should go through the waiting queue first
         AddToWaitingQueue(item);
     }
+
+    // Progress Bar Implementation
+    // ===========================
+    
+    /// <summary>
+    /// Gets the current processing progress as a value between 0.0 and 1.0.
+    /// Returns progress of the currently processing item.
+    /// </summary>
+    /// <returns>Progress value 0.0-1.0, or -1 if not processing</returns>
+    public override float GetProgress()
+    {
+        // Only show progress when actively processing
+        if (cellData.machineState != MachineState.Processing)
+        {
+            return -1f; // No progress when idle or other states
+        }
+
+        // Find the item being processed
+        foreach (var item in cellData.items)
+        {
+            if (item.state == ItemState.Processing)
+            {
+                float processingElapsed = Time.time - item.processingStartTime;
+                float progress = processingElapsed / item.processingDuration;
+                
+                // Clamp to 0-1 range
+                return Mathf.Clamp01(progress);
+            }
+        }
+
+        return -1f; // No processing item found
+    }
+
+    /// <summary>
+    /// Processors should show progress bar when actively processing an item
+    /// </summary>
+    /// <returns>True if progress bar should be shown</returns>
+    public override bool ShouldShowProgressBar()
+    {
+        float progress = GetProgress();
+        return progress >= 0f && progress < 1f && cellData.machineState == MachineState.Processing;
+    }
 }

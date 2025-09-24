@@ -343,4 +343,37 @@ public class SpawnerMachine : BaseMachine
         // Spawners don't process items
         GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, $"Attempted to process item {item.id} at spawner - this shouldn't happen", ComponentId);
     }
+
+    // Progress Bar Implementation
+    // ===========================
+    
+    /// <summary>
+    /// Gets the current spawning progress as a value between 0.0 and 1.0.
+    /// Returns progress toward next spawn based on time elapsed since last spawn.
+    /// </summary>
+    /// <returns>Progress value 0.0-1.0, or -1 if not spawning</returns>
+    public override float GetProgress()
+    {
+        // Only show progress if we have items to spawn and cell is available
+        if (!HasItemsInWasteCrate() || cellData.items.Count > 0)
+        {
+            return -1f; // No progress when can't spawn
+        }
+
+        float timeSinceLastSpawn = Time.time - lastSpawnTime;
+        float progress = timeSinceLastSpawn / spawnInterval;
+        
+        // Clamp to 0-1 range
+        return Mathf.Clamp01(progress);
+    }
+
+    /// <summary>
+    /// Spawners should show progress bar when actively counting down to spawn
+    /// </summary>
+    /// <returns>True if progress bar should be shown</returns>
+    public override bool ShouldShowProgressBar()
+    {
+        float progress = GetProgress();
+        return progress >= 0f && progress < 1f && HasItemsInWasteCrate() && cellData.items.Count == 0;
+    }
 }

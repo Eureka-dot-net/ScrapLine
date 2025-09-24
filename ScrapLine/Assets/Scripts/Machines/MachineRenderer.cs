@@ -23,6 +23,13 @@ public class MachineRenderer : MonoBehaviour
     private GameObject borderSprite; // Track border sprite separately
     private GameObject movingPartSprite; // Track moving part sprite separately
 
+    // Progress bar components
+    private GameObject progressBarContainer; // Container for progress bar UI
+    private UnityEngine.UI.Image progressBarBackground; // Background of progress bar
+    private UnityEngine.UI.Image progressBarFill; // Fill of progress bar
+    private BaseMachine associatedMachine; // Reference to machine for progress updates
+    private float lastProgressUpdate; // Track last update time for 1-second intervals
+
     // Moving part visual references (created internally)
     [NonSerialized] private RawImage movingPartRawImage;
     [NonSerialized] private Texture movingPartTexture;
@@ -53,6 +60,7 @@ public class MachineRenderer : MonoBehaviour
         this.cellY = cellY;
         this.movingPartTexture = movingPartTexture;
         this.movingPartMaterial = movingPartMaterial;
+        this.associatedMachine = baseMachine; // Store reference for progress bar updates
 
         // Get the machine definition for easier access
         MachineDef def = baseMachine.MachineDef;
@@ -356,6 +364,9 @@ public class MachineRenderer : MonoBehaviour
             iconRT.offsetMin = Vector2.zero;
             iconRT.offsetMax = Vector2.zero;
             iconRT.anchoredPosition = Vector2.zero;
+            
+            // Create progress bar if machine supports it and not in menu
+            CreateProgressBar();
         }
     }
 
@@ -584,6 +595,13 @@ public class MachineRenderer : MonoBehaviour
             Destroy(movingPartSprite);
             movingPartSprite = null;
         }
+        
+        // Clean up progress bar
+        if (progressBarContainer != null)
+        {
+            Destroy(progressBarContainer);
+            progressBarContainer = null;
+        }
     }
 
     private float GetCellDirectionRotation(UICell.Direction direction)
@@ -595,6 +613,141 @@ public class MachineRenderer : MonoBehaviour
             case UICell.Direction.Down: return -180f;
             case UICell.Direction.Left: return -270f;
             default: return 0f;
+        }
+    }
+
+    // Progress Bar System
+    // ===================
+
+    /// <summary>
+    /// Creates a progress bar UI underneath the building icon sprite.
+    /// Should only be called for non-menu machines that support progress tracking.
+    /// </summary>
+    private void CreateProgressBar()
+    {
+        // Only create progress bar if not in menu and machine supports progress
+        if (isInMenu || associatedMachine == null || !associatedMachine.ShouldShowProgressBar())
+        {
+            return;
+        }
+
+        // Get the buildings container from grid manager
+        RectTransform buildingsContainer = gridManager?.GetBuildingsContainer();
+        if (buildingsContainer == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Cannot create progress bar - BuildingsContainer not found", ComponentId);
+            return;
+        }
+
+        // Create progress bar container as a child of the building sprite
+        progressBarContainer = new GameObject($"ProgressBar_{cellX}_{cellY}");
+        progressBarContainer.transform.SetParent(buildingSprite.transform, false);
+
+        // Add RectTransform for UI positioning
+        RectTransform progressRT = progressBarContainer.AddComponent<RectTransform>();
+
+        // Position progress bar below the icon sprite
+        // Use anchors to position at bottom of parent with some margin
+        progressRT.anchorMin = new Vector2(0.2f, 0.05f); // Left and bottom margins
+        progressRT.anchorMax = new Vector2(0.8f, 0.15f);  // Right margin and height
+        progressRT.offsetMin = Vector2.zero;
+        progressRT.offsetMax = Vector2.zero;
+        progressRT.anchoredPosition = Vector2.zero;
+
+        // Create background image
+        GameObject backgroundObj = new GameObject("Background");
+        backgroundObj.transform.SetParent(progressBarContainer.transform, false);
+        
+        progressBarBackground = backgroundObj.AddComponent<UnityEngine.UI.Image>();
+        progressBarBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.8f); // Dark gray background
+        
+        RectTransform backgroundRT = backgroundObj.GetComponent<RectTransform>();
+        backgroundRT.anchorMin = Vector2.zero;
+        backgroundRT.anchorMax = Vector2.one;
+        backgroundRT.offsetMin = Vector2.zero;
+        backgroundRT.offsetMax = Vector2.zero;
+
+        // Create fill image
+        GameObject fillObj = new GameObject("Fill");
+        fillObj.transform.SetParent(progressBarContainer.transform, false);
+        
+        progressBarFill = fillObj.AddComponent<UnityEngine.UI.Image>();
+        progressBarFill.color = new Color(0.2f, 0.8f, 0.2f, 0.8f); // Green fill
+        progressBarFill.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
+        progressBarFill.type = UnityEngine.UI.Image.Type.Filled;
+        
+        RectTransform fillRT = fillObj.GetComponent<RectTransform>();
+        fillRT.anchorMin = Vector2.zero;
+        fillRT.anchorMax = Vector2.one;
+        fillRT.offsetMin = Vector2.zero;
+        fillRT.offsetMax = Vector2.zero;
+
+        // Make progress bar non-interactive
+        CanvasGroup progressCanvasGroup = progressBarContainer.AddComponent<CanvasGroup>();
+        progressCanvasGroup.blocksRaycasts = false;
+        progressCanvasGroup.interactable = false;
+
+        GameLogger.LogMachine($"Created progress bar for machine at ({cellX}, {cellY})", ComponentId);
+    }
+
+    /// <summary>
+    /// Updates the progress bar with current machine progress.
+    /// Called every second to avoid performance issues.
+    /// </summary>
+    private void UpdateProgressBar()
+    {
+        // Only update if we have a progress bar and associated machine
+        if (progressBarContainer == null || progressBarFill == null || associatedMachine == null)
+        {
+            return;
+        }
+
+        // Check if machine should still show progress bar
+        if (!associatedMachine.ShouldShowProgressBar())
+        {
+            // Hide progress bar if no longer needed
+            progressBarContainer.SetActive(false);
+            return;
+        }
+
+        // Show progress bar if it was hidden
+        if (!progressBarContainer.activeInHierarchy)
+        {
+            progressBarContainer.SetActive(true);
+        }
+
+        // Get current progress and update fill amount
+        float progress = associatedMachine.GetProgress();
+        if (progress >= 0f)
+        {
+            progressBarFill.fillAmount = progress;
+        }
+    }
+
+    /// <summary>
+    /// MonoBehaviour Update method to handle progress bar updates every second
+    /// </summary>
+    void Update()
+    {
+        // Only process progress bar updates if not in menu
+        if (isInMenu || associatedMachine == null)
+        {
+            return;
+        }
+
+        // Update progress bar every 1 second to avoid performance issues
+        if (Time.time - lastProgressUpdate >= 1.0f)
+        {
+            // Create progress bar if needed and machine supports it
+            if (progressBarContainer == null && associatedMachine.ShouldShowProgressBar())
+            {
+                CreateProgressBar();
+            }
+
+            // Update existing progress bar
+            UpdateProgressBar();
+            
+            lastProgressUpdate = Time.time;
         }
     }
 }

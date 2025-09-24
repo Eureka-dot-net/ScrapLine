@@ -317,7 +317,7 @@ namespace UnityEngine
     // Time class
     public static class Time
     {
-        public static float time => 0f;
+        public static float time { get; set; } = 0f;
         public static float deltaTime => 0.016f; // 60 FPS
         public static float fixedDeltaTime => 0.02f; // 50 FPS
         public static float unscaledTime => 0f;
@@ -619,5 +619,11 @@ namespace UnityEngine
     public static class UnityGlobals
     {
         public static void DontDestroyOnLoad(Object obj) { }
+    }
+
+    // Unity global methods as static class  
+    public static class Unity
+    {
+        public static void DontDestroyOnLoad(Object obj) => UnityGlobals.DontDestroyOnLoad(obj);
     }
 }
