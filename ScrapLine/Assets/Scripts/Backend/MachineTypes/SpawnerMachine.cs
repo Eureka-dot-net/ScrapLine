@@ -363,13 +363,7 @@ public class SpawnerMachine : BaseMachine
 
         float timeSinceLastSpawn = Time.time - lastSpawnTime;
         float progress = timeSinceLastSpawn / spawnInterval;
-        
-        // Show 100% when progress is 80% or higher (before spawning)
-        if (progress >= 0.8f)
-        {
-            GameLogger.LogSpawning("Showing 100% progress - ready to spawn", ComponentId);
-            return 1.0f;
-        }
+
         
         GameLogger.LogSpawning($"Spawner progress: {progress:P1} (time since last spawn: {timeSinceLastSpawn:F1}s)", ComponentId);
         return Mathf.Clamp01(progress);

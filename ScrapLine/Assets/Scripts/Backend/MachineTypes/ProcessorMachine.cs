@@ -349,13 +349,6 @@ public class ProcessorMachine : BaseMachine
                 float processingElapsed = Time.time - item.processingStartTime;
                 float progress = processingElapsed / item.processingDuration;
                 
-                // Show 100% when progress is 80% or higher (before completion)
-                if (progress >= 0.8f)
-                {
-                    GameLogger.LogProcessor("Showing 100% progress - ready to complete", ComponentId);
-                    return 1.0f;
-                }
-                
                 return Mathf.Clamp01(progress);
             }
         }

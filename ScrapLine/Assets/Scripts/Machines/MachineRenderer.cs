@@ -648,10 +648,8 @@ public class MachineRenderer : MonoBehaviour
 
         // Position progress bar below the icon sprite
         // Use anchors to position at bottom of parent with some margin
-        //progressRT.anchorMin = new Vector2(0.2f, 0.05f); // Left and bottom margins
-        //progressRT.anchorMax = new Vector2(0.8f, 0.15f);  // Right margin and height
-        progressRT.anchorMin = new Vector2(0.1f, 0.0f); // Wider and at bottom edge
-        progressRT.anchorMax = new Vector2(0.9f, 0.2f);  // Taller
+        progressRT.anchorMin = new Vector2(0.1f, 0.05f); // Left and bottom margins
+        progressRT.anchorMax = new Vector2(0.9f, 0.15f);  // Right margin and height
         progressRT.offsetMin = Vector2.zero;
         progressRT.offsetMax = Vector2.zero;
         progressRT.anchoredPosition = Vector2.zero;
@@ -731,7 +729,8 @@ public class MachineRenderer : MonoBehaviour
         {
             GameLogger.LogMachine($"Updating progress bar: {progress} for machine at ({cellX}, {cellY})", ComponentId);
             // Clamp to 1.0 to handle timing delays that might cause progress to exceed 100%
-            progressBarFill.fillAmount = Mathf.Clamp01(progress);
+            float normalizedProgress = Mathf.Clamp01(progress / 0.8f); // Normalize to 0-1 range based on 0-80% logic
+            progressBarFill.fillAmount = normalizedProgress;
             GameLogger.LogMachine($"fillAmount is now actually {progressBarFill.fillAmount}", ComponentId);
         }
     }
