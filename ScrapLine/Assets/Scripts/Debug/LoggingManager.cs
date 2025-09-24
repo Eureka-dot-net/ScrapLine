@@ -20,7 +20,7 @@ public class LoggingManager : MonoBehaviour
     [SerializeField] private bool enableSaveLoadLogs = false;
     [SerializeField] private bool enableMachineLogs = false;
     [SerializeField] private bool enableEconomyLogs = false;
-    [SerializeField] private bool enableSpawningLogs = false;
+    [SerializeField] private bool enableSpawningLogs = true;
     [SerializeField] private bool enableSellingLogs = false;
     [SerializeField] private bool enableDebugLogs = true;
 
@@ -108,7 +108,7 @@ public class LoggingManager : MonoBehaviour
             return;
 
         string finalMessage = FormatMessage(category, message);
-        
+
         // Handle state change detection if enabled and componentId provided
         if (enableStateChangeDetection && !string.IsNullOrEmpty(componentId))
         {
@@ -234,6 +234,24 @@ public class LoggingManager : MonoBehaviour
         return formattedMessage;
     }
 
+    private static string ExtractMessage(string logString)
+    {
+        if (string.IsNullOrEmpty(logString))
+            return logString;
+        // Find the index of the last closing bracket.
+        int startIndex = logString.LastIndexOf(']');
+
+        // If a closing bracket is found, return the substring after it.
+        // We add +2 to skip the bracket and the space that follows.
+        if (startIndex != -1 && startIndex + 2 <= logString.Length)
+        {
+            return logString.Substring(startIndex + 2);
+        }
+
+        // If no closing bracket is found, return the original string.
+        return logString;
+    }
+
     private bool ShouldSuppressDuplicate(string componentId, string message)
     {
         if (!componentStates.ContainsKey(componentId))
@@ -248,9 +266,9 @@ public class LoggingManager : MonoBehaviour
         }
 
         var state = componentStates[componentId];
-        
+
         // Check if this is the same message as last time
-        if (state.lastMessage == message)
+        if (ExtractMessage(state.lastMessage) == ExtractMessage(message))
         {
             // Check if enough time has passed to show it again
             if (Time.time - state.lastLogTime < stateChangeTimeoutSeconds)
@@ -285,7 +303,7 @@ public class LoggingManager : MonoBehaviour
     {
         int totalComponents = componentStates.Count;
         int suppressedMessages = 0;
-        
+
         foreach (var state in componentStates.Values)
         {
             suppressedMessages += state.duplicateCount;

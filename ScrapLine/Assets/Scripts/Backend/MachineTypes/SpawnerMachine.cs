@@ -20,7 +20,7 @@ public class SpawnerMachine : BaseMachine
         // Set spawn interval from machine definition
         spawnInterval = machineDef.baseProcessTime;
         lastSpawnTime = Time.time;
-        
+        GameLogger.LogSpawning($"Spawner created at ({cellData.x}, {cellData.y}) with interval {spawnInterval}s", ComponentId);
         // Assign the starter waste crate to this spawner when created
         InitializeWasteCrate();
     }
@@ -45,7 +45,7 @@ public class SpawnerMachine : BaseMachine
             if (timeUntilNext > 0)
             {
                 // Don't spam - only log occasionally when close to spawn time
-                if (timeUntilNext < 1.0f)
+                if (Mathf.Floor(timeUntilNext) != Mathf.Floor(timeUntilNext + Time.deltaTime))
                 {
                     GameLogger.LogSpawning($"Spawn in {timeUntilNext:F1}s", ComponentId);
                 }
@@ -68,14 +68,15 @@ public class SpawnerMachine : BaseMachine
     {
         // For now, assign the starter crate to all spawners when they are created
         var starterCrateDef = FactoryRegistry.Instance.GetWasteCrate("starter_crate");
-        if (starterCrateDef != null && (cellData.wasteCrate == null || cellData.wasteCrate.wasteCrateDefId == null))
+        GameLogger.LogSpawning($"Assigning starter crate to spawner with {starterCrateDef.displayName}", ComponentId);
+        if (starterCrateDef != null && (cellData.wasteCrate == null || cellData.wasteCrate.wasteCrateDefId == null || string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId)))
         {
             cellData.wasteCrate = new WasteCrateInstance
             {
                 wasteCrateDefId = starterCrateDef.id,
                 remainingItems = new List<WasteCrateItemDef>()
             };
-            
+
             // Copy items from definition to instance
             foreach (var item in starterCrateDef.items)
             {
@@ -85,6 +86,7 @@ public class SpawnerMachine : BaseMachine
                     count = item.count
                 });
             }
+            GameLogger.LogSpawning($"Waste crate initialized with {cellData.wasteCrate.remainingItems.Count} item types", ComponentId);
         }
     }
     
@@ -153,7 +155,7 @@ public class SpawnerMachine : BaseMachine
         GameLogger.LogSpawning($"Created new item: {newItem.itemType} (id: {newItem.id})", ComponentId);
 
         cellData.items.Add(newItem);
-
+        
         // Tell visual manager to create visual representation
         UIGridManager gridManager = UnityEngine.Object.FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
