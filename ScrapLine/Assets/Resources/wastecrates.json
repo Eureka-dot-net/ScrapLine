@@ -3,14 +3,76 @@
     {
       "id": "starter_crate",
       "displayName": "Starter Waste Crate",
+      "sprite": "waste_1",
+      "cost": 250,
       "items": [
         {
           "itemType": "can",
           "count": 50
         },
         {
-          "itemType": "plasticBottle",
+          "itemType": "plasticBottle", 
           "count": 50
+        }
+      ]
+    },
+    {
+      "id": "medium_crate",
+      "displayName": "Medium Waste Crate", 
+      "sprite": "waste_2",
+      "cost": 375,
+      "items": [
+        {
+          "itemType": "can",
+          "count": 75
+        },
+        {
+          "itemType": "plasticBottle",
+          "count": 75
+        }
+      ]
+    },
+    {
+      "id": "large_crate",
+      "displayName": "Large Waste Crate",
+      "sprite": "waste_3", 
+      "cost": 562,
+      "items": [
+        {
+          "itemType": "can",
+          "count": 100
+        },
+        {
+          "itemType": "plasticBottle",
+          "count": 100
+        },
+        {
+          "itemType": "shreddedAluminum",
+          "count": 25
+        }
+      ]
+    },
+    {
+      "id": "premium_crate",
+      "displayName": "Premium Waste Crate",
+      "sprite": "waste_4",
+      "cost": 937,
+      "items": [
+        {
+          "itemType": "can", 
+          "count": 150
+        },
+        {
+          "itemType": "plasticBottle",
+          "count": 150
+        },
+        {
+          "itemType": "shreddedAluminum",
+          "count": 50
+        },
+        {
+          "itemType": "granulatedPlastic",
+          "count": 25
         }
       ]
     }

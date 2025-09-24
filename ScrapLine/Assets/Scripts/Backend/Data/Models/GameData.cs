@@ -98,4 +98,6 @@ public class GameData
     public List<GridData> grids = new List<GridData>();
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public int credits = 0; // Credits (money) system for purchasing machines
+    public int wasteQueueLimit = 1; // How many crates can be queued (upgradeable in future)
+    public List<string> wasteQueue = new List<string>(); // Queue of waste crate IDs waiting to be used
 }

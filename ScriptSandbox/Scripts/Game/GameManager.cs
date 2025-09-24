@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using static GlobalUnityMethods;
 
 /// <summary>
 /// Core game manager that orchestrates all subsystems.
