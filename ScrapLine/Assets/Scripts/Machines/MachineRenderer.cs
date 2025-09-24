@@ -724,15 +724,12 @@ public class MachineRenderer : MonoBehaviour
         // Store current progress for next frame comparison
         lastProgress = progress;
 
-        // Check if machine should still show progress bar
-        bool shouldShow = associatedMachine.ShouldShowProgressBar(progress);
-        
-        // If we're in completion display mode, force show the progress bar
+        // Determine what progress to display and use for visibility checks
         bool inCompletionMode = (Time.time - completionShowTime) < COMPLETION_DISPLAY_DURATION;
-        if (inCompletionMode)
-        {
-            shouldShow = true;
-        }
+        float displayProgress = inCompletionMode ? 1.0f : progress;
+        
+        // Check if machine should show progress bar using the display progress
+        bool shouldShow = associatedMachine.ShouldShowProgressBar(displayProgress);
         
         if (!shouldShow)
         {
@@ -747,19 +744,18 @@ public class MachineRenderer : MonoBehaviour
             progressBarContainer.SetActive(true);
         }
 
-        // Determine what progress to display
-        float displayProgress = progress;
-        if (inCompletionMode)
-        {
-            // Show 100% during completion display period
-            displayProgress = 1.0f;
-            GameLogger.LogMachine($"Showing completion: 100% (actual progress: {progress:F2})", ComponentId);
-        }
-        
         // Get current progress and update fill amount
         if (displayProgress >= 0f)
         {
-            GameLogger.LogMachine($"Updating progress bar: {displayProgress} for machine at ({cellX}, {cellY})", ComponentId);
+            if (inCompletionMode)
+            {
+                GameLogger.LogMachine($"Showing completion: 100% (actual progress: {progress:F2})", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogMachine($"Updating progress bar: {displayProgress} for machine at ({cellX}, {cellY})", ComponentId);
+            }
+            
             // Clamp to 1.0 to handle timing delays that might cause progress to exceed 100%
             progressBarFill.fillAmount = Mathf.Clamp01(displayProgress);
             GameLogger.LogMachine($"fillAmount is now actually {progressBarFill.fillAmount}", ComponentId);
