@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace UnityEngine.UI
 {
+    // Text alignment enum (global in UnityEngine.UI)
+    public enum TextAnchor
+    {
+        UpperLeft, UpperCenter, UpperRight,
+        MiddleLeft, MiddleCenter, MiddleRight,
+        LowerLeft, LowerCenter, LowerRight
+    }
+
     // Selectable base class for UI elements
     public class Selectable : MonoBehaviour
     {
@@ -64,9 +72,12 @@ namespace UnityEngine.UI
         public Sprite sprite { get; set; }
         public Type type { get; set; } = Type.Simple;
         public float fillAmount { get; set; } = 1f;
+        public FillMethod fillMethod { get; set; } = FillMethod.Horizontal;
+        public int fillOrigin { get; set; } = 0;
         public RectTransform rectTransform => GetComponent<RectTransform>();
         
         public enum Type { Simple, Sliced, Tiled, Filled }
+        public enum FillMethod { Horizontal, Vertical, Radial90, Radial180, Radial360 }
     }
 
     // RawImage class
@@ -88,12 +99,6 @@ namespace UnityEngine.UI
         public bool supportRichText { get; set; } = true;
         
         public enum FontStyle { Normal, Bold, Italic, BoldAndItalic }
-        public enum TextAnchor 
-        { 
-            UpperLeft, UpperCenter, UpperRight,
-            MiddleLeft, MiddleCenter, MiddleRight,
-            LowerLeft, LowerCenter, LowerRight
-        }
     }
 
     // Graphic base class
@@ -411,17 +416,6 @@ namespace UnityEngine
         
         public enum Edge { Left, Right, Top, Bottom }
         public enum Axis { Horizontal, Vertical }
-    }
-
-    // Canvas class
-    public class Canvas : Component
-    {
-        public RenderMode renderMode { get; set; } = RenderMode.ScreenSpaceOverlay;
-        public Camera worldCamera { get; set; }
-        public int sortingOrder { get; set; }
-        public bool overrideSorting { get; set; }
-        
-        public enum RenderMode { ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace }
     }
 
     // CanvasRenderer class

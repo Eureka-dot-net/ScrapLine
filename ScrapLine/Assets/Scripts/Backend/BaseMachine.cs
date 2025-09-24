@@ -78,21 +78,6 @@ public abstract class BaseMachine
         // Subclasses override for specific behavior
     }
 
-    /// <summary>
-    /// Manages the waiting items queue for this machine
-    /// </summary>
-    /// <returns>Returns the next item to process, or null if none available</returns>
-    protected virtual ItemData GetNextWaitingItem()
-    {
-        if (cellData.waitingItems.Count > 0)
-        {
-            ItemData nextItem = cellData.waitingItems[0];
-            cellData.waitingItems.RemoveAt(0);
-            return nextItem;
-        }
-        return null;
-    }
-
 
     /// <summary>
     /// Gets the machine definition for this machine
@@ -217,5 +202,29 @@ public abstract class BaseMachine
         int currentIndex = (int)currentDirection;
         int newIndex = (currentIndex + steps + directionCount) % directionCount;
         return (Direction)newIndex;
+    }
+
+    // Progress Bar System
+    // ===================
+    
+    /// <summary>
+    /// Gets the current progress as a value between 0.0 and 1.0 (0% to 100%).
+    /// Default implementation returns -1 to indicate no progress tracking.
+    /// Override in subclasses to provide specific progress calculation.
+    /// </summary>
+    /// <returns>Progress value 0.0-1.0, or -1 if no progress tracking</returns>
+    public virtual float GetProgress()
+    {
+        return -1f; // No progress by default
+    }
+
+    /// <summary>
+    /// Checks if this machine should show a progress bar.
+    /// Override in subclasses to control when progress bars are visible.
+    /// </summary>
+    /// <returns>True if progress bar should be shown</returns>
+    public virtual bool ShouldShowProgressBar(float progress)
+    {
+        return progress >= 0f && progress <= 1f; // Show bar when there's active progress, including 100%
     }
 }

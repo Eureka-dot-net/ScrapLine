@@ -5319,9 +5319,9 @@ MonoBehaviour:
   enableGridLogs: 0
   enableUILogs: 0
   enableSaveLoadLogs: 0
-  enableMachineLogs: 0
+  enableMachineLogs: 1
   enableEconomyLogs: 0
-  enableSpawningLogs: 1
+  enableSpawningLogs: 0
   enableSellingLogs: 0
   enableDebugLogs: 1
   enableStateChangeDetection: 1

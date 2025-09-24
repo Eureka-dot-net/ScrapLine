@@ -317,7 +317,7 @@ namespace UnityEngine
     // Time class
     public static class Time
     {
-        public static float time => 0f;
+        public static float time { get; set; } = 0f;
         public static float deltaTime => 0.016f; // 60 FPS
         public static float fixedDeltaTime => 0.02f; // 50 FPS
         public static float unscaledTime => 0f;
@@ -600,9 +600,36 @@ namespace UnityEngine
         public static bool anyKeyDown => false;
     }
 
+    // Canvas render mode enum (in UnityEngine namespace)  
+    public enum RenderMode 
+    { 
+        ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace 
+    }
+
+    // Canvas class (in UnityEngine namespace)
+    public class Canvas : Component
+    {
+        public RenderMode renderMode { get; set; } = RenderMode.ScreenSpaceOverlay;
+        public Camera worldCamera { get; set; }
+        public int sortingOrder { get; set; }
+        public bool overrideSorting { get; set; }
+    }
+
     // Global functions
     public static class UnityGlobals
     {
         public static void DontDestroyOnLoad(Object obj) { }
     }
+
+    // Unity global methods as static class  
+    public static class Unity
+    {
+        public static void DontDestroyOnLoad(Object obj) => UnityGlobals.DontDestroyOnLoad(obj);
+    }
+}
+
+// Global Unity methods - available without namespace outside the UnityEngine namespace
+public static class GlobalUnityMethods
+{
+    public static void DontDestroyOnLoad(UnityEngine.Object obj) { }
 }
