@@ -724,11 +724,11 @@ public class MachineRenderer : MonoBehaviour
         }
 
         // Get current progress and update fill amount
-
         if (progress >= 0f)
         {
             GameLogger.LogMachine($"Updating progress bar: {progress} for machine at ({cellX}, {cellY})", ComponentId);
-            progressBarFill.fillAmount = progress;
+            // Clamp to 1.0 to handle timing delays that might cause progress to exceed 100%
+            progressBarFill.fillAmount = Mathf.Clamp01(progress);
             GameLogger.LogMachine($"fillAmount is now actually {progressBarFill.fillAmount}", ComponentId);
         }
     }

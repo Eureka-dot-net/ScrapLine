@@ -374,6 +374,6 @@ public class SpawnerMachine : BaseMachine
     /// <returns>True if progress bar should be shown</returns>
     public override bool ShouldShowProgressBar(float progress)
     {
-        return progress >= 0f && progress < 1f && HasItemsInWasteCrate() && cellData.items.Count == 0;
+        return progress >= 0f && HasItemsInWasteCrate() && cellData.items.Count == 0;
     }
 }

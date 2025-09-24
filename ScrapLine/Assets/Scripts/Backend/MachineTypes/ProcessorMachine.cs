@@ -361,6 +361,6 @@ public class ProcessorMachine : BaseMachine
     /// <returns>True if progress bar should be shown</returns>
     public override bool ShouldShowProgressBar(float progress)
     {
-        return progress >= 0f && progress < 1f && cellData.machineState == MachineState.Processing;
+        return progress >= 0f && cellData.machineState == MachineState.Processing;
     }
 }
