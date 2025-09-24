@@ -9,6 +9,8 @@ public class SpawnerMachine : BaseMachine
 {
     private float lastSpawnTime;
     private float spawnInterval;
+    private int initialWasteCrateTotal = -1; // Cache initial total for percentage calculations
+    private string cachedIconSprite = null; // Cache current icon sprite to detect changes
     
     /// <summary>
     /// Get the component ID for logging purposes
@@ -37,6 +39,9 @@ public class SpawnerMachine : BaseMachine
             GameLogger.LogSpawning($"Spawn conditions met - triggering spawn", ComponentId);
             SpawnItem();
             lastSpawnTime = Time.time;
+            
+            // Check if icon changed after spawning and update visuals
+            CheckAndUpdateIconVisual();
         }
         else if (GameLogger.IsCategoryEnabled(LoggingManager.LogCategory.Spawning))
         {
@@ -108,11 +113,30 @@ public class SpawnerMachine : BaseMachine
     
     public override string GetBuildingIconSprite()
     {
-        if (!HasItemsInWasteCrate())
+        int currentItems = GetTotalItemsInWasteCrate();
+        int initialTotal = GetInitialWasteCrateTotal();
+        
+        if (initialTotal == 0 || currentItems == 0)
         {
-            return machineDef.buildingIconSprite + "_0"; // Use a different icon if the waste crate is empty
+            return machineDef.buildingIconSprite + "_0";
         }
-        return machineDef.buildingIconSprite;
+        
+        // Calculate percentage
+        float percentage = (float)currentItems / initialTotal * 100f;
+        
+        // Return appropriate sprite based on percentage ranges
+        if (percentage > 66f)
+        {
+            return machineDef.buildingIconSprite + "_100";
+        }
+        else if (percentage > 33f)
+        {
+            return machineDef.buildingIconSprite + "_66";
+        }
+        else
+        {
+            return machineDef.buildingIconSprite + "_33";
+        }
     }
     
     /// <summary>
@@ -129,6 +153,65 @@ public class SpawnerMachine : BaseMachine
             total += item.count;
         }
         return total;
+    }
+    
+    /// <summary>
+    /// Get initial total capacity of the waste crate (cached for performance)
+    /// </summary>
+    private int GetInitialWasteCrateTotal()
+    {
+        if (initialWasteCrateTotal >= 0)
+            return initialWasteCrateTotal;
+            
+        if (cellData.wasteCrate == null || string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId))
+        {
+            initialWasteCrateTotal = 0;
+            return 0;
+        }
+        
+        // Try to get definition from FactoryRegistry first
+        try
+        {
+            var crateDef = FactoryRegistry.Instance?.GetWasteCrate(cellData.wasteCrate.wasteCrateDefId);
+            if (crateDef != null && crateDef.items != null)
+            {
+                int total = 0;
+                foreach (var item in crateDef.items)
+                {
+                    total += item.count;
+                }
+                
+                initialWasteCrateTotal = total;
+                GameLogger.LogSpawning($"Cached initial waste crate total from definition: {total} items", ComponentId);
+                return total;
+            }
+        }
+        catch
+        {
+            // FactoryRegistry may not be available in test context
+        }
+        
+        // Fallback: Calculate from current remaining items (assuming they haven't been consumed yet)
+        if (cellData.wasteCrate.remainingItems != null)
+        {
+            int total = 0;
+            foreach (var item in cellData.wasteCrate.remainingItems)
+            {
+                total += item.count;
+            }
+            
+            // Only cache if this seems reasonable (non-zero)
+            if (total > 0)
+            {
+                initialWasteCrateTotal = total;
+                GameLogger.LogSpawning($"Cached initial waste crate total from remaining items: {total} items", ComponentId);
+                return total;
+            }
+        }
+        
+        // Final fallback
+        initialWasteCrateTotal = 0;
+        return 0;
     }
     
     /// <summary>
@@ -200,6 +283,46 @@ public class SpawnerMachine : BaseMachine
         selectedItem.count--;
         
         return selectedItem.itemType;
+    }
+    
+    /// <summary>
+    /// Check if the building icon sprite has changed and update grid visuals if needed
+    /// </summary>
+    private void CheckAndUpdateIconVisual()
+    {
+        string currentIcon = GetBuildingIconSprite();
+        if (cachedIconSprite != currentIcon)
+        {
+            GameLogger.LogMachine($"Icon sprite changed from '{cachedIconSprite}' to '{currentIcon}' - updating grid visual", ComponentId);
+            cachedIconSprite = currentIcon;
+            
+            // Update the grid visual - need to get reference to UIGridManager
+            try 
+            {
+                var gameManager = GameManager.Instance;
+                if (gameManager != null)
+                {
+                    var gridManager = gameManager.GetComponent<UIGridManager>();
+                    if (gridManager != null)
+                    {
+                        gridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, this);
+                        GameLogger.LogMachine($"Grid visual updated successfully for cell ({cellData.x}, {cellData.y})", ComponentId);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Could not find UIGridManager to update visual", ComponentId);
+                    }
+                }
+                else
+                {
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "GameManager.Instance is null - cannot update visual", ComponentId);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Exception updating grid visual: {ex.Message}", ComponentId);
+            }
+        }
     }
     
     /// <summary>
