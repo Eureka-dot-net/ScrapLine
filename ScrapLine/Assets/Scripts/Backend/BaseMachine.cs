@@ -15,6 +15,11 @@ public abstract class BaseMachine
     public bool CanConfigure = false;
 
     /// <summary>
+    /// Public access to the machine definition for this machine
+    /// </summary>
+    public MachineDef MachineDef => machineDef;
+
+    /// <summary>
     /// Constructor that injects required data dependencies
     /// </summary>
     /// <param name="cellData">The cell data this machine operates on</param>

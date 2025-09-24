@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using static UnityEngine.UnityGlobals;
 
 /// <summary>
 /// Core game manager that orchestrates all subsystems.
@@ -50,7 +49,7 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        UnityGlobals.DontDestroyOnLoad(gameObject);
     }
 
     private void Start()

@@ -59,6 +59,21 @@ public class GridManager : MonoBehaviour
                 else if (y == defaultGrid.height - 1)
                     role = CellRole.Bottom;
 
+                // Set appropriate machineDefId for blank cells based on role
+                string machineDefId;
+                switch (role)
+                {
+                    case CellRole.Top:
+                        machineDefId = "blank_top";
+                        break;
+                    case CellRole.Bottom:
+                        machineDefId = "blank_bottom";
+                        break;
+                    default:
+                        machineDefId = "blank";
+                        break;
+                }
+
                 var cell = new CellData
                 {
                     x = x,
@@ -66,6 +81,7 @@ public class GridManager : MonoBehaviour
                     cellType = CellType.Blank,
                     direction = Direction.Up,
                     cellRole = role,
+                    machineDefId = machineDefId
                 };
                 defaultGrid.cells.Add(cell);
                 cell.machine = MachineFactory.CreateMachine(cell);

@@ -31,7 +31,7 @@ public class MachineRenderer : MonoBehaviour
     /// <summary>
     /// Setup the renderer. Pass in Texture and Material for moving part if needed.
     /// </summary>
-    /// <param name="def"></param>
+    /// <param name="baseMachine">The BaseMachine instance containing the definition and behavior</param>
     /// <param name="cellDirection"></param>
     /// <param name="gridManager"></param>
     /// <param name="cellX"></param>
@@ -39,7 +39,7 @@ public class MachineRenderer : MonoBehaviour
     /// <param name="movingPartTexture">Optional: assign this if using moving part</param>
     /// <param name="movingPartMaterial">Optional: assign this if using moving part</param>
     public void Setup(
-        MachineDef def,
+        BaseMachine baseMachine,
         UICell.Direction cellDirection = UICell.Direction.Up,
         UIGridManager gridManager = null,
         int cellX = 0,
@@ -53,6 +53,9 @@ public class MachineRenderer : MonoBehaviour
         this.cellY = cellY;
         this.movingPartTexture = movingPartTexture;
         this.movingPartMaterial = movingPartMaterial;
+
+        // Get the machine definition for easier access
+        MachineDef def = baseMachine.MachineDef;
 
         foreach (Transform child in transform) Destroy(child.gameObject);
 

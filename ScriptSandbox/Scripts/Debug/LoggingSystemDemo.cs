@@ -1,5 +1,4 @@
 using UnityEngine;
-using static UnityEngine.UnityGlobals;
 
 /// <summary>
 /// Demonstration script showing how to use the new central logging system.
@@ -28,7 +27,7 @@ public class LoggingSystemDemo : MonoBehaviour
                 // Create LoggingManager if it doesn't exist
                 GameObject loggingManagerObject = new GameObject("LoggingManager");
                 loggingManagerObject.AddComponent<LoggingManager>();
-                DontDestroyOnLoad(loggingManagerObject);
+                UnityGlobals.DontDestroyOnLoad(loggingManagerObject);
                 
                 Debug.Log("LoggingManager created for demo");
             }

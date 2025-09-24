@@ -94,12 +94,13 @@ public class UIGridManager : MonoBehaviour
                 if (cellData != null)
                 {
                     cellScript.SetCellRole(cellData.cellRole);
-                    cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machineDefId);
+                    cellScript.SetCellType(cellData.cellType, cellData.direction, cellData.machine);
                 }
                 else
                 {
+                    // This case should not happen now that all cells have CellData with machine instances
                     cellScript.SetCellRole(CellRole.Grid);
-                    cellScript.SetCellType(CellType.Blank, Direction.Up);
+                    GameLogger.LogError(LoggingManager.LogCategory.Grid, $"No CellData found for cell at ({x},{y}) during grid initialization", ComponentId);
                 }
             }
         }
@@ -188,13 +189,23 @@ public class UIGridManager : MonoBehaviour
 
 
 
-    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, string machineDefId = null)
+    public void UpdateCellVisuals(int x, int y, CellType newType, Direction newDirection, BaseMachine baseMachine = null)
     {
         UICell cell = GetCell(x, y);
         if (cell != null)
         {
+            // If baseMachine is not provided, get it from CellData
+            if (baseMachine == null)
+            {
+                CellData cellData = GetCellData(x, y);
+                if (cellData != null)
+                {
+                    baseMachine = cellData.machine;
+                }
+            }
+            
             // UICell now handles ALL visual setup internally via MachineRenderer
-            cell.SetCellType(newType, newDirection, machineDefId);
+            cell.SetCellType(newType, newDirection, baseMachine);
         }
     }
 
@@ -208,7 +219,7 @@ public class UIGridManager : MonoBehaviour
 
         foreach (var cell in gridData.cells)
         {
-            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machineDefId);
+            UpdateCellVisuals(cell.x, cell.y, cell.cellType, cell.direction, cell.machine);
         }
     }
 

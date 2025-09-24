@@ -297,10 +297,10 @@ public class MachineManager : MonoBehaviour
         if (activeGridManager != null)
         {
             // Update target cell with new machine
-            activeGridManager.UpdateCellVisuals(toX, toY, targetCellData.cellType, targetCellData.direction, targetCellData.machineDefId);
+            activeGridManager.UpdateCellVisuals(toX, toY, targetCellData.cellType, targetCellData.direction);
 
             // Update source cell to blank
-            activeGridManager.UpdateCellVisuals(fromX, fromY, sourceCellData.cellType, sourceCellData.direction, null);
+            activeGridManager.UpdateCellVisuals(fromX, fromY, sourceCellData.cellType, sourceCellData.direction);
         }
 
     }
@@ -346,7 +346,7 @@ public class MachineManager : MonoBehaviour
         // Update visuals
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(x, y, targetCellData.cellType, targetCellData.direction, targetCellData.machineDefId);
+            activeGridManager.UpdateCellVisuals(x, y, targetCellData.cellType, targetCellData.direction);
         }
 
         return true;
@@ -443,7 +443,7 @@ public class MachineManager : MonoBehaviour
 
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction);
         }
     }
 
@@ -470,7 +470,7 @@ public class MachineManager : MonoBehaviour
 
         if (activeGridManager != null)
         {
-            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, cellData.machineDefId);
+            activeGridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction);
         }
     }
 
