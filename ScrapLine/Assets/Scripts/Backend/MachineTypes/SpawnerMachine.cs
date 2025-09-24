@@ -24,7 +24,7 @@ public class SpawnerMachine : BaseMachine
         lastSpawnTime = Time.time;
         GameLogger.LogSpawning($"Spawner created at ({cellData.x}, {cellData.y}) with interval {spawnInterval}s", ComponentId);
         // Assign the starter waste crate to this spawner when created
-       // InitializeWasteCrate();
+        CreateWasteCrate();
     }
     
     /// <summary>
@@ -363,6 +363,7 @@ public class SpawnerMachine : BaseMachine
         float timeSinceLastSpawn = Time.time - lastSpawnTime;
         float progress = timeSinceLastSpawn / spawnInterval;
         
+        GameLogger.LogSpawning($"Spawner progress: {progress:P1} (time since last spawn: {timeSinceLastSpawn:F1}s)", ComponentId);
         // Clamp to 0-1 range
         return Mathf.Clamp01(progress);
     }
@@ -371,9 +372,8 @@ public class SpawnerMachine : BaseMachine
     /// Spawners should show progress bar when actively counting down to spawn
     /// </summary>
     /// <returns>True if progress bar should be shown</returns>
-    public override bool ShouldShowProgressBar()
+    public override bool ShouldShowProgressBar(float progress)
     {
-        float progress = GetProgress();
         return progress >= 0f && progress < 1f && HasItemsInWasteCrate() && cellData.items.Count == 0;
     }
 }

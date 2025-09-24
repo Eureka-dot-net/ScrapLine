@@ -117,7 +117,7 @@ public class MachineRenderer : MonoBehaviour
             movingPartRawImage.transform.SetSiblingIndex(0);
         }
 
-        
+
         // --- Border: create in BordersContainer ---
         if (!string.IsNullOrEmpty(def.borderSprite) && !isInMenu && gridManager != null)
         {
@@ -154,7 +154,7 @@ public class MachineRenderer : MonoBehaviour
             // For menu context, keep building sprites in local renderer
             var building = CreateImageChild("Building", def.buildingSprite);
             building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
-            
+
             // Apply building sprite color tinting if specified
             if (!string.IsNullOrEmpty(def.buildingSpriteColour))
             {
@@ -168,9 +168,9 @@ public class MachineRenderer : MonoBehaviour
                     GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
                 }
             }
-            
+
             building.transform.SetSiblingIndex(3);
-            
+
             string buildingIconSprite = def.buildingIconSprite;
             // Add icon sprite if specified
             if (!string.IsNullOrEmpty(buildingIconSprite))
@@ -219,7 +219,7 @@ public class MachineRenderer : MonoBehaviour
             GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"BuildingsContainer not found, falling back to local building sprite", ComponentId);
             var building = CreateImageChild("Building", def.buildingSprite);
             building.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
-            
+
             // Apply building sprite color tinting if specified
             if (!string.IsNullOrEmpty(def.buildingSpriteColour))
             {
@@ -233,22 +233,22 @@ public class MachineRenderer : MonoBehaviour
                     GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Failed to parse building sprite color '{def.buildingSpriteColour}' for machine '{def.id}'", ComponentId);
                 }
             }
-            
+
             building.transform.SetSiblingIndex(3);
-            
+
             // Add icon sprite if specified
             if (!string.IsNullOrEmpty(def.buildingIconSprite))
             {
                 var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
                 icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
-                
+
                 // Apply icon size scaling - for fallback context, use responsive anchors
                 RectTransform iconRT = icon.rectTransform;
-                
+
                 // For responsive UI, use anchors to size the icon relative to its parent
                 float iconSizeRatio = def.buildingIconSpriteSize;
                 float margin = (1.0f - iconSizeRatio) * 0.5f; // Calculate margins to center the icon
-                
+
                 iconRT.anchorMin = new Vector2(margin, margin);
                 iconRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
                 iconRT.offsetMin = Vector2.zero;
@@ -310,7 +310,7 @@ public class MachineRenderer : MonoBehaviour
 
         // Create icon sprite if specified (as a child of the building sprite)
         string buildingIconSprite = baseMachine.GetBuildingIconSprite();
-        
+
         if (!string.IsNullOrEmpty(buildingIconSprite))
         {
             GameObject iconSprite = new GameObject($"BuildingIcon_{cellX}_{cellY}");
@@ -364,7 +364,7 @@ public class MachineRenderer : MonoBehaviour
             iconRT.offsetMin = Vector2.zero;
             iconRT.offsetMax = Vector2.zero;
             iconRT.anchoredPosition = Vector2.zero;
-            
+
             // Create progress bar if machine supports it and not in menu
             CreateProgressBar();
         }
@@ -377,7 +377,7 @@ public class MachineRenderer : MonoBehaviour
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"BordersContainer not found, falling back to local border sprite", ComponentId);
             var border = CreateImageChild("Border", def.borderSprite);
-            
+
             // Apply border color tinting if specified
             if (!string.IsNullOrEmpty(def.borderColor))
             {
@@ -515,7 +515,7 @@ public class MachineRenderer : MonoBehaviour
         Image img = go.AddComponent<Image>();
 
         Sprite spriteAsset = null;
-        
+
         // For BuildingIcon, try multiple paths
         if (name == "BuildingIcon")
         {
@@ -524,7 +524,7 @@ public class MachineRenderer : MonoBehaviour
                 "Sprites/Items/" + spriteResource,
                 "Sprites/" + spriteResource
             };
-            
+
             foreach (string spritePath in possiblePaths)
             {
                 spriteAsset = Resources.Load<Sprite>(spritePath);
@@ -533,7 +533,7 @@ public class MachineRenderer : MonoBehaviour
                     break;
                 }
             }
-            
+
             if (spriteAsset == null)
             {
                 GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Building icon sprite '{spriteResource}' not found! Tried paths: {string.Join(", ", possiblePaths)}", ComponentId);
@@ -544,13 +544,13 @@ public class MachineRenderer : MonoBehaviour
             // For other sprites, use the default Machines path
             string spritePath = "Sprites/Machines/" + spriteResource;
             spriteAsset = Resources.Load<Sprite>(spritePath);
-            
+
             if (spriteAsset == null)
             {
                 GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Sprite not found! Tried to load: {spritePath} for '{name}'", ComponentId);
             }
         }
-        
+
         img.sprite = spriteAsset;
 
         if (img.sprite == null)
@@ -583,19 +583,19 @@ public class MachineRenderer : MonoBehaviour
             Destroy(buildingSprite);
             buildingSprite = null;
         }
-        
+
         if (borderSprite != null)
         {
             Destroy(borderSprite);
             borderSprite = null;
         }
-        
+
         if (movingPartSprite != null)
         {
             Destroy(movingPartSprite);
             movingPartSprite = null;
         }
-        
+
         // Clean up progress bar
         if (progressBarContainer != null)
         {
@@ -626,7 +626,7 @@ public class MachineRenderer : MonoBehaviour
     private void CreateProgressBar()
     {
         // Only create progress bar if not in menu and machine supports progress
-        if (isInMenu || associatedMachine == null || !associatedMachine.ShouldShowProgressBar())
+        if (isInMenu || associatedMachine == null || !associatedMachine.ShouldShowProgressBar(associatedMachine.GetProgress()))
         {
             return;
         }
@@ -648,8 +648,10 @@ public class MachineRenderer : MonoBehaviour
 
         // Position progress bar below the icon sprite
         // Use anchors to position at bottom of parent with some margin
-        progressRT.anchorMin = new Vector2(0.2f, 0.05f); // Left and bottom margins
-        progressRT.anchorMax = new Vector2(0.8f, 0.15f);  // Right margin and height
+        //progressRT.anchorMin = new Vector2(0.2f, 0.05f); // Left and bottom margins
+        //progressRT.anchorMax = new Vector2(0.8f, 0.15f);  // Right margin and height
+        progressRT.anchorMin = new Vector2(0.1f, 0.0f); // Wider and at bottom edge
+        progressRT.anchorMax = new Vector2(0.9f, 0.2f);  // Taller
         progressRT.offsetMin = Vector2.zero;
         progressRT.offsetMax = Vector2.zero;
         progressRT.anchoredPosition = Vector2.zero;
@@ -657,10 +659,10 @@ public class MachineRenderer : MonoBehaviour
         // Create background image
         GameObject backgroundObj = new GameObject("Background");
         backgroundObj.transform.SetParent(progressBarContainer.transform, false);
-        
+
         progressBarBackground = backgroundObj.AddComponent<UnityEngine.UI.Image>();
         progressBarBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.8f); // Dark gray background
-        
+
         RectTransform backgroundRT = backgroundObj.GetComponent<RectTransform>();
         backgroundRT.anchorMin = Vector2.zero;
         backgroundRT.anchorMax = Vector2.one;
@@ -670,12 +672,14 @@ public class MachineRenderer : MonoBehaviour
         // Create fill image
         GameObject fillObj = new GameObject("Fill");
         fillObj.transform.SetParent(progressBarContainer.transform, false);
-        
+
         progressBarFill = fillObj.AddComponent<UnityEngine.UI.Image>();
         progressBarFill.color = new Color(0.2f, 0.8f, 0.2f, 0.8f); // Green fill
         progressBarFill.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
+        progressBarFill.fillOrigin = 0;
+        progressBarFill.sprite = Resources.Load<Sprite>("Sprites/Machines/UICellSprite");
         progressBarFill.type = UnityEngine.UI.Image.Type.Filled;
-        
+
         RectTransform fillRT = fillObj.GetComponent<RectTransform>();
         fillRT.anchorMin = Vector2.zero;
         fillRT.anchorMax = Vector2.one;
@@ -686,6 +690,8 @@ public class MachineRenderer : MonoBehaviour
         CanvasGroup progressCanvasGroup = progressBarContainer.AddComponent<CanvasGroup>();
         progressCanvasGroup.blocksRaycasts = false;
         progressCanvasGroup.interactable = false;
+
+        
 
         GameLogger.LogMachine($"Created progress bar for machine at ({cellX}, {cellY})", ComponentId);
     }
@@ -701,9 +707,10 @@ public class MachineRenderer : MonoBehaviour
         {
             return;
         }
+        float progress = associatedMachine.GetProgress();
 
         // Check if machine should still show progress bar
-        if (!associatedMachine.ShouldShowProgressBar())
+        if (!associatedMachine.ShouldShowProgressBar(progress))
         {
             // Hide progress bar if no longer needed
             progressBarContainer.SetActive(false);
@@ -717,10 +724,12 @@ public class MachineRenderer : MonoBehaviour
         }
 
         // Get current progress and update fill amount
-        float progress = associatedMachine.GetProgress();
+
         if (progress >= 0f)
         {
+            GameLogger.LogMachine($"Updating progress bar: {progress} for machine at ({cellX}, {cellY})", ComponentId);
             progressBarFill.fillAmount = progress;
+            GameLogger.LogMachine($"fillAmount is now actually {progressBarFill.fillAmount}", ComponentId);
         }
     }
 
@@ -739,14 +748,14 @@ public class MachineRenderer : MonoBehaviour
         if (Time.time - lastProgressUpdate >= 1.0f)
         {
             // Create progress bar if needed and machine supports it
-            if (progressBarContainer == null && associatedMachine.ShouldShowProgressBar())
+            if (progressBarContainer == null)
             {
                 CreateProgressBar();
             }
 
             // Update existing progress bar
             UpdateProgressBar();
-            
+
             lastProgressUpdate = Time.time;
         }
     }

@@ -359,9 +359,8 @@ public class ProcessorMachine : BaseMachine
     /// Processors should show progress bar when actively processing an item
     /// </summary>
     /// <returns>True if progress bar should be shown</returns>
-    public override bool ShouldShowProgressBar()
+    public override bool ShouldShowProgressBar(float progress)
     {
-        float progress = GetProgress();
         return progress >= 0f && progress < 1f && cellData.machineState == MachineState.Processing;
     }
 }

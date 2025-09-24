@@ -78,21 +78,6 @@ public abstract class BaseMachine
         // Subclasses override for specific behavior
     }
 
-    /// <summary>
-    /// Manages the waiting items queue for this machine
-    /// </summary>
-    /// <returns>Returns the next item to process, or null if none available</returns>
-    protected virtual ItemData GetNextWaitingItem()
-    {
-        if (cellData.waitingItems.Count > 0)
-        {
-            ItemData nextItem = cellData.waitingItems[0];
-            cellData.waitingItems.RemoveAt(0);
-            return nextItem;
-        }
-        return null;
-    }
-
 
     /// <summary>
     /// Gets the machine definition for this machine
@@ -238,9 +223,8 @@ public abstract class BaseMachine
     /// Override in subclasses to control when progress bars are visible.
     /// </summary>
     /// <returns>True if progress bar should be shown</returns>
-    public virtual bool ShouldShowProgressBar()
+    public virtual bool ShouldShowProgressBar(float progress)
     {
-        float progress = GetProgress();
         return progress >= 0f && progress < 1f; // Show bar when there's active progress
     }
 }
