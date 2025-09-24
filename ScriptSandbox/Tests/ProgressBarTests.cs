@@ -72,7 +72,7 @@ namespace ScrapLine.Tests
             var machine = new TestBaseMachine(cellData, spawnerDef);
 
             // Act
-            bool shouldShow = machine.ShouldShowProgressBar();
+            bool shouldShow = machine.ShouldShowProgressBar(-1f);
 
             // Assert
             Assert.IsFalse(shouldShow, "BaseMachine should not show progress bar by default");
@@ -116,9 +116,10 @@ namespace ScrapLine.Tests
             // Arrange
             var spawner = new SpawnerMachine(cellData, spawnerDef);
             Time.time = 1.0f; // Partially through spawn interval
+            float progress = spawner.GetProgress();
 
             // Act
-            bool shouldShow = spawner.ShouldShowProgressBar();
+            bool shouldShow = spawner.ShouldShowProgressBar(progress);
 
             // Assert
             Assert.IsTrue(shouldShow, "Spawner should show progress bar when actively spawning");
@@ -181,12 +182,25 @@ namespace ScrapLine.Tests
             cellData.items.Add(processingItem);
             
             Time.time = 1.0f; // Partially through processing
+            float progress = processor.GetProgress();
 
             // Act
-            bool shouldShow = processor.ShouldShowProgressBar();
+            bool shouldShow = processor.ShouldShowProgressBar(progress);
 
             // Assert
             Assert.IsTrue(shouldShow, "Processor should show progress bar when actively processing");
+        }
+
+        [Test]
+        public void BaseMachine_ShouldShowProgressBar_ShowsAt100Percent()
+        {
+            // Arrange
+            var machine = new TestBaseMachine(cellData, spawnerDef);
+
+            // Act & Assert - Test that 100% progress is shown
+            Assert.IsTrue(machine.ShouldShowProgressBar(1.0f), "Progress bar should be shown at 100% progress");
+            Assert.IsTrue(machine.ShouldShowProgressBar(0.8f), "Progress bar should be shown at 80% progress");
+            Assert.IsFalse(machine.ShouldShowProgressBar(-1f), "Progress bar should not be shown for invalid progress");
         }
 
         // Helper class for testing BaseMachine functionality

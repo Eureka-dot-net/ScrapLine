@@ -73,6 +73,7 @@ namespace UnityEngine.UI
         public Type type { get; set; } = Type.Simple;
         public float fillAmount { get; set; } = 1f;
         public FillMethod fillMethod { get; set; } = FillMethod.Horizontal;
+        public int fillOrigin { get; set; } = 0;
         public RectTransform rectTransform => GetComponent<RectTransform>();
         
         public enum Type { Simple, Sliced, Tiled, Filled }

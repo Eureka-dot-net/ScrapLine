@@ -225,6 +225,6 @@ public abstract class BaseMachine
     /// <returns>True if progress bar should be shown</returns>
     public virtual bool ShouldShowProgressBar(float progress)
     {
-        return progress >= 0f && progress < 1f; // Show bar when there's active progress
+        return progress >= 0f && progress <= 1f; // Show bar when there's active progress, including 100%
     }
 }
