@@ -75,5 +75,7 @@ public class WasteCrateItemDef {
 public class WasteCrateDef {
     public string id;
     public string displayName;
+    public string sprite; // Sprite for UI display
     public List<WasteCrateItemDef> items;
+    public int cost; // Cost to purchase this crate (calculated from items)
 }

@@ -60,18 +60,20 @@ public class SaveLoadManager : MonoBehaviour
     {
         try
         {
-            GameData data = new GameData
-            {
-                grids = gridManager.GetActiveGrids(),
-                credits = creditsManager.GetCredits()
-            };
-
+            // Get current game data from GameManager
+            GameData data = GameManager.Instance.gameData;
+            
+            // Update with current state
+            data.grids = gridManager.GetActiveGrids();
+            data.credits = creditsManager.GetCredits();
+            
             FactoryRegistry.Instance.SaveToGameData(data);
 
             string json = JsonUtility.ToJson(data);
             string path = GetSaveFilePath();
             File.WriteAllText(path, json);
             
+            GameLogger.LogSaveLoad($"Game saved successfully. Queue items: {data.wasteQueue?.Count ?? 0}", ComponentId);
         }
         catch (System.Exception ex)
         {
@@ -103,6 +105,9 @@ public class SaveLoadManager : MonoBehaviour
                 return false;
             }
 
+            // Store loaded data in GameManager
+            GameManager.Instance.gameData = data;
+
             // Load grid data
             gridManager.SetActiveGrids(data.grids);
 
@@ -111,6 +116,8 @@ public class SaveLoadManager : MonoBehaviour
 
             // Load factory registry data
             FactoryRegistry.Instance.LoadFromGameData(data);
+            
+            GameLogger.LogSaveLoad($"Game loaded successfully. Queue items: {data.wasteQueue?.Count ?? 0}, Queue limit: {data.wasteQueueLimit}", ComponentId);
 
             return true;
         }
