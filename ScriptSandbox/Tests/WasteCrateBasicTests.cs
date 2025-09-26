@@ -37,11 +37,12 @@ namespace ScrapLine.Tests
         public void GameData_NewQueueFields_ExistAndWork()
         {
             // Arrange & Act
+            // Test corrected global queue system
             var gameData = new GameData
             {
                 credits = 1000,
                 wasteQueueLimit = 2,
-                wasteQueue = new List<string> { "medium_crate", "large_crate" }
+                wasteQueue = new List<string> { "medium_crate", "starter_crate" }
             };
             
             // Assert
@@ -49,7 +50,7 @@ namespace ScrapLine.Tests
             Assert.AreEqual(2, gameData.wasteQueueLimit);
             Assert.AreEqual(2, gameData.wasteQueue.Count);
             Assert.AreEqual("medium_crate", gameData.wasteQueue[0]);
-            Assert.AreEqual("large_crate", gameData.wasteQueue[1]);
+            Assert.AreEqual("starter_crate", gameData.wasteQueue[1]);
         }
         
         [Test]

@@ -27,6 +27,9 @@ public class GameManager : MonoBehaviour
 
     [Tooltip("Item movement processing manager")]
     public ItemMovementManager itemMovementManager;
+    
+    [Tooltip("Waste crate queue and supply management")]
+    public WasteSupplyManager wasteSupplyManager;
 
 
     [Header("Timing")]
@@ -367,76 +370,6 @@ public class GameManager : MonoBehaviour
         return creditsManager.CanAfford(amount);
     }
     
-    /// <summary>
-    /// Purchase a waste crate for a specific spawner
-    /// </summary>
-    /// <param name="crateId">ID of the waste crate to purchase</param>
-    /// <param name="spawnerX">X coordinate of the spawner</param>
-    /// <param name="spawnerY">Y coordinate of the spawner</param>
-    /// <returns>True if purchase was successful</returns>
-    public bool PurchaseWasteCrate(string crateId, int spawnerX, int spawnerY)
-    {
-        // Get crate definition and validate
-        var crateDef = FactoryRegistry.Instance?.GetWasteCrate(crateId);
-        if (crateDef == null)
-        {
-            GameLogger.LogError(LoggingManager.LogCategory.Economy, $"Cannot find waste crate definition for '{crateId}'");
-            return false;
-        }
-        
-        // Check if player can afford the crate
-        int crateCost = crateDef.cost > 0 ? crateDef.cost : SpawnerMachine.CalculateWasteCrateCost(crateDef);
-        if (!CanAfford(crateCost))
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Cannot afford waste crate '{crateDef.displayName}' - costs {crateCost} credits");
-            return false;
-        }
-        
-        // Get the spawner machine
-        var gridData = GetCurrentGrid();
-        var cellData = gridData?.cells?.Find(c => c.x == spawnerX && c.y == spawnerY);
-        var spawner = cellData?.machine as SpawnerMachine;
-        
-        if (spawner == null)
-        {
-            GameLogger.LogError(LoggingManager.LogCategory.Economy, $"No spawner machine found at ({spawnerX}, {spawnerY})");
-            return false;
-        }
-        
-        // Try to add to queue
-        if (!spawner.TryAddToQueue(crateId))
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Cannot add crate to queue - queue is full");
-            return false;
-        }
-        
-        // Deduct credits
-        if (!TrySpendCredits(crateCost))
-        {
-            // This shouldn't happen since we checked CanAfford above, but safety check
-            GameLogger.LogError(LoggingManager.LogCategory.Economy, $"Failed to spend {crateCost} credits for waste crate");
-            return false;
-        }
-        
-        GameLogger.LogEconomy($"Purchased waste crate '{crateDef.displayName}' for {crateCost} credits", $"GameManager_{GetInstanceID()}");
-        return true;
-    }
-    
-    /// <summary>
-    /// Get waste crate queue status for a specific spawner
-    /// </summary>
-    /// <param name="spawnerX">X coordinate of spawner</param>
-    /// <param name="spawnerY">Y coordinate of spawner</param>
-    /// <returns>Queue status or null if no spawner found</returns>
-    public WasteCrateQueueStatus GetSpawnerQueueStatus(int spawnerX, int spawnerY)
-    {
-        var gridData = GetCurrentGrid();
-        var cellData = gridData?.cells?.Find(c => c.x == spawnerX && c.y == spawnerY);
-        var spawner = cellData?.machine as SpawnerMachine;
-        
-        return spawner?.GetQueueStatus();
-    }
-
     /// <summary>
     /// Set the edit mode state
     /// </summary>

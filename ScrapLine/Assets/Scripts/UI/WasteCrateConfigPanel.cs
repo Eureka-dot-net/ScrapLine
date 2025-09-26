@@ -69,13 +69,18 @@ public class WasteCrateConfigPanel : BaseConfigPanel<CellData, string>
 
     protected override void LoadCurrentConfiguration()
     {
-        currentQueueStatus = GameManager.Instance?.GetSpawnerQueueStatus(currentSpawnerX, currentSpawnerY);
-        selectedCrateId = "";
-        
-        if (currentQueueStatus == null)
+        // Get global queue status from WasteSupplyManager instead
+        var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+        if (wasteSupplyManager != null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.UI, $"Could not get queue status for spawner at ({currentSpawnerX}, {currentSpawnerY})", ComponentId);
+            currentQueueStatus = wasteSupplyManager.GetGlobalQueueStatus();
         }
+        else
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "WasteSupplyManager not found", ComponentId);
+        }
+        
+        selectedCrateId = "";
     }
 
     protected override void UpdateUIFromCurrentState()
@@ -140,15 +145,16 @@ public class WasteCrateConfigPanel : BaseConfigPanel<CellData, string>
 
         selectedCrateId = crate.id;
         
-        // Attempt immediate purchase
-        bool success = GameManager.Instance?.PurchaseWasteCrate(crate.id, currentSpawnerX, currentSpawnerY) ?? false;
+        // Attempt immediate purchase using WasteSupplyManager
+        var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+        bool success = wasteSupplyManager?.PurchaseWasteCrate(crate.id) ?? false;
         
         if (success)
         {
             GameLogger.LogEconomy($"Successfully purchased {crate.displayName}", ComponentId);
             
             // Refresh the queue status and update display
-            currentQueueStatus = GameManager.Instance.GetSpawnerQueueStatus(currentSpawnerX, currentSpawnerY);
+            currentQueueStatus = wasteSupplyManager.GetGlobalQueueStatus();
             UpdateUIFromCurrentState();
             
             // Call the callback to notify of successful purchase

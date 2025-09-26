@@ -17,6 +17,28 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
     [Tooltip("Show cost in button text")]
     public bool showCostInText = true;
 
+    /// <summary>
+    /// Event fired when a crate is selected (for spawner configuration)
+    /// </summary>
+    public System.Action<string> OnCrateSelected;
+
+    /// <summary>
+    /// Show crate selection for spawner configuration (different from purchase)
+    /// </summary>
+    /// <param name="availableCrates">List of crates to show</param>
+    /// <param name="currentSelection">Currently selected crate ID</param>
+    public void ShowCrateSelection(List<WasteCrateDef> availableCrates, string currentSelection)
+    {
+        ShowPanel((selectedCrate) => 
+        {
+            if (selectedCrate != null)
+            {
+                OnCrateSelected?.Invoke(selectedCrate.id);
+                HidePanel();
+            }
+        });
+    }
+
     protected override List<WasteCrateDef> GetAvailableItems()
     {
         var crates = new List<WasteCrateDef>();
