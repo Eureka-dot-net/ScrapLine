@@ -13,7 +13,7 @@ public class MachineManager : MonoBehaviour
 
     [Header("UI References")]
     [Tooltip("Reference to the waste crate UI manager")]
-    public WasteCrateUI wasteCrateUI;
+    public WasteCrateConfigPanel wasteCrateUI;
 
     private MachineDef selectedMachine;
     private Direction lastMachineDirection = Direction.Up;
@@ -526,7 +526,7 @@ public class MachineManager : MonoBehaviour
         // Show UI if available
         if (wasteCrateUI != null)
         {
-            wasteCrateUI.ShowMenu(spawnerX, spawnerY);
+           // wasteCrateUI.ShowConfiguration(spawnerX, spawnerY, OnConfigurationConfirmed);
         }
         else
         {

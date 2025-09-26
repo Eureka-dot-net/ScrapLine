@@ -28,15 +28,15 @@ public class FabricatorMachine : ProcessorMachine
     public override void OnConfigured()
     {
         // Find the fabricator configuration UI in the scene
-        FabricatorMachineConfigUI configUI = UnityEngine.Object.FindFirstObjectByType<FabricatorMachineConfigUI>(FindObjectsInactive.Include);
+        FabricatorMachineConfigPanel configUI = UnityEngine.Object.FindFirstObjectByType<FabricatorMachineConfigPanel>(FindObjectsInactive.Include);
         if (configUI != null)
         {
             configUI.ShowConfiguration(cellData, OnConfigurationConfirmed);
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, "FabricatorMachineConfigUI not found in scene. Please add the UI component to configure fabricator machines.", ComponentId);
-            
+            GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, "FabricatorMachineConfigPanel not found in scene. Please add the UI component to configure fabricator machines.", ComponentId);
+
             // Fallback: Set a default configuration for testing if there are any fabricator recipes
             var fabricatorRecipes = FactoryRegistry.Instance.GetRecipesForMachine(cellData.machineDefId);
             if (fabricatorRecipes.Count > 0)

@@ -2268,6 +2268,8 @@ GameObject:
   - component: {fileID: 677903696}
   - component: {fileID: 677903695}
   - component: {fileID: 677903699}
+  - component: {fileID: 677903701}
+  - component: {fileID: 677903700}
   m_Layer: 5
   m_Name: UniversalConfigPanel
   m_TagString: Untagged
@@ -2392,7 +2394,40 @@ MonoBehaviour:
   cancelButton: {fileID: 1155701031}
   leftConfigButton: {fileID: 1146521931}
   rightConfigButton: {fileID: 259867326}
-  itemSelectionPanel: {fileID: 0}
+  itemSelectionPanel: {fileID: 1655839484}
+--- !u!114 &677903700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 677903693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dc4640b5e2a8184b89838950cd24f36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WasteCrateSelectionPanel
+  selectionPanel: {fileID: 677903693}
+  buttonContainer: {fileID: 0}
+  buttonPrefab: {fileID: 0}
+  showCostInText: 1
+--- !u!114 &677903701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 677903693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fcc55488c3846d4dad77bf99d73efae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FabricatorMachineConfigPanel
+  configPanel: {fileID: 677903693}
+  confirmButton: {fileID: 273900167}
+  cancelButton: {fileID: 1155701031}
+  recipeConfigButton: {fileID: 259867326}
+  recipeSelectionPanel: {fileID: 1655839486}
 --- !u!1 &705351537
 GameObject:
   m_ObjectHideFlags: 0
@@ -5459,6 +5494,8 @@ GameObject:
   - component: {fileID: 1655839482}
   - component: {fileID: 1655839481}
   - component: {fileID: 1655839484}
+  - component: {fileID: 1655839486}
+  - component: {fileID: 1655839485}
   m_Layer: 5
   m_Name: UniversalSelectionPanel
   m_TagString: Untagged
@@ -5568,8 +5605,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemSelectionPanel
   selectionPanel: {fileID: 1655839479}
   buttonContainer: {fileID: 629174282}
-  buttonPrefab: {fileID: 6365736263334911754, guid: 99b25ec96cf33d54cabb72112abf447e, type: 3}
+  buttonPrefab: {fileID: 5056346398829232864, guid: c27170844dadf8040965368da37b2647, type: 3}
   itemTypeFilter: []
+--- !u!114 &1655839485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1655839479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dc4640b5e2a8184b89838950cd24f36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WasteCrateSelectionPanel
+  selectionPanel: {fileID: 0}
+  buttonContainer: {fileID: 0}
+  buttonPrefab: {fileID: 0}
+  showCostInText: 1
+--- !u!114 &1655839486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1655839479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c898574e1e00451429d233e0a9c790f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RecipeSelectionPanel
+  selectionPanel: {fileID: 0}
+  buttonContainer: {fileID: 0}
+  buttonPrefab: {fileID: 0}
+  machineId: 
 --- !u!1 &1657055624
 GameObject:
   m_ObjectHideFlags: 0
@@ -6175,6 +6244,26 @@ MonoBehaviour:
   itemButtonContainer: {fileID: 887953773}
   itemButtonPrefab: {fileID: 6365736263334911754, guid: 928267acdf116e34fbe6c0e614b5bfbb, type: 3}
   configPanel: {fileID: 1774092778}
+  currentCellData:
+    x: 0
+    y: 0
+    cellType: 0
+    direction: 0
+    cellRole: 0
+    machineDefId: 
+    items: []
+    waitingItems: []
+    machineState: 0
+    selectedRecipeId: 
+    sortingConfig:
+      leftItemType: 
+      rightItemType: 
+    wasteCrate:
+      wasteCrateDefId: 
+      remainingItems: []
+  isSelectingForLeft: 0
+  selectedLeftItemId: 
+  selectedRightItemId: 
 --- !u!1 &1793062939
 GameObject:
   m_ObjectHideFlags: 0
