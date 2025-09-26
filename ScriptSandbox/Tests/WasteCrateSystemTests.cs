@@ -22,8 +22,8 @@ namespace ScrapLine.Tests
             var gameObject = new GameObject("TestGameManager");
             gameManager = gameObject.AddComponent<GameManager>();
             
-            // Trigger Awake to set up the singleton (mimics Unity lifecycle)
-            gameManager.Awake();
+            // Initialize the singleton manually since Awake is private in tests
+            // gameManager.Awake(); // This is called automatically by Unity
             
             // Initialize game data
             gameManager.gameData = new GameData
