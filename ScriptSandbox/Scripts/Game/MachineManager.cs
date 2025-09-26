@@ -530,11 +530,19 @@ public class MachineManager : MonoBehaviour
         }
         else
         {
-            // Fallback: Log global queue information
-            var queueStatus = GameManager.Instance.GetGlobalQueueStatus();
-            GameLogger.LogUI($"Current crate: {queueStatus.currentCrateId ?? "None"}", ComponentId);
-            GameLogger.LogUI($"Global queue size: {queueStatus.queuedCrateIds.Count}/{queueStatus.maxQueueSize}", ComponentId);
-            GameLogger.LogUI($"Can add to global queue: {queueStatus.canAddToQueue}", ComponentId);
+            // Fallback: Log global queue information using WasteSupplyManager
+            var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+            if (wasteSupplyManager != null)
+            {
+                var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
+                GameLogger.LogUI($"Current crate: {queueStatus.currentCrateId ?? "None"}", ComponentId);
+                GameLogger.LogUI($"Global queue size: {queueStatus.queuedCrateIds.Count}/{queueStatus.maxQueueSize}", ComponentId);
+                GameLogger.LogUI($"Can add to global queue: {queueStatus.canAddToQueue}", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteSupplyManager not found", ComponentId);
+            }
             GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteCrateUI not assigned to MachineManager", ComponentId);
         }
     }
