@@ -25,12 +25,13 @@ namespace ScrapLine.Tests
             // Initialize the singleton manually since Awake is private in tests
             // gameManager.Awake(); // This is called automatically by Unity
             
-            // Initialize game data
+            // Initialize game data with new per-machine queue system
             gameManager.gameData = new GameData
             {
                 credits = 1000,
-                wasteQueueLimit = 1,
-                wasteQueue = new List<string>()
+                machineWasteQueues = new Dictionary<string, List<string>>(),
+                machineQueueLimits = new Dictionary<string, int>(),
+                spawnerRequiredCrateIds = new Dictionary<string, string>()
             };
             
             // Create test cell data  

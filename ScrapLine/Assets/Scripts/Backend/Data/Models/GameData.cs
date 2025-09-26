@@ -110,6 +110,21 @@ public class GameData
     public List<GridData> grids = new List<GridData>();
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public int credits = 0; // Credits (money) system for purchasing machines
-    public int wasteQueueLimit = 1; // How many crates can be queued (upgradeable in future)
-    public List<string> wasteQueue = new List<string>(); // Queue of waste crate IDs waiting to be used
+    
+    /// <summary>
+    /// Per-machine waste crate queues. Key = machineId, Value = list of crate IDs
+    /// Replaces the old global wasteQueue system
+    /// </summary>
+    public Dictionary<string, List<string>> machineWasteQueues = new Dictionary<string, List<string>>();
+    
+    /// <summary>
+    /// Per-machine queue capacity limits. Key = machineId, Value = max queue size
+    /// Replaces the old global wasteQueueLimit
+    /// </summary>
+    public Dictionary<string, int> machineQueueLimits = new Dictionary<string, int>();
+    
+    /// <summary>
+    /// Spawner configuration data: Key = machineId, Value = required crate type
+    /// </summary>
+    public Dictionary<string, string> spawnerRequiredCrateIds = new Dictionary<string, string>();
 }
