@@ -85,22 +85,31 @@ namespace ScrapLine.Tests
             
             // Assert
             Assert.IsTrue(result, "Should be able to add crate to empty queue");
-            Assert.AreEqual(1, gameManager.gameData.wasteQueue.Count, "Queue should have 1 item");
-            Assert.AreEqual("medium_crate", gameManager.gameData.wasteQueue[0], "Queue should contain the added crate");
+            
+            // Check via WasteSupplyManager instead of old GameData
+            var wasteSupplyManager = WasteSupplyManager.Instance;
+            var status = wasteSupplyManager.GetMachineQueueStatus("Spawner_0_0");
+            Assert.AreEqual(1, status.queuedCrateIds.Count, "Queue should have 1 item");
+            Assert.AreEqual("medium_crate", status.queuedCrateIds[0], "Queue should contain the added crate");
         }
         
         [Test]
         public void TryAddToQueue_WhenFull_ReturnsFalse()
         {
-            // Arrange - fill the queue
+            // Arrange - fill the queue (default capacity is 2 in new system)
             spawnerMachine.TryAddToQueue("medium_crate");
+            spawnerMachine.TryAddToQueue("large_crate"); // Fill to capacity
             
             // Act
-            bool result = spawnerMachine.TryAddToQueue("large_crate");
+            bool result = spawnerMachine.TryAddToQueue("starter_crate");
             
             // Assert
             Assert.IsFalse(result, "Should not be able to add to full queue");
-            Assert.AreEqual(1, gameManager.gameData.wasteQueue.Count, "Queue should still have only 1 item");
+            
+            // Check via WasteSupplyManager instead of old GameData  
+            var wasteSupplyManager = WasteSupplyManager.Instance;
+            var status = wasteSupplyManager.GetMachineQueueStatus("Spawner_0_0");
+            Assert.AreEqual(2, status.queuedCrateIds.Count, "Queue should still have 2 items (at capacity)");
         }
         
         [Test]
@@ -190,15 +199,16 @@ namespace ScrapLine.Tests
         }
         
         [Test] 
-        public void GameData_IncludesQueueFields_ByDefault()
+        public void GameData_IncludesNewQueueFields_ByDefault()
         {
             // Arrange
             var gameData = new GameData();
             
-            // Assert
-            Assert.IsNotNull(gameData.wasteQueue, "wasteQueue should be initialized");
-            Assert.AreEqual(1, gameData.wasteQueueLimit, "wasteQueueLimit should default to 1");
-            Assert.AreEqual(0, gameData.wasteQueue.Count, "wasteQueue should be empty by default");
+            // Assert - test new per-machine queue system
+            Assert.IsNotNull(gameData.machineWasteQueues, "machineWasteQueues should be initialized");
+            Assert.IsNotNull(gameData.machineQueueLimits, "machineQueueLimits should be initialized");
+            Assert.IsNotNull(gameData.spawnerRequiredCrateIds, "spawnerRequiredCrateIds should be initialized");
+            Assert.AreEqual(0, gameData.machineWasteQueues.Count, "machineWasteQueues should be empty by default");
         }
         
         [Test]
