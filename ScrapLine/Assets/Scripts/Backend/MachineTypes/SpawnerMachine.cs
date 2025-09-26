@@ -141,9 +141,9 @@ public class SpawnerMachine : BaseMachine
     }
     
     /// <summary>
-    /// Get total count of items in waste crate (for debugging)
+    /// Get total count of items in waste crate (for debugging and UI)
     /// </summary>
-    private int GetTotalItemsInWasteCrate()
+    public int GetTotalItemsInWasteCrate()
     {
         if (cellData.wasteCrate == null || cellData.wasteCrate.remainingItems == null)
             return 0;
@@ -157,9 +157,9 @@ public class SpawnerMachine : BaseMachine
     }
     
     /// <summary>
-    /// Get initial total capacity of the waste crate (cached for performance)
+    /// Get initial total capacity of the waste crate (cached for performance, public for UI)
     /// </summary>
-    private int GetInitialWasteCrateTotal()
+    public int GetInitialWasteCrateTotal()
     {
         if (initialWasteCrateTotal >= 0)
             return initialWasteCrateTotal;
@@ -258,7 +258,8 @@ public class SpawnerMachine : BaseMachine
     }
     
     /// <summary>
-    /// Gets a random item from the waste crate and removes one count from it
+    /// Gets a random item from the waste crate and removes one count from it.
+    /// If the current crate is empty, checks the queue and moves the next crate to current.
     /// </summary>
     private string GetRandomItemFromWasteCrate()
     {
@@ -274,7 +275,21 @@ public class SpawnerMachine : BaseMachine
         }
         
         if (availableItems.Count == 0)
-            return null;
+        {
+            // Current crate is empty - check queue for next crate
+            GameLogger.LogSpawning("Current waste crate is empty, checking queue for next crate", ComponentId);
+            if (CheckAndMoveFromQueue())
+            {
+                GameLogger.LogSpawning("Successfully moved crate from queue to current", ComponentId);
+                // Recursive call to try again with the new crate
+                return GetRandomItemFromWasteCrate();
+            }
+            else
+            {
+                GameLogger.LogSpawning("No crates in queue - spawner cannot produce items", ComponentId);
+                return null;
+            }
+        }
             
         // Select random item from available items
         int randomIndex = UnityEngine.Random.Range(0, availableItems.Count);
@@ -284,6 +299,134 @@ public class SpawnerMachine : BaseMachine
         selectedItem.count--;
         
         return selectedItem.itemType;
+    }
+    
+    /// <summary>
+    /// Checks if there are crates in the queue and moves the next one to current waste crate
+    /// </summary>
+    private bool CheckAndMoveFromQueue()
+    {
+        var gameManager = GameManager.Instance;
+        if (gameManager?.gameData?.wasteQueue == null || gameManager.gameData.wasteQueue.Count == 0)
+        {
+            return false;
+        }
+        
+        // Get the first crate ID from queue
+        string nextCrateId = gameManager.gameData.wasteQueue[0];
+        gameManager.gameData.wasteQueue.RemoveAt(0);
+        
+        GameLogger.LogSpawning($"Moving crate '{nextCrateId}' from queue to current", ComponentId);
+        
+        // Get the crate definition and create instance
+        var crateDef = FactoryRegistry.Instance?.GetWasteCrate(nextCrateId);
+        if (crateDef == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, $"Could not find crate definition for '{nextCrateId}'", ComponentId);
+            return false;
+        }
+        
+        // Replace current waste crate with the new one
+        cellData.wasteCrate = new WasteCrateInstance
+        {
+            wasteCrateDefId = crateDef.id,
+            remainingItems = new List<WasteCrateItemDef>()
+        };
+        
+        // Copy items from definition to instance
+        foreach (var item in crateDef.items)
+        {
+            cellData.wasteCrate.remainingItems.Add(new WasteCrateItemDef
+            {
+                itemType = item.itemType,
+                count = item.count
+            });
+        }
+        
+        // Reset cached icon sprite so it updates
+        cachedIconSprite = null;
+        initialWasteCrateTotal = -1; // Reset cache
+        
+        GameLogger.LogSpawning($"New waste crate '{crateDef.displayName}' activated with {cellData.wasteCrate.remainingItems.Count} item types", ComponentId);
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// Adds a waste crate to the queue if there is space
+    /// </summary>
+    public bool TryAddToQueue(string crateId)
+    {
+        var gameManager = GameManager.Instance;
+        if (gameManager?.gameData == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Spawning, "GameManager or gameData is null", ComponentId);
+            return false;
+        }
+        
+        if (gameManager.gameData.wasteQueue == null)
+        {
+            gameManager.gameData.wasteQueue = new List<string>();
+        }
+        
+        if (gameManager.gameData.wasteQueue.Count >= gameManager.gameData.wasteQueueLimit)
+        {
+            GameLogger.LogSpawning($"Cannot add crate to queue - limit reached ({gameManager.gameData.wasteQueueLimit})", ComponentId);
+            return false;
+        }
+        
+        gameManager.gameData.wasteQueue.Add(crateId);
+        GameLogger.LogSpawning($"Added crate '{crateId}' to queue. Queue size: {gameManager.gameData.wasteQueue.Count}/{gameManager.gameData.wasteQueueLimit}", ComponentId);
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// Gets the current queue status for UI display
+    /// </summary>
+    public WasteCrateQueueStatus GetQueueStatus()
+    {
+        var gameManager = GameManager.Instance;
+        if (gameManager?.gameData == null)
+        {
+            return new WasteCrateQueueStatus
+            {
+                currentCrateId = cellData.wasteCrate?.wasteCrateDefId,
+                queuedCrateIds = new List<string>(),
+                maxQueueSize = 1,
+                canAddToQueue = false
+            };
+        }
+        
+        return new WasteCrateQueueStatus
+        {
+            currentCrateId = cellData.wasteCrate?.wasteCrateDefId,
+            queuedCrateIds = gameManager.gameData.wasteQueue ?? new List<string>(),
+            maxQueueSize = gameManager.gameData.wasteQueueLimit,
+            canAddToQueue = (gameManager.gameData.wasteQueue?.Count ?? 0) < gameManager.gameData.wasteQueueLimit
+        };
+    }
+    
+    /// <summary>
+    /// Calculates the cost of a waste crate based on item values (50% of total item value)
+    /// </summary>
+    public static int CalculateWasteCrateCost(WasteCrateDef crateDef)
+    {
+        if (crateDef?.items == null)
+            return 0;
+            
+        int totalValue = 0;
+        foreach (var item in crateDef.items)
+        {
+            var itemDef = FactoryRegistry.Instance?.GetItem(item.itemType);
+            if (itemDef != null)
+            {
+                totalValue += itemDef.sellValue * item.count;
+            }
+        }
+        
+        // Return 50% of total item value
+        return (int)(totalValue * 0.5f);
     }
     
     /// <summary>

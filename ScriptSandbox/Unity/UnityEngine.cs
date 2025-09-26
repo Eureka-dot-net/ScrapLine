@@ -26,6 +26,7 @@ namespace UnityEngine
         
         public static void Destroy(Object obj) { }
         public static void DestroyImmediate(Object obj) { }
+        public static void DontDestroyOnLoad(Object target) { } // Mock DontDestroyOnLoad
         public static T FindAnyObjectByType<T>() where T : Object => default(T);
         public static T FindFirstObjectByType<T>() where T : Object => default(T);
         public static T FindFirstObjectByType<T>(FindObjectsInactive findObjectsInactive) where T : Object => default(T);

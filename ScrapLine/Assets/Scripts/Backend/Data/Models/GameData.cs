@@ -51,6 +51,18 @@ public class WasteCrateInstance {
     public List<WasteCrateItemDef> remainingItems = new List<WasteCrateItemDef>();
 }
 
+/// <summary>
+/// Status information for waste crate queue (used for UI display)
+/// </summary>
+[System.Serializable]
+public class WasteCrateQueueStatus
+{
+    public string currentCrateId;
+    public List<string> queuedCrateIds;
+    public int maxQueueSize;
+    public bool canAddToQueue;
+}
+
 [System.Serializable]
 public class SortingMachineConfig
 {
@@ -98,4 +110,6 @@ public class GameData
     public List<GridData> grids = new List<GridData>();
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public int credits = 0; // Credits (money) system for purchasing machines
+    public int wasteQueueLimit = 1; // How many crates can be queued (upgradeable in future)
+    public List<string> wasteQueue = new List<string>(); // Queue of waste crate IDs waiting to be used
 }
