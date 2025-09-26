@@ -35,7 +35,7 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     /// <summary>
     /// Initialize the base panel - call this from derived Start() methods
     /// </summary>
-    protected virtual new void Start()
+    protected virtual void Start()
     {
         SetupBaseButtonListeners();
         SetupCustomButtonListeners();
