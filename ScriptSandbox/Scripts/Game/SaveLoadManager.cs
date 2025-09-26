@@ -67,24 +67,13 @@ public class SaveLoadManager : MonoBehaviour
             data.grids = gridManager.GetActiveGrids();
             data.credits = creditsManager.GetCredits();
             
-            // Save WasteSupplyManager data
-            var wasteSupplyManager = WasteSupplyManager.Instance;
-            if (wasteSupplyManager != null)
-            {
-                data.machineWasteQueues = wasteSupplyManager.SerializeQueues();
-                GameLogger.LogSaveLoad($"Saved queues for {data.machineWasteQueues.Count} machines", ComponentId);
-            }
-            
-            // Save spawner configuration data
-            SaveSpawnerConfigurations(data);
-            
             FactoryRegistry.Instance.SaveToGameData(data);
 
             string json = JsonUtility.ToJson(data);
             string path = GetSaveFilePath();
             File.WriteAllText(path, json);
             
-            GameLogger.LogSaveLoad($"Game saved successfully. Machines with queues: {data.machineWasteQueues?.Count ?? 0}", ComponentId);
+            GameLogger.LogSaveLoad($"Game saved successfully. Queue items: {data.wasteQueue?.Count ?? 0}", ComponentId);
         }
         catch (System.Exception ex)
         {
@@ -125,21 +114,10 @@ public class SaveLoadManager : MonoBehaviour
             // Load credits
             creditsManager.SetCredits(data.credits);
 
-            // Load WasteSupplyManager data
-            var wasteSupplyManager = WasteSupplyManager.Instance;
-            if (wasteSupplyManager != null)
-            {
-                wasteSupplyManager.DeserializeQueues(data.machineWasteQueues);
-                GameLogger.LogSaveLoad($"Loaded queues for {data.machineWasteQueues?.Count ?? 0} machines", ComponentId);
-            }
-            
-            // Load spawner configuration data
-            LoadSpawnerConfigurations(data);
-
             // Load factory registry data
             FactoryRegistry.Instance.LoadFromGameData(data);
             
-            GameLogger.LogSaveLoad($"Game loaded successfully. Machines with queues: {data.machineWasteQueues?.Count ?? 0}", ComponentId);
+            GameLogger.LogSaveLoad($"Game loaded successfully. Queue items: {data.wasteQueue?.Count ?? 0}, Queue limit: {data.wasteQueueLimit}", ComponentId);
 
             return true;
         }
@@ -195,59 +173,5 @@ public class SaveLoadManager : MonoBehaviour
                 GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to delete save file: {ex.Message}", ComponentId);
             }
         }
-    }
-
-    /// <summary>
-    /// Save spawner configuration data to GameData
-    /// </summary>
-    /// <param name="data">GameData to save to</param>
-    private void SaveSpawnerConfigurations(GameData data)
-    {
-        data.spawnerRequiredCrateIds = new System.Collections.Generic.Dictionary<string, string>();
-        
-        // Iterate through all grids and collect spawner configurations
-        foreach (var grid in data.grids)
-        {
-            foreach (var cell in grid.cells)
-            {
-                if (cell.machine is SpawnerMachine spawner)
-                {
-                    string machineId = $"Spawner_{cell.x}_{cell.y}";
-                    data.spawnerRequiredCrateIds[machineId] = spawner.RequiredCrateId;
-                }
-            }
-        }
-        
-        GameLogger.LogSaveLoad($"Saved configuration for {data.spawnerRequiredCrateIds.Count} spawners", ComponentId);
-    }
-
-    /// <summary>
-    /// Load spawner configuration data from GameData
-    /// </summary>
-    /// <param name="data">GameData to load from</param>
-    private void LoadSpawnerConfigurations(GameData data)
-    {
-        if (data.spawnerRequiredCrateIds == null) return;
-        
-        int configuredSpawners = 0;
-        
-        // Iterate through all grids and apply spawner configurations
-        foreach (var grid in data.grids)
-        {
-            foreach (var cell in grid.cells)
-            {
-                if (cell.machine is SpawnerMachine spawner)
-                {
-                    string machineId = $"Spawner_{cell.x}_{cell.y}";
-                    if (data.spawnerRequiredCrateIds.TryGetValue(machineId, out string requiredCrateId))
-                    {
-                        spawner.RequiredCrateId = requiredCrateId;
-                        configuredSpawners++;
-                    }
-                }
-            }
-        }
-        
-        GameLogger.LogSaveLoad($"Loaded configuration for {configuredSpawners} spawners", ComponentId);
     }
 }

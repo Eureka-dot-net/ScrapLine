@@ -368,11 +368,11 @@ public class GameManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Purchase a waste crate for a specific spawner
+    /// Purchase a waste crate and add it to the global queue
     /// </summary>
     /// <param name="crateId">ID of the waste crate to purchase</param>
-    /// <param name="spawnerX">X coordinate of the spawner</param>
-    /// <param name="spawnerY">Y coordinate of the spawner</param>
+    /// <param name="spawnerX">X coordinate of the spawner (for reference only)</param>
+    /// <param name="spawnerY">Y coordinate of the spawner (for reference only)</param>
     /// <returns>True if purchase was successful</returns>
     public bool PurchaseWasteCrate(string crateId, int spawnerX, int spawnerY)
     {
@@ -392,49 +392,85 @@ public class GameManager : MonoBehaviour
             return false;
         }
         
-        // Get the spawner machine
-        var gridData = GetCurrentGrid();
-        var cellData = gridData?.cells?.Find(c => c.x == spawnerX && c.y == spawnerY);
-        var spawner = cellData?.machine as SpawnerMachine;
-        
-        if (spawner == null)
+        // Check if global queue has space
+        if (gameData.wasteQueue.Count >= gameData.wasteQueueLimit)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Economy, $"No spawner machine found at ({spawnerX}, {spawnerY})");
+            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Global waste queue is full ({gameData.wasteQueue.Count}/{gameData.wasteQueueLimit})");
             return false;
         }
         
-        // Try to add to queue
-        if (!spawner.TryAddToQueue(crateId))
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Cannot add crate to queue - queue is full");
-            return false;
-        }
-        
-        // Deduct credits
+        // Deduct credits first
         if (!TrySpendCredits(crateCost))
         {
-            // This shouldn't happen since we checked CanAfford above, but safety check
             GameLogger.LogError(LoggingManager.LogCategory.Economy, $"Failed to spend {crateCost} credits for waste crate");
             return false;
         }
         
-        GameLogger.LogEconomy($"Purchased waste crate '{crateDef.displayName}' for {crateCost} credits", $"GameManager_{GetInstanceID()}");
+        // Add crate to global queue
+        gameData.wasteQueue.Add(crateId);
+        GameLogger.LogEconomy($"Purchased waste crate '{crateDef.displayName}' for {crateCost} credits and added to global queue ({gameData.wasteQueue.Count}/{gameData.wasteQueueLimit})", $"GameManager_{GetInstanceID()}");
+        
+        // Notify all empty spawners that a new crate is available
+        NotifySpawnersOfNewCrate(crateId);
+        
         return true;
     }
     
     /// <summary>
-    /// Get waste crate queue status for a specific spawner
+    /// Notify all empty spawners that a new crate has been added to the global queue
+    /// Each spawner will check if the crate matches their RequiredCrateId
+    /// </summary>
+    /// <param name="newCrateId">The ID of the crate that was just added to the queue</param>
+    private void NotifySpawnersOfNewCrate(string newCrateId)
+    {
+        var gridData = GetCurrentGrid();
+        if (gridData?.cells == null) return;
+        
+        int notifiedSpawners = 0;
+        foreach (var cell in gridData.cells)
+        {
+            if (cell.machine is SpawnerMachine spawner)
+            {
+                // Only notify spawners that are empty and need this crate type
+                if (!spawner.HasItemsInWasteCrate() && spawner.RequiredCrateId == newCrateId)
+                {
+                    spawner.TryRefillFromGlobalQueue();
+                    notifiedSpawners++;
+                }
+            }
+        }
+        
+        if (notifiedSpawners > 0)
+        {
+            GameLogger.LogEconomy($"Notified {notifiedSpawners} empty spawners about new '{newCrateId}' crate", $"GameManager_{GetInstanceID()}");
+        }
+    }
+    
+    /// <summary>
+    /// Get global waste crate queue status for UI display
+    /// </summary>
+    /// <returns>Global queue status</returns>
+    public WasteCrateQueueStatus GetGlobalQueueStatus()
+    {
+        return new WasteCrateQueueStatus
+        {
+            currentCrateId = null, // Global queue doesn't have "current" crate
+            queuedCrateIds = gameData.wasteQueue ?? new List<string>(),
+            maxQueueSize = gameData.wasteQueueLimit,
+            canAddToQueue = (gameData.wasteQueue?.Count ?? 0) < gameData.wasteQueueLimit
+        };
+    }
+
+    /// <summary>
+    /// Get waste crate queue status for a specific spawner (LEGACY - now returns global status)
     /// </summary>
     /// <param name="spawnerX">X coordinate of spawner</param>
     /// <param name="spawnerY">Y coordinate of spawner</param>
-    /// <returns>Queue status or null if no spawner found</returns>
+    /// <returns>Global queue status</returns>
     public WasteCrateQueueStatus GetSpawnerQueueStatus(int spawnerX, int spawnerY)
     {
-        var gridData = GetCurrentGrid();
-        var cellData = gridData?.cells?.Find(c => c.x == spawnerX && c.y == spawnerY);
-        var spawner = cellData?.machine as SpawnerMachine;
-        
-        return spawner?.GetQueueStatus();
+        // Now returns global queue status since we're using global queue system
+        return GetGlobalQueueStatus();
     }
 
     /// <summary>

@@ -193,22 +193,25 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
     /// </summary>
     /// <param name="cellData">The spawner cell data</param>
     /// <param name="onConfirmed">Callback when configuration is confirmed</param>
-    public void ShowConfiguration(CellData cellData, System.Action<string> onConfirmed)
+    public new void ShowConfiguration(CellData cellData, System.Action<string> onConfirmed)
     {
         base.ShowConfiguration(cellData, onConfirmed);
         
         // Additional setup for spawner-specific UI
         if (purchaseButton != null && cellData?.machine is SpawnerMachine spawner)
         {
-            // Enable purchase button and show queue status
+            // Enable purchase button and show global queue status
             purchaseButton.gameObject.SetActive(true);
-            var queueStatus = spawner.GetQueueStatus();
             
-            // Update purchase button text to show queue info
-            var buttonText = purchaseButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText != null)
+            // Get global queue status instead of per-spawner queue
+            var gameManager = GameManager.Instance;
+            if (gameManager?.gameData != null)
             {
-                buttonText.text = $"Purchase Crates ({queueStatus.queuedCrateIds.Count}/{queueStatus.maxQueueSize})";
+                var buttonText = purchaseButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (buttonText != null)
+                {
+                    buttonText.text = $"Purchase Crates (Global: {gameManager.gameData.wasteQueue.Count}/{gameManager.gameData.wasteQueueLimit})";
+                }
             }
         }
     }

@@ -37,26 +37,20 @@ namespace ScrapLine.Tests
         public void GameData_NewQueueFields_ExistAndWork()
         {
             // Arrange & Act
-            // Test new per-machine queue system
+            // Test corrected global queue system
             var gameData = new GameData
             {
                 credits = 1000,
-                machineWasteQueues = new Dictionary<string, List<string>>
-                {
-                    ["Spawner_0_0"] = new List<string> { "medium_crate", "large_crate" }
-                },
-                machineQueueLimits = new Dictionary<string, int>
-                {
-                    ["Spawner_0_0"] = 2
-                }
+                wasteQueueLimit = 2,
+                wasteQueue = new List<string> { "medium_crate", "starter_crate" }
             };
             
             // Assert
             Assert.AreEqual(1000, gameData.credits);
-            Assert.AreEqual(1, gameData.machineWasteQueues.Count);
-            Assert.AreEqual(2, gameData.machineWasteQueues["Spawner_0_0"].Count);
-            Assert.AreEqual("medium_crate", gameData.machineWasteQueues["Spawner_0_0"][0]);
-            Assert.AreEqual("large_crate", gameData.machineWasteQueues["Spawner_0_0"][1]);
+            Assert.AreEqual(2, gameData.wasteQueueLimit);
+            Assert.AreEqual(2, gameData.wasteQueue.Count);
+            Assert.AreEqual("medium_crate", gameData.wasteQueue[0]);
+            Assert.AreEqual("starter_crate", gameData.wasteQueue[1]);
         }
         
         [Test]
