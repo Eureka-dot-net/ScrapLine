@@ -23,10 +23,10 @@ public class SortingMachine : BaseMachine
         // Configuration logic for sorting machine
 
         // Find the sorting configuration UI in the scene
-        SortingMachineConfigUI configUI = UnityEngine.Object.FindFirstObjectByType<SortingMachineConfigUI>(FindObjectsInactive.Include); //this returns null
+        SortingMachineConfigPanel configUI = UnityEngine.Object.FindFirstObjectByType<SortingMachineConfigPanel>(FindObjectsInactive.Include); //this returns null
         if (configUI != null)
         {
-            configUI.ShowConfiguration(cellData, OnConfigurationConfirmed);
+            configUI.ShowConfiguration(cellData, tuple => OnConfigurationConfirmed(tuple.Item1, tuple.Item2));
         }
         else
         {
@@ -35,9 +35,6 @@ public class SortingMachine : BaseMachine
             // Fallback: Set some default configuration for testing
             if (cellData.sortingConfig == null)
                 cellData.sortingConfig = new SortingMachineConfig();
-            
-            cellData.sortingConfig.leftItemType = "can";
-            cellData.sortingConfig.rightItemType = "shreddedAluminum";
         }
     }
 
