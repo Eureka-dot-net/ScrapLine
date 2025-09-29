@@ -149,8 +149,8 @@ public class SortingMachineConfigPanel : BaseConfigPanel<CellData, Tuple<string,
             if (buttonText != null)
                 buttonText.text = defaultText;
             
-            if (buttonImage != null)
-                buttonImage.sprite = null;
+           // if (buttonImage != null)
+           //     buttonImage.sprite = null;
         }
         else
         {
