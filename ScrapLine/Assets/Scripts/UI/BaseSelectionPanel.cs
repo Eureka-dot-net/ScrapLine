@@ -196,14 +196,15 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
     protected void SetButtonImage(GameObject buttonObj, Sprite sprite)
     {
         if (buttonObj == null) return;
-        
+
         Image buttonImage = buttonObj.GetComponent<Image>();
         if (buttonImage == null)
             buttonImage = buttonObj.GetComponentInChildren<Image>();
-        
+
         if (buttonImage != null && sprite != null)
         {
             buttonImage.sprite = sprite;
+            buttonImage.color = Color.white;
         }
     }
 

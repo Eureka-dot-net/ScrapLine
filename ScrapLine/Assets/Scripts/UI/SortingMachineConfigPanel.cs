@@ -148,15 +148,17 @@ public class SortingMachineConfigPanel : BaseConfigPanel<CellData, Tuple<string,
             // No item selected - show default
             if (buttonText != null)
                 buttonText.text = defaultText;
-            
-           // if (buttonImage != null)
-           //     buttonImage.sprite = null;
+
+            if (buttonImage != null)
+                buttonImage.sprite = null;
+
+            buttonImage.color = new Color32(64, 75, 90, 255);
         }
         else
         {
             // Item selected - show item info
             ItemDef itemDef = FactoryRegistry.Instance?.GetItem(itemId);
-            
+
             if (itemDef != null)
             {
                 if (buttonText != null)
@@ -168,6 +170,7 @@ public class SortingMachineConfigPanel : BaseConfigPanel<CellData, Tuple<string,
                     if (itemSprite != null)
                     {
                         buttonImage.sprite = itemSprite;
+                        buttonImage.color = Color.white; // Reset color in case it was changed
                     }
                 }
             }
