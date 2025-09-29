@@ -20,10 +20,20 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     [Header("Base Config Panel Components")]
     [Tooltip("Main panel to show/hide for configuration")]
     public GameObject configPanel;
-    
+
+    [Header("Detail Config Panel Components")]
+    [Tooltip("Detail panel to show/hide for configuration")]
+    public GameObject detailConfigPanel;
+
+    [Tooltip("Panel containing the title bar")]
+    public GameObject titlePanel;
+
+    [Tooltip("Text to display in the title bar")]
+    public string titleText;
+
     [Tooltip("Button to confirm configuration")]
     public Button confirmButton;
-    
+
     [Tooltip("Button to cancel configuration")]
     public Button cancelButton;
 
@@ -40,7 +50,7 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
         SetupBaseButtonListeners();
         SetupCustomButtonListeners();
         HideConfiguration();
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Initialized {GetType().Name}", ComponentId);
     }
 
@@ -51,7 +61,7 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     {
         if (confirmButton != null)
             confirmButton.onClick.AddListener(OnConfirmClicked);
-        
+
         if (cancelButton != null)
             cancelButton.onClick.AddListener(OnCancelClicked);
     }
@@ -66,9 +76,20 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
         currentData = data;
         onConfigurationConfirmed = onConfirmed;
 
+        if (detailConfigPanel != null)
+            detailConfigPanel.SetActive(true);
+
+        if (titlePanel != null)
+        {
+            titlePanel.SetActive(true);
+            var textComp = titlePanel.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (textComp != null)
+                textComp.text = titleText;
+        }
+
         // Load current configuration from data
         LoadCurrentConfiguration();
-        
+
         // Update UI to reflect current state
         UpdateUIFromCurrentState();
 
@@ -80,7 +101,7 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
 
         // Notify derived classes
         OnConfigurationShown();
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Configuration shown for {GetType().Name}", ComponentId);
     }
 
@@ -94,16 +115,19 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
         else
             gameObject.SetActive(false);
 
+        if (detailConfigPanel != null)
+            detailConfigPanel.SetActive(false);
+
         // Hide any selection panels
         HideSelectionPanels();
 
         // Notify derived classes
         OnConfigurationHidden();
-        
+
         // Clear state
         currentData = default(TData);
         onConfigurationConfirmed = null;
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Configuration hidden for {GetType().Name}", ComponentId);
     }
 
@@ -114,18 +138,18 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     {
         // Get the current selection from derived class
         TSelection selection = GetCurrentSelection();
-        
+
         // Update the data with the selection
         UpdateDataWithSelection(selection);
-        
+
         // Call the callback
         onConfigurationConfirmed?.Invoke(selection);
-        
+
         // Notify derived classes
         OnConfigurationConfirmed(selection);
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Configuration confirmed for {GetType().Name}: {selection}", ComponentId);
-        
+
         // Hide the configuration panel
         HideConfiguration();
     }
@@ -136,64 +160,64 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     private void OnCancelClicked()
     {
         OnConfigurationCancelled();
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Configuration cancelled for {GetType().Name}", ComponentId);
-        
+
         HideConfiguration();
     }
 
     // Abstract methods that derived classes must implement
-    
+
     /// <summary>
     /// Setup custom button listeners specific to this panel type
     /// </summary>
     protected abstract void SetupCustomButtonListeners();
-    
+
     /// <summary>
     /// Load the current configuration from the data object
     /// </summary>
     protected abstract void LoadCurrentConfiguration();
-    
+
     /// <summary>
     /// Update the UI to reflect the current configuration state
     /// </summary>
     protected abstract void UpdateUIFromCurrentState();
-    
+
     /// <summary>
     /// Get the current selection from the UI
     /// </summary>
     /// <returns>Current selection result</returns>
     protected abstract TSelection GetCurrentSelection();
-    
+
     /// <summary>
     /// Update the data object with the confirmed selection
     /// </summary>
     /// <param name="selection">Selection to apply to data</param>
     protected abstract void UpdateDataWithSelection(TSelection selection);
-    
+
     /// <summary>
     /// Hide any selection panels specific to this panel type
     /// </summary>
     protected abstract void HideSelectionPanels();
 
     // Virtual methods with default implementations that can be overridden
-    
+
     /// <summary>
     /// Called when configuration is first shown
     /// </summary>
     protected virtual void OnConfigurationShown() { }
-    
+
     /// <summary>
     /// Called when configuration is hidden
     /// </summary>
     protected virtual void OnConfigurationHidden() { }
-    
+
     /// <summary>
     /// Called when configuration is confirmed
     /// </summary>
     /// <param name="selection">The confirmed selection</param>
     protected virtual void OnConfigurationConfirmed(TSelection selection) { }
-    
+
     /// <summary>
     /// Called when configuration is cancelled
     /// </summary>

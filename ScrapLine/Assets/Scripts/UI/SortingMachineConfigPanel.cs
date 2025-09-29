@@ -27,16 +27,29 @@ public class SortingMachineConfigPanel : BaseConfigPanel<CellData, Tuple<string,
     [Tooltip("Item selection panel component")]
     public ItemSelectionPanel itemSelectionPanel;
 
+    private Sprite emptySelectionSprite;
+
     // Selection state
     private string selectedLeftItemId = "";
     private string selectedRightItemId = "";
     private bool isSelectingForLeft = false;
 
+    protected override void Start()
+    {
+        // Load empty selection sprite
+        emptySelectionSprite = leftConfigButton?.GetComponent<Image>()?.sprite;
+        if (emptySelectionSprite == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "Failed to load empty selection sprite!", ComponentId);
+        }
+
+        base.Start();
+    }
     protected override void SetupCustomButtonListeners()
     {
         if (leftConfigButton != null)
             leftConfigButton.onClick.AddListener(() => ShowItemSelection(true));
-        
+
         if (rightConfigButton != null)
             rightConfigButton.onClick.AddListener(() => ShowItemSelection(false));
     }
@@ -146,17 +159,16 @@ public class SortingMachineConfigPanel : BaseConfigPanel<CellData, Tuple<string,
         if (string.IsNullOrEmpty(itemId))
         {
             // No item selected - show default
-            if (buttonText != null)
-                buttonText.text = defaultText;
-            
-            if (buttonImage != null)
-                buttonImage.sprite = null;
+
+            buttonImage.sprite = emptySelectionSprite;
+
+            buttonImage.color = new Color32(64, 75, 90, 255);
         }
         else
         {
             // Item selected - show item info
             ItemDef itemDef = FactoryRegistry.Instance?.GetItem(itemId);
-            
+
             if (itemDef != null)
             {
                 if (buttonText != null)
@@ -168,6 +180,7 @@ public class SortingMachineConfigPanel : BaseConfigPanel<CellData, Tuple<string,
                     if (itemSprite != null)
                     {
                         buttonImage.sprite = itemSprite;
+                        buttonImage.color = Color.white; // Reset color in case it was changed
                     }
                 }
             }
