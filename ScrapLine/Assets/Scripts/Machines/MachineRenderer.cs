@@ -780,19 +780,19 @@ public class MachineRenderer : MonoBehaviour
         string leftSprite = baseMachine.GetLeftConfigurationSprite();
         string rightSprite = baseMachine.GetRightConfigurationSprite();
 
-        // Check if this is a sorting machine (which is rotated 180°)
-        bool isSortingMachine = baseMachine.MachineDef.buildingDirection == 180 && baseMachine is SortingMachine;
+        // Check if this machine is rotated 180° (applies to any machine type)
+        bool isRotated180 = baseMachine.MachineDef.buildingDirection == 180;
 
         // Create left configuration sprite if available
         if (!string.IsNullOrEmpty(leftSprite))
         {
-            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.35f, 0.0f, isSortingMachine); // Left position
+            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.35f, 0.0f, isRotated180); // Left position
         }
 
         // Create right configuration sprite if available
         if (!string.IsNullOrEmpty(rightSprite))
         {
-            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.35f, 0.0f, isSortingMachine); // Right position
+            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.35f, 0.0f, isRotated180); // Right position
         }
     }
 
@@ -904,7 +904,7 @@ public class MachineRenderer : MonoBehaviour
     /// <summary>
     /// Creates a single configuration sprite at the specified position
     /// </summary>
-    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parentSprite, float offsetX, float offsetY, bool rotateForSortingMachine = false)
+    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parentSprite, float offsetX, float offsetY, bool rotateForRotated180Machine = false)
     {
         GameObject configSprite = new GameObject($"{gameObjectName}_{cellX}_{cellY}");
         configSprite.transform.SetParent(parentSprite.transform, false);
@@ -962,8 +962,8 @@ public class MachineRenderer : MonoBehaviour
         configRT.anchoredPosition = new Vector2(offsetX * parentSprite.GetComponent<RectTransform>().sizeDelta.x, 
                                                 offsetY * parentSprite.GetComponent<RectTransform>().sizeDelta.y);
 
-        // Apply rotation compensation for sorting machines (which are rotated 180°)
-        if (rotateForSortingMachine)
+        // Apply rotation compensation for machines that are rotated 180°
+        if (rotateForRotated180Machine)
         {
             configRT.rotation = Quaternion.Euler(0, 0, 180);
             GameLogger.LogMachine($"Applied 180° rotation compensation to {gameObjectName} configuration sprite", ComponentId);
