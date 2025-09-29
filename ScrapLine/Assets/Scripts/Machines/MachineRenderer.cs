@@ -365,6 +365,9 @@ public class MachineRenderer : MonoBehaviour
             iconRT.offsetMax = Vector2.zero;
             iconRT.anchoredPosition = Vector2.zero;
 
+            // Create configuration sprites for non-menu machines after the icon sprite
+            CreateConfigurationSprites(baseMachine, buildingSprite);
+
             // Create progress bar if machine supports it and not in menu
             CreateProgressBar();
         }
@@ -760,5 +763,95 @@ public class MachineRenderer : MonoBehaviour
 
             lastProgressUpdate = Time.time;
         }
+    }
+
+    /// <summary>
+    /// Creates left and right configuration sprites for machines that support configuration
+    /// </summary>
+    private void CreateConfigurationSprites(BaseMachine baseMachine, GameObject parentSprite)
+    {
+        if (baseMachine == null || parentSprite == null)
+            return;
+
+        // Only create configuration sprites for non-menu machines
+        if (isInMenu)
+            return;
+
+        string leftSprite = baseMachine.GetLeftConfigurationSprite();
+        string rightSprite = baseMachine.GetRightConfigurationSprite();
+
+        // Create left configuration sprite if available
+        if (!string.IsNullOrEmpty(leftSprite))
+        {
+            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.35f, 0.0f); // Left position
+        }
+
+        // Create right configuration sprite if available
+        if (!string.IsNullOrEmpty(rightSprite))
+        {
+            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.35f, 0.0f); // Right position
+        }
+    }
+
+    /// <summary>
+    /// Creates a single configuration sprite at the specified position
+    /// </summary>
+    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parentSprite, float offsetX, float offsetY)
+    {
+        GameObject configSprite = new GameObject($"{gameObjectName}_{cellX}_{cellY}");
+        configSprite.transform.SetParent(parentSprite.transform, false);
+
+        Image configImage = configSprite.AddComponent<Image>();
+
+        // Try loading config sprite from multiple possible locations  
+        Sprite configSpriteAsset = null;
+        string[] possiblePaths = {
+            "Sprites/Items/" + spriteName,
+            "Sprites/Machines/" + spriteName,
+            "Sprites/" + spriteName
+        };
+
+        foreach (string configPath in possiblePaths)
+        {
+            configSpriteAsset = Resources.Load<Sprite>(configPath);
+            if (configSpriteAsset != null)
+            {
+                break;
+            }
+        }
+
+        configImage.sprite = configSpriteAsset;
+
+        // Make config sprite non-interactive
+        CanvasGroup configCanvasGroup = configSprite.AddComponent<CanvasGroup>();
+        configCanvasGroup.blocksRaycasts = false;
+        configCanvasGroup.interactable = false;
+
+        if (configImage.sprite == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                $"Configuration sprite '{spriteName}' not found! Tried paths: {string.Join(", ", possiblePaths)}", ComponentId);
+            configImage.color = Color.cyan; // Fallback color for missing config sprites
+        }
+        else
+        {
+            configImage.color = Color.white;
+        }
+
+        // Position and size the configuration sprite
+        RectTransform configRT = configSprite.GetComponent<RectTransform>();
+
+        // Use 0.3 relative size as requested
+        float configSizeRatio = 0.3f;
+        float margin = (1.0f - configSizeRatio) * 0.5f;
+
+        configRT.anchorMin = new Vector2(margin, margin);
+        configRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
+        configRT.offsetMin = Vector2.zero;
+        configRT.offsetMax = Vector2.zero;
+
+        // Apply offset position (relative to parent)
+        configRT.anchoredPosition = new Vector2(offsetX * parentSprite.GetComponent<RectTransform>().sizeDelta.x, 
+                                                offsetY * parentSprite.GetComponent<RectTransform>().sizeDelta.y);
     }
 }

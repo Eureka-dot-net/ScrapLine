@@ -616,6 +616,37 @@ namespace UnityEngine
         public bool overrideSorting { get; set; }
     }
 
+    // Color32 struct for UI components
+    public struct Color32
+    {
+        public byte r, g, b, a;
+        
+        public Color32(byte r, byte g, byte b, byte a)
+        {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+        }
+        
+        public static implicit operator Color(Color32 c) => new Color(c.r / 255f, c.g / 255f, c.b / 255f, c.a / 255f);
+        public static implicit operator Color32(Color c) => new Color32((byte)(c.r * 255), (byte)(c.g * 255), (byte)(c.b * 255), (byte)(c.a * 255));
+    }
+
+    // Cursor class for mouse cursor control
+    public static class Cursor
+    {
+        public static bool visible { get; set; } = true;
+        public static void SetCursor(Texture2D texture, Vector2 hotspot, CursorMode cursorMode) { }
+    }
+
+    // CursorMode enum
+    public enum CursorMode
+    {
+        Auto,
+        ForceSoftware
+    }
+
     // Global functions
     public static class UnityGlobals
     {

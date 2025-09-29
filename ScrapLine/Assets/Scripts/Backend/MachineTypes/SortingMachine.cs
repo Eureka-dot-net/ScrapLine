@@ -50,6 +50,40 @@ public class SortingMachine : BaseMachine
         cellData.sortingConfig.leftItemType = leftItemType;
         cellData.sortingConfig.rightItemType = rightItemType;
     }
+
+    /// <summary>
+    /// Returns the left configuration sprite based on sorting configuration
+    /// </summary>
+    public override string GetLeftConfigurationSprite()
+    {
+        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.leftItemType))
+        {
+            // Try to get the item definition to find its sprite
+            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.leftItemType);
+            if (itemDef != null && !string.IsNullOrEmpty(itemDef.sprite))
+            {
+                return itemDef.sprite;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the right configuration sprite based on sorting configuration
+    /// </summary>
+    public override string GetRightConfigurationSprite()
+    {
+        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.rightItemType))
+        {
+            // Try to get the item definition to find its sprite
+            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.rightItemType);
+            if (itemDef != null && !string.IsNullOrEmpty(itemDef.sprite))
+            {
+                return itemDef.sprite;
+            }
+        }
+        return null;
+    }
     
     /// <summary>
     /// Update logic for sorting machines - acts as failsafe to check for any Idle items and try to move them with sorting logic

@@ -534,4 +534,27 @@ public class FabricatorMachine : ProcessorMachine
         // GameLogger.LogFabricator(" Final inventory after processing start: [{string.Join(", ", cellData.items.Select(i => $"{i.itemType}({i.state}) id:{i.id}"))}]", ComponentId); // TODO: Fix complex string interpolation
         GameLogger.LogFabricator($"[FABRICATOR] === PROCESSING STARTED SUCCESSFULLY ===", ComponentId);
     }
+
+    /// <summary>
+    /// Override to return recipe output sprite if available, otherwise fallback to building sprite
+    /// </summary>
+    public override string GetBuildingIconSprite()
+    {
+        // If we have a selected recipe, show the recipe output item sprite
+        if (!string.IsNullOrEmpty(cellData.selectedRecipeId))
+        {
+            RecipeDef selectedRecipe = GetSelectedRecipe();
+            if (selectedRecipe != null && selectedRecipe.outputItems.Count > 0)
+            {
+                var outputItem = FactoryRegistry.Instance?.GetItem(selectedRecipe.outputItems[0].item);
+                if (outputItem != null && !string.IsNullOrEmpty(outputItem.sprite))
+                {
+                    return outputItem.sprite;
+                }
+            }
+        }
+        
+        // Fallback to default building icon sprite
+        return machineDef.buildingIconSprite;
+    }
 }

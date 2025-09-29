@@ -50,6 +50,22 @@ public abstract class BaseMachine
     }
 
     /// <summary>
+    /// Returns the left configuration sprite file name for rendering (null if not applicable)
+    /// </summary>
+    public virtual string GetLeftConfigurationSprite()
+    {
+        return null; // Default: no left sprite
+    }
+
+    /// <summary>
+    /// Returns the right configuration sprite file name for rendering (null if not applicable)
+    /// </summary>
+    public virtual string GetRightConfigurationSprite()
+    {
+        return null; // Default: no right sprite
+    }
+
+    /// <summary>
     /// Called when an item arrives at this machine's cell
     /// </summary>
     /// <param name="item">The item that arrived</param>
