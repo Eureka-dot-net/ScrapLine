@@ -130,10 +130,9 @@
             "baseProcessTime": 0,
             "isMoving": true,
             "borderSprite": "",
-            "buildingSprite": "Machine_border",
+            "buildingSprite": "Machine_border_rotated",
             "buildingIconSprite": "seller",
             "buildingIconSpriteSize": 0.6,
-            "buildingDirection": 180,
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "top"

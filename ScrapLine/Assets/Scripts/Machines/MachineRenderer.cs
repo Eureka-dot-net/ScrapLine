@@ -240,7 +240,7 @@ public class MachineRenderer : MonoBehaviour
             if (!string.IsNullOrEmpty(def.buildingIconSprite))
             {
                 var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
-                icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
+                icon.rectTransform.rotation = Quaternion.Euler(0, 0, 0);
 
                 // Apply icon size scaling - for fallback context, use responsive anchors
                 RectTransform iconRT = icon.rectTransform;
@@ -304,8 +304,8 @@ public class MachineRenderer : MonoBehaviour
         buildingRT.position = cellPosition;
         buildingRT.sizeDelta = cellSize;
 
-        // Apply rotations: building direction + cell direction
-        float totalRotation = def.buildingDirection + GetCellDirectionRotation(cellDirection);
+        // Apply rotations: only cell direction (buildingDirection removed)
+        float totalRotation = GetCellDirectionRotation(cellDirection);
         buildingRT.rotation = Quaternion.Euler(0, 0, totalRotation);
 
         // Create icon sprite if specified (as a child of the building sprite)
@@ -780,31 +780,16 @@ public class MachineRenderer : MonoBehaviour
         string leftSprite = baseMachine.GetLeftConfigurationSprite();
         string rightSprite = baseMachine.GetRightConfigurationSprite();
 
-        // Check if this machine is rotated 180° (applies to any machine type)
-        bool isRotated180 = baseMachine.MachineDef.buildingDirection == 180;
-
-        // For 180° rotated machines, place config sprites in the buildingsContainer to avoid rotation inheritance
-        GameObject configParent = parentSprite;
-        if (isRotated180 && !isInMenu && gridManager != null)
-        {
-            RectTransform buildingsContainer = gridManager.GetBuildingsContainer();
-            if (buildingsContainer != null)
-            {
-                configParent = buildingsContainer.gameObject;
-                GameLogger.LogMachine($"Using buildingsContainer as parent for 180° rotated machine config sprites", ComponentId);
-            }
-        }
-
         // Create left configuration sprite if available
         if (!string.IsNullOrEmpty(leftSprite))
         {
-            CreateConfigurationSprite(leftSprite, "LeftConfig", configParent, parentSprite, -0.35f, 0.0f, isRotated180); // Left position
+            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.35f, 0.0f); // Left position
         }
 
         // Create right configuration sprite if available
         if (!string.IsNullOrEmpty(rightSprite))
         {
-            CreateConfigurationSprite(rightSprite, "RightConfig", configParent, parentSprite, 0.35f, 0.0f, isRotated180); // Right position
+            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.35f, 0.0f); // Right position
         }
     }
 
@@ -837,22 +822,7 @@ public class MachineRenderer : MonoBehaviour
             return;
         }
 
-        // For 180° rotated machines, configuration sprites might be in buildingsContainer instead
-        bool isRotated180 = associatedMachine.MachineDef.buildingDirection == 180;
-        GameObject configParent = buildingContainer;
-        
-        if (isRotated180 && gridManager != null)
-        {
-            RectTransform buildingsContainer = gridManager.GetBuildingsContainer();
-            if (buildingsContainer != null)
-            {
-                configParent = buildingsContainer.gameObject;
-                GameLogger.LogMachine($"Using buildingsContainer for 180° rotated machine config sprite refresh", ComponentId);
-            }
-        }
-
-        // Remove existing configuration sprites from both possible locations
-        // Check in buildingContainer first
+        // Remove existing configuration sprites
         Transform leftConfig = buildingContainer.transform.Find($"LeftConfig_{cellX}_{cellY}");
         if (leftConfig != null)
             DestroyImmediate(leftConfig.gameObject);
@@ -860,22 +830,6 @@ public class MachineRenderer : MonoBehaviour
         Transform rightConfig = buildingContainer.transform.Find($"RightConfig_{cellX}_{cellY}");
         if (rightConfig != null)
             DestroyImmediate(rightConfig.gameObject);
-
-        // Also check in buildingsContainer for 180° machines
-        if (isRotated180 && gridManager != null)
-        {
-            RectTransform buildingsContainer = gridManager.GetBuildingsContainer();
-            if (buildingsContainer != null)
-            {
-                Transform leftConfigBC = buildingsContainer.transform.Find($"LeftConfig_{cellX}_{cellY}");
-                if (leftConfigBC != null)
-                    DestroyImmediate(leftConfigBC.gameObject);
-
-                Transform rightConfigBC = buildingsContainer.transform.Find($"RightConfig_{cellX}_{cellY}");
-                if (rightConfigBC != null)
-                    DestroyImmediate(rightConfigBC.gameObject);
-            }
-        }
 
         // Recreate configuration sprites with updated data
         CreateConfigurationSprites(associatedMachine, buildingContainer);
@@ -947,10 +901,10 @@ public class MachineRenderer : MonoBehaviour
     /// <summary>
     /// Creates a single configuration sprite at the specified position
     /// </summary>
-    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject configParent, GameObject positioningParent, float offsetX, float offsetY, bool isRotated180Machine = false)
+    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parent, float offsetX, float offsetY)
     {
         GameObject configSprite = new GameObject($"{gameObjectName}_{cellX}_{cellY}");
-        configSprite.transform.SetParent(configParent.transform, false);
+        configSprite.transform.SetParent(parent.transform, false);
 
         Image configImage = configSprite.AddComponent<Image>();
 
@@ -1001,37 +955,12 @@ public class MachineRenderer : MonoBehaviour
         configRT.offsetMin = Vector2.zero;
         configRT.offsetMax = Vector2.zero;
 
-        // Position relative to the positioning parent (the building sprite)
-        RectTransform positioningRT = positioningParent.GetComponent<RectTransform>();
-        if (positioningRT != null)
+        // Simple relative positioning
+        RectTransform parentRT = parent.GetComponent<RectTransform>();
+        if (parentRT != null)
         {
-            if (configParent == positioningParent)
-            {
-                // Standard relative positioning when parent is the same
-                configRT.anchoredPosition = new Vector2(offsetX * positioningRT.sizeDelta.x, offsetY * positioningRT.sizeDelta.y);
-                GameLogger.LogMachine($"Positioned {gameObjectName} config sprite relatively at {configRT.anchoredPosition}", ComponentId);
-            }
-            else
-            {
-                // For 180° machines in buildingsContainer, we need to copy the building position and add offset
-                // Simplified approach: copy the building's position and add offset
-                RectTransform buildingRT = positioningRT;
-                Vector2 buildingPos = buildingRT.anchoredPosition;
-                Vector2 offset = new Vector2(offsetX * buildingRT.sizeDelta.x, offsetY * buildingRT.sizeDelta.y);
-                
-                // For 180° machines, we need to account for the position swap due to rotation compensation in sorting machine code
-                if (isRotated180Machine && associatedMachine is SortingMachine)
-                {
-                    // Swap left/right offsets due to sorting machine configuration sprite mapping being swapped
-                    offset.x = -offset.x; 
-                }
-                
-                configRT.anchoredPosition = buildingPos + offset;
-                GameLogger.LogMachine($"Positioned {gameObjectName} config sprite absolutely at {configRT.anchoredPosition} (building: {buildingPos}, offset: {offset})", ComponentId);
-            }
+            configRT.anchoredPosition = new Vector2(offsetX * parentRT.sizeDelta.x, offsetY * parentRT.sizeDelta.y);
+            GameLogger.LogMachine($"Positioned {gameObjectName} config sprite at {configRT.anchoredPosition}", ComponentId);
         }
-
-        // No rotation compensation needed since we're avoiding parent rotation inheritance by using buildingsContainer
-        GameLogger.LogMachine($"Created {gameObjectName} config sprite for 180° machine: {isRotated180Machine}", ComponentId);
     }
 }

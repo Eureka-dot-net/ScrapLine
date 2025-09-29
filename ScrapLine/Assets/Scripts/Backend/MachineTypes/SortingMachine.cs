@@ -58,15 +58,12 @@ public class SortingMachine : BaseMachine
 
     /// <summary>
     /// Returns the left configuration sprite based on sorting configuration
-    /// NOTE: Sorting machines are rotated 180° visually (buildingDirection: 180), 
-    /// so we need to swap left/right sprites to compensate for the rotation
     /// </summary>
     public override string GetLeftConfigurationSprite()
     {
-        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.rightItemType))
+        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.leftItemType))
         {
-            // Due to 180° rotation, left sprite shows right item type
-            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.rightItemType);
+            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.leftItemType);
             if (itemDef != null && !string.IsNullOrEmpty(itemDef.sprite))
             {
                 return itemDef.sprite;
@@ -77,15 +74,12 @@ public class SortingMachine : BaseMachine
 
     /// <summary>
     /// Returns the right configuration sprite based on sorting configuration
-    /// NOTE: Sorting machines are rotated 180° visually (buildingDirection: 180), 
-    /// so we need to swap left/right sprites to compensate for the rotation
     /// </summary>
     public override string GetRightConfigurationSprite()
     {
-        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.leftItemType))
+        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.rightItemType))
         {
-            // Due to 180° rotation, right sprite shows left item type
-            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.leftItemType);
+            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.rightItemType);
             if (itemDef != null && !string.IsNullOrEmpty(itemDef.sprite))
             {
                 return itemDef.sprite;
