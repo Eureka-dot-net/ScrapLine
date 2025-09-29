@@ -780,16 +780,19 @@ public class MachineRenderer : MonoBehaviour
         string leftSprite = baseMachine.GetLeftConfigurationSprite();
         string rightSprite = baseMachine.GetRightConfigurationSprite();
 
+        // Check if this is a sorting machine (which is rotated 180°)
+        bool isSortingMachine = baseMachine.MachineDef.buildingDirection == 180 && baseMachine is SortingMachine;
+
         // Create left configuration sprite if available
         if (!string.IsNullOrEmpty(leftSprite))
         {
-            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.35f, 0.0f); // Left position
+            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.35f, 0.0f, isSortingMachine); // Left position
         }
 
         // Create right configuration sprite if available
         if (!string.IsNullOrEmpty(rightSprite))
         {
-            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.35f, 0.0f); // Right position
+            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.35f, 0.0f, isSortingMachine); // Right position
         }
     }
 
@@ -901,7 +904,7 @@ public class MachineRenderer : MonoBehaviour
     /// <summary>
     /// Creates a single configuration sprite at the specified position
     /// </summary>
-    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parentSprite, float offsetX, float offsetY)
+    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parentSprite, float offsetX, float offsetY, bool rotateForSortingMachine = false)
     {
         GameObject configSprite = new GameObject($"{gameObjectName}_{cellX}_{cellY}");
         configSprite.transform.SetParent(parentSprite.transform, false);
@@ -958,5 +961,12 @@ public class MachineRenderer : MonoBehaviour
         // Apply offset position (relative to parent)
         configRT.anchoredPosition = new Vector2(offsetX * parentSprite.GetComponent<RectTransform>().sizeDelta.x, 
                                                 offsetY * parentSprite.GetComponent<RectTransform>().sizeDelta.y);
+
+        // Apply rotation compensation for sorting machines (which are rotated 180°)
+        if (rotateForSortingMachine)
+        {
+            configRT.rotation = Quaternion.Euler(0, 0, 180);
+            GameLogger.LogMachine($"Applied 180° rotation compensation to {gameObjectName} configuration sprite", ComponentId);
+        }
     }
 }

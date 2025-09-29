@@ -10,7 +10,6 @@ public class SpawnerMachine : BaseMachine
     private float lastSpawnTime;
     private float spawnInterval;
     private int initialWasteCrateTotal = -1; // Cache initial total for percentage calculations
-    private string cachedIconSprite = null; // Cache current icon sprite to detect changes
 
     /// <summary>
     /// The crate type this spawner is configured to accept (e.g., "medium_crate")
@@ -109,8 +108,8 @@ public class SpawnerMachine : BaseMachine
             SpawnItem();
             lastSpawnTime = Time.time;
             
-            // Check if icon changed after spawning and update visuals
-            CheckAndUpdateIconVisual();
+            // Check if icon changed after spawning and update visuals using new refresh system
+            RefreshConfigurationVisuals();
         }
         
         // Debug logging (only if enabled to avoid spam)
@@ -420,8 +419,7 @@ public class SpawnerMachine : BaseMachine
                     });
                 }
                 
-                // Reset cached icon sprite so it updates
-                cachedIconSprite = null;
+                // Reset cache so it updates visuals properly
                 initialWasteCrateTotal = -1; // Reset cache
                 
                 GameLogger.LogSpawning($"New waste crate '{crateDef.displayName}' activated with {cellData.wasteCrate.remainingItems.Count} item types", ComponentId);
@@ -465,46 +463,7 @@ public class SpawnerMachine : BaseMachine
         // Return 50% of total item value
         return (int)(totalValue * 0.5f);
     }
-    
-    /// <summary>
-    /// Check if the building icon sprite has changed and update grid visuals if needed
-    /// </summary>
-    private void CheckAndUpdateIconVisual()
-    {
-        string currentIcon = GetBuildingIconSprite();
-        if (cachedIconSprite != currentIcon)
-        {
-            GameLogger.LogMachine($"Icon sprite changed from '{cachedIconSprite}' to '{currentIcon}' - updating grid visual", ComponentId);
-            cachedIconSprite = currentIcon;
-            
-            // Update the grid visual - need to get reference to UIGridManager
-            try 
-            {
-                var gameManager = GameManager.Instance;
-                if (gameManager != null)
-                {
-                    var gridManager = gameManager.GetComponent<UIGridManager>();
-                    if (gridManager != null)
-                    {
-                        gridManager.UpdateCellVisuals(cellData.x, cellData.y, cellData.cellType, cellData.direction, this);
-                        GameLogger.LogMachine($"Grid visual updated successfully for cell ({cellData.x}, {cellData.y})", ComponentId);
-                    }
-                    else
-                    {
-                        GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "Could not find UIGridManager to update visual", ComponentId);
-                    }
-                }
-                else
-                {
-                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, "GameManager.Instance is null - cannot update visual", ComponentId);
-                }
-            }
-            catch (System.Exception ex)
-            {
-                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"Exception updating grid visual: {ex.Message}", ComponentId);
-            }
-        }
-    }
+
     
     /// <summary>
     /// Spawners don't process arriving items - they create new ones
