@@ -27,10 +27,28 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     public override void OnConfigured()
     {
-        // Find the fabricator configuration UI in the scene
+        // Find the fabricator configuration UI in the scene with improved search
         FabricatorMachineConfigPanel configUI = UnityEngine.Object.FindFirstObjectByType<FabricatorMachineConfigPanel>(FindObjectsInactive.Include);
+        
+        // If not found, try alternate search methods
+        if (configUI == null)
+        {
+            configUI = UnityEngine.Object.FindAnyObjectByType<FabricatorMachineConfigPanel>();
+        }
+        
+        if (configUI == null)
+        {
+            // Last resort: search by name
+            GameObject configObj = GameObject.Find("FabricatorMachineConfigPanel");
+            if (configObj != null)
+            {
+                configUI = configObj.GetComponent<FabricatorMachineConfigPanel>();
+            }
+        }
+        
         if (configUI != null)
         {
+            GameLogger.Log(LoggingManager.LogCategory.Fabricator, "Found FabricatorMachineConfigPanel, showing configuration", ComponentId);
             configUI.ShowConfiguration(cellData, OnConfigurationConfirmed);
         }
         else

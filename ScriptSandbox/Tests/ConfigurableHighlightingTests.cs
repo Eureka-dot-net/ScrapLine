@@ -113,5 +113,17 @@ namespace ScrapLine.Tests
             Assert.IsNotNull(rendererType.GetMethod("HighlightBuilding"), "HighlightBuilding method should exist");
             Assert.IsNotNull(rendererType.GetMethod("SetBorderInteraction"), "SetBorderInteraction method should exist");
         }
+
+        [Test]
+        public void GameManager_PanelManagement_MethodsExist()
+        {
+            // Arrange & Act & Assert
+            // Test that the new panel management methods exist
+            var gameManagerType = typeof(GameManager);
+            
+            Assert.IsNotNull(gameManagerType.GetMethod("RegisterOpenConfigPanel"), "RegisterOpenConfigPanel method should exist");
+            Assert.IsNotNull(gameManagerType.GetMethod("CloseCurrentConfigPanel"), "CloseCurrentConfigPanel method should exist");
+            Assert.IsNotNull(gameManagerType.GetMethod("UnregisterConfigPanel"), "UnregisterConfigPanel method should exist");
+        }
     }
 }

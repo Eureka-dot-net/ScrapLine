@@ -22,10 +22,28 @@ public class SortingMachine : BaseMachine
     {
         // Configuration logic for sorting machine
 
-        // Find the sorting configuration UI in the scene
-        SortingMachineConfigPanel configUI = UnityEngine.Object.FindFirstObjectByType<SortingMachineConfigPanel>(FindObjectsInactive.Include); //this returns null
+        // Find the sorting configuration UI in the scene with improved search
+        SortingMachineConfigPanel configUI = UnityEngine.Object.FindFirstObjectByType<SortingMachineConfigPanel>(FindObjectsInactive.Include);
+        
+        // If not found, try alternate search methods
+        if (configUI == null)
+        {
+            configUI = UnityEngine.Object.FindAnyObjectByType<SortingMachineConfigPanel>();
+        }
+        
+        if (configUI == null)
+        {
+            // Last resort: search by name
+            GameObject configObj = GameObject.Find("SortingMachineConfigPanel");
+            if (configObj != null)
+            {
+                configUI = configObj.GetComponent<SortingMachineConfigPanel>();
+            }
+        }
+        
         if (configUI != null)
         {
+            GameLogger.Log(LoggingManager.LogCategory.Processor, "Found SortingMachineConfigPanel, showing configuration", ComponentId);
             configUI.ShowConfiguration(cellData, tuple => OnConfigurationConfirmed(tuple.Item1, tuple.Item2));
         }
         else

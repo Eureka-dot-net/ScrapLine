@@ -73,6 +73,12 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     /// <param name="onConfirmed">Callback when configuration is confirmed</param>
     public virtual void ShowConfiguration(TData data, Action<TSelection> onConfirmed)
     {
+        // Register this panel with GameManager to ensure only one panel is open
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterOpenConfigPanel(this);
+        }
+        
         currentData = data;
         onConfigurationConfirmed = onConfirmed;
 
@@ -110,6 +116,12 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     /// </summary>
     protected virtual void HideConfiguration()
     {
+        // Unregister this panel from GameManager
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.UnregisterConfigPanel(this);
+        }
+        
         if (configPanel != null)
             configPanel.SetActive(false);
         else
