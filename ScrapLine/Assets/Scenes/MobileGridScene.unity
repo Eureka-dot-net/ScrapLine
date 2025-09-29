@@ -2794,6 +2794,10 @@ MonoBehaviour:
   itemMovementManager: {fileID: 0}
   wasteSupplyManager: {fileID: 0}
   spawnInterval: 5
+  gridColorConfig:
+    topRowColor: {r: 0.36862746, g: 0.4862745, b: 0.3529412, a: 1}
+    gridColor: {r: 0.78431374, g: 0.7764706, b: 0.7529412, a: 1}
+    bottomRowColor: {r: 0.69803923, g: 0.43137255, b: 0.32941177, a: 1}
   activeGridManager: {fileID: 0}
 --- !u!4 &772599014
 Transform:
@@ -3401,15 +3405,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: Manage
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: e73a58f6e2794ae7b1b7e50b7fb811b0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1456226090233ec499c6e5daab57ae35, type: 2}
+  m_sharedMaterial: {fileID: 2994134224635841980, guid: 1456226090233ec499c6e5daab57ae35, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4278229503
+  m_fontColor: {r: 1, g: 0.6, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -6243,15 +6247,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: Build
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: e73a58f6e2794ae7b1b7e50b7fb811b0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1456226090233ec499c6e5daab57ae35, type: 2}
+  m_sharedMaterial: {fileID: 2994134224635841980, guid: 1456226090233ec499c6e5daab57ae35, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4278229503
+  m_fontColor: {r: 1, g: 0.6, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
