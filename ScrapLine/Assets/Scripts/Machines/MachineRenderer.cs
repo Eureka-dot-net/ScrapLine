@@ -783,13 +783,13 @@ public class MachineRenderer : MonoBehaviour
         // Create left configuration sprite if available
         if (!string.IsNullOrEmpty(leftSprite))
         {
-            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.35f, 0.35f); // Left top position
+            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.3f, 0.2f); // Left top position
         }
 
         // Create right configuration sprite if available
         if (!string.IsNullOrEmpty(rightSprite))
         {
-            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.35f, 0.35f); // Right top position
+            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.3f, 0.2f); // Right top position
         }
     }
 
