@@ -50,6 +50,9 @@ public class GameManager : MonoBehaviour
     // Game data for save/load and queue management
     private GameData _gameData;
     
+    // Configuration panel management to ensure only one panel is open at a time
+    private MonoBehaviour currentOpenConfigPanel;
+    
     /// <summary>
     /// Access to the current game data (creates if null)
     /// </summary>
@@ -450,6 +453,42 @@ public class GameManager : MonoBehaviour
     /// Get the item movement manager instance
     /// </summary>
     public ItemMovementManager GetItemMovementManager() => itemMovementManager;
+
+    #endregion
+
+    #region Configuration Panel Management
+
+    /// <summary>
+    /// Register a configuration panel as currently open and close any other open panels
+    /// </summary>
+    /// <param name="panel">The configuration panel that is being opened</param>
+    public void RegisterOpenConfigPanel(MonoBehaviour panel)
+    {
+        // Mock implementation - just track the panel
+        currentOpenConfigPanel = panel;
+    }
+
+    /// <summary>
+    /// Close the currently open configuration panel if any
+    /// </summary>
+    public void CloseCurrentConfigPanel()
+    {
+        // Mock implementation
+        currentOpenConfigPanel = null;
+    }
+
+    /// <summary>
+    /// Unregister a configuration panel when it closes
+    /// </summary>
+    /// <param name="panel">The panel that is closing</param>
+    public void UnregisterConfigPanel(MonoBehaviour panel)
+    {
+        // Mock implementation
+        if (currentOpenConfigPanel == panel)
+        {
+            currentOpenConfigPanel = null;
+        }
+    }
 
     #endregion
 }

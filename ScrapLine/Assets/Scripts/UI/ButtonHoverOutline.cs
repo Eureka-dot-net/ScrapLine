@@ -11,9 +11,20 @@ public class ButtonHoverOutline : MonoBehaviour, IPointerEnterHandler, IPointerE
 {
     private Outline outline;
     
-    // The color we want for the border (Orange/Accent: #FFA500)
+    // The color we want for the border - now gets from GameManager if available
+    // Fallback to Orange/Accent: #FFA500 if GameManager not available
     // Note: Colors in Unity C# are normalized from 0 to 1
-    public Color hoverColor = new Color(1f, 165f / 255f, 0f, 1f); 
+    public Color hoverColor 
+    { 
+        get 
+        {
+            if (GameManager.Instance != null && GameManager.Instance.gridColorConfig != null)
+            {
+                return GameManager.Instance.gridColorConfig.uiHoverColor;
+            }
+            return new Color(1f, 165f / 255f, 0f, 1f); // Fallback to orange
+        }
+    } 
     
     // Optional: Reference to a custom cursor texture if you use one.
     // public Texture2D customCursor; 
