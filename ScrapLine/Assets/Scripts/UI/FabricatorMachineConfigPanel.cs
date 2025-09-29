@@ -26,6 +26,20 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
     // Selection state
     private string selectedRecipeId = "";
 
+     private Sprite emptySelectionSprite;
+
+     protected override void Start()
+     {
+              // Load empty selection sprite
+         emptySelectionSprite = recipeConfigButton?.GetComponent<Image>()?.sprite;
+         if (emptySelectionSprite == null)
+         {
+             GameLogger.LogError(LoggingManager.LogCategory.UI, "Failed to load empty selection sprite!", ComponentId);
+         }
+
+         base.Start();
+     }
+
     protected override void SetupCustomButtonListeners()
     {
         if (recipeConfigButton != null)
@@ -106,12 +120,9 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
 
         if (string.IsNullOrEmpty(selectedRecipeId))
         {
-            // No recipe selected - show default
-            if (buttonText != null)
-                buttonText.text = "Select Recipe";
             
-            if (buttonImage != null)
-                buttonImage.sprite = null;
+            if (buttonImage != null && emptySelectionSprite != null)
+                buttonImage.sprite = emptySelectionSprite;
         }
         else
         {

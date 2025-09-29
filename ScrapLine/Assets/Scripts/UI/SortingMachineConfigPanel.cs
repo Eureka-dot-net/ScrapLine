@@ -36,14 +36,14 @@ public class SortingMachineConfigPanel : BaseConfigPanel<CellData, Tuple<string,
 
     protected override void Start()
     {
-        base.Start();
-
         // Load empty selection sprite
         emptySelectionSprite = leftConfigButton?.GetComponent<Image>()?.sprite;
         if (emptySelectionSprite == null)
         {
             GameLogger.LogError(LoggingManager.LogCategory.UI, "Failed to load empty selection sprite!", ComponentId);
         }
+
+        base.Start();
     }
     protected override void SetupCustomButtonListeners()
     {

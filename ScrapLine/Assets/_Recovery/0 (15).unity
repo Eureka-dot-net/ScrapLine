@@ -2620,8 +2620,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Recipe Required! Choose the blueprint for creation, and I'll handle the
-    rest. Time to start crafting!
+  m_text: "Sorting Duty! Pick two materials to reroute\u2014one to the left, one
+    to the right. All other types stay on course."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1456226090233ec499c6e5daab57ae35, type: 2}
   m_sharedMaterial: {fileID: 2994134224635841980, guid: 1456226090233ec499c6e5daab57ae35, type: 2}
@@ -2648,7 +2648,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 55.55
+  m_fontSize: 55.15
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
