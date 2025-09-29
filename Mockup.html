@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Game - Color Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #5B7A95; /* Desaturated blue-grey background */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            background: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 400px;
+            background: #5B7A95;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Top row - Input area */
+        .grid-cell.top {
+            background: #D4948A; /* Dusty coral */
+        }
+
+        /* Middle rows - Main play area */
+        .grid-cell.middle {
+            background: #B8B8B0; /* Light warm grey */
+        }
+
+        /* Bottom row - Output area */
+        .grid-cell.bottom {
+            background: #8BA888; /* Sage green */
+        }
+
+        .connector {
+            width: 12px;
+            height: 12px;
+            background: #4A6B8A;
+            border-radius: 50%;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            margin: -6px 0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 50%;
+            left: 30%;
+            transform: translate(-50%, -50%);
+            background: #3a4b5c;
+            border: 2px solid #4a5b6c;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            max-width: 320px;
+            width: 90%;
+        }
+
+        .modal-title {
+            color: #ff8c00;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-text {
+            color: #ff8c00;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .modal-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .item-box {
+            background: #4a5b6c;
+            border: 2px solid #5a6b7c;
+            border-radius: 8px;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .arrows {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 16px 0;
+        }
+
+        .arrow {
+            color: #ff8c00;
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .divider {
+            height: 2px;
+            background: #4a5b6c;
+            margin: 16px 0;
+        }
+
+        .modal-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 12px;
+            border: 2px solid;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .modal-btn.ok {
+            background: #ff8c00;
+            border-color: #e67c00;
+            color: white;
+        }
+
+        .modal-btn.cancel {
+            background: #6c757d;
+            border-color: #5a6268;
+            color: white;
+        }
+
+        .footer {
+            width: 100%;
+            max-width: 400px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .footer-icon {
+            background: #2a3a4a;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .settings-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: #ff8c00;
+            border: 2px solid #e67c00;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .color-swatches {
+            margin-bottom: 40px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .swatch-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .swatch {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+        }
+
+        .swatch-info {
+            flex: 1;
+        }
+
+        .swatch-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .swatch-hex {
+            font-family: monospace;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .color-picker {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            height: 30px;
+            width: 60px;
+        }
+
+        .hex-input {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: monospace;
+            font-size: 12px;
+            width: 80px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="color-swatches">
+        <h3 style="margin-bottom: 16px;">Color Palette - Click to Change</h3>
+        
+        <div class="swatch-row">
+            <div class="swatch" style="background: #5B7A95;"></div>
+            <div class="swatch-info">
+                <div class="swatch-name">Background</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="color" id="bgColor" value="#5B7A95" class="color-picker">
+                    <input type="text" id="bgHex" value="5B7A95" class="hex-input" maxlength="6">
+                </div>
+            </div>
+        </div>
+
+        <div class="swatch-row">
+            <div class="swatch" style="background: #D4948A;"></div>
+            <div class="swatch-info">
+                <div class="swatch-name">Top Row (Input) - Dusty Coral</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="color" id="topColor" value="#D4948A" class="color-picker">
+                    <input type="text" id="topHex" value="D4948A" class="hex-input" maxlength="6">
+                </div>
+            </div>
+        </div>
+
+        <div class="swatch-row">
+            <div class="swatch" style="background: #B8B8B0;"></div>
+            <div class="swatch-info">
+                <div class="swatch-name">Center Grid - Light Warm Grey</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="color" id="centerColor" value="#B8B8B0" class="color-picker">
+                    <input type="text" id="centerHex" value="B8B8B0" class="hex-input" maxlength="6">
+                </div>
+            </div>
+        </div>
+
+        <div class="swatch-row">
+            <div class="swatch" style="background: #8BA888;"></div>
+            <div class="swatch-info">
+                <div class="swatch-name">Bottom Row (Output) - Sage Green</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="color" id="bottomColor" value="#8BA888" class="color-picker">
+                    <input type="text" id="bottomHex" value="8BA888" class="hex-input" maxlength="6">
+                </div>
+            </div>
+        </div>
+
+        <div class="swatch-row">
+            <div class="swatch" style="background: #3a4b5c;"></div>
+            <div class="swatch-info">
+                <div class="swatch-name">UI Panel Background</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="color" id="panelColor" value="#3a4b5c" class="color-picker">
+                    <input type="text" id="panelHex" value="3a4b5c" class="hex-input" maxlength="6">
+                </div>
+            </div>
+        </div>
+
+        <div class="swatch-row">
+            <div class="swatch" style="background: #ff8c00;"></div>
+            <div class="swatch-info">
+                <div class="swatch-name">UI Accent (Orange)</div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="color" id="accentColor" value="#ff8c00" class="color-picker">
+                    <input type="text" id="accentHex" value="ff8c00" class="hex-input" maxlength="6">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <div>Credits: 1825</div>
+        <div class="buttons">
+            <button class="header-btn">Save</button>
+            <button class="header-btn">Load</button>
+            <button class="header-btn">Clear</button>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <!-- Top row (Input) -->
+        <div class="grid">
+            <div class="grid-cell top"></div>
+            <div class="grid-cell top"></div>
+            <div class="grid-cell top"></div>
+            <div class="grid-cell top"></div>
+            <div class="grid-cell top"></div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+        </div>
+
+        <!-- Middle rows (Main area) -->
+        <div class="grid">
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+        </div>
+
+        <div class="grid">
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+        </div>
+
+        <div class="grid">
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+        </div>
+
+        <div class="grid">
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+            <div class="grid-cell middle"></div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+            <div class="connector"></div>
+        </div>
+
+        <!-- Bottom row (Output) -->
+        <div class="grid">
+            <div class="grid-cell bottom"></div>
+            <div class="grid-cell bottom"></div>
+            <div class="grid-cell bottom"></div>
+            <div class="grid-cell bottom"></div>
+            <div class="grid-cell bottom"></div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-icon">Build</div>
+            <div class="footer-icon">Manage</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay">
+        <div class="modal-title">Sorting</div>
+        <div class="modal-text">
+            Sorting Duty! Pick two materials to reroute—one to the left, one to the right. All other types stay on course.
+        </div>
+        <div class="divider"></div>
+        <div class="modal-content">
+            <div class="item-box">📦</div>
+            <div class="item-box">📦</div>
+            <div class="arrows">
+                <div class="arrow">←</div>
+                <div class="arrow">→</div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="modal-buttons">
+            <button class="modal-btn ok">Ok</button>
+            <button class="modal-btn cancel">Cancel</button>
+        </div>
+    </div>
+
+    <button class="settings-btn">⚙️</button>
+
+    <script>
+        // Color pickers and hex inputs
+        const bgPicker = document.getElementById('bgColor');
+        const bgHexInput = document.getElementById('bgHex');
+        const topPicker = document.getElementById('topColor');
+        const topHexInput = document.getElementById('topHex');
+        const centerPicker = document.getElementById('centerColor');
+        const centerHexInput = document.getElementById('centerHex');
+        const bottomPicker = document.getElementById('bottomColor');
+        const bottomHexInput = document.getElementById('bottomHex');
+        const panelPicker = document.getElementById('panelColor');
+        const panelHexInput = document.getElementById('panelHex');
+        const accentPicker = document.getElementById('accentColor');
+        const accentHexInput = document.getElementById('accentHex');
+
+        // Helper function to validate hex
+        function isValidHex(hex) {
+            return /^[0-9A-Fa-f]{6}$/.test(hex);
+        }
+
+        // Update background color
+        bgPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.body.style.background = color;
+            document.querySelector('.game-container').style.background = color;
+            updateSwatch(0, color);
+            bgHexInput.value = color.substring(1).toUpperCase();
+        });
+
+        bgHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value.replace('#', '');
+            if (isValidHex(hex)) {
+                const color = '#' + hex;
+                document.body.style.background = color;
+                document.querySelector('.game-container').style.background = color;
+                updateSwatch(0, color);
+                bgPicker.value = color;
+            }
+        });
+
+        // Update top row color
+        topPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.querySelectorAll('.grid-cell.top').forEach(cell => {
+                cell.style.background = color;
+            });
+            updateSwatch(1, color);
+            topHexInput.value = color.substring(1).toUpperCase();
+        });
+
+        topHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value.replace('#', '');
+            if (isValidHex(hex)) {
+                const color = '#' + hex;
+                document.querySelectorAll('.grid-cell.top').forEach(cell => {
+                    cell.style.background = color;
+                });
+                updateSwatch(1, color);
+                topPicker.value = color;
+            }
+        });
+
+        // Update center grid color
+        centerPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.querySelectorAll('.grid-cell.middle').forEach(cell => {
+                cell.style.background = color;
+            });
+            updateSwatch(2, color);
+            centerHexInput.value = color.substring(1).toUpperCase();
+        });
+
+        centerHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value.replace('#', '');
+            if (isValidHex(hex)) {
+                const color = '#' + hex;
+                document.querySelectorAll('.grid-cell.middle').forEach(cell => {
+                    cell.style.background = color;
+                });
+                updateSwatch(2, color);
+                centerPicker.value = color;
+            }
+        });
+
+        // Update bottom row color
+        bottomPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.querySelectorAll('.grid-cell.bottom').forEach(cell => {
+                cell.style.background = color;
+            });
+            updateSwatch(3, color);
+            bottomHexInput.value = color.substring(1).toUpperCase();
+        });
+
+        bottomHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value.replace('#', '');
+            if (isValidHex(hex)) {
+                const color = '#' + hex;
+                document.querySelectorAll('.grid-cell.bottom').forEach(cell => {
+                    cell.style.background = color;
+                });
+                updateSwatch(3, color);
+                bottomPicker.value = color;
+            }
+        });
+
+        // Update panel color
+        panelPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.querySelector('.modal-overlay').style.background = color;
+            updateSwatch(4, color);
+            panelHexInput.value = color.substring(1).toUpperCase();
+        });
+
+        panelHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value.replace('#', '');
+            if (isValidHex(hex)) {
+                const color = '#' + hex;
+                document.querySelector('.modal-overlay').style.background = color;
+                updateSwatch(4, color);
+                panelPicker.value = color;
+            }
+        });
+
+        // Update accent color
+        accentPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.querySelector('.modal-title').style.color = color;
+            document.querySelector('.modal-text').style.color = color;
+            document.querySelectorAll('.arrow').forEach(arrow => {
+                arrow.style.color = color;
+            });
+            document.querySelectorAll('.modal-btn.ok').forEach(btn => {
+                btn.style.background = color;
+            });
+            document.querySelector('.settings-btn').style.background = color;
+            updateSwatch(5, color);
+            accentHexInput.value = color.substring(1).toUpperCase();
+        });
+
+        accentHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value.replace('#', '');
+            if (isValidHex(hex)) {
+                const color = '#' + hex;
+                document.querySelector('.modal-title').style.color = color;
+                document.querySelector('.modal-text').style.color = color;
+                document.querySelectorAll('.arrow').forEach(arrow => {
+                    arrow.style.color = color;
+                });
+                document.querySelectorAll('.modal-btn.ok').forEach(btn => {
+                    btn.style.background = color;
+                });
+                document.querySelector('.settings-btn').style.background = color;
+                updateSwatch(5, color);
+                accentPicker.value = color;
+            }
+        });
+
+        function updateSwatch(index, color) {
+            const swatches = document.querySelectorAll('.swatch');
+            swatches[index].style.background = color;
+        }
+    </script>
+</body>
+</html>
