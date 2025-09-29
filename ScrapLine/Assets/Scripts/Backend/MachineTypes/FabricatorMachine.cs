@@ -58,6 +58,9 @@ public class FabricatorMachine : ProcessorMachine
         // The configuration UI already updates cellData.selectedRecipeId, but let's be explicit
         cellData.selectedRecipeId = selectedRecipeId;
         
+        // Refresh the visual configuration indicators
+        RefreshConfigurationVisuals();
+        
         if (string.IsNullOrEmpty(selectedRecipeId))
         {
             GameLogger.LogFabricator("[FABRICATOR] Recipe cleared - machine will not process items", ComponentId);

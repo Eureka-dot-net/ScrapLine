@@ -794,6 +794,50 @@ public class MachineRenderer : MonoBehaviour
     }
 
     /// <summary>
+    /// Updates/refreshes the configuration sprites for machines when configuration changes
+    /// </summary>
+    public void RefreshConfigurationSprites()
+    {
+        if (isInMenu || associatedMachine == null)
+            return;
+
+        // Find the building sprite container to update configuration sprites
+        GameObject buildingContainer = null;
+        if (buildingSprite != null)
+        {
+            buildingContainer = buildingSprite;
+        }
+        else if (gridManager != null)
+        {
+            // For local building sprites, find in this renderer's children
+            Transform buildingTransform = transform.Find("Building");
+            if (buildingTransform != null)
+                buildingContainer = buildingTransform.gameObject;
+        }
+
+        if (buildingContainer == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                "Cannot refresh configuration sprites - no building container found", ComponentId);
+            return;
+        }
+
+        // Remove existing configuration sprites
+        Transform leftConfig = buildingContainer.transform.Find($"LeftConfig_{cellX}_{cellY}");
+        if (leftConfig != null)
+            DestroyImmediate(leftConfig.gameObject);
+
+        Transform rightConfig = buildingContainer.transform.Find($"RightConfig_{cellX}_{cellY}");
+        if (rightConfig != null)
+            DestroyImmediate(rightConfig.gameObject);
+
+        // Recreate configuration sprites with updated data
+        CreateConfigurationSprites(associatedMachine, buildingContainer);
+        
+        GameLogger.LogMachine($"Refreshed configuration sprites for machine at ({cellX}, {cellY})", ComponentId);
+    }
+
+    /// <summary>
     /// Creates a single configuration sprite at the specified position
     /// </summary>
     private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parentSprite, float offsetX, float offsetY)

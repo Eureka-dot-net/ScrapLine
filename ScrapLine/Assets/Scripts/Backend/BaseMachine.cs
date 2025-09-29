@@ -66,6 +66,40 @@ public abstract class BaseMachine
     }
 
     /// <summary>
+    /// Triggers a visual refresh of the machine's configuration sprites
+    /// Call this after changing machine configuration to update the visual indicators
+    /// </summary>
+    protected void RefreshConfigurationVisuals()
+    {
+        // Find the UIGridManager and trigger a visual update
+        var gameManager = GameManager.Instance;
+        if (gameManager != null && gameManager.activeGridManager != null)
+        {
+            var gridManager = gameManager.activeGridManager;
+            var cell = gridManager.GetCell(cellData.x, cellData.y);
+            if (cell != null)
+            {
+                // Get the MachineRenderer component and refresh configuration sprites
+                var renderer = cell.GetComponentInChildren<MachineRenderer>();
+                if (renderer != null)
+                {
+                    renderer.RefreshConfigurationSprites();
+                }
+                else
+                {
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                        $"No MachineRenderer found for machine at ({cellData.x}, {cellData.y}) - cannot refresh configuration visuals", $"Machine_{cellData.x}_{cellData.y}");
+                }
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                "Cannot refresh configuration visuals - GameManager or activeGridManager not available", $"Machine_{cellData.x}_{cellData.y}");
+        }
+    }
+
+    /// <summary>
     /// Called when an item arrives at this machine's cell
     /// </summary>
     /// <param name="item">The item that arrived</param>

@@ -49,6 +49,11 @@ public class SortingMachine : BaseMachine
             
         cellData.sortingConfig.leftItemType = leftItemType;
         cellData.sortingConfig.rightItemType = rightItemType;
+
+        // Refresh the visual configuration indicators
+        RefreshConfigurationVisuals();
+        
+        GameLogger.LogMachine($"Sorting machine configuration updated: Left='{leftItemType}', Right='{rightItemType}'", ComponentId);
     }
 
     /// <summary>
