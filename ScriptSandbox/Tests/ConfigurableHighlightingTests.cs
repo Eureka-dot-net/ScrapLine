@@ -101,5 +101,17 @@ namespace ScrapLine.Tests
             Assert.IsTrue(colorConfig.editModeHighlightColor.a > 0, "Edit mode highlight should have some alpha");
             Assert.IsTrue(colorConfig.uiHoverColor.a > 0, "UI hover color should have some alpha");
         }
+
+        [Test]
+        public void MachineRenderer_HighlightMethods_Exist()
+        {
+            // Arrange & Act & Assert
+            // Test that the new methods exist without calling them (to avoid Unity dependency issues)
+            var rendererType = typeof(MachineRenderer);
+            
+            Assert.IsNotNull(rendererType.GetMethod("HighlightBorder"), "HighlightBorder method should exist");
+            Assert.IsNotNull(rendererType.GetMethod("HighlightBuilding"), "HighlightBuilding method should exist");
+            Assert.IsNotNull(rendererType.GetMethod("SetBorderInteraction"), "SetBorderInteraction method should exist");
+        }
     }
 }

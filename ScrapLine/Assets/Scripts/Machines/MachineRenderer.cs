@@ -1029,6 +1029,70 @@ public class MachineRenderer : MonoBehaviour
     }
 
     /// <summary>
+    /// Highlight the building sprite for edit mode
+    /// </summary>
+    /// <param name="highlight">True to highlight, false to remove highlight</param>
+    public void HighlightBuilding(bool highlight)
+    {
+        if (buildingSprite == null) return;
+
+        Image buildingImage = buildingSprite.GetComponent<Image>();
+        if (buildingImage == null) return;
+
+        if (highlight)
+        {
+            // Get configurable edit mode highlight color from GameManager
+            Color highlightColor = GameManager.Instance != null && GameManager.Instance.gridColorConfig != null 
+                ? GameManager.Instance.gridColorConfig.editModeHighlightColor 
+                : new Color(0.5f, 1f, 0.7f, 0.15f); // Fallback color
+
+            // Apply highlight tint by blending with the original color
+            Color originalColor = buildingImage.color;
+            Color blendedColor = Color.Lerp(originalColor, highlightColor, 0.7f);
+            blendedColor.a = Mathf.Max(originalColor.a, 0.8f); // Ensure visibility
+            buildingImage.color = blendedColor;
+
+            // Add outline for better visibility
+            Outline outline = buildingSprite.GetComponent<Outline>();
+            if (outline == null)
+            {
+                outline = buildingSprite.AddComponent<Outline>();
+            }
+            outline.effectColor = highlightColor;
+            outline.effectDistance = new Vector2(3, 3);
+            outline.enabled = true;
+        }
+        else
+        {
+            // Reset to original color (white or specified building color)
+            MachineDef def = associatedMachine?.GetMachineDef();
+            if (def != null && !string.IsNullOrEmpty(def.buildingSpriteColour))
+            {
+                Color buildingColor;
+                if (ColorUtility.TryParseHtmlString(def.buildingSpriteColour, out buildingColor))
+                {
+                    buildingImage.color = buildingColor;
+                }
+                else
+                {
+                    buildingImage.color = Color.white;
+                }
+            }
+            else
+            {
+                buildingImage.color = Color.white;
+            }
+
+            // Remove outline
+            Outline outline = buildingSprite.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
+        }
+    }
+
+    /// <summary>
     /// Enable or disable border sprite interaction for edit mode
     /// In edit mode, border sprites should be clickable to allow configuration
     /// </summary>

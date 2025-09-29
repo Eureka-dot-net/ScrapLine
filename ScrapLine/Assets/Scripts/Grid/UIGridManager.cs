@@ -279,7 +279,7 @@ public class UIGridManager : MonoBehaviour
                 // Only clear slot highlights (not grid highlights)
                 HighlightSlot(x, y, false);
                 
-                // Also clear border highlights and disable interaction
+                // Also clear border and building highlights and disable interaction
                 UICell cell = GetCell(x, y);
                 if (cell != null)
                 {
@@ -287,6 +287,7 @@ public class UIGridManager : MonoBehaviour
                     if (renderer != null)
                     {
                         renderer.HighlightBorder(false);
+                        renderer.HighlightBuilding(false); // Clear building highlights too
                         renderer.SetBorderInteraction(false); // Disable border clicks when not in edit mode
                     }
                 }
@@ -320,7 +321,7 @@ public class UIGridManager : MonoBehaviour
                     {
                         HighlightSlot(x, y, true);
                         
-                        // Also highlight the border sprite and enable interaction if available
+                        // Also highlight the border sprite and building sprite if available
                         UICell cell = GetCell(x, y);
                         if (cell != null)
                         {
@@ -328,6 +329,7 @@ public class UIGridManager : MonoBehaviour
                             if (renderer != null)
                             {
                                 renderer.HighlightBorder(true);
+                                renderer.HighlightBuilding(true); // Highlight building sprites too
                                 renderer.SetBorderInteraction(true); // Enable border clicks in edit mode
                             }
                         }
