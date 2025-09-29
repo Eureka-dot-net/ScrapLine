@@ -39,9 +39,10 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     private GameObject dragVisual;
     private Canvas dragCanvas;
 
-    // Store data of the machine being dragged
+    // Store complete data of the machine being dragged
     private string draggedMachineDefId;
     private Direction draggedMachineDirection;
+    private CellData draggedCellData; // Complete machine configuration data
 
     public enum CellType { Blank, Machine }
     public enum CellRole { Grid, Top, Bottom }
@@ -192,15 +193,39 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             machineBarManager.ClearSelection();
         }
 
-        // Store the machine data before blanking the cell
+        // Store the complete machine data before blanking the cell
         var gridManager = GameManager.Instance.GetGridManager();
         if (gridManager != null)
         {
             var cellData = gridManager.GetCellData(x, y);
             if (cellData != null && cellData.cellType == CellType.Machine)
             {
+                // Store basic data for backward compatibility
                 draggedMachineDefId = cellData.machineDefId;
                 draggedMachineDirection = cellData.direction;
+                
+                // Store complete machine configuration data for drag visual and restoration
+                draggedCellData = new CellData
+                {
+                    x = cellData.x,
+                    y = cellData.y,
+                    cellType = cellData.cellType,
+                    direction = cellData.direction,
+                    cellRole = cellData.cellRole,
+                    machineDefId = cellData.machineDefId,
+                    machineState = cellData.machineState,
+                    selectedRecipeId = cellData.selectedRecipeId,
+                    sortingConfig = cellData.sortingConfig != null ? new SortingMachineConfig 
+                    {
+                        leftItemType = cellData.sortingConfig.leftItemType,
+                        rightItemType = cellData.sortingConfig.rightItemType
+                    } : null,
+                    wasteCrate = cellData.wasteCrate
+                    // Note: items and waitingItems are not copied as they represent current state
+                    // machine object will be recreated
+                };
+                
+                GameLogger.LogMachine($"Stored complete machine data for drag: {draggedMachineDefId} with config", ComponentId);
             }
             else
             {
@@ -280,12 +305,30 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         if (targetCell != null && targetCell != this)
         {
             // Dropped on another cell - attempt to place machine using stored data
-            bool placementSuccess = GameManager.Instance.PlaceDraggedMachine(
-                targetCell.x,
-                targetCell.y,
-                draggedMachineDefId,
-                draggedMachineDirection
-            );
+            bool placementSuccess = false;
+            
+            // Try using complete configuration data first
+            if (draggedCellData != null)
+            {
+                placementSuccess = GameManager.Instance.PlaceDraggedMachineWithData(
+                    targetCell.x,
+                    targetCell.y,
+                    draggedCellData
+                );
+                GameLogger.LogMachine($"Attempted placement with complete data: {placementSuccess}", ComponentId);
+            }
+            
+            // Fallback to basic method if complete data placement failed
+            if (!placementSuccess)
+            {
+                placementSuccess = GameManager.Instance.PlaceDraggedMachine(
+                    targetCell.x,
+                    targetCell.y,
+                    draggedMachineDefId,
+                    draggedMachineDirection
+                );
+                GameLogger.LogMachine($"Fallback placement with basic data: {placementSuccess}", ComponentId);
+            }
 
             if (!placementSuccess)
             {
@@ -316,19 +359,35 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     /// </summary>
     private void RestoreMachineToOriginalCell()
     {
-        if (string.IsNullOrEmpty(draggedMachineDefId))
+        if (draggedCellData == null && string.IsNullOrEmpty(draggedMachineDefId))
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Grid, $"Cannot restore machine to cell ({x}, {y}) - no stored machine data", ComponentId);
             return;
         }
 
-        bool restoreSuccess = GameManager.Instance.PlaceDraggedMachine(x, y, draggedMachineDefId, draggedMachineDirection);
+        bool restoreSuccess = false;
+        
+        // Try using complete configuration data first
+        if (draggedCellData != null)
+        {
+            // Update position to current cell
+            draggedCellData.x = x;
+            draggedCellData.y = y;
+            
+            restoreSuccess = GameManager.Instance.PlaceDraggedMachineWithData(x, y, draggedCellData);
+            GameLogger.LogMachine($"Attempted restore with complete data: {restoreSuccess}", ComponentId);
+        }
+        
+        // Fallback to basic method if complete data restoration failed
+        if (!restoreSuccess && !string.IsNullOrEmpty(draggedMachineDefId))
+        {
+            restoreSuccess = GameManager.Instance.PlaceDraggedMachine(x, y, draggedMachineDefId, draggedMachineDirection);
+            GameLogger.LogMachine($"Fallback restore with basic data: {restoreSuccess}", ComponentId);
+        }
+        
         if (!restoreSuccess)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Failed to restore machine {draggedMachineDefId} to original cell ({x}, {y})", ComponentId);
-        }
-        else
-        {
+            GameLogger.LogError(LoggingManager.LogCategory.Grid, $"Failed to restore machine to original cell ({x}, {y})", ComponentId);
         }
     }
 
@@ -393,9 +452,61 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     }
 
     /// <summary>
-    /// Creates machine visuals from definition for drag display
+    /// Creates machine visuals from definition for drag display using complete configuration data
     /// </summary>
     private bool CreateMachineVisualFromDefinition()
+    {
+        if (draggedCellData == null || dragVisual == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "CreateMachineVisualFromDefinition: No complete machine data stored, falling back to basic data", ComponentId);
+            return CreateMachineVisualFromBasicData();
+        }
+
+        var machineDef = FactoryRegistry.Instance.GetMachine(draggedCellData.machineDefId);
+        if (machineDef == null)
+            return false;
+
+        // Create MachineRenderer in menu mode (keeps sprites local)
+        GameObject tempRenderer = new GameObject("TempMachineRenderer");
+        tempRenderer.transform.SetParent(dragVisual.transform, false);
+
+        RectTransform tempRT = tempRenderer.AddComponent<RectTransform>();
+        tempRT.anchorMin = Vector2.zero;
+        tempRT.anchorMax = Vector2.one;
+        tempRT.offsetMin = Vector2.zero;
+        tempRT.offsetMax = Vector2.zero;
+
+        MachineRenderer machineRenderer = tempRenderer.AddComponent<MachineRenderer>();
+        machineRenderer.isInMenu = true;  // Keep sprites local, don't use grid containers
+
+        var gridManager = FindFirstObjectByType<UIGridManager>();
+        if (gridManager != null)
+        {
+            // Create BaseMachine instance using complete configuration data
+            var tempBaseMachine = MachineFactory.CreateMachine(draggedCellData);
+            if (tempBaseMachine != null)
+            {
+                machineRenderer.Setup(tempBaseMachine, draggedCellData.direction, gridManager, 
+                                    draggedCellData.x, draggedCellData.y,
+                                    gridManager.conveyorSharedTexture, gridManager.conveyorSharedMaterial);
+                                    
+                GameLogger.LogMachine($"Created drag visual with complete configuration for {draggedCellData.machineDefId}", ComponentId);
+                return true;
+            }
+            else
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.UI, $"Failed to create temporary machine instance for drag visual: {draggedCellData.machineDefId}", ComponentId);
+            }
+        }
+
+        DestroyImmediate(tempRenderer);
+        return false;
+    }
+
+    /// <summary>
+    /// Fallback method to create machine visuals using basic data (for backward compatibility)
+    /// </summary>
+    private bool CreateMachineVisualFromBasicData()
     {
         if (string.IsNullOrEmpty(draggedMachineDefId) || dragVisual == null)
             return false;
@@ -420,7 +531,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         var gridManager = FindFirstObjectByType<UIGridManager>();
         if (gridManager != null)
         {
-            // Create temporary CellData and BaseMachine instance for drag visual
+            // Create temporary CellData and BaseMachine instance for drag visual (basic data only)
             var tempCellData = new CellData
             {
                 x = x,
@@ -435,6 +546,8 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
             {
                 machineRenderer.Setup(tempBaseMachine, draggedMachineDirection, gridManager, x, y,
                                     gridManager.conveyorSharedTexture, gridManager.conveyorSharedMaterial);
+                                    
+                GameLogger.LogMachine($"Created drag visual with basic data for {draggedMachineDefId}", ComponentId);
                 return true;
             }
             else

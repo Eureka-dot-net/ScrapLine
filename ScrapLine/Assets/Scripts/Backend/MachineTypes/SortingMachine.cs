@@ -49,6 +49,43 @@ public class SortingMachine : BaseMachine
             
         cellData.sortingConfig.leftItemType = leftItemType;
         cellData.sortingConfig.rightItemType = rightItemType;
+
+        // Refresh the visual configuration indicators
+        RefreshConfigurationVisuals();
+        
+        GameLogger.LogMachine($"Sorting machine configuration updated: Left='{leftItemType}', Right='{rightItemType}'", ComponentId);
+    }
+
+    /// <summary>
+    /// Returns the left configuration sprite based on sorting configuration
+    /// </summary>
+    public override string GetLeftConfigurationSprite()
+    {
+        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.leftItemType))
+        {
+            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.leftItemType);
+            if (itemDef != null && !string.IsNullOrEmpty(itemDef.sprite))
+            {
+                return itemDef.sprite;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the right configuration sprite based on sorting configuration
+    /// </summary>
+    public override string GetRightConfigurationSprite()
+    {
+        if (cellData.sortingConfig != null && !string.IsNullOrEmpty(cellData.sortingConfig.rightItemType))
+        {
+            var itemDef = FactoryRegistry.Instance?.GetItem(cellData.sortingConfig.rightItemType);
+            if (itemDef != null && !string.IsNullOrEmpty(itemDef.sprite))
+            {
+                return itemDef.sprite;
+            }
+        }
+        return null;
     }
     
     /// <summary>

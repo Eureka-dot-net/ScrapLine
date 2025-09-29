@@ -240,7 +240,7 @@ public class MachineRenderer : MonoBehaviour
             if (!string.IsNullOrEmpty(def.buildingIconSprite))
             {
                 var icon = CreateImageChild("BuildingIcon", def.buildingIconSprite);
-                icon.rectTransform.rotation = Quaternion.Euler(0, 0, def.buildingDirection);
+                icon.rectTransform.rotation = Quaternion.Euler(0, 0, 0);
 
                 // Apply icon size scaling - for fallback context, use responsive anchors
                 RectTransform iconRT = icon.rectTransform;
@@ -304,8 +304,8 @@ public class MachineRenderer : MonoBehaviour
         buildingRT.position = cellPosition;
         buildingRT.sizeDelta = cellSize;
 
-        // Apply rotations: building direction + cell direction
-        float totalRotation = def.buildingDirection + GetCellDirectionRotation(cellDirection);
+        // Apply rotations: only cell direction (buildingDirection removed)
+        float totalRotation = GetCellDirectionRotation(cellDirection);
         buildingRT.rotation = Quaternion.Euler(0, 0, totalRotation);
 
         // Create icon sprite if specified (as a child of the building sprite)
@@ -364,6 +364,9 @@ public class MachineRenderer : MonoBehaviour
             iconRT.offsetMin = Vector2.zero;
             iconRT.offsetMax = Vector2.zero;
             iconRT.anchoredPosition = Vector2.zero;
+
+            // Create configuration sprites for non-menu machines after the icon sprite
+            CreateConfigurationSprites(baseMachine, buildingSprite);
 
             // Create progress bar if machine supports it and not in menu
             CreateProgressBar();
@@ -759,6 +762,205 @@ public class MachineRenderer : MonoBehaviour
             UpdateProgressBar();
 
             lastProgressUpdate = Time.time;
+        }
+    }
+
+    /// <summary>
+    /// Creates left and right configuration sprites for machines that support configuration
+    /// </summary>
+    private void CreateConfigurationSprites(BaseMachine baseMachine, GameObject parentSprite)
+    {
+        if (baseMachine == null || parentSprite == null)
+            return;
+
+        // Only create configuration sprites for non-menu machines
+        if (isInMenu)
+            return;
+
+        string leftSprite = baseMachine.GetLeftConfigurationSprite();
+        string rightSprite = baseMachine.GetRightConfigurationSprite();
+
+        // Create left configuration sprite if available
+        if (!string.IsNullOrEmpty(leftSprite))
+        {
+            CreateConfigurationSprite(leftSprite, "LeftConfig", parentSprite, -0.3f, 0.2f); // Left top position
+        }
+
+        // Create right configuration sprite if available
+        if (!string.IsNullOrEmpty(rightSprite))
+        {
+            CreateConfigurationSprite(rightSprite, "RightConfig", parentSprite, 0.3f, 0.2f); // Right top position
+        }
+    }
+
+    /// <summary>
+    /// Updates/refreshes the configuration sprites for machines when configuration changes
+    /// </summary>
+    public void RefreshConfigurationSprites()
+    {
+        if (isInMenu || associatedMachine == null)
+            return;
+
+        // Find the building sprite container to update configuration sprites
+        GameObject buildingContainer = null;
+        if (buildingSprite != null)
+        {
+            buildingContainer = buildingSprite;
+        }
+        else if (gridManager != null)
+        {
+            // For local building sprites, find in this renderer's children
+            Transform buildingTransform = transform.Find("Building");
+            if (buildingTransform != null)
+                buildingContainer = buildingTransform.gameObject;
+        }
+
+        if (buildingContainer == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                "Cannot refresh configuration sprites - no building container found", ComponentId);
+            return;
+        }
+
+        // Remove existing configuration sprites
+        Transform leftConfig = buildingContainer.transform.Find($"LeftConfig_{cellX}_{cellY}");
+        if (leftConfig != null)
+            DestroyImmediate(leftConfig.gameObject);
+
+        Transform rightConfig = buildingContainer.transform.Find($"RightConfig_{cellX}_{cellY}");
+        if (rightConfig != null)
+            DestroyImmediate(rightConfig.gameObject);
+
+        // Recreate configuration sprites with updated data
+        CreateConfigurationSprites(associatedMachine, buildingContainer);
+        
+        // Also refresh the building icon sprite for machines that override it (like FabricatorMachine)
+        RefreshBuildingIconSprite(buildingContainer);
+        
+        GameLogger.LogMachine($"Refreshed configuration sprites for machine at ({cellX}, {cellY})", ComponentId);
+    }
+
+    /// <summary>
+    /// Updates the building icon sprite for machines that can change it dynamically (e.g., FabricatorMachine)
+    /// </summary>
+    private void RefreshBuildingIconSprite(GameObject buildingContainer)
+    {
+        if (buildingContainer == null || associatedMachine == null)
+            return;
+
+        // Find existing building icon sprite
+        Transform existingIcon = buildingContainer.transform.Find($"BuildingIcon_{cellX}_{cellY}");
+        
+        // Get the current building icon sprite from the machine
+        string currentIconSprite = associatedMachine.GetBuildingIconSprite();
+        
+        if (existingIcon != null)
+        {
+            Image iconImage = existingIcon.GetComponent<Image>();
+            if (iconImage != null)
+            {
+                // Load the sprite
+                Sprite iconSpriteAsset = null;
+                if (!string.IsNullOrEmpty(currentIconSprite))
+                {
+                    string[] possiblePaths = {
+                        "Sprites/Items/" + currentIconSprite,
+                        "Sprites/Machines/" + currentIconSprite,
+                        "Sprites/" + currentIconSprite
+                    };
+
+                    foreach (string iconPath in possiblePaths)
+                    {
+                        iconSpriteAsset = Resources.Load<Sprite>(iconPath);
+                        if (iconSpriteAsset != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                // Update the icon image
+                iconImage.sprite = iconSpriteAsset;
+                
+                if (iconImage.sprite == null && !string.IsNullOrEmpty(currentIconSprite))
+                {
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                        $"Building icon sprite '{currentIconSprite}' not found during refresh", ComponentId);
+                    iconImage.color = Color.yellow; // Fallback color
+                }
+                else
+                {
+                    iconImage.color = Color.white;
+                }
+                
+                GameLogger.LogMachine($"Refreshed building icon sprite to '{currentIconSprite ?? "null"}' for machine at ({cellX}, {cellY})", ComponentId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Creates a single configuration sprite at the specified position
+    /// </summary>
+    private void CreateConfigurationSprite(string spriteName, string gameObjectName, GameObject parent, float offsetX, float offsetY)
+    {
+        GameObject configSprite = new GameObject($"{gameObjectName}_{cellX}_{cellY}");
+        configSprite.transform.SetParent(parent.transform, false);
+
+        Image configImage = configSprite.AddComponent<Image>();
+
+        // Try loading config sprite from multiple possible locations  
+        Sprite configSpriteAsset = null;
+        string[] possiblePaths = {
+            "Sprites/Items/" + spriteName,
+            "Sprites/Machines/" + spriteName,
+            "Sprites/" + spriteName
+        };
+
+        foreach (string configPath in possiblePaths)
+        {
+            configSpriteAsset = Resources.Load<Sprite>(configPath);
+            if (configSpriteAsset != null)
+            {
+                break;
+            }
+        }
+
+        configImage.sprite = configSpriteAsset;
+
+        // Make config sprite non-interactive
+        CanvasGroup configCanvasGroup = configSprite.AddComponent<CanvasGroup>();
+        configCanvasGroup.blocksRaycasts = false;
+        configCanvasGroup.interactable = false;
+
+        if (configImage.sprite == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                $"Configuration sprite '{spriteName}' not found! Tried paths: {string.Join(", ", possiblePaths)}", ComponentId);
+            configImage.color = Color.cyan; // Fallback color for missing config sprites
+        }
+        else
+        {
+            configImage.color = Color.white;
+        }
+
+        // Position and size the configuration sprite
+        RectTransform configRT = configSprite.GetComponent<RectTransform>();
+
+        // Use 0.3 relative size as requested
+        float configSizeRatio = 0.3f;
+        float margin = (1.0f - configSizeRatio) * 0.5f;
+
+        configRT.anchorMin = new Vector2(margin, margin);
+        configRT.anchorMax = new Vector2(1.0f - margin, 1.0f - margin);
+        configRT.offsetMin = Vector2.zero;
+        configRT.offsetMax = Vector2.zero;
+
+        // Simple relative positioning
+        RectTransform parentRT = parent.GetComponent<RectTransform>();
+        if (parentRT != null)
+        {
+            configRT.anchoredPosition = new Vector2(offsetX * parentRT.sizeDelta.x, offsetY * parentRT.sizeDelta.y);
+            GameLogger.LogMachine($"Positioned {gameObjectName} config sprite at {configRT.anchoredPosition}", ComponentId);
         }
     }
 }

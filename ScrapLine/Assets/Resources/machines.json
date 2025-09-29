@@ -130,10 +130,9 @@
             "baseProcessTime": 0,
             "isMoving": true,
             "borderSprite": "",
-            "buildingSprite": "Machine_border",
+            "buildingSprite": "Machine_border_rotated",
             "buildingIconSprite": "seller",
             "buildingIconSpriteSize": 0.6,
-            "buildingDirection": 180,
             "upgradeMultipliers": [],
             "gridPlacement": [
                 "top"
@@ -189,10 +188,9 @@
             "sprite": "",
             "isMoving": true,
             "borderSprite": "",
-            "buildingSprite": "Machine_border",
+            "buildingSprite": "Machine_border_rotated",
             "buildingIconSprite": "sorter",
             "buildingIconSpriteSize": 0.5,
-            "buildingDirection": 180,
             "buildingSpriteColour": "#5D6D7E",
             "upgradeMultipliers": [
                 {

@@ -41,6 +41,10 @@ public class GameManager : MonoBehaviour
     [Tooltip("Whether the game is currently in edit mode")]
     private bool isInEditMode = false;
 
+    [Header("Grid Visual Configuration")]
+    [Tooltip("Configure the colors for different areas of the grid")]
+    public GridColorConfiguration gridColorConfig = new GridColorConfiguration();
+
     public UIGridManager activeGridManager;
 
     // Game data for save/load and queue management
@@ -108,8 +112,8 @@ public class GameManager : MonoBehaviour
         if (activeGridManager == null)
             activeGridManager = FindAnyObjectByType<UIGridManager>();
 
-        // Initialize resource manager first
-        resourceManager.Initialize();
+        // Initialize resource manager first (pass grid color configuration)
+        resourceManager.Initialize(gridColorConfig);
 
         // Initialize other managers
         creditsManager.Initialize(resourceManager.GetCreditsUI(), resourceManager.GetMachineBarManager());
@@ -260,7 +264,19 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Place a dragged machine at the target location
+    /// Place a dragged machine using complete machine data (including configuration)
+    /// </summary>
+    /// <param name="x">Target X coordinate</param>
+    /// <param name="y">Target Y coordinate</param>
+    /// <param name="machineData">Complete machine data including configuration</param>
+    /// <returns>True if placement was successful, false otherwise</returns>
+    public bool PlaceDraggedMachineWithData(int x, int y, CellData machineData)
+    {
+        return machineManager.PlaceDraggedMachineWithData(x, y, machineData);
+    }
+
+    /// <summary>
+    /// Place a dragged machine using basic machine information (backward compatibility)
     /// </summary>
     /// <param name="x">Target X coordinate</param>
     /// <param name="y">Target Y coordinate</param>
