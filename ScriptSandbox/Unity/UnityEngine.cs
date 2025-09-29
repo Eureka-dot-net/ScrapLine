@@ -112,6 +112,9 @@ namespace UnityEngine
         public T AddComponent<T>() where T : Component => default(T);
         
         public void SetActive(bool value) { activeSelf = value; }
+        
+        // Static methods
+        public static GameObject Find(string name) => null; // Mock implementation returns null
     }
 
     // Transform class with IEnumerable support

@@ -2796,7 +2796,7 @@ MonoBehaviour:
     topRowColor: {r: 0.36862746, g: 0.4862745, b: 0.3529412, a: 1}
     gridColor: {r: 0.78431374, g: 0.7764706, b: 0.7529412, a: 1}
     bottomRowColor: {r: 0.69803923, g: 0.43137255, b: 0.32941177, a: 1}
-    editModeHighlightColor: {r: 0.6, g: 0.8980392, b: 0.3137255, a: 0.15}
+    editModeHighlightColor: {r: 1, g: 0.64705884, b: 0, a: 0.15}
     uiHoverColor: {r: 1, g: 0.64705884, b: 0, a: 1}
   activeGridManager: {fileID: 0}
 --- !u!4 &772599014

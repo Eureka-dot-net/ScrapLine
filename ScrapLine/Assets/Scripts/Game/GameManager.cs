@@ -50,6 +50,14 @@ public class GameManager : MonoBehaviour
     // Game data for save/load and queue management
     private GameData _gameData;
     
+    // Configuration panel management to ensure only one panel is open at a time
+    private MonoBehaviour currentOpenConfigPanel;
+    
+    /// <summary>
+    /// Get the component ID for logging purposes
+    /// </summary>
+    private string ComponentId => $"GameManager_{GetInstanceID()}";
+    
     /// <summary>
     /// Access to the current game data (creates if null)
     /// </summary>
@@ -415,6 +423,53 @@ public class GameManager : MonoBehaviour
     public bool IsInEditMode()
     {
         return isInEditMode;
+    }
+
+    /// <summary>
+    /// Register a configuration panel as currently open and close any other open panels
+    /// </summary>
+    /// <param name="panel">The configuration panel that is being opened</param>
+    public void RegisterOpenConfigPanel(MonoBehaviour panel)
+    {
+        // Close any currently open panel first
+        CloseCurrentConfigPanel();
+        
+        // Set the new panel as current
+        currentOpenConfigPanel = panel;
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Registered config panel: {panel?.GetType().Name}", ComponentId);
+    }
+
+    /// <summary>
+    /// Close the currently open configuration panel if any
+    /// </summary>
+    public void CloseCurrentConfigPanel()
+    {
+        if (currentOpenConfigPanel != null)
+        {
+            // Try to call HideConfiguration if it's a BaseConfigPanel
+            var method = currentOpenConfigPanel.GetType().GetMethod("HideConfiguration");
+            if (method != null)
+            {
+                method.Invoke(currentOpenConfigPanel, null);
+                GameLogger.Log(LoggingManager.LogCategory.UI, $"Closed config panel: {currentOpenConfigPanel.GetType().Name}", ComponentId);
+            }
+            
+            currentOpenConfigPanel = null;
+        }
+    }
+
+    /// <summary>
+    /// Unregister a configuration panel when it closes
+    /// </summary>
+    /// <param name="panel">The panel that is closing</param>
+    public void UnregisterConfigPanel(MonoBehaviour panel)
+    {
+        if (currentOpenConfigPanel == panel)
+        {
+            currentOpenConfigPanel = null;
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Unregistered config panel: {panel?.GetType().Name}", ComponentId);
+        }
     }
 
     #endregion

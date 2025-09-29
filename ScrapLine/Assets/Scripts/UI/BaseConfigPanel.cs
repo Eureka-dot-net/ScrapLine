@@ -49,9 +49,34 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     {
         SetupBaseButtonListeners();
         SetupCustomButtonListeners();
-        HideConfiguration();
+        
+        // Initialize panel in hidden state without triggering the full hide logic
+        // This prevents interference with panel management during the same frame
+        InitializeHiddenState();
 
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Initialized {GetType().Name}", ComponentId);
+    }
+
+    /// <summary>
+    /// Initialize the panel in a hidden state without triggering panel management events
+    /// </summary>
+    private void InitializeHiddenState()
+    {
+        // Directly set panels to inactive without calling HideConfiguration()
+        // to avoid interference with the panel management system
+        if (configPanel != null)
+            configPanel.SetActive(false);
+        else
+            gameObject.SetActive(false);
+
+        if (detailConfigPanel != null)
+            detailConfigPanel.SetActive(false);
+
+        HideSelectionPanels();
+
+        // Clear state but don't notify GameManager
+        currentData = default(TData);
+        onConfigurationConfirmed = null;
     }
 
     /// <summary>
@@ -73,6 +98,12 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     /// <param name="onConfirmed">Callback when configuration is confirmed</param>
     public virtual void ShowConfiguration(TData data, Action<TSelection> onConfirmed)
     {
+        // Register this panel with GameManager to ensure only one panel is open
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterOpenConfigPanel(this);
+        }
+        
         currentData = data;
         onConfigurationConfirmed = onConfirmed;
 
@@ -110,6 +141,12 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     /// </summary>
     protected virtual void HideConfiguration()
     {
+        // Unregister this panel from GameManager
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.UnregisterConfigPanel(this);
+        }
+        
         if (configPanel != null)
             configPanel.SetActive(false);
         else
