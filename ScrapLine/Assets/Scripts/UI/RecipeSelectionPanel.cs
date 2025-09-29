@@ -79,8 +79,9 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     protected override void SetupButtonVisuals(GameObject buttonObj, RecipeDef recipe, string displayName)
     {
-        // Set button text
-        SetButtonText(buttonObj, displayName);
+        // Set button text to include ingredients and output
+        string enhancedDisplayName = GetEnhancedDisplayName(recipe, displayName);
+        SetButtonText(buttonObj, enhancedDisplayName);
 
         // Set button sprite based on first output item
         if (recipe?.outputItems != null && recipe.outputItems.Count > 0)
@@ -95,6 +96,9 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
                 SetButtonImage(buttonObj, itemSprite);
             }
         }
+
+        // Try to find and update ingredient display if available
+        UpdateButtonIngredientDisplay(buttonObj, recipe);
     }
 
     protected override string GetNoneDisplayName()
@@ -155,5 +159,48 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         }
         
         return null;
+    }
+
+    /// <summary>
+    /// Get enhanced display name that includes ingredient information
+    /// </summary>
+    /// <param name="recipe">Recipe to describe</param>
+    /// <param name="baseDisplayName">Base display name</param>
+    /// <returns>Enhanced display name with ingredients</returns>
+    private string GetEnhancedDisplayName(RecipeDef recipe, string baseDisplayName)
+    {
+        if (recipe?.inputItems == null || recipe.inputItems.Count == 0)
+            return baseDisplayName;
+
+        // Create ingredients string 
+        string ingredientsString = RecipeIngredientDisplay.GetIngredientsString(recipe);
+        
+        // Return format: "Output Item (ingredients)"
+        return $"{baseDisplayName} ({ingredientsString})";
+    }
+
+    /// <summary>
+    /// Update ingredient display in a recipe button if available
+    /// </summary>
+    /// <param name="buttonObj">Button object to check for ingredient display</param>
+    /// <param name="recipe">Recipe to display</param>
+    private void UpdateButtonIngredientDisplay(GameObject buttonObj, RecipeDef recipe)
+    {
+        // Try to find RecipeIngredientDisplay component in the button
+        RecipeIngredientDisplay ingredientDisplay = buttonObj.GetComponentInChildren<RecipeIngredientDisplay>();
+        
+        if (ingredientDisplay != null)
+        {
+            if (recipe != null)
+            {
+                ingredientDisplay.DisplayRecipe(recipe);
+                GameLogger.Log(LoggingManager.LogCategory.UI, $"Updated button ingredient display for recipe", ComponentId);
+            }
+            else
+            {
+                ingredientDisplay.ClearIngredients();
+            }
+        }
+        // If no ingredient display found, that's fine - it's optional
     }
 }

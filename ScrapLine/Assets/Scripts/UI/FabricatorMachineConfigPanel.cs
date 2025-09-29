@@ -22,6 +22,9 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
     
     [Tooltip("Recipe selection panel component")]
     public RecipeSelectionPanel recipeSelectionPanel;
+    
+    [Tooltip("Component to display recipe ingredients (optional)")]
+    public RecipeIngredientDisplay ingredientDisplay;
 
     // Selection state
     private string selectedRecipeId = "";
@@ -56,6 +59,7 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
     protected override void UpdateUIFromCurrentState()
     {
         UpdateRecipeButtonVisual();
+        UpdateIngredientDisplay();
     }
 
     protected override string GetCurrentSelection()
@@ -166,6 +170,39 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
                 if (buttonText != null)
                     buttonText.text = "Invalid Recipe";
             }
+        }
+    }
+
+    /// <summary>
+    /// Update the ingredient display to show recipe inputs
+    /// </summary>
+    private void UpdateIngredientDisplay()
+    {
+        if (ingredientDisplay == null)
+        {
+            // Ingredient display is optional, so just log and continue
+            GameLogger.Log(LoggingManager.LogCategory.UI, "No ingredient display assigned - skipping ingredient update", ComponentId);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(selectedRecipeId))
+        {
+            // No recipe selected - clear ingredients
+            ingredientDisplay.ClearIngredients();
+            return;
+        }
+
+        // Recipe selected - show ingredients
+        RecipeDef selectedRecipe = RecipeSelectionPanel.GetRecipeById(selectedRecipeId);
+        if (selectedRecipe != null)
+        {
+            ingredientDisplay.DisplayRecipe(selectedRecipe);
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Updated ingredient display for recipe: {RecipeIngredientDisplay.GetIngredientsString(selectedRecipe)}", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not find recipe for ID: {selectedRecipeId}", ComponentId);
+            ingredientDisplay.ClearIngredients();
         }
     }
 }
