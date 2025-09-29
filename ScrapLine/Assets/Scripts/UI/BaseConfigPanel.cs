@@ -72,8 +72,8 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
         if (detailConfigPanel != null)
             detailConfigPanel.SetActive(false);
 
-        // Hide any selection panels
-        HideSelectionPanels();
+        // Don't call HideSelectionPanels() during initialization as it might interfere 
+        // with other panels trying to open during the same frame
 
         // Clear state but don't notify GameManager
         currentData = default(TData);
