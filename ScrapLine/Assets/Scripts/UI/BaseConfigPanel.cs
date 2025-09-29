@@ -49,9 +49,35 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     {
         SetupBaseButtonListeners();
         SetupCustomButtonListeners();
-        HideConfiguration();
+        
+        // Initialize panel in hidden state without triggering the full hide logic
+        // This prevents interference with panel management during the same frame
+        InitializeHiddenState();
 
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Initialized {GetType().Name}", ComponentId);
+    }
+
+    /// <summary>
+    /// Initialize the panel in a hidden state without triggering panel management events
+    /// </summary>
+    private void InitializeHiddenState()
+    {
+        // Directly set panels to inactive without calling HideConfiguration()
+        // to avoid interference with the panel management system
+        if (configPanel != null)
+            configPanel.SetActive(false);
+        else
+            gameObject.SetActive(false);
+
+        if (detailConfigPanel != null)
+            detailConfigPanel.SetActive(false);
+
+        // Hide any selection panels
+        HideSelectionPanels();
+
+        // Clear state but don't notify GameManager
+        currentData = default(TData);
+        onConfigurationConfirmed = null;
     }
 
     /// <summary>
