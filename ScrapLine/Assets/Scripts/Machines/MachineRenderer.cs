@@ -834,7 +834,68 @@ public class MachineRenderer : MonoBehaviour
         // Recreate configuration sprites with updated data
         CreateConfigurationSprites(associatedMachine, buildingContainer);
         
+        // Also refresh the building icon sprite for machines that override it (like FabricatorMachine)
+        RefreshBuildingIconSprite(buildingContainer);
+        
         GameLogger.LogMachine($"Refreshed configuration sprites for machine at ({cellX}, {cellY})", ComponentId);
+    }
+
+    /// <summary>
+    /// Updates the building icon sprite for machines that can change it dynamically (e.g., FabricatorMachine)
+    /// </summary>
+    private void RefreshBuildingIconSprite(GameObject buildingContainer)
+    {
+        if (buildingContainer == null || associatedMachine == null)
+            return;
+
+        // Find existing building icon sprite
+        Transform existingIcon = buildingContainer.transform.Find($"BuildingIcon_{cellX}_{cellY}");
+        
+        // Get the current building icon sprite from the machine
+        string currentIconSprite = associatedMachine.GetBuildingIconSprite();
+        
+        if (existingIcon != null)
+        {
+            Image iconImage = existingIcon.GetComponent<Image>();
+            if (iconImage != null)
+            {
+                // Load the sprite
+                Sprite iconSpriteAsset = null;
+                if (!string.IsNullOrEmpty(currentIconSprite))
+                {
+                    string[] possiblePaths = {
+                        "Sprites/Items/" + currentIconSprite,
+                        "Sprites/Machines/" + currentIconSprite,
+                        "Sprites/" + currentIconSprite
+                    };
+
+                    foreach (string iconPath in possiblePaths)
+                    {
+                        iconSpriteAsset = Resources.Load<Sprite>(iconPath);
+                        if (iconSpriteAsset != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                // Update the icon image
+                iconImage.sprite = iconSpriteAsset;
+                
+                if (iconImage.sprite == null && !string.IsNullOrEmpty(currentIconSprite))
+                {
+                    GameLogger.LogWarning(LoggingManager.LogCategory.Machine, 
+                        $"Building icon sprite '{currentIconSprite}' not found during refresh", ComponentId);
+                    iconImage.color = Color.yellow; // Fallback color
+                }
+                else
+                {
+                    iconImage.color = Color.white;
+                }
+                
+                GameLogger.LogMachine($"Refreshed building icon sprite to '{currentIconSprite ?? "null"}' for machine at ({cellX}, {cellY})", ComponentId);
+            }
+        }
     }
 
     /// <summary>
