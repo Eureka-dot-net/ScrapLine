@@ -22,16 +22,18 @@ public class ResourceManager : MonoBehaviour
     /// <summary>
     /// Initialize all resources and UI managers
     /// </summary>
-    public void Initialize()
+    /// <param name="colorConfig">Optional color configuration for grid cells</param>
+    public void Initialize(GridColorConfiguration colorConfig = null)
     {
-        LoadFactoryData();
+        LoadFactoryData(colorConfig);
         InitializeUIManagers();
     }
 
     /// <summary>
     /// Load factory data from JSON resources
     /// </summary>
-    private void LoadFactoryData()
+    /// <param name="colorConfig">Optional color configuration for grid cells</param>
+    private void LoadFactoryData(GridColorConfiguration colorConfig = null)
     {
         TextAsset machinesAsset = Resources.Load<TextAsset>("machines");
         if (machinesAsset == null)
@@ -69,7 +71,7 @@ public class ResourceManager : MonoBehaviour
                 GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "wastecrates.json resource not found - WasteCrates will be disabled", ComponentId);
         }
 
-        FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson, wastecratesJson);
+        FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson, wastecratesJson, colorConfig);
     }
 
     /// <summary>

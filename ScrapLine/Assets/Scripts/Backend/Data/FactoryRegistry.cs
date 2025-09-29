@@ -33,13 +33,19 @@ public class FactoryRegistry
     /// Loads machine, recipe, item, and wastecrate definitions from JSON strings.
     /// Call this from GameManager when starting the game.
     /// </summary>
-    public void LoadFromJson(string machinesJson, string recipesJson, string itemsJson, string wastecratesJson = null)
+    public void LoadFromJson(string machinesJson, string recipesJson, string itemsJson, string wastecratesJson = null, GridColorConfiguration colorConfig = null)
     {
         // Load Machines
         var machinesWrapper = JsonUtility.FromJson<MachineListWrapper>(machinesJson);
         Machines.Clear();
         foreach (var m in machinesWrapper.machines)
             Machines[m.id] = m;
+
+        // Apply color configuration to blank machine definitions
+        if (colorConfig != null)
+        {
+            ApplyColorConfiguration(colorConfig);
+        }
 
         // Load Recipes - handle direct array format
         try
@@ -213,5 +219,33 @@ public class FactoryRegistry
     public void SaveToGameData(GameData data)
     {
         data.userMachineProgress = UserMachines;
+    }
+
+    /// <summary>
+    /// Apply color configuration to blank machine definitions for grid cell coloring
+    /// </summary>
+    /// <param name="colorConfig">The color configuration to apply</param>
+    private void ApplyColorConfiguration(GridColorConfiguration colorConfig)
+    {
+        // Apply top row color (pink/red area for sellers)
+        if (Machines.TryGetValue("blank_top", out var topMachine))
+        {
+            topMachine.borderColor = colorConfig.GetTopRowHexColor();
+            GameLogger.Log(LoggingManager.LogCategory.Grid, $"Applied top row color: {topMachine.borderColor}", ComponentId);
+        }
+
+        // Apply grid color (middle grey area) - we leave this as default by not setting borderColor
+        if (Machines.TryGetValue("blank", out var gridMachine))
+        {
+            gridMachine.borderColor = colorConfig.GetGridHexColor(); // This returns null for default
+            GameLogger.Log(LoggingManager.LogCategory.Grid, $"Applied grid color: {gridMachine.borderColor ?? "default"}", ComponentId);
+        }
+
+        // Apply bottom row color (green area for spawners)
+        if (Machines.TryGetValue("blank_bottom", out var bottomMachine))
+        {
+            bottomMachine.borderColor = colorConfig.GetBottomRowHexColor();
+            GameLogger.Log(LoggingManager.LogCategory.Grid, $"Applied bottom row color: {bottomMachine.borderColor}", ComponentId);
+        }
     }
 }

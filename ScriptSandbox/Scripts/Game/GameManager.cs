@@ -41,6 +41,10 @@ public class GameManager : MonoBehaviour
     [Tooltip("Whether the game is currently in edit mode")]
     private bool isInEditMode = false;
 
+    [Header("Grid Visual Configuration")]
+    [Tooltip("Configure the colors for different areas of the grid")]
+    public GridColorConfiguration gridColorConfig = new GridColorConfiguration();
+
     public UIGridManager activeGridManager;
 
     // Game data for save/load and queue management
@@ -108,8 +112,8 @@ public class GameManager : MonoBehaviour
         if (activeGridManager == null)
             activeGridManager = FindAnyObjectByType<UIGridManager>();
 
-        // Initialize resource manager first
-        resourceManager.Initialize();
+        // Initialize resource manager first (pass grid color configuration)
+        resourceManager.Initialize(gridColorConfig);
 
         // Initialize other managers
         creditsManager.Initialize(resourceManager.GetCreditsUI(), resourceManager.GetMachineBarManager());
