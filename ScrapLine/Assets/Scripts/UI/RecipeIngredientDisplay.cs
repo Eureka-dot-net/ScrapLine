@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections.Generic;
 
 /// <summary>
@@ -10,7 +11,8 @@ using System.Collections.Generic;
 /// 1. Create a GameObject with HorizontalLayoutGroup
 /// 2. Add this component
 /// 3. Assign ingredientContainer and ingredientPrefab
-/// 4. Ingredient prefab should have Image and Text components
+/// 4. Ingredient prefab should have Image and TextMeshProUGUI components
+/// 5. Configure Content Size Fitter for responsive layout
 /// </summary>
 public class RecipeIngredientDisplay : MonoBehaviour
 {
@@ -18,11 +20,17 @@ public class RecipeIngredientDisplay : MonoBehaviour
     [Tooltip("Container with HorizontalLayoutGroup for ingredient items")]
     public Transform ingredientContainer;
     
-    [Tooltip("Prefab for each ingredient item (should have Image and Text components)")]
+    [Tooltip("Prefab for each ingredient item (should have Image and TextMeshProUGUI components)")]
     public GameObject ingredientPrefab;
     
     [Tooltip("Maximum number of individual icons to show for each ingredient type")]
     public int maxIconsPerIngredient = 5;
+    
+    [Tooltip("Size for ingredient icons (default 32x32 for mobile touch)")]
+    public Vector2 iconSize = new Vector2(32, 32);
+    
+    [Tooltip("Font size for count text")]
+    public float fontSize = 12f;
     
     [Tooltip("Show arrow between ingredients and output")]
     public bool showArrow = false;
@@ -120,12 +128,20 @@ public class RecipeIngredientDisplay : MonoBehaviour
         {
             iconImage.sprite = sprite;
             iconImage.color = Color.white;
+            
+            // Set icon size for consistent layout
+            RectTransform iconRect = iconImage.GetComponent<RectTransform>();
+            if (iconRect != null)
+            {
+                iconRect.sizeDelta = iconSize;
+            }
         }
 
-        // Setup text (count or item name)
-        Text iconText = ingredientObj.GetComponentInChildren<Text>();
+        // Setup text (count or item name) - Use TextMeshPro
+        TextMeshProUGUI iconText = ingredientObj.GetComponentInChildren<TextMeshProUGUI>();
         if (iconText != null)
         {
+            iconText.fontSize = fontSize;
             if (count > 1)
             {
                 iconText.text = $"{count}x";
@@ -166,11 +182,12 @@ public class RecipeIngredientDisplay : MonoBehaviour
             arrowImage.color = Color.white;
         }
 
-        // Clear text for arrow
-        Text arrowText = arrowObj.GetComponentInChildren<Text>();
+        // Clear text for arrow - Use TextMeshPro
+        TextMeshProUGUI arrowText = arrowObj.GetComponentInChildren<TextMeshProUGUI>();
         if (arrowText != null)
         {
             arrowText.text = "→"; // Unicode arrow as fallback
+            arrowText.fontSize = fontSize;
         }
     }
 

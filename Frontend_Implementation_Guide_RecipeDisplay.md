@@ -38,14 +38,24 @@ Create GameObject: "IngredientItemPrefab"
 ├── Add Component: Image (for item sprite)
 │   ├── Sprite: None (set at runtime)
 │   ├── Color: White
-│   └── Preserve Aspect: true
+│   ├── Preserve Aspect: true
+│   └── Native Size: false (for consistent sizing)
+├── Add Component: Content Size Fitter
+│   ├── Horizontal Fit: Preferred Size
+│   └── Vertical Fit: Preferred Size
 └── Create Child: "CountText"
-    └── Add Component: Text
+    └── Add Component: TextMeshProUGUI
         ├── Text: "" (empty, set at runtime)
         ├── Font Size: 12
         ├── Alignment: Center
-        └── Color: White
+        ├── Color: White
+        └── Auto Size: Min 8, Max 16
 ```
+
+**IMPORTANT**: The prefab size should be constrained for proper layout:
+- Set Image RectTransform size to 32x32 (or desired icon size)
+- Ensure Content Size Fitter respects these dimensions
+- Position CountText as overlay or below the icon
 
 ### 2. Update FabricatorMachineConfigPanel
 
@@ -54,15 +64,24 @@ Create GameObject: "IngredientItemPrefab"
 FabricatorConfigPanel
 ├── Background (Image)
 ├── Header
-│   └── Title (Text - "Configure Fabricator")
+│   └── Title (TextMeshProUGUI - "Configure Fabricator")
 ├── RecipeConfigSection
 │   ├── RecipeConfigButton (Button)
 │   │   ├── Background (Image - for output item sprite)
-│   │   └── Label (Text - for output item name)
+│   │   └── Label (TextMeshProUGUI - for output item name)
 │   └── IngredientDisplayContainer (NEW)
 │       ├── Add Component: RecipeIngredientDisplay
+│       ├── Add Component: HorizontalLayoutGroup
+│       │   ├── Spacing: 8
+│       │   ├── Child Force Expand: false
+│       │   └── Child Control Size: true
+│       ├── Add Component: Content Size Fitter
+│       │   ├── Horizontal Fit: Preferred Size
+│       │   └── Vertical Fit: Preferred Size
 │       ├── Assign ingredientContainer: self
 │       ├── Assign ingredientPrefab: IngredientItemPrefab
+│       ├── iconSize: (32, 32)
+│       ├── fontSize: 12
 │       ├── maxIconsPerIngredient: 5
 │       └── showArrow: false
 ├── RecipeSelectionPanel (existing)
@@ -131,17 +150,45 @@ Assets/Prefabs/UI/
 └── RecipeSelectionPanel.prefab (UPDATED)
 ```
 
-## Layout Considerations
+## Layout Issues and Solutions
 
-### Space Requirements
-- **Ingredient Display**: Plan for 50-150 pixels width per ingredient type
-- **Button Height**: Increase to ~60-80 pixels to accommodate ingredient displays
-- **Spacing**: Maintain 5-10 pixel spacing between ingredient icons
+### Common Layout Problems
 
-### Mobile Optimization
-- Keep ingredient icons at least 32x32 pixels for touch friendliness
-- Ensure text is readable at 12+ point size
-- Test on various screen sizes and aspect ratios
+**Problem 1: Icons appear too large or in wrong positions**
+- **Solution**: Set explicit iconSize in RecipeIngredientDisplay (default: 32x32)
+- **Unity Setup**: Ensure Image components have correct RectTransform sizing
+- **Content Size Fitter**: Use Preferred Size for both horizontal and vertical
+
+**Problem 2: Ingredient display doesn't fit in panel**
+- **Solution**: Add Content Size Fitter to ingredient container
+- **Layout Group**: Configure HorizontalLayoutGroup with appropriate spacing (8px recommended)
+- **Parent Constraints**: Ensure parent panel can accommodate the ingredient display
+
+**Problem 3: Text is too small or incorrectly positioned**
+- **Solution**: Use TextMeshProUGUI with appropriate fontSize (12-16 recommended)
+- **Auto Size**: Enable auto-sizing with min/max bounds
+- **Anchoring**: Properly anchor text relative to icon
+
+### Responsive Design Configuration
+
+```
+IngredientDisplayContainer Settings:
+├── HorizontalLayoutGroup
+│   ├── Padding: Left=4, Right=4, Top=2, Bottom=2
+│   ├── Spacing: 8
+│   ├── Child Alignment: Middle Left
+│   ├── Child Force Expand Width: false
+│   ├── Child Force Expand Height: false
+│   ├── Child Control Width: true
+│   └── Child Control Height: true
+├── Content Size Fitter
+│   ├── Horizontal Fit: Preferred Size
+│   └── Vertical Fit: Preferred Size
+└── RecipeIngredientDisplay
+    ├── iconSize: (32, 32) for mobile, (24, 24) for dense layouts
+    ├── fontSize: 12-16 depending on target resolution
+    └── maxIconsPerIngredient: 3-5 based on available space
+```
 
 ## Visual Design Recommendations
 
@@ -201,10 +248,41 @@ Assets/Prefabs/UI/
 ## Troubleshooting
 
 ### Common Issues
-1. **Icons not showing**: Check sprite paths in Resources/Sprites/Items/
-2. **Layout breaking**: Verify HorizontalLayoutGroup settings
-3. **Count text overlapping**: Adjust Text component anchoring
-4. **Performance issues**: Consider object pooling for complex recipes
+
+#### Issue 1: Ingredient Icons Too Large or Mispositioned
+**Symptoms**: Icons appear oversized or in wrong locations (as seen in screenshot)
+**Solution**:
+```
+1. Set RecipeIngredientDisplay.iconSize to (32, 32) or smaller
+2. Ensure IngredientItemPrefab Image has RectTransform:
+   - Width: 32, Height: 32
+   - Anchors: Center
+   - Pivot: Center (0.5, 0.5)
+3. Add Content Size Fitter to ingredient container:
+   - Horizontal Fit: Preferred Size
+   - Vertical Fit: Preferred Size
+```
+
+#### Issue 2: Layout Breaking with Multiple Ingredients
+**Symptoms**: Ingredients overflow or overlap
+**Solution**:
+```
+1. Configure HorizontalLayoutGroup properly:
+   - Spacing: 8
+   - Child Force Expand Width: false
+   - Child Control Width: true
+2. Set maxIconsPerIngredient to 3-4 for limited space
+3. Ensure parent container has adequate width
+```
+
+#### Issue 3: TextMeshPro Components Missing
+**Symptoms**: Count text not displaying or compilation errors
+**Solution**:
+```
+1. Import TextMeshPro package in Unity (Window > TextMeshPro > Import)
+2. Replace Text components with TextMeshProUGUI in prefabs
+3. Update using statements in scripts to include TMPro
+```
 
 ### Debug Features
 - Enable logging in RecipeIngredientDisplay for troubleshooting
