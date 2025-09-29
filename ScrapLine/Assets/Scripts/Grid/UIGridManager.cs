@@ -278,6 +278,18 @@ public class UIGridManager : MonoBehaviour
             {
                 // Only clear slot highlights (not grid highlights)
                 HighlightSlot(x, y, false);
+                
+                // Also clear border highlights and disable interaction
+                UICell cell = GetCell(x, y);
+                if (cell != null)
+                {
+                    MachineRenderer renderer = cell.GetComponentInChildren<MachineRenderer>();
+                    if (renderer != null)
+                    {
+                        renderer.HighlightBorder(false);
+                        renderer.SetBorderInteraction(false); // Disable border clicks when not in edit mode
+                    }
+                }
             }
         }
     }
@@ -307,6 +319,18 @@ public class UIGridManager : MonoBehaviour
                     if (cellData.machine.CanConfigure)
                     {
                         HighlightSlot(x, y, true);
+                        
+                        // Also highlight the border sprite and enable interaction if available
+                        UICell cell = GetCell(x, y);
+                        if (cell != null)
+                        {
+                            MachineRenderer renderer = cell.GetComponentInChildren<MachineRenderer>();
+                            if (renderer != null)
+                            {
+                                renderer.HighlightBorder(true);
+                                renderer.SetBorderInteraction(true); // Enable border clicks in edit mode
+                            }
+                        }
                     }
                 }
             }
@@ -331,7 +355,11 @@ public class UIGridManager : MonoBehaviour
                 overlay.transform.SetParent(bordersContainer, false);
 
                 Image overlayImage = overlay.AddComponent<Image>();
-                overlayImage.color = new Color(0.5f, 1f, 0.7f, 0.15f); // Much more subtle green overlay
+                // Get configurable edit mode highlight color from GameManager
+                Color highlightColor = GameManager.Instance != null && GameManager.Instance.gridColorConfig != null 
+                    ? GameManager.Instance.gridColorConfig.editModeHighlightColor 
+                    : new Color(0.5f, 1f, 0.7f, 0.15f); // Fallback color
+                overlayImage.color = highlightColor;
                 
                 // Add subtle outline for visibility without being overwhelming
                 // Outline outline = overlay.AddComponent<Outline>();

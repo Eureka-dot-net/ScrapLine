@@ -17,6 +17,14 @@ public class GridColorConfiguration
     [Tooltip("Color for the bottom row cells (spawner area) - default green")]
     public Color bottomRowColor = new Color(0.667f, 1f, 0.667f, 1f); // #AAFFAA
     
+    [Header("Edit Mode Colors")]
+    [Tooltip("Color for highlighting machines in edit mode - default light green")]
+    public Color editModeHighlightColor = new Color(0.5f, 1f, 0.7f, 0.15f); // Light green overlay
+    
+    [Header("UI Interaction Colors")]
+    [Tooltip("Color for UI button hover outlines - default orange")]
+    public Color uiHoverColor = new Color(1f, 165f / 255f, 0f, 1f); // Orange (#FFA500)
+    
     /// <summary>
     /// Convert a Unity Color to hex string format for use in machine definitions
     /// </summary>

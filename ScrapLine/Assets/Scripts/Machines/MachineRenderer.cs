@@ -963,4 +963,123 @@ public class MachineRenderer : MonoBehaviour
             GameLogger.LogMachine($"Positioned {gameObjectName} config sprite at {configRT.anchoredPosition}", ComponentId);
         }
     }
+
+    /// <summary>
+    /// Highlight the border sprite for edit mode
+    /// </summary>
+    /// <param name="highlight">True to highlight, false to remove highlight</param>
+    public void HighlightBorder(bool highlight)
+    {
+        if (borderSprite == null) return;
+
+        Image borderImage = borderSprite.GetComponent<Image>();
+        if (borderImage == null) return;
+
+        if (highlight)
+        {
+            // Get configurable edit mode highlight color from GameManager
+            Color highlightColor = GameManager.Instance != null && GameManager.Instance.gridColorConfig != null 
+                ? GameManager.Instance.gridColorConfig.editModeHighlightColor 
+                : new Color(0.5f, 1f, 0.7f, 0.15f); // Fallback color
+
+            // Apply highlight tint by blending with the original color
+            Color originalColor = borderImage.color;
+            Color blendedColor = Color.Lerp(originalColor, highlightColor, 0.7f);
+            blendedColor.a = Mathf.Max(originalColor.a, 0.8f); // Ensure visibility
+            borderImage.color = blendedColor;
+
+            // Add outline for better visibility
+            Outline outline = borderSprite.GetComponent<Outline>();
+            if (outline == null)
+            {
+                outline = borderSprite.AddComponent<Outline>();
+            }
+            outline.effectColor = highlightColor;
+            outline.effectDistance = new Vector2(3, 3);
+            outline.enabled = true;
+        }
+        else
+        {
+            // Reset to original color (white or specified border color)
+            MachineDef def = associatedMachine?.GetMachineDef();
+            if (def != null && !string.IsNullOrEmpty(def.borderColor))
+            {
+                Color borderColor;
+                if (ColorUtility.TryParseHtmlString(def.borderColor, out borderColor))
+                {
+                    borderImage.color = borderColor;
+                }
+                else
+                {
+                    borderImage.color = Color.white;
+                }
+            }
+            else
+            {
+                borderImage.color = Color.white;
+            }
+
+            // Remove outline
+            Outline outline = borderSprite.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Enable or disable border sprite interaction for edit mode
+    /// In edit mode, border sprites should be clickable to allow configuration
+    /// </summary>
+    /// <param name="allowInteraction">True to allow clicks, false to block them</param>
+    public void SetBorderInteraction(bool allowInteraction)
+    {
+        if (borderSprite == null) return;
+
+        CanvasGroup borderCanvasGroup = borderSprite.GetComponent<CanvasGroup>();
+        if (borderCanvasGroup != null)
+        {
+            if (allowInteraction)
+            {
+                // In edit mode, allow border clicks but still let them pass through to the underlying cell
+                borderCanvasGroup.blocksRaycasts = false; // Keep as false to allow clicks to pass through
+                borderCanvasGroup.interactable = false;   // But we could enable this if needed
+                
+                // Instead, we'll add a Button component that forwards clicks to the cell
+                Button borderButton = borderSprite.GetComponent<Button>();
+                if (borderButton == null)
+                {
+                    borderButton = borderSprite.AddComponent<Button>();
+                    // No visual transition needed for mock environment
+                    
+                    // Forward click to the underlying cell
+                    borderButton.onClick.AddListener(() => {
+                        if (GameManager.Instance != null)
+                        {
+                            GameManager.Instance.OnCellClicked(cellX, cellY);
+                        }
+                    });
+                }
+                borderButton.interactable = true;
+                
+                // Ensure the button can receive raycasts
+                borderCanvasGroup.blocksRaycasts = true;
+            }
+            else
+            {
+                // Normal mode: make border non-interactive
+                borderCanvasGroup.blocksRaycasts = false;
+                borderCanvasGroup.interactable = false;
+                
+                // Remove the button component if it exists
+                Button borderButton = borderSprite.GetComponent<Button>();
+                if (borderButton != null)
+                {
+                    borderButton.onClick.RemoveAllListeners();
+                    DestroyImmediate(borderButton);
+                }
+            }
+        }
+    }
 }
