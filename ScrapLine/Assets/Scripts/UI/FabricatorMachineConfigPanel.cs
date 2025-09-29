@@ -1,3 +1,4 @@
+using UnityEditor.Rendering.BuiltIn.ShaderGraph;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -120,9 +121,13 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
 
         if (string.IsNullOrEmpty(selectedRecipeId))
         {
-            
+
+
             if (buttonImage != null && emptySelectionSprite != null)
+            {
                 buttonImage.sprite = emptySelectionSprite;
+                buttonImage.color = new Color32(64, 75, 90, 255);
+            }
         }
         else
         {
@@ -144,6 +149,7 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
                         Sprite itemSprite = Resources.Load<Sprite>($"Sprites/Items/{outputItem.sprite}");
                         if (itemSprite != null)
                         {
+                            buttonImage.color = Color.white;
                             buttonImage.sprite = itemSprite;
                         }
                     }

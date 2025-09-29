@@ -5855,9 +5855,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c898574e1e00451429d233e0a9c790f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RecipeSelectionPanel
-  selectionPanel: {fileID: 0}
-  buttonContainer: {fileID: 0}
-  buttonPrefab: {fileID: 0}
+  selectionPanel: {fileID: 1655839479}
+  buttonContainer: {fileID: 629174282}
+  buttonPrefab: {fileID: 243617362569422418, guid: 8f5a80e3eeb1a8a408313f22cae7e0ad, type: 3}
   machineId: 
 --- !u!1 &1657055624
 GameObject:
