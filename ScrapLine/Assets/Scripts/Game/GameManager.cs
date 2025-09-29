@@ -264,7 +264,19 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Place a dragged machine at the target location
+    /// Place a dragged machine using complete machine data (including configuration)
+    /// </summary>
+    /// <param name="x">Target X coordinate</param>
+    /// <param name="y">Target Y coordinate</param>
+    /// <param name="machineData">Complete machine data including configuration</param>
+    /// <returns>True if placement was successful, false otherwise</returns>
+    public bool PlaceDraggedMachineWithData(int x, int y, CellData machineData)
+    {
+        return machineManager.PlaceDraggedMachineWithData(x, y, machineData);
+    }
+
+    /// <summary>
+    /// Place a dragged machine using basic machine information (backward compatibility)
     /// </summary>
     /// <param name="x">Target X coordinate</param>
     /// <param name="y">Target Y coordinate</param>

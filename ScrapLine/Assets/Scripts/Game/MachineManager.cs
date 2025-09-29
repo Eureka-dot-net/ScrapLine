@@ -318,7 +318,77 @@ public class MachineManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Place a dragged machine at the target location using stored machine data
+    /// Place a dragged machine using complete machine data (including configuration)
+    /// Used when completing a drag-and-drop operation with full configuration preservation
+    /// </summary>
+    /// <param name="x">Target X coordinate</param>
+    /// <param name="y">Target Y coordinate</param>
+    /// <param name="machineData">Complete machine data including configuration</param>
+    /// <returns>True if placement was successful, false otherwise</returns>
+    public bool PlaceDraggedMachineWithData(int x, int y, CellData machineData)
+    {
+        if (machineData == null || string.IsNullOrEmpty(machineData.machineDefId))
+        {
+            if (enableMachineLogs)
+                GameLogger.LogError(LoggingManager.LogCategory.Machine, $"PlaceDraggedMachineWithData({x}, {y}): Invalid machine data", ComponentId);
+            return false;
+        }
+
+        // Use the new validation method that doesn't require source cell data
+        if (!CanDropMachineWithDefId(x, y, machineData.machineDefId))
+        {
+            if (enableMachineLogs)
+                GameLogger.LogWarning(LoggingManager.LogCategory.Machine, $"PlaceDraggedMachineWithData({x}, {y}): Cannot place {machineData.machineDefId} at target location", ComponentId);
+            return false;
+        }
+
+        CellData targetCellData = gridManager.GetCellData(x, y);
+        if (targetCellData == null)
+        {
+            if (enableMachineLogs)
+                GameLogger.LogError(LoggingManager.LogCategory.Machine, $"PlaceDraggedMachineWithData({x}, {y}): No cell data found", ComponentId);
+            return false;
+        }
+
+        // Place the machine with complete configuration data (no cost since it's being moved, not newly placed)
+        targetCellData.cellType = CellType.Machine;
+        targetCellData.machineDefId = machineData.machineDefId;
+        targetCellData.direction = machineData.direction;
+        targetCellData.machineState = machineData.machineState;
+        
+        // Preserve configuration data
+        targetCellData.selectedRecipeId = machineData.selectedRecipeId;
+        targetCellData.sortingConfig = machineData.sortingConfig;
+        targetCellData.wasteCrate = machineData.wasteCrate;
+        
+        // Update position to target location
+        targetCellData.x = x;
+        targetCellData.y = y;
+        
+        // Create machine instance with complete configuration
+        targetCellData.machine = MachineFactory.CreateMachine(targetCellData);
+
+        if (targetCellData.machine == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Failed to create machine object for dragged {machineData.machineDefId} with configuration", ComponentId);
+        }
+        else
+        {
+            if (enableMachineLogs)
+                GameLogger.LogMachine($"Successfully placed {machineData.machineDefId} with configuration at ({x}, {y})", ComponentId);
+        }
+
+        // Update visuals
+        if (activeGridManager != null)
+        {
+            activeGridManager.UpdateCellVisuals(x, y, targetCellData.cellType, targetCellData.direction);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Place a dragged machine using basic machine data (backward compatibility)
     /// Used when completing a successful drag-and-drop operation
     /// </summary>
     /// <param name="x">Target X coordinate</param>
