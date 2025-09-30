@@ -31,6 +31,9 @@ public class GameManager : MonoBehaviour
     [Tooltip("Waste crate queue and supply management")]
     public WasteSupplyManager wasteSupplyManager;
 
+    [Tooltip("UI panel visibility and lifecycle management")]
+    public UIPanelManager uiPanelManager;
+
 
     [Header("Timing")]
     [Tooltip("Interval for spawner machines")]
@@ -116,6 +119,9 @@ public class GameManager : MonoBehaviour
         if (itemMovementManager == null)
             itemMovementManager = GetComponent<ItemMovementManager>() ?? gameObject.AddComponent<ItemMovementManager>();
 
+        if (uiPanelManager == null)
+            uiPanelManager = GetComponent<UIPanelManager>() ?? gameObject.AddComponent<UIPanelManager>();
+
         // Find the UI grid manager
         if (activeGridManager == null)
             activeGridManager = FindAnyObjectByType<UIGridManager>();
@@ -129,6 +135,8 @@ public class GameManager : MonoBehaviour
         saveLoadManager.Initialize(gridManager, creditsManager);
         machineManager.Initialize(creditsManager, gridManager, activeGridManager);
         itemMovementManager.Initialize(gridManager, activeGridManager);
+        
+        // Note: UIPanelManager initializes itself in Awake() before this method runs
     }
 
     /// <summary>
@@ -431,13 +439,21 @@ public class GameManager : MonoBehaviour
     /// <param name="panel">The configuration panel that is being opened</param>
     public void RegisterOpenConfigPanel(MonoBehaviour panel)
     {
-        // Close any currently open panel first
-        CloseCurrentConfigPanel();
-        
-        // Set the new panel as current
-        currentOpenConfigPanel = panel;
-        
-        GameLogger.Log(LoggingManager.LogCategory.UI, $"Registered config panel: {panel?.GetType().Name}", ComponentId);
+        // Delegate to UIPanelManager if available, otherwise handle locally for backward compatibility
+        if (uiPanelManager != null)
+        {
+            uiPanelManager.RegisterOpenPanel(panel);
+        }
+        else
+        {
+            // Fallback: Close any currently open panel first
+            CloseCurrentConfigPanel();
+            
+            // Set the new panel as current
+            currentOpenConfigPanel = panel;
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Registered config panel (fallback): {panel?.GetType().Name}", ComponentId);
+        }
     }
 
     /// <summary>
@@ -445,17 +461,26 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void CloseCurrentConfigPanel()
     {
-        if (currentOpenConfigPanel != null)
+        // Delegate to UIPanelManager if available
+        if (uiPanelManager != null)
         {
-            // Try to call HideConfiguration if it's a BaseConfigPanel
-            var method = currentOpenConfigPanel.GetType().GetMethod("HideConfiguration");
-            if (method != null)
+            uiPanelManager.CloseCurrentPanel();
+        }
+        else
+        {
+            // Fallback: Handle locally for backward compatibility
+            if (currentOpenConfigPanel != null)
             {
-                method.Invoke(currentOpenConfigPanel, null);
-                GameLogger.Log(LoggingManager.LogCategory.UI, $"Closed config panel: {currentOpenConfigPanel.GetType().Name}", ComponentId);
+                // Try to call HideConfiguration if it's a BaseConfigPanel
+                var method = currentOpenConfigPanel.GetType().GetMethod("HideConfiguration");
+                if (method != null)
+                {
+                    method.Invoke(currentOpenConfigPanel, null);
+                    GameLogger.Log(LoggingManager.LogCategory.UI, $"Closed config panel (fallback): {currentOpenConfigPanel.GetType().Name}", ComponentId);
+                }
+                
+                currentOpenConfigPanel = null;
             }
-            
-            currentOpenConfigPanel = null;
         }
     }
 
@@ -465,10 +490,19 @@ public class GameManager : MonoBehaviour
     /// <param name="panel">The panel that is closing</param>
     public void UnregisterConfigPanel(MonoBehaviour panel)
     {
-        if (currentOpenConfigPanel == panel)
+        // Delegate to UIPanelManager if available
+        if (uiPanelManager != null)
         {
-            currentOpenConfigPanel = null;
-            GameLogger.Log(LoggingManager.LogCategory.UI, $"Unregistered config panel: {panel?.GetType().Name}", ComponentId);
+            uiPanelManager.UnregisterPanel(panel);
+        }
+        else
+        {
+            // Fallback: Handle locally for backward compatibility
+            if (currentOpenConfigPanel == panel)
+            {
+                currentOpenConfigPanel = null;
+                GameLogger.Log(LoggingManager.LogCategory.UI, $"Unregistered config panel (fallback): {panel?.GetType().Name}", ComponentId);
+            }
         }
     }
 
@@ -505,6 +539,11 @@ public class GameManager : MonoBehaviour
     /// Get the item movement manager instance
     /// </summary>
     public ItemMovementManager GetItemMovementManager() => itemMovementManager;
+
+    /// <summary>
+    /// Get the UI panel manager instance
+    /// </summary>
+    public UIPanelManager GetUIPanelManager() => uiPanelManager;
 
     #endregion
 }
