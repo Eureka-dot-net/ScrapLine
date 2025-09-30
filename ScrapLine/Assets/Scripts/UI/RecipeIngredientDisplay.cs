@@ -181,7 +181,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
             // For vertical layout, always show count
             if (useVerticalLayout)
             {
-                iconText.text = $"{count} x";
+                iconText.text = $"{count}  x";
             }
             else
             {
