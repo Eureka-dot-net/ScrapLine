@@ -34,8 +34,9 @@ public class UIPanelManager : MonoBehaviour
     /// <summary>
     /// Initialize all config panels to hidden state
     /// Calls the initialization method on each panel regardless of GameObject active state
+    /// Made internal for testing purposes
     /// </summary>
-    private void InitializeAllPanels()
+    internal void InitializeAllPanels()
     {
         // Auto-discover config panels if not manually assigned
         if (configPanels.Count == 0)
