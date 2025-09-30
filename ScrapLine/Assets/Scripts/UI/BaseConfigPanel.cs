@@ -69,12 +69,6 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
         SetupBaseButtonListeners();
         SetupCustomButtonListeners();
 
-        // Ensure initialization happened (fallback if UIPanelManager not present)
-        if (!isInitialized)
-        {
-            InitializePanelState();
-        }
-
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Started {GetType().Name}", ComponentId);
     }
 

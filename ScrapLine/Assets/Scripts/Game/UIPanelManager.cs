@@ -73,11 +73,11 @@ public class UIPanelManager : MonoBehaviour
     {
         GameLogger.Log(LoggingManager.LogCategory.UI, "Auto-discovering config panels...", ComponentId);
 
-        // Find all types of config panels
-        var sortingPanels = FindObjectsByType<SortingMachineConfigPanel>(FindObjectsSortMode.None);
-        var fabricatorPanels = FindObjectsByType<FabricatorMachineConfigPanel>(FindObjectsSortMode.None);
-        var wasteCratePanels = FindObjectsByType<WasteCrateConfigPanel>(FindObjectsSortMode.None);
-        var spawnerPanels = FindObjectsByType<SpawnerConfigPanel>(FindObjectsSortMode.None);
+        // Find all types of config panels - include inactive objects
+        var sortingPanels = FindObjectsByType<SortingMachineConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var fabricatorPanels = FindObjectsByType<FabricatorMachineConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var wasteCratePanels = FindObjectsByType<WasteCrateConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var spawnerPanels = FindObjectsByType<SpawnerConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         // Add to list
         foreach (var panel in sortingPanels)
