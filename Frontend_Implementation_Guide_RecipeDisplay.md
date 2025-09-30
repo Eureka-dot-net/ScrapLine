@@ -20,46 +20,48 @@ This guide covers the Unity frontend setup required to implement recipe ingredie
 
 ## Unity Setup Requirements
 
-### 1. Create Ingredient Display Prefab
+### 1. Create Ingredient Display Prefabs
 
-#### 1.1. Base Ingredient Container
-```
-Create GameObject: "IngredientDisplayContainer"
-└── Add Component: HorizontalLayoutGroup
-    ├── Spacing: 5
-    ├── Child Force Expand Width: false
-    ├── Child Force Expand Height: false
-    └── Child Control Size: true
-```
-
-#### 1.2. Ingredient Item Prefab
+#### 1.1. Ingredient Item Prefab (For Both Layouts)
 ```
 Create GameObject: "IngredientItemPrefab"
-├── Add Component: Image (for item sprite)
-│   ├── Sprite: None (set at runtime)
-│   ├── Color: White
-│   ├── Preserve Aspect: true
-│   └── Native Size: false (for consistent sizing)
+├── Add Component: HorizontalLayoutGroup
+│   ├── Spacing: 5
+│   ├── Child Force Expand: false
+│   └── Child Control Size: true
 ├── Add Component: Content Size Fitter
 │   ├── Horizontal Fit: Preferred Size
 │   └── Vertical Fit: Preferred Size
-└── Create Child: "CountText"
-    └── Add Component: TextMeshProUGUI
-        ├── Text: "" (empty, set at runtime)
-        ├── Font Size: 12
-        ├── Alignment: Center
+├── Create Child: "CountText"
+│   └── Add Component: TextMeshProUGUI
+│       ├── Text: "1 x" (placeholder, set at runtime)
+│       ├── Font Size: 14
+│       ├── Alignment: Middle Left
+│       ├── Color: White
+│       └── Best Fit: unchecked
+└── Create Child: "ItemIcon"
+    └── Add Component: Image (for item sprite)
+        ├── Sprite: None (set at runtime)
         ├── Color: White
-        └── Auto Size: Min 8, Max 16
+        ├── Preserve Aspect: true
+        ├── RectTransform Size: 32x32
+        └── Native Size: false
 ```
 
-**IMPORTANT**: The prefab size should be constrained for proper layout:
-- Set Image RectTransform size to 32x32 (or desired icon size)
-- Ensure Content Size Fitter respects these dimensions
-- Position CountText as overlay or below the icon
+**Layout Structure**: The ingredient item should have the text BEFORE the icon in hierarchy for proper "Count x [Icon]" display.
+
+#### 1.2. Spacer Prefab (Optional)
+```
+Create GameObject: "SpacerPrefab"
+└── Add Component: LayoutElement
+    ├── Min Height: 10
+    ├── Preferred Height: 10
+    └── Flexible Height: 0
+```
 
 ### 2. Update FabricatorMachineConfigPanel
 
-#### 2.1. Panel Structure Enhancement
+#### 2.1. Panel Structure Enhancement - VERTICAL LAYOUT
 ```
 FabricatorConfigPanel
 ├── Background (Image)
@@ -69,26 +71,35 @@ FabricatorConfigPanel
 │   ├── RecipeConfigButton (Button)
 │   │   ├── Background (Image - for output item sprite)
 │   │   └── Label (TextMeshProUGUI - for output item name)
-│   └── IngredientDisplayContainer (NEW)
+│   └── IngredientDisplayContainer (NEW - VERTICAL)
 │       ├── Add Component: RecipeIngredientDisplay
-│       ├── Add Component: HorizontalLayoutGroup
-│       │   ├── Spacing: 8
-│       │   ├── Child Force Expand: false
-│       │   └── Child Control Size: true
+│       ├── Add Component: VerticalLayoutGroup (NOT Horizontal!)
+│       │   ├── Spacing: 5
+│       │   ├── Child Force Expand Width: false
+│       │   ├── Child Force Expand Height: false
+│       │   ├── Child Control Size: true
+│       │   └── Child Alignment: Upper Left
 │       ├── Add Component: Content Size Fitter
 │       │   ├── Horizontal Fit: Preferred Size
 │       │   └── Vertical Fit: Preferred Size
-│       ├── Assign ingredientContainer: self
+│       ├── Assign ingredientContainer: self (the transform of this GameObject)
 │       ├── Assign ingredientPrefab: IngredientItemPrefab
+│       ├── Assign spacerPrefab: SpacerPrefab (optional)
 │       ├── iconSize: (32, 32)
-│       ├── fontSize: 12
+│       ├── fontSize: 14
 │       ├── maxIconsPerIngredient: 5
+│       ├── useVerticalLayout: TRUE (IMPORTANT!)
 │       └── showArrow: false
 ├── RecipeSelectionPanel (existing)
 └── ActionButtonsContainer
     ├── ConfirmButton
     └── CancelButton
 ```
+
+**CRITICAL SETTINGS**:
+- Use **VerticalLayoutGroup** (not HorizontalLayoutGroup) for the config panel
+- Set **useVerticalLayout = TRUE** in RecipeIngredientDisplay component
+- This will display ingredients vertically with automatic spacers
 
 #### 2.2. Inspector Configuration
 ```
@@ -152,6 +163,50 @@ Assets/Prefabs/UI/
 
 ## Layout Issues and Solutions
 
+### Vertical vs Horizontal Layout Modes
+
+**The RecipeIngredientDisplay component supports TWO layout modes:**
+
+#### Vertical Layout (Config Panel)
+**When to use**: Fabricator Machine Configuration Panel
+**Setting**: `useVerticalLayout = TRUE`
+
+**Display Format:**
+```
+Single ingredient recipe (e.g., 1 can):
+  [Blank Spacer]
+  1 x [can_icon]
+  [Blank Spacer]
+
+Multiple ingredient recipe (e.g., 2 cans + 3 bottles):
+  2 x [can_icon]
+  3 x [bottle_icon]
+  [Blank Spacer]
+```
+
+**Key Features:**
+- Each ingredient on its own line
+- Always shows count with format "N x [icon]"
+- Automatic spacer logic:
+  - Single ingredient: spacer above AND below
+  - Multiple ingredients: spacer below only
+- Uses VerticalLayoutGroup on the container
+
+#### Horizontal Layout (Selection Panel)
+**When to use**: Recipe Selection Panel buttons
+**Setting**: `useVerticalLayout = FALSE` (default)
+
+**Display Format:**
+```
+Shows all ingredients side-by-side: [icon][icon][icon] or 3x[icon] + 2x[icon]
+```
+
+**Key Features:**
+- Multiple icons for small counts (≤5)
+- Single icon with "Nx" text for large counts
+- Optional arrow for recipe flow
+- Uses HorizontalLayoutGroup on the container
+
 ### Common Layout Problems
 
 **Problem 1: Icons appear too large or in wrong positions**
@@ -161,16 +216,44 @@ Assets/Prefabs/UI/
 
 **Problem 2: Ingredient display doesn't fit in panel**
 - **Solution**: Add Content Size Fitter to ingredient container
-- **Layout Group**: Configure HorizontalLayoutGroup with appropriate spacing (8px recommended)
+- **Layout Group**: Configure VerticalLayoutGroup (config panel) or HorizontalLayoutGroup (selection panel) with appropriate spacing
 - **Parent Constraints**: Ensure parent panel can accommodate the ingredient display
 
 **Problem 3: Text is too small or incorrectly positioned**
 - **Solution**: Use TextMeshProUGUI with appropriate fontSize (12-16 recommended)
-- **Auto Size**: Enable auto-sizing with min/max bounds
-- **Anchoring**: Properly anchor text relative to icon
+- **Text Placement**: In IngredientItemPrefab, place CountText BEFORE ItemIcon in hierarchy
+- **Anchoring**: Properly anchor text relative to icon using HorizontalLayoutGroup on the prefab
+
+**Problem 4: Ingredients showing horizontally instead of vertically in config panel**
+- **Solution**: 
+  1. Change container's LayoutGroup from HorizontalLayoutGroup to VerticalLayoutGroup
+  2. Set `useVerticalLayout = TRUE` in RecipeIngredientDisplay component
+  3. Verify spacerPrefab is assigned (optional but recommended)
 
 ### Responsive Design Configuration
 
+#### For Vertical Layout (Config Panel):
+```
+IngredientDisplayContainer Settings:
+├── VerticalLayoutGroup
+│   ├── Padding: Left=4, Right=4, Top=2, Bottom=2
+│   ├── Spacing: 5
+│   ├── Child Alignment: Upper Left
+│   ├── Child Force Expand Width: false
+│   ├── Child Force Expand Height: false
+│   ├── Child Control Width: true
+│   └── Child Control Height: true
+├── Content Size Fitter
+│   ├── Horizontal Fit: Preferred Size
+│   └── Vertical Fit: Preferred Size
+└── RecipeIngredientDisplay
+    ├── useVerticalLayout: TRUE
+    ├── iconSize: (32, 32) for mobile
+    ├── fontSize: 14
+    └── maxIconsPerIngredient: N/A (not used in vertical mode)
+```
+
+#### For Horizontal Layout (Selection Panel):
 ```
 IngredientDisplayContainer Settings:
 ├── HorizontalLayoutGroup
@@ -185,18 +268,46 @@ IngredientDisplayContainer Settings:
 │   ├── Horizontal Fit: Preferred Size
 │   └── Vertical Fit: Preferred Size
 └── RecipeIngredientDisplay
-    ├── iconSize: (32, 32) for mobile, (24, 24) for dense layouts
-    ├── fontSize: 12-16 depending on target resolution
-    └── maxIconsPerIngredient: 3-5 based on available space
+    ├── useVerticalLayout: FALSE
+    ├── iconSize: (24, 24) for compact layouts
+    ├── fontSize: 12
+    ├── maxIconsPerIngredient: 5 (show individual icons up to 5)
+    └── showArrow: true (optional)
 ```
 
 ## Visual Design Recommendations
+
+### Display Format Examples
+
+#### Config Panel (Vertical Layout):
+```
+Recipe with 2 ingredients (2 cans + 3 bottles):
+┌─────────────────┐
+│ [Blank Space]   │  ← No spacer (multiple ingredients)
+│ 2 x [🥫]       │  ← Ingredient 1
+│ 3 x [🍾]       │  ← Ingredient 2
+│ [Blank Space]   │  ← Bottom spacer
+└─────────────────┘
+
+Recipe with 1 ingredient (1 can):
+┌─────────────────┐
+│ [Blank Space]   │  ← Top spacer (single ingredient)
+│ 1 x [🥫]       │  ← Ingredient
+│ [Blank Space]   │  ← Bottom spacer
+└─────────────────┘
+```
+
+#### Selection Panel (Horizontal Layout):
+```
+Small count: [🥫][🥫] + [🍾][🍾][🍾] → [📦]
+Large count: 10x[🥫] + 5x[🍾] → [📦]
+```
 
 ### Color Scheme
 - **Ingredient Icons**: Use original item sprite colors
 - **Count Text**: White text with subtle shadow/outline for readability
 - **Background**: Maintain existing panel styling
-- **Arrow**: Subtle gray or themed color
+- **Spacers**: Transparent or match panel background
 
 ### Animation (Future Enhancement)
 - Consider subtle fade-in for ingredient displays
@@ -205,16 +316,22 @@ IngredientDisplayContainer Settings:
 
 ## Implementation Steps
 
-### Phase 1: Basic Setup
-1. Create IngredientItemPrefab with Image and Text components
-2. Add RecipeIngredientDisplay component to existing panels
-3. Configure inspector references
-4. Test with existing recipes
+### Phase 1: Basic Setup - Config Panel (Priority)
+1. Create IngredientItemPrefab with HorizontalLayoutGroup, CountText, and ItemIcon
+2. Create SpacerPrefab (optional but recommended)
+3. Add VerticalLayoutGroup to IngredientDisplayContainer in FabricatorConfigPanel
+4. Add RecipeIngredientDisplay component and configure:
+   - Set `useVerticalLayout = TRUE`
+   - Assign ingredientPrefab and spacerPrefab
+   - Set iconSize to (32, 32)
+   - Set fontSize to 14
+5. Test with recipes having 1, 2, and 3 ingredients
 
-### Phase 2: Visual Enhancement
-1. Create/import arrow sprite if desired
-2. Adjust layout spacing and sizing
-3. Test on different screen resolutions
+### Phase 2: Selection Panel (Optional Enhancement)
+1. Add HorizontalLayoutGroup to selection button ingredient section
+2. Add RecipeIngredientDisplay with `useVerticalLayout = FALSE`
+3. Configure for compact horizontal display
+4. Test on different screen resolutions
 4. Fine-tune visual appearance
 
 ### Phase 3: Advanced Features (Optional)
