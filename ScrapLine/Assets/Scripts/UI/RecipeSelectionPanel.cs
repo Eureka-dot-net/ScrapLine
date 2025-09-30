@@ -16,8 +16,13 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     [Header("Recipe Selection Specific")]
     [Tooltip("Machine ID to filter recipes by (set at runtime)")]
     public string machineId = "";
+    
+    [Header("Visual Ingredient Display (Optional)")]
+    [Tooltip("Component to display selected recipe ingredients with icons (optional)")]
+    public RecipeIngredientDisplay ingredientDisplay;
 
     private CellData contextCellData; // Used to determine machine type
+    private RecipeDef currentlyDisplayedRecipe; // Track which recipe is being displayed
 
     /// <summary>
     /// Show the recipe selection panel for a specific machine
@@ -79,9 +84,8 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     protected override void SetupButtonVisuals(GameObject buttonObj, RecipeDef recipe, string displayName)
     {
-        // Set button text to include ingredients and output
-        string enhancedDisplayName = GetEnhancedDisplayName(recipe, displayName);
-        SetButtonText(buttonObj, enhancedDisplayName);
+        // Set button text (just output name, not full ingredients since we show visually)
+        SetButtonText(buttonObj, displayName);
 
         // Set button sprite based on first output item
         if (recipe?.outputItems != null && recipe.outputItems.Count > 0)
@@ -97,8 +101,42 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             }
         }
 
-        // Note: Visual ingredient icons removed for simplicity
-        // Text display shows all ingredient information clearly: "Output (1x Can + 2x Bottle)"
+        // Add hover/click handlers to show ingredient display
+        var button = buttonObj.GetComponent<UnityEngine.UI.Button>();
+        if (button != null && ingredientDisplay != null)
+        {
+            // Store recipe reference for button click
+            button.onClick.AddListener(() => OnRecipeButtonClicked(recipe));
+        }
+    }
+
+    /// <summary>
+    /// Handle recipe button click to update ingredient display
+    /// </summary>
+    /// <param name="recipe">Recipe to display</param>
+    private void OnRecipeButtonClicked(RecipeDef recipe)
+    {
+        // Update ingredient display when button is clicked
+        if (ingredientDisplay != null && recipe != null)
+        {
+            currentlyDisplayedRecipe = recipe;
+            ingredientDisplay.DisplayRecipe(recipe);
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Displaying ingredients for recipe: {GetDisplayName(recipe)}", ComponentId);
+        }
+    }
+
+    /// <summary>
+    /// Override to clear ingredient display when panel is hidden
+    /// </summary>
+    public override void HidePanel()
+    {
+        if (ingredientDisplay != null)
+        {
+            ingredientDisplay.ClearIngredients();
+            currentlyDisplayedRecipe = null;
+        }
+        
+        base.HidePanel();
     }
 
     protected override string GetNoneDisplayName()
@@ -159,23 +197,5 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         }
         
         return null;
-    }
-
-    /// <summary>
-    /// Get enhanced display name that includes ingredient information
-    /// </summary>
-    /// <param name="recipe">Recipe to describe</param>
-    /// <param name="baseDisplayName">Base display name</param>
-    /// <returns>Enhanced display name with ingredients</returns>
-    private string GetEnhancedDisplayName(RecipeDef recipe, string baseDisplayName)
-    {
-        if (recipe?.inputItems == null || recipe.inputItems.Count == 0)
-            return baseDisplayName;
-
-        // Create ingredients string 
-        string ingredientsString = RecipeIngredientDisplay.GetIngredientsString(recipe);
-        
-        // Return format: "Output Item (ingredients)"
-        return $"{baseDisplayName} ({ingredientsString})";
     }
 }

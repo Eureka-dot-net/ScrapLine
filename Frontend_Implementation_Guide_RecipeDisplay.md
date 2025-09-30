@@ -114,44 +114,59 @@ FabricatorMachineConfigPanel Component:
     └── ingredientDisplay: IngredientDisplayContainer (NEW)
 ```
 
-### 3. RecipeSelectionPanel Setup (Simplified)
+### 3. RecipeSelectionPanel Setup (Like Config Panel)
 
-The RecipeSelectionPanel automatically displays recipe information in button text - no complex prefab setup required!
+The RecipeSelectionPanel can display recipe ingredients visually with icons, just like the config panel! The key difference is the layout direction.
 
-#### 3.1. How It Works (Automatic)
-
-**Display Format**: Each button shows "Output Item (ingredients)" format
-- Example: "Aluminum Plate (1x Aluminum Can + 2x Plastic Bottle)"
-- This is handled automatically by `GetEnhancedDisplayName()` method
-- No additional Unity setup needed beyond standard selection panel
-
-#### 3.2. Unity Setup (Simple)
+#### 3.1. Panel Structure (Similar to Config Panel)
 
 ```
 RecipeSelectionPanel
-├── Add Component: RecipeSelectionPanel
-├── selectionPanel: RecipeSelectionPanel GameObject  
-├── buttonContainer: Content (Grid Layout Group)
-└── buttonPrefab: Standard button with Button, Image, and TextMeshProUGUI
-    ├── Button Component
-    ├── Icon (Image) - Shows output item sprite
-    └── Label (TextMeshProUGUI) - Shows "Output (ingredients)"
+├── SelectionButtonsContainer (Grid Layout Group)
+│   └── [Buttons populated dynamically]
+└── IngredientDisplayContainer (NEW - Similar to config panel)
+    ├── Add Component: RecipeIngredientDisplay
+    ├── Add Component: HorizontalLayoutGroup (horizontal, not vertical!)
+    │   ├── Spacing: 5
+    │   ├── Child Force Expand: false
+    │   └── Child Control Size: true
+    ├── Add Component: Content Size Fitter
+    │   ├── Horizontal Fit: Preferred Size
+    │   └── Vertical Fit: Preferred Size
+    └── RecipeIngredientDisplay Settings:
+        ├── ingredientContainer: self (the transform of this GameObject)
+        ├── ingredientPrefab: IngredientItemPrefab (same prefab as config panel!)
+        ├── spacerPrefab: (leave empty - no spacers for horizontal)
+        ├── iconSize: (24, 24) - slightly smaller for compact display
+        ├── fontSize: 12
+        ├── useVerticalLayout: FALSE (horizontal for selection panel)
+        ├── maxIconsPerIngredient: 3
+        └── showArrow: true (optional, shows → between items)
 ```
 
-**That's it!** No need for complex ingredient display components in buttons.
+#### 3.2. Inspector Configuration
 
-#### 3.3. Inspector Configuration
 ```
 RecipeSelectionPanel Component:
 ├── Base Selection Panel (inherited)
 │   ├── selectionPanel: RecipeSelectionPanel GameObject
 │   ├── buttonContainer: Content (Grid Layout Group)
-│   └── buttonPrefab: Standard SelectionButtonPrefab
-└── Recipe Selection Specific
-    └── machineId: "" (set at runtime by FabricatorMachineConfigPanel)
+│   └── buttonPrefab: Standard SelectionButtonPrefab (Button + Image + TextMeshProUGUI)
+├── Recipe Selection Specific
+│   └── machineId: "" (set at runtime)
+└── Visual Ingredient Display
+    └── ingredientDisplay: IngredientDisplayContainer (optional but recommended)
 ```
 
-**Key Simplification**: Unlike the config panel which shows ingredients visually with icons, the selection panel uses clear text labels. This keeps the button prefab simple and easy to set up.
+#### 3.3. How It Works
+
+**User clicks recipe button** → Ingredient display updates to show that recipe's ingredients horizontally
+
+**Display Format**: `[icon][icon][icon] + [icon][icon]` or `3x[icon] + 2x[icon]`
+
+**Key Difference from Config Panel:**
+- **Config Panel**: Vertical layout with spacers, always visible for selected recipe
+- **Selection Panel**: Horizontal layout without spacers, updates when button clicked
 
 ## Asset Requirements
 
@@ -324,34 +339,33 @@ Large count: 10x[🥫] + 5x[🍾] → [📦]
 
 ## Troubleshooting
 
-### Selection Panel Button Text Not Showing Ingredients
+### Selection Panel Not Showing Recipe Ingredients Visually
 
-**Symptom**: Recipe selection buttons only show output item name, no ingredient information
+**Symptom**: Recipe selection panel shows button names but no visual ingredient icons
 
 **Solution**: 
-- Verify `FactoryRegistry.Instance` is loaded with recipe data
-- Check that recipes have `inputItems` defined in recipes.json
-- Button text should automatically show format: "Output (1x Item1 + 2x Item2)"
+1. Add `IngredientDisplayContainer` to RecipeSelectionPanel (see section 3.1)
+2. Configure with `HorizontalLayoutGroup` (not Vertical!)
+3. Add RecipeIngredientDisplay component with `useVerticalLayout = FALSE`
+4. Assign `ingredientDisplay` field in RecipeSelectionPanel inspector
+5. Click a recipe button to see ingredients displayed horizontally
 
-**Common Issue**: If seeing "Recipe" or generic names:
-- Ensure output items are defined in items.json with proper displayName
-- Check that recipe.outputItems[0].item matches an item ID in the registry
+**Note**: Ingredient display updates when you click a recipe button, showing that recipe's ingredients
 
-### Config Panel vs Selection Panel - Key Differences
+### Config Panel vs Selection Panel - Layout Differences
 
 | Feature | Config Panel | Selection Panel |
 |---------|-------------|-----------------|
-| **Setup Complexity** | Moderate (VerticalLayoutGroup + ingredient display) | **Simple** (standard button prefab) |
-| **Layout** | VerticalLayoutGroup | Grid Layout Group |
-| **Ingredient Display** | Visual icons: "N x [icon]" | Text only: "(Nx Item)" |
-| **Display Location** | Separate IngredientDisplayContainer | In button text label |
-| **useVerticalLayout** | TRUE | N/A (no visual component) |
-| **Icon Size** | 32x32 (touch-friendly) | N/A (text only) |
-| **Component Setup** | RecipeIngredientDisplay on panel | Just standard button |
+| **Layout Direction** | Vertical (stacked) | Horizontal (side-by-side) |
+| **useVerticalLayout** | TRUE | FALSE |
+| **Layout Component** | VerticalLayoutGroup | HorizontalLayoutGroup |
+| **Display Format** | "N x [icon]" on lines | "[icon][icon] + [icon]" |
+| **Spacers** | Yes (top/bottom) | No |
+| **Icon Size** | 32x32 (touch-friendly) | 24x24 (compact) |
+| **When Updates** | Automatic with selection | On button click |
+| **Display Location** | Always visible below button | Separate area, updates on click |
 
-**Why Different?**
-- **Config Panel**: Shows detail for ONE selected recipe - visual icons are worth the setup
-- **Selection Panel**: Shows MANY recipes at once - simple text labels are clearer and easier to set up
+**Both panels use the same approach**: A RecipeIngredientDisplay component on the panel itself, configured with different layout directions!
 
 ## Implementation Steps
 
@@ -366,11 +380,12 @@ Large count: 10x[🥫] + 5x[🍾] → [📦]
    - Set fontSize to 14
 5. Test with recipes having 1, 2, and 3 ingredients
 
-### Phase 2: Selection Panel (Simple Setup)
-1. Use standard button prefab with Button, Image, and TextMeshProUGUI
-2. Assign to RecipeSelectionPanel's buttonPrefab field
-3. That's it! Button text automatically shows "Output (ingredients)" format
-4. No need for RecipeIngredientDisplay components or complex layouts
+### Phase 2: Selection Panel Setup
+1. Create IngredientDisplayContainer with HorizontalLayoutGroup
+2. Add RecipeIngredientDisplay with `useVerticalLayout = FALSE`
+3. Use same IngredientItemPrefab as config panel
+4. Assign ingredientDisplay field in RecipeSelectionPanel
+5. Test by clicking recipe buttons to see horizontal ingredient display
 4. Fine-tune visual appearance
 
 ### Phase 3: Advanced Features (Optional)
