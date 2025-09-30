@@ -3109,6 +3109,7 @@ MonoBehaviour:
   machineManager: {fileID: 0}
   itemMovementManager: {fileID: 0}
   wasteSupplyManager: {fileID: 0}
+  uiPanelManager: {fileID: 0}
   spawnInterval: 5
   gridColorConfig:
     topRowColor: {r: 0.36862746, g: 0.4862745, b: 0.3529412, a: 1}
@@ -3336,11 +3337,9 @@ GameObject:
   - component: {fileID: 880526755}
   - component: {fileID: 880526754}
   - component: {fileID: 880526753}
-  - component: {fileID: 880526752}
   - component: {fileID: 880526751}
-  - component: {fileID: 880526750}
   m_Layer: 5
-  m_Name: UniversalVerticalSelectionPanel
+  m_Name: RecipeSelectionPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3367,22 +3366,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &880526750
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 880526748}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4dc4640b5e2a8184b89838950cd24f36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WasteCrateSelectionPanel
-  selectionPanel: {fileID: 0}
-  buttonContainer: {fileID: 0}
-  buttonPrefab: {fileID: 0}
-  showCostInText: 1
 --- !u!114 &880526751
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3399,22 +3382,6 @@ MonoBehaviour:
   buttonContainer: {fileID: 1209216475}
   buttonPrefab: {fileID: 243617362569422418, guid: 8f5a80e3eeb1a8a408313f22cae7e0ad, type: 3}
   machineId: 
---- !u!114 &880526752
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 880526748}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f5f735aa885dfc4b8140da9fa041330, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemSelectionPanel
-  selectionPanel: {fileID: 880526748}
-  buttonContainer: {fileID: 1209216475}
-  buttonPrefab: {fileID: 243617362569422418, guid: 8f5a80e3eeb1a8a408313f22cae7e0ad, type: 3}
-  itemTypeFilter: []
 --- !u!114 &880526753
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5108,6 +5075,7 @@ GameObject:
   - component: {fileID: 1209216478}
   - component: {fileID: 1209216477}
   - component: {fileID: 1209216476}
+  - component: {fileID: 1209216479}
   m_Layer: 5
   m_Name: ScrollView
   m_TagString: Untagged
@@ -5199,6 +5167,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1209216474}
   m_CullTransparentMesh: 1
+--- !u!114 &1209216479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1209216474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17046a20d16940318894b2f2b6c10a65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RecipeIngredientDisplay
+  ingredientContainer: {fileID: 1209216475}
+  ingredientPrefab: {fileID: 3925377309417145555, guid: 8237abe591ac11f40b493c604fbdd7e2, type: 3}
+  spacerPrefab: {fileID: 1837805431968198997, guid: 3bd4de779dd7cd0479842e1122f44741, type: 3}
+  maxIconsPerIngredient: 5
+  iconSize: {x: 32, y: 32}
+  fontSize: 12
+  useVerticalLayout: 0
+  showArrow: 1
+  arrowSprite: {fileID: 4367426293593361832, guid: 80c715aa9ceb1b44a9a4275ceb1f3991, type: 3}
 --- !u!1 &1237183358
 GameObject:
   m_ObjectHideFlags: 0

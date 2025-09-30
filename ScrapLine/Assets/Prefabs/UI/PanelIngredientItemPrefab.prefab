@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1916269197294931217}
   - component: {fileID: -2930289834861042235}
   m_Layer: 0
-  m_Name: IngredientItemPrefab
+  m_Name: PanelIngredientItemPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
