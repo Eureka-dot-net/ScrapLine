@@ -97,8 +97,8 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             }
         }
 
-        // Try to find and update ingredient display if available
-        UpdateButtonIngredientDisplay(buttonObj, recipe);
+        // Note: Visual ingredient icons removed for simplicity
+        // Text display shows all ingredient information clearly: "Output (1x Can + 2x Bottle)"
     }
 
     protected override string GetNoneDisplayName()
@@ -177,30 +177,5 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         
         // Return format: "Output Item (ingredients)"
         return $"{baseDisplayName} ({ingredientsString})";
-    }
-
-    /// <summary>
-    /// Update ingredient display in a recipe button if available
-    /// </summary>
-    /// <param name="buttonObj">Button object to check for ingredient display</param>
-    /// <param name="recipe">Recipe to display</param>
-    private void UpdateButtonIngredientDisplay(GameObject buttonObj, RecipeDef recipe)
-    {
-        // Try to find RecipeIngredientDisplay component in the button
-        RecipeIngredientDisplay ingredientDisplay = buttonObj.GetComponentInChildren<RecipeIngredientDisplay>();
-        
-        if (ingredientDisplay != null)
-        {
-            if (recipe != null)
-            {
-                ingredientDisplay.DisplayRecipe(recipe);
-                GameLogger.Log(LoggingManager.LogCategory.UI, $"Updated button ingredient display for recipe", ComponentId);
-            }
-            else
-            {
-                ingredientDisplay.ClearIngredients();
-            }
-        }
-        // If no ingredient display found, that's fine - it's optional
     }
 }

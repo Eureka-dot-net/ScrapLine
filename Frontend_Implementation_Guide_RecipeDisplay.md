@@ -114,68 +114,44 @@ FabricatorMachineConfigPanel Component:
     └── ingredientDisplay: IngredientDisplayContainer (NEW)
 ```
 
-### 3. Update RecipeSelectionPanel
+### 3. RecipeSelectionPanel Setup (Simplified)
 
-The RecipeSelectionPanel automatically displays recipe ingredients in two ways:
-1. **Text Display (Automatic)**: Recipe button text includes ingredient counts, e.g., "Aluminum Plate (1x Aluminum Can + 2x Plastic Bottle)"
-2. **Visual Display (Optional)**: Add RecipeIngredientDisplay component to button prefab for icon-based ingredient display
+The RecipeSelectionPanel automatically displays recipe information in button text - no complex prefab setup required!
 
-#### 3.1. Text-Only Display (No Additional Setup)
-The `GetEnhancedDisplayName()` method automatically adds ingredient text to button labels. This works out-of-the-box with no additional setup.
+#### 3.1. How It Works (Automatic)
 
-#### 3.2. Visual Icon Display (Optional Enhancement)
+**Display Format**: Each button shows "Output Item (ingredients)" format
+- Example: "Aluminum Plate (1x Aluminum Can + 2x Plastic Bottle)"
+- This is handled automatically by `GetEnhancedDisplayName()` method
+- No additional Unity setup needed beyond standard selection panel
 
-To add visual ingredient icons to selection buttons:
+#### 3.2. Unity Setup (Simple)
 
-**Step 1: Modify SelectionButtonPrefab**
 ```
-SelectionButtonPrefab (Enhanced with Visual Ingredients)
-├── Button Component
-├── Background (Image)
-├── MainContent (Vertical Layout Group)
-│   ├── TopSection (Horizontal Layout Group)
-│   │   ├── OutputIcon (Image - for recipe output)
-│   │   └── OutputName (TextMeshProUGUI - for recipe name)
-│   └── IngredientSection (NEW - for visual ingredient display)
-│       ├── Add Component: RecipeIngredientDisplay
-│       ├── Add Component: HorizontalLayoutGroup
-│       │   ├── Spacing: 5
-│       │   ├── Child Force Expand: false
-│       │   └── Child Control Size: true
-│       ├── Add Component: Content Size Fitter
-│       │   ├── Horizontal Fit: Preferred Size
-│       │   └── Vertical Fit: Preferred Size
-│       └── RecipeIngredientDisplay Settings:
-│           ├── ingredientContainer: self (IngredientSection transform)
-│           ├── ingredientPrefab: IngredientItemPrefab (same as config panel)
-│           ├── iconSize: (24, 24) - smaller for compact display
-│           ├── fontSize: 10-12
-│           ├── useVerticalLayout: FALSE (horizontal for selection panel)
-│           ├── maxIconsPerIngredient: 3
-│           └── showArrow: true (optional)
+RecipeSelectionPanel
+├── Add Component: RecipeSelectionPanel
+├── selectionPanel: RecipeSelectionPanel GameObject  
+├── buttonContainer: Content (Grid Layout Group)
+└── buttonPrefab: Standard button with Button, Image, and TextMeshProUGUI
+    ├── Button Component
+    ├── Icon (Image) - Shows output item sprite
+    └── Label (TextMeshProUGUI) - Shows "Output (ingredients)"
 ```
 
-**How It Works:**
-- `RecipeSelectionPanel.SetupButtonVisuals()` calls `UpdateButtonIngredientDisplay()`
-- This method searches for `RecipeIngredientDisplay` component in the button using `GetComponentInChildren<RecipeIngredientDisplay>()`
-- If found, it calls `DisplayRecipe()` to show ingredient icons
-- If not found, only text display is used (which still works fine)
+**That's it!** No need for complex ingredient display components in buttons.
 
-**Step 2: Configure RecipeSelectionPanel Component**
+#### 3.3. Inspector Configuration
 ```
 RecipeSelectionPanel Component:
 ├── Base Selection Panel (inherited)
 │   ├── selectionPanel: RecipeSelectionPanel GameObject
 │   ├── buttonContainer: Content (Grid Layout Group)
-│   └── buttonPrefab: SelectionButtonPrefab (with or without IngredientSection)
+│   └── buttonPrefab: Standard SelectionButtonPrefab
 └── Recipe Selection Specific
     └── machineId: "" (set at runtime by FabricatorMachineConfigPanel)
 ```
 
-**Important Notes:**
-- The visual ingredient display is **optional** - text display works without it
-- If you don't add RecipeIngredientDisplay to button prefab, you'll only see text descriptions
-- The code automatically detects if the component exists and uses it if available
+**Key Simplification**: Unlike the config panel which shows ingredients visually with icons, the selection panel uses clear text labels. This keeps the button prefab simple and easy to set up.
 
 ## Asset Requirements
 
@@ -348,53 +324,34 @@ Large count: 10x[🥫] + 5x[🍾] → [📦]
 
 ## Troubleshooting
 
-### Selection Panel Not Showing Recipe Ingredients
+### Selection Panel Button Text Not Showing Ingredients
 
-**Symptom**: Recipe selection buttons show output item name but no ingredient information
+**Symptom**: Recipe selection buttons only show output item name, no ingredient information
 
-**Diagnosis:**
-1. Check if text includes ingredients: Button text should show format like "Aluminum Plate (1x Can + 2x Bottle)"
-   - **If text IS showing ingredients**: Text display is working, visual icons are optional
-   - **If text is NOT showing ingredients**: Check `RecipeSelectionPanel.GetEnhancedDisplayName()` method
+**Solution**: 
+- Verify `FactoryRegistry.Instance` is loaded with recipe data
+- Check that recipes have `inputItems` defined in recipes.json
+- Button text should automatically show format: "Output (1x Item1 + 2x Item2)"
 
-2. Check for visual ingredient icons:
-   - Visual icons require `RecipeIngredientDisplay` component added to button prefab
-   - If you see text but no icons, the button prefab needs the IngredientSection added (see section 3.2)
+**Common Issue**: If seeing "Recipe" or generic names:
+- Ensure output items are defined in items.json with proper displayName
+- Check that recipe.outputItems[0].item matches an item ID in the registry
 
-**Solutions:**
-
-**For Text-Only Display (Quick Setup):**
-- No additional setup needed
-- `RecipeSelectionPanel` automatically adds ingredient text to button labels via `GetEnhancedDisplayName()`
-- Check that `FactoryRegistry.Instance` is loaded with recipe data
-
-**For Visual Icon Display:**
-1. Add `IngredientSection` GameObject to SelectionButtonPrefab
-2. Add `RecipeIngredientDisplay` component to IngredientSection
-3. Add `HorizontalLayoutGroup` to IngredientSection
-4. Configure RecipeIngredientDisplay properties:
-   - Assign `ingredientContainer` = IngredientSection transform
-   - Assign `ingredientPrefab` = IngredientItemPrefab
-   - Set `useVerticalLayout = FALSE`
-   - Set `iconSize = (24, 24)`
-5. The code will automatically detect and use the component via `UpdateButtonIngredientDisplay()`
-
-**Common Mistakes:**
-- ❌ Forgetting to assign `ingredientContainer` in RecipeIngredientDisplay
-- ❌ Using `useVerticalLayout = TRUE` for selection panel (should be FALSE)
-- ❌ Not assigning `ingredientPrefab` reference
-- ❌ Expecting visual icons without adding RecipeIngredientDisplay to button prefab
-
-### Config Panel vs Selection Panel Differences
+### Config Panel vs Selection Panel - Key Differences
 
 | Feature | Config Panel | Selection Panel |
 |---------|-------------|-----------------|
-| Layout | VerticalLayoutGroup | HorizontalLayoutGroup |
-| useVerticalLayout | TRUE | FALSE |
-| Display Format | Stacked lines: "N x [icon]" | Side-by-side: "[icon][icon]" |
-| Spacers | Automatic (top/bottom) | None |
-| Icon Size | 32x32 (touch-friendly) | 24x24 (compact) |
-| Component Location | Separate container in panel | Inside button prefab |
+| **Setup Complexity** | Moderate (VerticalLayoutGroup + ingredient display) | **Simple** (standard button prefab) |
+| **Layout** | VerticalLayoutGroup | Grid Layout Group |
+| **Ingredient Display** | Visual icons: "N x [icon]" | Text only: "(Nx Item)" |
+| **Display Location** | Separate IngredientDisplayContainer | In button text label |
+| **useVerticalLayout** | TRUE | N/A (no visual component) |
+| **Icon Size** | 32x32 (touch-friendly) | N/A (text only) |
+| **Component Setup** | RecipeIngredientDisplay on panel | Just standard button |
+
+**Why Different?**
+- **Config Panel**: Shows detail for ONE selected recipe - visual icons are worth the setup
+- **Selection Panel**: Shows MANY recipes at once - simple text labels are clearer and easier to set up
 
 ## Implementation Steps
 
@@ -409,11 +366,11 @@ Large count: 10x[🥫] + 5x[🍾] → [📦]
    - Set fontSize to 14
 5. Test with recipes having 1, 2, and 3 ingredients
 
-### Phase 2: Selection Panel (Optional Enhancement)
-1. Add HorizontalLayoutGroup to selection button ingredient section
-2. Add RecipeIngredientDisplay with `useVerticalLayout = FALSE`
-3. Configure for compact horizontal display
-4. Test on different screen resolutions
+### Phase 2: Selection Panel (Simple Setup)
+1. Use standard button prefab with Button, Image, and TextMeshProUGUI
+2. Assign to RecipeSelectionPanel's buttonPrefab field
+3. That's it! Button text automatically shows "Output (ingredients)" format
+4. No need for RecipeIngredientDisplay components or complex layouts
 4. Fine-tune visual appearance
 
 ### Phase 3: Advanced Features (Optional)
