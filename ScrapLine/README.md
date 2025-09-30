@@ -76,6 +76,15 @@ ScrapLine/
 #### Processing (`recipes.json`)
 - **Can → Shredded Aluminum**: Primary transformation recipe
 
+#### Manager Systems
+- **GameManager**: Core game orchestration and subsystem coordination
+- **UIPanelManager**: Configuration panel lifecycle and visibility management ([docs](./UIPANELMANAGER.md))
+- **GridManager**: Grid operations and cell management
+- **MachineManager**: Machine placement, rotation, and interaction
+- **ItemMovementManager**: Item transport and conveyor logic
+- **CreditsManager**: Economy and transaction handling
+- **SaveLoadManager**: Game state persistence
+
 ## 🚀 Development Setup
 
 ### Prerequisites

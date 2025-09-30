@@ -253,10 +253,27 @@ dotnet build
 
 ### Key Scripts to Understand
 - **GameManager.cs:** Core game loop, spawning, save/load, timing
+- **UIPanelManager.cs:** Configuration panel lifecycle and visibility management
 - **UIGridManager.cs:** Grid display, cell management, visual updates  
 - **UICell.cs:** Individual grid cell behavior and item placement
+- **BaseConfigPanel.cs:** Generic base class for all configuration panels
 - **ConveyorBelt.cs:** Conveyor belt logic and item movement
 - **MachineButton.cs:** UI for machine selection and placement
+
+### Manager Architecture
+ScrapLine uses a centralized manager pattern for system coordination:
+
+- **GameManager**: Core orchestrator, maintains references to all specialized managers
+- **UIPanelManager**: Manages configuration panel lifecycle, ensures only one panel visible at a time ([see docs](./UIPANELMANAGER.md))
+- **GridManager**: Grid data and cell operations
+- **MachineManager**: Machine placement, rotation, drag-drop, deletion
+- **ItemMovementManager**: Item transport through conveyor networks
+- **CreditsManager**: Economy and transaction processing
+- **SaveLoadManager**: Game state persistence and restoration
+- **ResourceManager**: Asset loading and initialization
+- **WasteSupplyManager**: Waste crate queue and supply management
+
+**Key Pattern**: All managers are initialized in `GameManager.InitializeManagers()` in dependency order.
 
 ### Resource Files (Critical for Game Data)
 - **items.json:** Defines can, shreddedAluminum with display names and sprites
