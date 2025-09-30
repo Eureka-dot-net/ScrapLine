@@ -42,6 +42,25 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     protected Action<TSelection> onConfigurationConfirmed;
     protected string ComponentId => $"{GetType().Name}_{GetInstanceID()}";
 
+    // Track if panel has been initialized
+    private bool isInitialized = false;
+
+    /// <summary>
+    /// Initialize the panel state - called by UIPanelManager in Awake before any Start() methods
+    /// This ensures panels are initialized even if their GameObjects start inactive
+    /// </summary>
+    internal void InitializePanelState()
+    {
+        if (isInitialized) return;
+
+        // Initialize panel in hidden state without triggering the full hide logic
+        // This prevents interference with panel management during the same frame
+        InitializeHiddenState();
+
+        isInitialized = true;
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Panel state initialized for {GetType().Name}", ComponentId);
+    }
+
     /// <summary>
     /// Initialize the base panel - call this from derived Start() methods
     /// </summary>
@@ -49,12 +68,14 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     {
         SetupBaseButtonListeners();
         SetupCustomButtonListeners();
-        
-        // Initialize panel in hidden state without triggering the full hide logic
-        // This prevents interference with panel management during the same frame
-        InitializeHiddenState();
 
-        GameLogger.Log(LoggingManager.LogCategory.UI, $"Initialized {GetType().Name}", ComponentId);
+        // Ensure initialization happened (fallback if UIPanelManager not present)
+        if (!isInitialized)
+        {
+            InitializePanelState();
+        }
+
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Started {GetType().Name}", ComponentId);
     }
 
     /// <summary>
@@ -98,9 +119,15 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     /// <param name="onConfirmed">Callback when configuration is confirmed</param>
     public virtual void ShowConfiguration(TData data, Action<TSelection> onConfirmed)
     {
-        // Register this panel with GameManager to ensure only one panel is open
-        if (GameManager.Instance != null)
+        // Register this panel with UIPanelManager (preferred) or GameManager (fallback) to ensure only one panel is open
+        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        if (panelManager != null)
         {
+            panelManager.RegisterOpenPanel(this);
+        }
+        else if (GameManager.Instance != null)
+        {
+            // Fallback to GameManager for backward compatibility
             GameManager.Instance.RegisterOpenConfigPanel(this);
         }
         
@@ -141,9 +168,15 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     /// </summary>
     protected virtual void HideConfiguration()
     {
-        // Unregister this panel from GameManager
-        if (GameManager.Instance != null)
+        // Unregister this panel from UIPanelManager (preferred) or GameManager (fallback)
+        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        if (panelManager != null)
         {
+            panelManager.UnregisterPanel(this);
+        }
+        else if (GameManager.Instance != null)
+        {
+            // Fallback to GameManager for backward compatibility
             GameManager.Instance.UnregisterConfigPanel(this);
         }
         
