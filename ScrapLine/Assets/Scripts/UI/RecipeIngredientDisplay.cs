@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// Supports up to 3 different ingredient types with quantities.
 /// 
 /// UNITY SETUP:
-/// 1. Create a GameObject with HorizontalLayoutGroup
+/// 1. Create a GameObject with VerticalLayoutGroup (for config panel) or HorizontalLayoutGroup (for selection panel)
 /// 2. Add this component
 /// 3. Assign ingredientContainer and ingredientPrefab
 /// 4. Ingredient prefab should have Image and TextMeshProUGUI components
@@ -17,11 +17,14 @@ using System.Collections.Generic;
 public class RecipeIngredientDisplay : MonoBehaviour
 {
     [Header("Ingredient Display Configuration")]
-    [Tooltip("Container with HorizontalLayoutGroup for ingredient items")]
+    [Tooltip("Container with VerticalLayoutGroup or HorizontalLayoutGroup for ingredient items")]
     public Transform ingredientContainer;
     
     [Tooltip("Prefab for each ingredient item (should have Image and TextMeshProUGUI components)")]
     public GameObject ingredientPrefab;
+    
+    [Tooltip("Prefab for spacer (blank GameObject with fixed height)")]
+    public GameObject spacerPrefab;
     
     [Tooltip("Maximum number of individual icons to show for each ingredient type")]
     public int maxIconsPerIngredient = 5;
@@ -31,6 +34,9 @@ public class RecipeIngredientDisplay : MonoBehaviour
     
     [Tooltip("Font size for count text")]
     public float fontSize = 12f;
+    
+    [Tooltip("Use vertical layout (for config panel) vs horizontal layout (for selection panel)")]
+    public bool useVerticalLayout = false;
     
     [Tooltip("Show arrow between ingredients and output")]
     public bool showArrow = false;
@@ -57,16 +63,37 @@ public class RecipeIngredientDisplay : MonoBehaviour
 
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Displaying recipe with {recipe.inputItems.Count} ingredient types", ComponentId);
 
-        // Display each ingredient type
-        foreach (var ingredient in recipe.inputItems)
+        // For vertical layout (config panel), add spacer logic
+        if (useVerticalLayout)
         {
-            DisplayIngredient(ingredient);
+            // Add top spacer if only one ingredient type
+            if (recipe.inputItems.Count == 1)
+            {
+                CreateSpacer();
+            }
+            
+            // Display each ingredient type
+            foreach (var ingredient in recipe.inputItems)
+            {
+                DisplayIngredient(ingredient);
+            }
+            
+            // Add bottom spacer
+            CreateSpacer();
         }
-        
-        // Add arrow if requested
-        if (showArrow && arrowSprite != null)
+        else
         {
-            DisplayArrow();
+            // Horizontal layout (selection panel) - original behavior
+            foreach (var ingredient in recipe.inputItems)
+            {
+                DisplayIngredient(ingredient);
+            }
+            
+            // Add arrow if requested
+            if (showArrow && arrowSprite != null)
+            {
+                DisplayArrow();
+            }
         }
     }
 
@@ -93,19 +120,27 @@ public class RecipeIngredientDisplay : MonoBehaviour
             itemSprite = Resources.Load<Sprite>($"Sprites/Items/{itemDef.sprite}");
         }
 
-        // Create ingredient display based on count
-        if (ingredient.count <= maxIconsPerIngredient)
+        // For vertical layout, always show count + single icon
+        if (useVerticalLayout)
         {
-            // Show individual icons for each item
-            for (int i = 0; i < ingredient.count; i++)
-            {
-                CreateIngredientIcon(itemSprite, itemDef.displayName, 1);
-            }
+            CreateIngredientIcon(itemSprite, itemDef.displayName, ingredient.count);
         }
         else
         {
-            // Show single icon with count text
-            CreateIngredientIcon(itemSprite, itemDef.displayName, ingredient.count);
+            // Horizontal layout - original behavior with multiple icons
+            if (ingredient.count <= maxIconsPerIngredient)
+            {
+                // Show individual icons for each item
+                for (int i = 0; i < ingredient.count; i++)
+                {
+                    CreateIngredientIcon(itemSprite, itemDef.displayName, 1);
+                }
+            }
+            else
+            {
+                // Show single icon with count text
+                CreateIngredientIcon(itemSprite, itemDef.displayName, ingredient.count);
+            }
         }
     }
 
@@ -142,14 +177,24 @@ public class RecipeIngredientDisplay : MonoBehaviour
         if (iconText != null)
         {
             iconText.fontSize = fontSize;
-            if (count > 1)
+            
+            // For vertical layout, always show count
+            if (useVerticalLayout)
             {
-                iconText.text = $"{count}x";
+                iconText.text = $"{count} x";
             }
             else
             {
-                // For single items, we might not want to show text or show item name
-                iconText.text = ""; // Clean look with just icons
+                // Horizontal layout - original behavior
+                if (count > 1)
+                {
+                    iconText.text = $"{count}x";
+                }
+                else
+                {
+                    // For single items, we might not want to show text or show item name
+                    iconText.text = ""; // Clean look with just icons
+                }
             }
         }
 
@@ -161,6 +206,36 @@ public class RecipeIngredientDisplay : MonoBehaviour
             string tooltipText = count > 1 ? $"{count}x {itemName}" : itemName;
             GameLogger.Log(LoggingManager.LogCategory.UI, $"Created ingredient icon: {tooltipText}", ComponentId);
         }
+    }
+
+    /// <summary>
+    /// Create a spacer for vertical layout
+    /// </summary>
+    private void CreateSpacer()
+    {
+        if (ingredientContainer == null) return;
+        
+        GameObject spacer;
+        if (spacerPrefab != null)
+        {
+            spacer = Instantiate(spacerPrefab, ingredientContainer);
+        }
+        else
+        {
+            // Create a simple spacer GameObject if no prefab provided
+            spacer = new GameObject("Spacer");
+            spacer.transform.SetParent(ingredientContainer);
+            
+            RectTransform rectTransform = spacer.AddComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(0, 10); // 10 pixel height spacer
+            
+            // Optional: Add LayoutElement for better control
+            LayoutElement layoutElement = spacer.AddComponent<LayoutElement>();
+            layoutElement.minHeight = 10;
+            layoutElement.preferredHeight = 10;
+        }
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, "Created spacer", ComponentId);
     }
 
     /// <summary>
