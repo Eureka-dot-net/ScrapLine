@@ -139,24 +139,31 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
         RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
         if (rectTransform != null)
         {
-            // Get the prefab's height to use for positioning
-            RectTransform prefabRect = prefabToUse.GetComponent<RectTransform>();
-            float buttonHeight = prefabRect != null ? prefabRect.rect.height : 100f; // Default 100 if not found
+            // IMPORTANT: Get height from the instantiated object's RectTransform
+            // The prefab might not have its size properly initialized yet
+            float buttonHeight = rectTransform.rect.height;
             
-            // Set anchors to top-left
+            // If height is 0 or invalid, try to get from prefab as fallback
+            if (buttonHeight <= 0)
+            {
+                RectTransform prefabRect = prefabToUse.GetComponent<RectTransform>();
+                buttonHeight = prefabRect != null ? prefabRect.rect.height : 100f;
+            }
+            
+            // Set anchors to top-left FIRST
             rectTransform.anchorMin = new Vector2(0, 1);
             rectTransform.anchorMax = new Vector2(1, 1); // Stretch horizontally
             rectTransform.pivot = new Vector2(0.5f, 1);
             
-            // Position from top, each row below the previous
+            // Set the height explicitly (this might change buttonHeight, so do it before positioning)
+            rectTransform.sizeDelta = new Vector2(0, buttonHeight); // 0 width = stretch to parent width
+            
+            // NOW position from top, each row below the previous
             // Y position is negative (downward from top)
             rectTransform.anchoredPosition = new Vector2(0, -buttonIndex * buttonHeight);
             
-            // Set the height explicitly
-            rectTransform.sizeDelta = new Vector2(0, buttonHeight); // 0 width = stretch to parent width
-            
             GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Positioned button at index {buttonIndex}, y={-buttonIndex * buttonHeight}, height={buttonHeight}", ComponentId);
+                $"Positioned button at index {buttonIndex}, y={-buttonIndex * buttonHeight}, height={buttonHeight}, actualPos={rectTransform.anchoredPosition}", ComponentId);
         }
         
         Button button = buttonObj.GetComponent<Button>();
