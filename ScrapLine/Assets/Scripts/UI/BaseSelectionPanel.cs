@@ -131,6 +131,34 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
         if (buttonContainer == null || prefabToUse == null) return;
 
         GameObject buttonObj = Instantiate(prefabToUse, buttonContainer);
+        
+        // Manually position the button/row to avoid LayoutGroup issues
+        RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            // Count how many buttons already exist (for positioning)
+            int buttonIndex = buttonContainer.childCount - 1; // -1 because we just added this one
+            
+            // Get the prefab's height to use for positioning
+            RectTransform prefabRect = prefabToUse.GetComponent<RectTransform>();
+            float buttonHeight = prefabRect != null ? prefabRect.rect.height : 100f; // Default 100 if not found
+            
+            // Set anchors to top-left
+            rectTransform.anchorMin = new Vector2(0, 1);
+            rectTransform.anchorMax = new Vector2(1, 1); // Stretch horizontally
+            rectTransform.pivot = new Vector2(0.5f, 1);
+            
+            // Position from top, each row below the previous
+            // Y position is negative (downward from top)
+            rectTransform.anchoredPosition = new Vector2(0, -buttonIndex * buttonHeight);
+            
+            // Set the height explicitly
+            rectTransform.sizeDelta = new Vector2(0, buttonHeight); // 0 width = stretch to parent width
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Positioned button at index {buttonIndex}, y={-buttonIndex * buttonHeight}, height={buttonHeight}", ComponentId);
+        }
+        
         Button button = buttonObj.GetComponent<Button>();
         
         if (button != null)
