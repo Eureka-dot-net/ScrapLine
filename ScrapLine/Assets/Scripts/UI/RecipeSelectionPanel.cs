@@ -17,12 +17,11 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     [Tooltip("Machine ID to filter recipes by (set at runtime)")]
     public string machineId = "";
     
-    [Header("Visual Ingredient Display (Optional)")]
-    [Tooltip("Component to display selected recipe ingredients with icons (optional)")]
-    public RecipeIngredientDisplay ingredientDisplay;
+    [Header("Visual Ingredient Display")]
+    [Tooltip("Prefab for displaying recipe ingredients with icons (assign same prefab as config panel)")]
+    public GameObject ingredientDisplayPrefab;
 
     private CellData contextCellData; // Used to determine machine type
-    private RecipeDef currentlyDisplayedRecipe; // Track which recipe is being displayed
 
     /// <summary>
     /// Show the recipe selection panel for a specific machine
@@ -84,59 +83,36 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     protected override void SetupButtonVisuals(GameObject buttonObj, RecipeDef recipe, string displayName)
     {
-        // Set button text (just output name, not full ingredients since we show visually)
-        SetButtonText(buttonObj, displayName);
-
-        // Set button sprite based on first output item
-        if (recipe?.outputItems != null && recipe.outputItems.Count > 0)
+        // Don't set button text - we'll show ingredients and output visually
+        
+        // Find or create the IngredientDisplayContainer in the button
+        Transform ingredientContainer = buttonObj.transform.Find("IngredientDisplayContainer");
+        if (ingredientContainer != null)
         {
-            string outputItemId = recipe.outputItems[0].item;
-            ItemDef outputItem = FactoryRegistry.Instance?.GetItem(outputItemId);
+            // Find the RecipeIngredientDisplay component
+            RecipeIngredientDisplay ingredientDisplay = ingredientContainer.GetComponent<RecipeIngredientDisplay>();
             
-            if (outputItem != null && !string.IsNullOrEmpty(outputItem.sprite))
+            if (ingredientDisplay != null && recipe != null)
             {
-                string spritePath = $"Sprites/Items/{outputItem.sprite}";
-                Sprite itemSprite = LoadSprite(spritePath);
-                SetButtonImage(buttonObj, itemSprite);
+                // Display recipe with ingredients and output
+                // Format: "Nx[icon] + Nx[icon] → Nx[icon]"
+                ingredientDisplay.DisplayRecipe(recipe);
+                GameLogger.Log(LoggingManager.LogCategory.UI, $"Set up ingredient display for recipe: {displayName}", ComponentId);
+            }
+            else if (ingredientDisplay == null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                    "IngredientDisplayContainer found but missing RecipeIngredientDisplay component", ComponentId);
             }
         }
-
-        // Add hover/click handlers to show ingredient display
-        var button = buttonObj.GetComponent<UnityEngine.UI.Button>();
-        if (button != null && ingredientDisplay != null)
+        else
         {
-            // Store recipe reference for button click
-            button.onClick.AddListener(() => OnRecipeButtonClicked(recipe));
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                "Button prefab missing IngredientDisplayContainer child object", ComponentId);
+            
+            // Fallback: set button text with recipe name
+            SetButtonText(buttonObj, displayName);
         }
-    }
-
-    /// <summary>
-    /// Handle recipe button click to update ingredient display
-    /// </summary>
-    /// <param name="recipe">Recipe to display</param>
-    private void OnRecipeButtonClicked(RecipeDef recipe)
-    {
-        // Update ingredient display when button is clicked
-        if (ingredientDisplay != null && recipe != null)
-        {
-            currentlyDisplayedRecipe = recipe;
-            ingredientDisplay.DisplayRecipe(recipe);
-            GameLogger.Log(LoggingManager.LogCategory.UI, $"Displaying ingredients for recipe: {GetDisplayName(recipe)}", ComponentId);
-        }
-    }
-
-    /// <summary>
-    /// Override to clear ingredient display when panel is hidden
-    /// </summary>
-    public override void HidePanel()
-    {
-        if (ingredientDisplay != null)
-        {
-            ingredientDisplay.ClearIngredients();
-            currentlyDisplayedRecipe = null;
-        }
-        
-        base.HidePanel();
     }
 
     protected override string GetNoneDisplayName()
