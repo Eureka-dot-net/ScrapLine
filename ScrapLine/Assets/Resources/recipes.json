@@ -43,7 +43,7 @@
     "machineId": "fabricator",
     "inputItems": [
       { "item": "aluminumPlate", "count": 1 },
-      { "item": "granulatedPlastic", "count": 2 }
+      { "item": "granulatedPlastic", "count": 5 }
     ],
     "outputItems": [
       { "item": "reinforcedAluminumPlate", "count": 1 }

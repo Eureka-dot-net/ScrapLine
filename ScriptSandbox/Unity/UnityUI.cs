@@ -133,6 +133,16 @@ namespace UnityEngine.UI
         public int layoutPriority { get; set; } = 1;
     }
 
+    // HorizontalLayoutGroup class
+    public class HorizontalLayoutGroup : MonoBehaviour
+    {
+        public float spacing { get; set; } = 0f;
+        public bool childForceExpandWidth { get; set; } = true;
+        public bool childForceExpandHeight { get; set; } = true;
+        public bool childControlWidth { get; set; } = true;
+        public bool childControlHeight { get; set; } = true;
+    }
+
     // GridLayoutGroup class
     public class GridLayoutGroup : MonoBehaviour
     {

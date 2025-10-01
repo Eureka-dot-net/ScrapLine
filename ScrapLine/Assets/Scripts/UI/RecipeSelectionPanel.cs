@@ -16,6 +16,12 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     [Header("Recipe Selection Specific")]
     [Tooltip("Machine ID to filter recipes by (set at runtime)")]
     public string machineId = "";
+    
+    [Tooltip("IngredientDisplayContainer prefab - row container with Button component for each recipe")]
+    public GameObject ingredientDisplayContainerPrefab;
+    
+    [Tooltip("PanelIngredientItemPrefab - shows individual ingredients (same as config panel uses)")]
+    public GameObject panelIngredientItemPrefab;
 
     private CellData contextCellData; // Used to determine machine type
 
@@ -79,22 +85,179 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     protected override void SetupButtonVisuals(GameObject buttonObj, RecipeDef recipe, string displayName)
     {
-        // Set button text
-        SetButtonText(buttonObj, displayName);
-
-        // Set button sprite based on first output item
-        if (recipe?.outputItems != null && recipe.outputItems.Count > 0)
+        if (recipe == null || panelIngredientItemPrefab == null)
         {
-            string outputItemId = recipe.outputItems[0].item;
-            ItemDef outputItem = FactoryRegistry.Instance?.GetItem(outputItemId);
-            
-            if (outputItem != null && !string.IsNullOrEmpty(outputItem.sprite))
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                "Recipe or panelIngredientItemPrefab is null - cannot setup visuals", ComponentId);
+            return;
+        }
+        
+        // The buttonObj is the IngredientDisplayContainer row
+        // We need to populate it with PanelIngredientItemPrefab instances:
+        // - One for each input ingredient
+        // - One arrow/separator (optional)
+        // - One for the output result
+        
+        // Find the container where we'll add ingredient item prefabs
+        // This could be the buttonObj itself or a child container
+        Transform container = buttonObj.transform;
+        
+        // Check if there's a specific child container (like "Content" or "ItemsContainer")
+        Transform contentChild = buttonObj.transform.Find("Content");
+        if (contentChild != null)
+        {
+            container = contentChild;
+        }
+        
+        // Clear any existing children
+        foreach (Transform child in container)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Creating ingredient items for recipe '{displayName}' with {recipe.inputItems?.Count ?? 0} inputs", ComponentId);
+        
+        // Create ingredient items for inputs
+        if (recipe.inputItems != null)
+        {
+            foreach (var ingredient in recipe.inputItems)
             {
-                string spritePath = $"Sprites/Items/{outputItem.sprite}";
-                Sprite itemSprite = LoadSprite(spritePath);
-                SetButtonImage(buttonObj, itemSprite);
+                CreateIngredientItem(container, ingredient.item, ingredient.count);
             }
         }
+        
+        // TODO: Add arrow/separator visual if needed
+        // For now we can add a simple text element or skip
+        
+        // Create ingredient item for output/result
+        if (recipe.outputItems != null && recipe.outputItems.Count > 0)
+        {
+            var output = recipe.outputItems[0];
+            CreateIngredientItem(container, output.item, output.count);
+        }
+    }
+    
+    /// <summary>
+    /// Create a single ingredient item instance in the container
+    /// </summary>
+    private void CreateIngredientItem(Transform container, string itemId, int count)
+    {
+        if (panelIngredientItemPrefab == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "panelIngredientItemPrefab is null - cannot create ingredient item", ComponentId);
+            return;
+        }
+        
+        GameObject itemObj = Instantiate(panelIngredientItemPrefab, container);
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Instantiated ingredient item prefab for {itemId}", ComponentId);
+        
+        // Get item definition
+        ItemDef itemDef = FactoryRegistry.Instance?.GetItem(itemId);
+        if (itemDef == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Item definition not found for '{itemId}'", ComponentId);
+            return;
+        }
+        
+        // Load sprite
+        Sprite itemSprite = null;
+        if (!string.IsNullOrEmpty(itemDef.sprite))
+        {
+            string spritePath = $"Sprites/Items/{itemDef.sprite}";
+            itemSprite = Resources.Load<Sprite>(spritePath);
+            if (itemSprite == null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Failed to load sprite from path: {spritePath}", ComponentId);
+            }
+            else
+            {
+                GameLogger.Log(LoggingManager.LogCategory.UI, $"Loaded sprite: {spritePath}", ComponentId);
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Item {itemId} has no sprite defined", ComponentId);
+        }
+        
+        // Find and set the icon image (looking for child named "ItemIcon")
+        Transform iconTransform = itemObj.transform.Find("ItemIcon");
+        UnityEngine.UI.Image iconImage = null;
+        
+        if (iconTransform != null)
+        {
+            iconImage = iconTransform.GetComponent<UnityEngine.UI.Image>();
+            GameLogger.Log(LoggingManager.LogCategory.UI, "Found ItemIcon child by name", ComponentId);
+        }
+        else
+        {
+            iconImage = itemObj.GetComponentInChildren<UnityEngine.UI.Image>();
+            if (iconImage != null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "ItemIcon not found by name, using GetComponentInChildren", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.UI, "No Image component found in ingredient prefab", ComponentId);
+            }
+        }
+        
+        if (iconImage != null && itemSprite != null)
+        {
+            iconImage.sprite = itemSprite;
+            iconImage.color = Color.white;
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Set sprite on icon image for {itemId}", ComponentId);
+        }
+        else if (iconImage != null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Icon image found but sprite is null for {itemId}", ComponentId);
+        }
+        
+        // Find and set the count text (looking for child named "CountText")
+        Transform textTransform = itemObj.transform.Find("CountText");
+        TMPro.TextMeshProUGUI countText = null;
+        
+        if (textTransform != null)
+        {
+            countText = textTransform.GetComponent<TMPro.TextMeshProUGUI>();
+            GameLogger.Log(LoggingManager.LogCategory.UI, "Found CountText child by name", ComponentId);
+        }
+        else
+        {
+            countText = itemObj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (countText != null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "CountText not found by name, using GetComponentInChildren", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.UI, "No TextMeshProUGUI component found in ingredient prefab", ComponentId);
+            }
+        }
+        
+        if (countText != null)
+        {
+            countText.text = $"{count} x";
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Set count text to '{count} x'", ComponentId);
+        }
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Created ingredient item: {count}x {itemDef.displayName ?? itemId} (sprite: {itemSprite != null}, icon: {iconImage != null}, text: {countText != null})", ComponentId);
+    }
+    
+    /// <summary>
+    /// Override to use ingredientDisplayContainerPrefab if assigned, otherwise use buttonPrefab
+    /// </summary>
+    protected override GameObject GetButtonPrefabToUse()
+    {
+        // If user assigned the IngredientDisplayContainer prefab, use that as the button
+        if (ingredientDisplayContainerPrefab != null)
+        {
+            return ingredientDisplayContainerPrefab;
+        }
+        
+        // Otherwise fallback to standard buttonPrefab
+        return buttonPrefab;
     }
 
     protected override string GetNoneDisplayName()
