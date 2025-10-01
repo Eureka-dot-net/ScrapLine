@@ -94,8 +94,10 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     {
         if (recipe == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                "Recipe is null - cannot setup visuals", ComponentId);
+            // None option - just set the text on the button
+            SetButtonText(buttonObj, displayName);
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Setup None option button with text: {displayName}", ComponentId);
             return;
         }
 
@@ -193,11 +195,12 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             GameLogger.Log(LoggingManager.LogCategory.UI, 
                 $"Added click listener to button for recipe: {displayName}", ComponentId);
             
-            // Disable raycast on all child Images to prevent blocking button clicks
-            DisableChildRaycastTargets(buttonObj);
-            
-            // Setup button visuals using derived class implementation
+            // Setup button visuals using derived class implementation (this creates child elements)
             SetupButtonVisuals(buttonObj, item, displayName);
+            
+            // Disable raycast on all child Images to prevent blocking button clicks
+            // MUST be called AFTER SetupButtonVisuals since that creates the child elements
+            DisableChildRaycastTargets(buttonObj);
         }
         else
         {
