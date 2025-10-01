@@ -144,19 +144,32 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         {
             // None option - use simple button prefab from base class
             prefabToUse = buttonPrefab;
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Using buttonPrefab for None option. buttonPrefab null? {buttonPrefab == null}", ComponentId);
         }
         else
         {
             // Actual recipe - use ingredientDisplayRow
             prefabToUse = ingredientDisplayRow != null ? ingredientDisplayRow.gameObject : buttonPrefab;
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Using ingredientDisplayRow for recipe '{displayName}'. ingredientDisplayRow null? {ingredientDisplayRow == null}, prefab: {prefabToUse?.name}", ComponentId);
         }
         
-        if (buttonContainer == null || prefabToUse == null) return;
+        if (buttonContainer == null || prefabToUse == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                $"Cannot create button - buttonContainer null? {buttonContainer == null}, prefabToUse null? {prefabToUse == null}", ComponentId);
+            return;
+        }
 
         // Count how many buttons already exist BEFORE instantiation
         int buttonIndex = buttonContainer.childCount;
         
         GameObject buttonObj = Instantiate(prefabToUse, buttonContainer);
+        buttonObj.name = $"{prefabToUse.name}_Instance_{buttonIndex}_{displayName}";
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Instantiated button '{buttonObj.name}' at index {buttonIndex}", ComponentId);
         
         // Manually position the button/row to avoid LayoutGroup issues
         RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
@@ -187,6 +200,17 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         
         Button button = buttonObj.GetComponent<Button>();
         
+        // If Button not on root, try to find it in children
+        if (button == null)
+        {
+            button = buttonObj.GetComponentInChildren<Button>();
+            if (button != null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                    $"Button component found on child GameObject '{button.gameObject.name}' instead of root. This may cause click issues. Please move Button component to root of prefab '{prefabToUse.name}'.", ComponentId);
+            }
+        }
+        
         if (button != null)
         {
             // Set up button click listener
@@ -205,7 +229,7 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         else
         {
             GameLogger.LogError(LoggingManager.LogCategory.UI, 
-                $"{GetType().Name}: Button prefab missing Button component!", ComponentId);
+                $"{GetType().Name}: Button prefab '{prefabToUse.name}' missing Button component on root GameObject or children! Button will not be clickable.", ComponentId);
         }
     }
     
