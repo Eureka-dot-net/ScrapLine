@@ -158,10 +158,10 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
             
             // NOW position from top, each row below the previous
             // Y position is negative (downward from top)
-            rectTransform.anchoredPosition = new Vector2(0, -buttonIndex * buttonHeight);
+            rectTransform.anchoredPosition = new Vector2(0, (buttonIndex - 1) * -buttonHeight);
             
             GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Positioned button at index {buttonIndex}, y={-buttonIndex * buttonHeight}, height={buttonHeight}, actualPos={rectTransform.anchoredPosition}", ComponentId);
+                $"Positioned button at index {buttonIndex}, y={-(buttonIndex - 1) * -buttonHeight}, height={buttonHeight}, actualPos={rectTransform.anchoredPosition}", ComponentId);
         }
         
         Button button = buttonObj.GetComponent<Button>();
