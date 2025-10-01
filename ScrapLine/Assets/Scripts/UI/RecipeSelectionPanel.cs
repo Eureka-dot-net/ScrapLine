@@ -238,24 +238,41 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     private void DisableChildRaycastTargets(GameObject buttonObj)
     {
-        // Get all Image components in children (but not the root button itself)
+        // Find the Button component (might be on root or child)
+        Button button = buttonObj.GetComponent<Button>();
+        if (button == null)
+        {
+            button = buttonObj.GetComponentInChildren<Button>();
+        }
+        
+        GameObject buttonGameObject = button != null ? button.gameObject : buttonObj;
+        
+        // Get all Image components in children (including self)
         UnityEngine.UI.Image[] childImages = buttonObj.GetComponentsInChildren<UnityEngine.UI.Image>();
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Found {childImages.Length} Image components in button hierarchy", ComponentId);
+            
         foreach (var img in childImages)
         {
-            // Don't disable raycast on the button's own Image component (if it has one)
-            if (img.gameObject != buttonObj)
+            // Don't disable raycast on the Button's own Image component (if it has one)
+            if (img.gameObject == buttonGameObject)
             {
-                img.raycastTarget = false;
                 GameLogger.Log(LoggingManager.LogCategory.UI, 
-                    $"Disabled raycast target on child Image: {img.gameObject.name}", ComponentId);
+                    $"Keeping raycast enabled on Button's own Image: {img.gameObject.name}", ComponentId);
+                continue;
             }
+            
+            bool wasEnabled = img.raycastTarget;
+            img.raycastTarget = false;
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Disabled raycast target on child Image: {img.gameObject.name} (was {wasEnabled})", ComponentId);
         }
         
         // Also disable Text components
         UnityEngine.UI.Text[] childTexts = buttonObj.GetComponentsInChildren<UnityEngine.UI.Text>();
         foreach (var txt in childTexts)
         {
-            if (txt.gameObject != buttonObj)
+            if (txt.gameObject != buttonGameObject)
             {
                 txt.raycastTarget = false;
             }
@@ -265,11 +282,14 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         TMPro.TextMeshProUGUI[] childTMPs = buttonObj.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
         foreach (var tmp in childTMPs)
         {
-            if (tmp.gameObject != buttonObj)
+            if (tmp.gameObject != buttonGameObject)
             {
                 tmp.raycastTarget = false;
             }
         }
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Completed disabling raycasts for button", ComponentId);
     }
     
     protected override string GetNoneDisplayName()
