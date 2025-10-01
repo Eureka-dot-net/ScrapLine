@@ -5,6 +5,14 @@ This guide covers the Unity frontend setup required to implement recipe ingredie
 
 **KEY DESIGN CHANGE**: Selection panel now uses a SIMPLER approach - directly creating ingredient items inside container rows!
 
+## Debugging Blank Rows
+If you see blank rows in the selection panel, enable Unity logging and check the console for these messages:
+- "panelIngredientItemPrefab is null" → Assign the prefab in RecipeSelectionPanel inspector
+- "Failed to load sprite from path" → Check sprite paths in items.json
+- "No Image component found" → Ensure IngredientItemPrefab has child named "ItemIcon" with Image component
+- "No TextMeshProUGUI component found" → Ensure IngredientItemPrefab has child named "CountText" with TextMeshProUGUI component
+- Check that FactoryRegistry has loaded recipe data correctly
+
 ## New Components Added
 
 ### 1. RecipeIngredientDisplay Component

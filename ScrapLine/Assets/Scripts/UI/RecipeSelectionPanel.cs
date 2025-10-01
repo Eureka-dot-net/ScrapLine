@@ -143,7 +143,14 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     private void CreateIngredientItem(Transform container, string itemId, int count)
     {
+        if (panelIngredientItemPrefab == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "panelIngredientItemPrefab is null - cannot create ingredient item", ComponentId);
+            return;
+        }
+        
         GameObject itemObj = Instantiate(panelIngredientItemPrefab, container);
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Instantiated ingredient item prefab for {itemId}", ComponentId);
         
         // Get item definition
         ItemDef itemDef = FactoryRegistry.Instance?.GetItem(itemId);
@@ -157,7 +164,20 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         Sprite itemSprite = null;
         if (!string.IsNullOrEmpty(itemDef.sprite))
         {
-            itemSprite = Resources.Load<Sprite>($"Sprites/Items/{itemDef.sprite}");
+            string spritePath = $"Sprites/Items/{itemDef.sprite}";
+            itemSprite = Resources.Load<Sprite>(spritePath);
+            if (itemSprite == null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Failed to load sprite from path: {spritePath}", ComponentId);
+            }
+            else
+            {
+                GameLogger.Log(LoggingManager.LogCategory.UI, $"Loaded sprite: {spritePath}", ComponentId);
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Item {itemId} has no sprite defined", ComponentId);
         }
         
         // Find and set the icon image (looking for child named "ItemIcon")
@@ -167,16 +187,30 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         if (iconTransform != null)
         {
             iconImage = iconTransform.GetComponent<UnityEngine.UI.Image>();
+            GameLogger.Log(LoggingManager.LogCategory.UI, "Found ItemIcon child by name", ComponentId);
         }
         else
         {
             iconImage = itemObj.GetComponentInChildren<UnityEngine.UI.Image>();
+            if (iconImage != null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "ItemIcon not found by name, using GetComponentInChildren", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.UI, "No Image component found in ingredient prefab", ComponentId);
+            }
         }
         
         if (iconImage != null && itemSprite != null)
         {
             iconImage.sprite = itemSprite;
             iconImage.color = Color.white;
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Set sprite on icon image for {itemId}", ComponentId);
+        }
+        else if (iconImage != null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Icon image found but sprite is null for {itemId}", ComponentId);
         }
         
         // Find and set the count text (looking for child named "CountText")
@@ -186,19 +220,29 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         if (textTransform != null)
         {
             countText = textTransform.GetComponent<TMPro.TextMeshProUGUI>();
+            GameLogger.Log(LoggingManager.LogCategory.UI, "Found CountText child by name", ComponentId);
         }
         else
         {
             countText = itemObj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (countText != null)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "CountText not found by name, using GetComponentInChildren", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.UI, "No TextMeshProUGUI component found in ingredient prefab", ComponentId);
+            }
         }
         
         if (countText != null)
         {
-            countText.text = count > 1 ? $"{count} x" : "";
+            countText.text = $"{count} x";
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Set count text to '{count} x'", ComponentId);
         }
         
         GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"Created ingredient item: {count}x {itemDef.displayName ?? itemId}", ComponentId);
+            $"Created ingredient item: {count}x {itemDef.displayName ?? itemId} (sprite: {itemSprite != null}, icon: {iconImage != null}, text: {countText != null})", ComponentId);
     }
     
     /// <summary>
