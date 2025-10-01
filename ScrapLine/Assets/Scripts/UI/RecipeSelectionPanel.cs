@@ -11,9 +11,9 @@ using TMPro;
 /// 1. Create UI Panel with Grid Layout Group  
 /// 2. Add this component to the panel
 /// 3. Assign selectionPanel, buttonContainer
-/// 4. Create a RecipeIngredientDisplay prefab and assign to ingredientDisplayRow
-/// 5. The prefab should have a Button component to make it clickable
-/// 6. (Optional) Create an empty row prefab for the "None" option and assign to emptyRowPrefab
+/// 4. Assign buttonPrefab (simple button for "None" option)
+/// 5. Create a RecipeIngredientDisplay prefab and assign to ingredientDisplayRow (for actual recipes)
+/// 6. The ingredientDisplayRow prefab should have a Button component to make it clickable
 /// 
 /// NOTE: This now uses the same RecipeIngredientDisplay pattern as FabricatorMachineConfigPanel
 /// for consistency. Each recipe gets its own RecipeIngredientDisplay instance.
@@ -29,9 +29,6 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     
     [Tooltip("RecipeIngredientDisplay prefab - creates a row instance for each recipe (same pattern as FabricatorMachineConfigPanel)")]
     public RecipeIngredientDisplay ingredientDisplayRow;
-    
-    [Tooltip("Optional: Empty row prefab for 'None' option (if not set, uses ingredientDisplayRow)")]
-    public GameObject emptyRowPrefab;
 
     private CellData contextCellData; // Used to determine machine type
 
@@ -140,14 +137,16 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     {
         GameObject prefabToUse;
         
-        // Use emptyRowPrefab for "None" option if available, otherwise use standard flow
-        if (item == null && emptyRowPrefab != null)
+        // Use buttonPrefab for "None" option, ingredientDisplayRow for actual recipes
+        if (item == null)
         {
-            prefabToUse = emptyRowPrefab;
+            // None option - use simple button prefab from base class
+            prefabToUse = buttonPrefab;
         }
         else
         {
-            prefabToUse = GetButtonPrefabToUse();
+            // Actual recipe - use ingredientDisplayRow
+            prefabToUse = ingredientDisplayRow != null ? ingredientDisplayRow.gameObject : buttonPrefab;
         }
         
         if (buttonContainer == null || prefabToUse == null) return;
@@ -246,21 +245,6 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         }
     }
     
-    /// <summary>
-    /// Override to use ingredientDisplayRow prefab's GameObject if assigned, otherwise use buttonPrefab
-    /// </summary>
-    protected override GameObject GetButtonPrefabToUse()
-    {
-        // If user assigned the RecipeIngredientDisplay prefab, use its GameObject as the button
-        if (ingredientDisplayRow != null)
-        {
-            return ingredientDisplayRow.gameObject;
-        }
-        
-        // Otherwise fallback to standard buttonPrefab
-        return buttonPrefab;
-    }
-
     protected override string GetNoneDisplayName()
     {
         return "No Recipe";
