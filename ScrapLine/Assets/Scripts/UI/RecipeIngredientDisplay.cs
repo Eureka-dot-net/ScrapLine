@@ -104,6 +104,13 @@ public class RecipeIngredientDisplay : MonoBehaviour
                 }
             }
         }
+        
+        // Force layout rebuild after adding all items dynamically
+        // This is necessary for HorizontalLayoutGroup/VerticalLayoutGroup to properly position items
+        if (ingredientContainer != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(ingredientContainer as RectTransform);
+        }
     }
 
     /// <summary>

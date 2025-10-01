@@ -465,4 +465,19 @@ namespace UnityEngine
         
         public enum ClearFlags { Skybox, Color, SolidColor, Nothing }
     }
+    
+    // LayoutRebuilder for forcing layout recalculation
+    public static class LayoutRebuilder
+    {
+        public static void ForceRebuildLayoutImmediate(RectTransform layoutRoot)
+        {
+            // Mock implementation - in real Unity this rebuilds the layout
+            // For testing purposes, this is a no-op
+        }
+        
+        public static void MarkLayoutForRebuild(RectTransform rect)
+        {
+            // Mock implementation
+        }
+    }
 }
