@@ -32,21 +32,27 @@ Create GameObject: "IngredientItemPrefab"
 ├── Add Component: Content Size Fitter
 │   ├── Horizontal Fit: Preferred Size
 │   └── Vertical Fit: Preferred Size
-├── Create Child: "CountText"
+├── Create Child: "CountText" ⚠️ IMPORTANT: This child MUST be named exactly "CountText"
 │   └── Add Component: TextMeshProUGUI
 │       ├── Text: "1 x" (placeholder, set at runtime)
 │       ├── Font Size: 14
 │       ├── Alignment: Middle Left
 │       ├── Color: White
 │       └── Best Fit: unchecked
-└── Create Child: "ItemIcon"
+└── Create Child: "ItemIcon" ⚠️ IMPORTANT: This child MUST be named exactly "ItemIcon"
     └── Add Component: Image (for item sprite)
         ├── Sprite: None (set at runtime)
         ├── Color: White
         ├── Preserve Aspect: true
-        ├── RectTransform Size: 32x32
+        ├── RectTransform Size: 32x32 (for config panel) or 24x24 (for selection panel)
         └── Native Size: false
 ```
+
+**⚠️ CRITICAL NAMING REQUIREMENTS**:
+- The count text child MUST be named exactly "CountText" (code searches by name)
+- The icon image child MUST be named exactly "ItemIcon" (code searches by name)
+- These names are case-sensitive and must match exactly
+- If names don't match, you'll see "1 x" text but no icons!
 
 **Layout Structure**: The ingredient item should have the text BEFORE the icon in hierarchy for proper "Count x [Icon]" display.
 
@@ -255,6 +261,19 @@ Shows all ingredients side-by-side: [icon][icon][icon] or 3x[icon] + 2x[icon]
   1. Change container's LayoutGroup from HorizontalLayoutGroup to VerticalLayoutGroup
   2. Set `useVerticalLayout = TRUE` in RecipeIngredientDisplay component
   3. Verify spacerPrefab is assigned (optional but recommended)
+
+**Problem 5: Seeing "1 x" text but no icons (MOST COMMON)**
+- **Root Cause**: Prefab child objects are not named correctly
+- **Solution**: 
+  1. Open IngredientItemPrefab
+  2. Ensure text child is named exactly "CountText" (case-sensitive!)
+  3. Ensure image child is named exactly "ItemIcon" (case-sensitive!)
+  4. Code searches for children by these exact names
+- **Why this happens**: If names don't match, code finds the TextMeshProUGUI component (showing "1 x") but can't find the Image component (no icons)
+- **Verification**: 
+  - Check Unity Console for warnings: "No Image component found in ingredient prefab"
+  - Verify hierarchy structure matches the required naming convention
+  - Use "Find References in Scene" to ensure correct prefab is assigned
 
 ### Responsive Design Configuration
 

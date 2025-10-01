@@ -154,15 +154,32 @@ public class RecipeIngredientDisplay : MonoBehaviour
     {
         GameObject ingredientObj = Instantiate(ingredientPrefab, ingredientContainer);
         
-        // Setup image
-        Image iconImage = ingredientObj.GetComponent<Image>();
-        if (iconImage == null)
-            iconImage = ingredientObj.GetComponentInChildren<Image>();
+        // Find ItemIcon by name (common prefab naming convention)
+        Transform itemIconTransform = ingredientObj.transform.Find("ItemIcon");
+        Image iconImage = null;
         
-        if (iconImage != null && sprite != null)
+        if (itemIconTransform != null)
         {
-            iconImage.sprite = sprite;
-            iconImage.color = Color.white;
+            iconImage = itemIconTransform.GetComponent<Image>();
+        }
+        else
+        {
+            // Fallback: search all Images in children
+            iconImage = ingredientObj.GetComponentInChildren<Image>();
+        }
+        
+        if (iconImage != null)
+        {
+            if (sprite != null)
+            {
+                iconImage.sprite = sprite;
+                iconImage.color = Color.white;
+                GameLogger.Log(LoggingManager.LogCategory.UI, $"Set icon sprite for {itemName}", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"No sprite found for {itemName}", ComponentId);
+            }
             
             // Set icon size for consistent layout
             RectTransform iconRect = iconImage.GetComponent<RectTransform>();
@@ -171,9 +188,28 @@ public class RecipeIngredientDisplay : MonoBehaviour
                 iconRect.sizeDelta = iconSize;
             }
         }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                "No Image component found in ingredient prefab. Check prefab structure.", ComponentId);
+        }
 
-        // Setup text (count or item name) - Use TextMeshPro
-        TextMeshProUGUI iconText = ingredientObj.GetComponentInChildren<TextMeshProUGUI>();
+        // Find CountText by name (common prefab naming convention)
+        Transform countTextTransform = ingredientObj.transform.Find("CountText");
+        TextMeshProUGUI iconText = null;
+        
+        if (countTextTransform != null)
+        {
+            iconText = countTextTransform.GetComponent<TextMeshProUGUI>();
+            if (iconText == null)
+                iconText = countTextTransform.GetComponentInChildren<TextMeshProUGUI>();
+        }
+        else
+        {
+            // Fallback: search all TextMeshPro components
+            iconText = ingredientObj.GetComponentInChildren<TextMeshProUGUI>();
+        }
+        
         if (iconText != null)
         {
             iconText.fontSize = fontSize;
@@ -198,14 +234,9 @@ public class RecipeIngredientDisplay : MonoBehaviour
             }
         }
 
-        // Setup tooltip or hover text if needed
-        var button = ingredientObj.GetComponent<Button>();
-        if (button != null)
-        {
-            // Could add hover functionality here
-            string tooltipText = count > 1 ? $"{count}x {itemName}" : itemName;
-            GameLogger.Log(LoggingManager.LogCategory.UI, $"Created ingredient icon: {tooltipText}", ComponentId);
-        }
+        // Log for debugging
+        string tooltipText = count > 1 ? $"{count}x {itemName}" : itemName;
+        GameLogger.Log(LoggingManager.LogCategory.UI, $"Created ingredient icon: {tooltipText}", ComponentId);
     }
 
     /// <summary>
