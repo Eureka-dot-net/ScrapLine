@@ -62,6 +62,18 @@ RecipeSelectionPanel uses RecipeIngredientDisplay component:
 ### Issue: No arrow showing between ingredients and output
 **Solution**: In the RecipeIngredientDisplay component, set `showArrow = TRUE` and assign an arrow sprite
 
+### Issue: Buttons not clickable (NEW - FIXED)
+**Solution**: This is now automatically handled! RecipeSelectionPanel disables `raycastTarget` on all child UI elements at runtime. Ensure:
+1. Button component is on the root GameObject of the prefab
+2. EventSystem exists in the scene
+3. The prefab is properly assigned to `ingredientDisplayRow` field
+
+### Issue: "None" option displays incorrectly (NEW - FIXED)
+**Solution**: Assign a custom `emptyRowPrefab` to RecipeSelectionPanel's emptyRowPrefab field. This prefab should:
+- Have a Button component on root GameObject
+- Display appropriate text/styling for "No Recipe" option
+- Can be a simple button with text, no RecipeIngredientDisplay needed
+
 ## Code Reference
 
 ### Old RecipeSelectionPanel Fields (Removed)
@@ -71,10 +83,13 @@ public GameObject ingredientDisplayContainerPrefab;
 public GameObject panelIngredientItemPrefab;
 ```
 
-### New RecipeSelectionPanel Field (Added)
+### New RecipeSelectionPanel Fields (Added)
 ```csharp
 // NEW - Unified approach
 public RecipeIngredientDisplay ingredientDisplayRow;
+
+// NEW (Oct 2024) - Optional empty row for "None" option
+public GameObject emptyRowPrefab;
 ```
 
 ### Old SetupButtonVisuals (Removed ~100 lines)

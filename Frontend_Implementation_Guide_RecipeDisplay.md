@@ -193,7 +193,14 @@ Create GameObject: "RecipeIngredientDisplayRow"
 - This prefab DOES have RecipeIngredientDisplay component (unified approach!)
 - Set `useVerticalLayout = FALSE` for horizontal layout
 - Set `showArrow = TRUE` to show arrow between ingredients and output
-- The Button component should be on the root GameObject
+- The Button component MUST be on the root GameObject
+- Child UI elements will have raycastTarget disabled automatically (no manual setup needed)
+
+**⚠️ RAYCAST BLOCKING FIX (AUTOMATIC)**:
+- RecipeSelectionPanel automatically disables `raycastTarget` on all child Images, Text, and TextMeshPro components
+- This prevents child elements from blocking button clicks
+- No manual configuration needed in the prefab
+- The fix is applied at runtime when buttons are created
 
 #### 3.2. RecipeSelectionPanel Inspector Configuration
 
@@ -205,10 +212,30 @@ RecipeSelectionPanel Component:
 │   └── buttonPrefab: (LEAVE EMPTY - not used)
 └── Recipe Selection Specific
     ├── machineId: "" (set at runtime)
-    └── ingredientDisplayRow: RecipeIngredientDisplayRow prefab (NEW!)
+    ├── ingredientDisplayRow: RecipeIngredientDisplayRow prefab (NEW!)
+    └── emptyRowPrefab: (OPTIONAL) Prefab for "No Recipe" option
 ```
 
-#### 3.3. How It Works
+**NEW: Empty Row Prefab (Optional)**
+- If you want a custom appearance for the "No Recipe" option, create a separate prefab
+- Should have a Button component on root GameObject
+- Can be a simple button with text "No Recipe" or custom styling
+- If not set, the system uses ingredientDisplayRow for the empty option
+
+#### 3.3. Important: Button Clickability
+
+**The RecipeSelectionPanel automatically handles button clickability:**
+- Child UI elements (Images, Text, TextMeshPro) have `raycastTarget` disabled automatically
+- This prevents them from blocking clicks to the parent Button component
+- No manual configuration needed in prefabs
+- The Button component MUST be on the root GameObject of the prefab
+
+**If buttons are not clickable, verify:**
+1. Button component is on the root GameObject (not a child)
+2. The ingredientDisplayRow prefab is properly assigned in inspector
+3. EventSystem exists in the scene (Unity requirement for UI interaction)
+
+#### 3.4. How It Works
 
 **For each recipe in the list, RecipeSelectionPanel:**
 1. Instantiates ONE `RecipeIngredientDisplayRow` prefab (the row with Button + RecipeIngredientDisplay)
