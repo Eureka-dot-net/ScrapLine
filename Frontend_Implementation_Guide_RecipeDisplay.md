@@ -1,9 +1,33 @@
 # Recipe Ingredient Display UI Enhancement - Frontend Implementation Guide
 
+## ⚠️ CRITICAL: Different Architectures for Config vs Selection Panels
+
+**Config Panel**: Uses `RecipeIngredientDisplay` component to manage ingredient creation
+**Selection Panel**: Does NOT use `RecipeIngredientDisplay` - RecipeSelectionPanel code directly creates items
+
+**Common Mistake**: Adding RecipeIngredientDisplay component to IngredientDisplayContainer for selection panel will result in BLANK ROWS!
+
 ## Overview
 This guide covers the Unity frontend setup required to implement recipe ingredient display functionality in fabricator machine UI configuration and selection panels.
 
-**KEY DESIGN CHANGE**: Selection panel now uses a SIMPLER approach - directly creating ingredient items inside container rows!
+**KEY DESIGN CHANGE**: Selection panel uses a SIMPLER approach - directly creating ingredient items inside container rows without using RecipeIngredientDisplay component!
+
+## Debugging Blank Rows
+
+**MOST COMMON CAUSE**: IngredientDisplayContainer prefab has RecipeIngredientDisplay component (it shouldn't!)
+
+Other possible causes - enable Unity logging and check console:
+- "panelIngredientItemPrefab is null" → Assign the prefab in RecipeSelectionPanel inspector
+- "Failed to load sprite from path" → Check sprite paths in items.json
+- "No Image component found" → Ensure IngredientItemPrefab has child named "ItemIcon" with Image component
+- "No TextMeshProUGUI component found" → Ensure IngredientItemPrefab has child named "CountText" with TextMeshProUGUI component
+- Check that FactoryRegistry has loaded recipe data correctly
+
+**To fix blank rows:**
+1. Select your IngredientDisplayContainer prefab
+2. Remove RecipeIngredientDisplay component if present
+3. Ensure you have assigned panelIngredientItemPrefab in RecipeSelectionPanel inspector
+4. Test again
 
 ## New Components Added
 
@@ -149,7 +173,10 @@ Create GameObject: "IngredientDisplayContainer"
     └── Material: None
 ```
 
-**IMPORTANT**: This prefab should NOT have RecipeIngredientDisplay component! It's just a container with Button + Layout.
+**⚠️ CRITICAL**: This prefab should NOT have RecipeIngredientDisplay component! 
+- Config panel: Uses RecipeIngredientDisplay component
+- Selection panel: Does NOT use RecipeIngredientDisplay - code directly creates items
+- It's just a container with Button + HorizontalLayoutGroup + Content Size Fitter
 
 **Optional Enhancement**: Add a child GameObject named "Content" if you want extra control over layout:
 ```
