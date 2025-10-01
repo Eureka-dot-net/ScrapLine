@@ -163,19 +163,22 @@ RecipeSelectionPanel Component:
 │   ├── buttonContainer: Content/ScrollView (Grid Layout Group)
 │   └── buttonPrefab: RecipeSelectionButtonPrefab (with IngredientDisplayContainer)
 └── Recipe Selection Specific
-    ├── machineId: "" (set at runtime)
-    └── ingredientDisplayPrefab: IngredientItemPrefab (SAME as config panel)
+    └── machineId: "" (set at runtime)
 ```
+
+**⚠️ IMPORTANT**: There is NO `ingredientDisplayPrefab` field to assign! The button prefab is self-contained.
 
 #### 3.3. How It Works
 
 1. RecipeSelectionPanel creates one button per recipe in the grid
-2. Each button contains its own IngredientDisplayContainer
-3. RecipeSelectionPanel finds the container and calls `DisplayRecipe()` to populate it
+2. Each button **already contains** its own pre-configured IngredientDisplayContainer (built into the prefab)
+3. RecipeSelectionPanel finds the container in each button and calls `DisplayRecipe()` to populate it
 4. Each recipe row shows: Input icons → Output icon
 5. User clicks entire button/row to select that recipe
 
 **Key Advantage**: All recipes visible at once with their ingredients - easy to compare!
+
+**Common Mistake**: Don't assign `ingredientDisplayPrefab` in RecipeSelectionPanel inspector - that field was removed! The button prefab itself contains everything needed.
 
 ## Asset Requirements
 
@@ -274,6 +277,31 @@ Shows all ingredients side-by-side: [icon][icon][icon] or 3x[icon] + 2x[icon]
   - Check Unity Console for warnings: "No Image component found in ingredient prefab"
   - Verify hierarchy structure matches the required naming convention
   - Use "Find References in Scene" to ensure correct prefab is assigned
+
+**Problem 6: RecipeSelectionPanel showing individual items instead of recipe rows (CRITICAL)**
+- **Symptom**: Grid shows 3 rows of "1 x" items instead of 3 recipe rows with complete recipes
+- **Root Cause**: Wrong prefab assigned or confusion about what to assign
+- **Solution**: 
+  1. **IMPORTANT**: There is NO `ingredientDisplayPrefab` field to assign in RecipeSelectionPanel!
+  2. Your **button prefab** must be a complete button with IngredientDisplayContainer already inside it:
+     ```
+     RecipeSelectionButtonPrefab (this is what you assign to buttonPrefab)
+     ├── Button component (root)
+     └── IngredientDisplayContainer (child)
+         ├── RecipeIngredientDisplay component
+         │   ├── ingredientPrefab: PanelIngredientItemPrefab ← assign HERE
+         │   ├── useVerticalLayout: FALSE
+         │   ├── showArrow: TRUE
+         │   └── iconSize: (24, 24)
+         └── HorizontalLayoutGroup
+     ```
+  3. Assign `RecipeSelectionButtonPrefab` to the `buttonPrefab` field (from BaseSelectionPanel)
+  4. The button prefab is self-contained and gets duplicated for each recipe
+- **Key Understanding**: 
+  - **PanelIngredientItemPrefab** = Shows ONE ingredient like "2 x [can_icon]"
+  - **RecipeSelectionButtonPrefab** = Shows ENTIRE recipe like "[can][can] + [bottle] → [plate]"
+  - You're assigning a complete button prefab to buttonPrefab, not individual ingredient pieces!
+  - The RecipeIngredientDisplay INSIDE the button prefab references PanelIngredientItemPrefab
 
 ### Responsive Design Configuration
 

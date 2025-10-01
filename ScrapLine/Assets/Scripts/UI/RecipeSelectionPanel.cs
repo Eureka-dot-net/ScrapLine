@@ -16,10 +16,6 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     [Header("Recipe Selection Specific")]
     [Tooltip("Machine ID to filter recipes by (set at runtime)")]
     public string machineId = "";
-    
-    [Header("Visual Ingredient Display")]
-    [Tooltip("Prefab for displaying recipe ingredients with icons (assign same prefab as config panel)")]
-    public GameObject ingredientDisplayPrefab;
 
     private CellData contextCellData; // Used to determine machine type
 
