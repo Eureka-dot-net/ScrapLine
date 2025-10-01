@@ -139,23 +139,21 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
         RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
         if (rectTransform != null)
         {
-            // IMPORTANT: Get height from the instantiated object's RectTransform
-            // The prefab might not have its size properly initialized yet
-            float buttonHeight = rectTransform.rect.height;
+            // Calculate height: parent width / 5 (same as RecipeIngredientDisplay does)
+            // This ensures the row height matches the item size that will be set later
+            RectTransform containerRect = buttonContainer as RectTransform;
+            float parentWidth = containerRect != null ? containerRect.rect.width : 500f;
+            float buttonHeight = parentWidth / 5f;
             
-            // If height is 0 or invalid, try to get from prefab as fallback
-            if (buttonHeight <= 0)
-            {
-                RectTransform prefabRect = prefabToUse.GetComponent<RectTransform>();
-                buttonHeight = prefabRect != null ? prefabRect.rect.height : 100f;
-            }
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Calculated buttonHeight = {buttonHeight} from parentWidth = {parentWidth}", ComponentId);
             
             // Set anchors to top-left FIRST
             rectTransform.anchorMin = new Vector2(0, 1);
             rectTransform.anchorMax = new Vector2(1, 1); // Stretch horizontally
             rectTransform.pivot = new Vector2(0.5f, 1);
             
-            // Set the height explicitly (this might change buttonHeight, so do it before positioning)
+            // Set the height explicitly
             rectTransform.sizeDelta = new Vector2(0, buttonHeight); // 0 width = stretch to parent width
             
             // NOW position from top, each row below the previous
