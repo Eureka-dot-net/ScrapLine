@@ -130,15 +130,15 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
         
         if (buttonContainer == null || prefabToUse == null) return;
 
+        // Count how many buttons already exist BEFORE instantiation
+        int buttonIndex = buttonContainer.childCount;
+        
         GameObject buttonObj = Instantiate(prefabToUse, buttonContainer);
         
         // Manually position the button/row to avoid LayoutGroup issues
         RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
         if (rectTransform != null)
         {
-            // Count how many buttons already exist (for positioning)
-            int buttonIndex = buttonContainer.childCount - 1; // -1 because we just added this one
-            
             // Get the prefab's height to use for positioning
             RectTransform prefabRect = prefabToUse.GetComponent<RectTransform>();
             float buttonHeight = prefabRect != null ? prefabRect.rect.height : 100f; // Default 100 if not found
