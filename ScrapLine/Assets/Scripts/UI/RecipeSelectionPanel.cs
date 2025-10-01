@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 /// <summary>
 /// Selection panel for recipes (used by fabricator machines).
@@ -11,9 +13,13 @@ using System.Collections.Generic;
 /// 3. Assign selectionPanel, buttonContainer
 /// 4. Create a RecipeIngredientDisplay prefab and assign to ingredientDisplayRow
 /// 5. The prefab should have a Button component to make it clickable
+/// 6. (Optional) Create an empty row prefab for the "None" option and assign to emptyRowPrefab
 /// 
 /// NOTE: This now uses the same RecipeIngredientDisplay pattern as FabricatorMachineConfigPanel
 /// for consistency. Each recipe gets its own RecipeIngredientDisplay instance.
+/// 
+/// IMPORTANT: Child UI elements (Images, Text) will have their raycastTarget disabled automatically
+/// to prevent them from blocking button clicks. The Button component must be on the root GameObject.
 /// </summary>
 public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 {
@@ -23,6 +29,9 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     
     [Tooltip("RecipeIngredientDisplay prefab - creates a row instance for each recipe (same pattern as FabricatorMachineConfigPanel)")]
     public RecipeIngredientDisplay ingredientDisplayRow;
+    
+    [Tooltip("Optional: Empty row prefab for 'None' option (if not set, uses ingredientDisplayRow)")]
+    public GameObject emptyRowPrefab;
 
     private CellData contextCellData; // Used to determine machine type
 
@@ -122,6 +131,119 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         
         // Use the standardized RecipeIngredientDisplay to show the recipe
         displayComponent.DisplayRecipe(recipe);
+    }
+    
+    /// <summary>
+    /// Override to create selection buttons with proper prefab based on whether it's the "None" option
+    /// </summary>
+    protected override void CreateSelectionButton(RecipeDef item, string displayName)
+    {
+        GameObject prefabToUse;
+        
+        // Use emptyRowPrefab for "None" option if available, otherwise use standard flow
+        if (item == null && emptyRowPrefab != null)
+        {
+            prefabToUse = emptyRowPrefab;
+        }
+        else
+        {
+            prefabToUse = GetButtonPrefabToUse();
+        }
+        
+        if (buttonContainer == null || prefabToUse == null) return;
+
+        // Count how many buttons already exist BEFORE instantiation
+        int buttonIndex = buttonContainer.childCount;
+        
+        GameObject buttonObj = Instantiate(prefabToUse, buttonContainer);
+        
+        // Manually position the button/row to avoid LayoutGroup issues
+        RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            // Calculate height: parent width / 5 (same as RecipeIngredientDisplay does)
+            RectTransform containerRect = buttonContainer as RectTransform;
+            float parentWidth = containerRect != null ? containerRect.rect.width : 500f;
+            float buttonHeight = parentWidth / 5f;
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Calculated buttonHeight = {buttonHeight} from parentWidth = {parentWidth}", ComponentId);
+            
+            // Set anchors to top-left FIRST
+            rectTransform.anchorMin = new Vector2(0, 1);
+            rectTransform.anchorMax = new Vector2(1, 1); // Stretch horizontally
+            rectTransform.pivot = new Vector2(0.5f, 1);
+            
+            // Set the height explicitly
+            rectTransform.sizeDelta = new Vector2(0, buttonHeight);
+            
+            // Position from top, each row below the previous
+            rectTransform.anchoredPosition = new Vector2(0, -buttonIndex * buttonHeight);
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Positioned button at index {buttonIndex}, y={-buttonIndex * buttonHeight}, height={buttonHeight}", ComponentId);
+        }
+        
+        Button button = buttonObj.GetComponent<Button>();
+        
+        if (button != null)
+        {
+            // Set up button click listener
+            button.onClick.AddListener(() => OnItemSelected(item));
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Added click listener to button for recipe: {displayName}", ComponentId);
+            
+            // Disable raycast on all child Images to prevent blocking button clicks
+            DisableChildRaycastTargets(buttonObj);
+            
+            // Setup button visuals using derived class implementation
+            SetupButtonVisuals(buttonObj, item, displayName);
+        }
+        else
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                $"{GetType().Name}: Button prefab missing Button component!", ComponentId);
+        }
+    }
+    
+    /// <summary>
+    /// Disable raycast targets on all child UI elements to prevent them from blocking button clicks
+    /// </summary>
+    private void DisableChildRaycastTargets(GameObject buttonObj)
+    {
+        // Get all Image components in children (but not the root button itself)
+        UnityEngine.UI.Image[] childImages = buttonObj.GetComponentsInChildren<UnityEngine.UI.Image>();
+        foreach (var img in childImages)
+        {
+            // Don't disable raycast on the button's own Image component (if it has one)
+            if (img.gameObject != buttonObj)
+            {
+                img.raycastTarget = false;
+                GameLogger.Log(LoggingManager.LogCategory.UI, 
+                    $"Disabled raycast target on child Image: {img.gameObject.name}", ComponentId);
+            }
+        }
+        
+        // Also disable Text components
+        UnityEngine.UI.Text[] childTexts = buttonObj.GetComponentsInChildren<UnityEngine.UI.Text>();
+        foreach (var txt in childTexts)
+        {
+            if (txt.gameObject != buttonObj)
+            {
+                txt.raycastTarget = false;
+            }
+        }
+        
+        // And TextMeshPro components
+        TMPro.TextMeshProUGUI[] childTMPs = buttonObj.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+        foreach (var tmp in childTMPs)
+        {
+            if (tmp.gameObject != buttonObj)
+            {
+                tmp.raycastTarget = false;
+            }
+        }
     }
     
     /// <summary>
