@@ -1588,6 +1588,90 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &332893578
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 332893579}
+  - component: {fileID: 332893581}
+  - component: {fileID: 332893580}
+  m_Layer: 5
+  m_Name: IngredientDisplayContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &332893579
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332893578}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1209216475}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &332893580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332893578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 1
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &332893581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332893578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17046a20d16940318894b2f2b6c10a65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RecipeIngredientDisplay
+  ingredientContainer: {fileID: 332893579}
+  ingredientPrefab: {fileID: 3925377309417145555, guid: 3a937649d50f4e642a5d3645f4f28156, type: 3}
+  spacerPrefab: {fileID: 1837805431968198997, guid: 3bd4de779dd7cd0479842e1122f44741, type: 3}
+  maxIconsPerIngredient: 5
+  iconSize: {x: 32, y: 32}
+  fontSize: 12
+  useVerticalLayout: 0
+  showArrow: 1
+  arrowSprite: {fileID: 0}
 --- !u!1 &361906910
 GameObject:
   m_ObjectHideFlags: 0
@@ -3380,8 +3464,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RecipeSelectionPanel
   selectionPanel: {fileID: 880526748}
   buttonContainer: {fileID: 1209216475}
-  buttonPrefab: {fileID: 243617362569422418, guid: 8f5a80e3eeb1a8a408313f22cae7e0ad, type: 3}
+  buttonPrefab: {fileID: 3925377309417145555, guid: 3a937649d50f4e642a5d3645f4f28156, type: 3}
   machineId: 
+  ingredientDisplayContainerPrefab: {fileID: 332893578}
+  panelIngredientItemPrefab: {fileID: 3925377309417145555, guid: 3a937649d50f4e642a5d3645f4f28156, type: 3}
 --- !u!114 &880526753
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3916,41 +4002,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &1020566220
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1020566221}
-  m_Layer: 5
-  m_Name: ItemButtonContainer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1020566221
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1020566220}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1209216475}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1052175100
 GameObject:
   m_ObjectHideFlags: 0
@@ -5075,7 +5126,6 @@ GameObject:
   - component: {fileID: 1209216478}
   - component: {fileID: 1209216477}
   - component: {fileID: 1209216476}
-  - component: {fileID: 1209216479}
   m_Layer: 5
   m_Name: ScrollView
   m_TagString: Untagged
@@ -5095,7 +5145,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1020566221}
+  - {fileID: 332893579}
   m_Father: {fileID: 880526749}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -5167,27 +5217,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1209216474}
   m_CullTransparentMesh: 1
---- !u!114 &1209216479
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1209216474}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17046a20d16940318894b2f2b6c10a65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RecipeIngredientDisplay
-  ingredientContainer: {fileID: 1209216475}
-  ingredientPrefab: {fileID: 3925377309417145555, guid: 8237abe591ac11f40b493c604fbdd7e2, type: 3}
-  spacerPrefab: {fileID: 1837805431968198997, guid: 3bd4de779dd7cd0479842e1122f44741, type: 3}
-  maxIconsPerIngredient: 5
-  iconSize: {x: 32, y: 32}
-  fontSize: 12
-  useVerticalLayout: 0
-  showArrow: 1
-  arrowSprite: {fileID: 4367426293593361832, guid: 80c715aa9ceb1b44a9a4275ceb1f3991, type: 3}
 --- !u!1 &1237183358
 GameObject:
   m_ObjectHideFlags: 0
