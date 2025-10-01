@@ -83,7 +83,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
         }
         else
         {
-            // Horizontal layout (selection panel) - original behavior
+            // Horizontal layout (selection panel) - display inputs, arrow, and outputs
             foreach (var ingredient in recipe.inputItems)
             {
                 DisplayIngredient(ingredient);
@@ -93,6 +93,15 @@ public class RecipeIngredientDisplay : MonoBehaviour
             if (showArrow && arrowSprite != null)
             {
                 DisplayArrow();
+            }
+            
+            // Display output items
+            if (recipe.outputItems != null && recipe.outputItems.Count > 0)
+            {
+                foreach (var output in recipe.outputItems)
+                {
+                    DisplayIngredient(output);
+                }
             }
         }
     }
