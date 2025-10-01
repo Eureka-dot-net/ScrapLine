@@ -16,6 +16,9 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     [Header("Recipe Selection Specific")]
     [Tooltip("Machine ID to filter recipes by (set at runtime)")]
     public string machineId = "";
+    
+    [Tooltip("IngredientDisplayContainer prefab (same one used in config panel) - becomes the clickable row")]
+    public GameObject ingredientDisplayContainerPrefab;
 
     private CellData contextCellData; // Used to determine machine type
 
@@ -79,36 +82,40 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     protected override void SetupButtonVisuals(GameObject buttonObj, RecipeDef recipe, string displayName)
     {
-        // Don't set button text - we'll show ingredients and output visually
+        // The buttonObj IS the IngredientDisplayContainer (if ingredientDisplayContainerPrefab is assigned)
+        // Find the RecipeIngredientDisplay component directly on it
+        RecipeIngredientDisplay ingredientDisplay = buttonObj.GetComponent<RecipeIngredientDisplay>();
         
-        // Find or create the IngredientDisplayContainer in the button
-        Transform ingredientContainer = buttonObj.transform.Find("IngredientDisplayContainer");
-        if (ingredientContainer != null)
+        if (ingredientDisplay != null && recipe != null)
         {
-            // Find the RecipeIngredientDisplay component
-            RecipeIngredientDisplay ingredientDisplay = ingredientContainer.GetComponent<RecipeIngredientDisplay>();
-            
-            if (ingredientDisplay != null && recipe != null)
-            {
-                // Display recipe with ingredients and output
-                // Format: "Nx[icon] + Nx[icon] → Nx[icon]"
-                ingredientDisplay.DisplayRecipe(recipe);
-                GameLogger.Log(LoggingManager.LogCategory.UI, $"Set up ingredient display for recipe: {displayName}", ComponentId);
-            }
-            else if (ingredientDisplay == null)
-            {
-                GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                    "IngredientDisplayContainer found but missing RecipeIngredientDisplay component", ComponentId);
-            }
+            // Display recipe with ingredients and output
+            // Format: "Nx[icon] + Nx[icon] → Nx[icon]"
+            ingredientDisplay.DisplayRecipe(recipe);
+            GameLogger.Log(LoggingManager.LogCategory.UI, $"Set up ingredient display for recipe: {displayName}", ComponentId);
         }
-        else
+        else if (ingredientDisplay == null)
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                "Button prefab missing IngredientDisplayContainer child object", ComponentId);
+                "Button object missing RecipeIngredientDisplay component. Make sure ingredientDisplayContainerPrefab is assigned.", ComponentId);
             
-            // Fallback: set button text with recipe name
+            // Fallback: set button text with recipe name if there's a text component
             SetButtonText(buttonObj, displayName);
         }
+    }
+    
+    /// <summary>
+    /// Override to use ingredientDisplayContainerPrefab if assigned, otherwise use buttonPrefab
+    /// </summary>
+    protected override GameObject GetButtonPrefabToUse()
+    {
+        // If user assigned the IngredientDisplayContainer prefab, use that as the button
+        if (ingredientDisplayContainerPrefab != null)
+        {
+            return ingredientDisplayContainerPrefab;
+        }
+        
+        // Otherwise fallback to standard buttonPrefab
+        return buttonPrefab;
     }
 
     protected override string GetNoneDisplayName()

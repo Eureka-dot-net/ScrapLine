@@ -61,11 +61,23 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
     }
 
     /// <summary>
+    /// Get the button prefab to use for creating selection buttons.
+    /// Can be overridden by derived classes to use a different prefab.
+    /// </summary>
+    /// <returns>Button prefab to instantiate</returns>
+    protected virtual GameObject GetButtonPrefabToUse()
+    {
+        return buttonPrefab;
+    }
+
+    /// <summary>
     /// Populate the selection panel with available options
     /// </summary>
     protected virtual void PopulateButtons()
     {
-        if (buttonContainer == null || buttonPrefab == null)
+        GameObject prefabToUse = GetButtonPrefabToUse();
+        
+        if (buttonContainer == null || prefabToUse == null)
         {
             GameLogger.LogError(LoggingManager.LogCategory.UI, $"{GetType().Name}: Button container or prefab not assigned!", ComponentId);
             return;
@@ -114,9 +126,11 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
     /// <param name="displayName">Display name for the button</param>
     protected virtual void CreateSelectionButton(TItem item, string displayName)
     {
-        if (buttonContainer == null || buttonPrefab == null) return;
+        GameObject prefabToUse = GetButtonPrefabToUse();
+        
+        if (buttonContainer == null || prefabToUse == null) return;
 
-        GameObject buttonObj = Instantiate(buttonPrefab, buttonContainer);
+        GameObject buttonObj = Instantiate(prefabToUse, buttonContainer);
         Button button = buttonObj.GetComponent<Button>();
         
         if (button != null)
