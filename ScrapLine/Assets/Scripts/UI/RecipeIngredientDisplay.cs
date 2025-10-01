@@ -40,6 +40,9 @@ public class RecipeIngredientDisplay : MonoBehaviour
     
     [Tooltip("Arrow sprite (optional)")]
     public Sprite arrowSprite;
+    
+    [Tooltip("Arrow color (default: white)")]
+    public Color arrowColor = Color.white;
 
     private string ComponentId => $"RecipeIngredientDisplay_{GetInstanceID()}";
 
@@ -97,27 +100,25 @@ public class RecipeIngredientDisplay : MonoBehaviour
             
             int itemIndex = 0;
             
-            // Display input ingredients
+            // Display input ingredients (always at indices 0, 1, 2)
             foreach (var ingredient in recipe.inputItems)
             {
                 CreateIngredientWithManualLayout(ingredient, itemIndex, itemSize);
                 itemIndex++;
             }
             
-            // Add arrow if requested
+            // Add arrow at index 3 (right-aligned, always at same position)
             if (showArrow && arrowSprite != null)
             {
-                CreateArrowWithManualLayout(itemIndex, itemSize);
-                itemIndex++;
+                CreateArrowWithManualLayout(3, itemSize);
             }
             
-            // Display output items
+            // Display output items at index 4 (right-aligned, always at same position)
             if (recipe.outputItems != null && recipe.outputItems.Count > 0)
             {
                 foreach (var output in recipe.outputItems)
                 {
-                    CreateIngredientWithManualLayout(output, itemIndex, itemSize);
-                    itemIndex++;
+                    CreateIngredientWithManualLayout(output, 4, itemSize);
                 }
             }
         }
@@ -255,7 +256,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
             rectTransform.anchoredPosition = new Vector2(index * itemSize, 0);
         }
         
-        // Set arrow image
+        // Set arrow image with specified color
         Image arrowImage = arrowObj.GetComponent<Image>();
         if (arrowImage == null)
             arrowImage = arrowObj.GetComponentInChildren<Image>();
@@ -263,7 +264,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
         if (arrowImage != null)
         {
             arrowImage.sprite = arrowSprite;
-            arrowImage.color = Color.white;
+            arrowImage.color = arrowColor;  // Use the specified arrow color
         }
         
         // Hide text for arrow
