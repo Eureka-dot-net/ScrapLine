@@ -17,8 +17,11 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     [Tooltip("Machine ID to filter recipes by (set at runtime)")]
     public string machineId = "";
     
-    [Tooltip("IngredientDisplayContainer prefab (same one used in config panel) - becomes the clickable row")]
+    [Tooltip("IngredientDisplayContainer prefab - row container with Button component for each recipe")]
     public GameObject ingredientDisplayContainerPrefab;
+    
+    [Tooltip("PanelIngredientItemPrefab - shows individual ingredients (same as config panel uses)")]
+    public GameObject panelIngredientItemPrefab;
 
     private CellData contextCellData; // Used to determine machine type
 
@@ -82,25 +85,120 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     protected override void SetupButtonVisuals(GameObject buttonObj, RecipeDef recipe, string displayName)
     {
-        // The buttonObj IS the IngredientDisplayContainer (if ingredientDisplayContainerPrefab is assigned)
-        // Find the RecipeIngredientDisplay component directly on it
-        RecipeIngredientDisplay ingredientDisplay = buttonObj.GetComponent<RecipeIngredientDisplay>();
-        
-        if (ingredientDisplay != null && recipe != null)
-        {
-            // Display recipe with ingredients and output
-            // Format: "Nx[icon] + Nx[icon] → Nx[icon]"
-            ingredientDisplay.DisplayRecipe(recipe);
-            GameLogger.Log(LoggingManager.LogCategory.UI, $"Set up ingredient display for recipe: {displayName}", ComponentId);
-        }
-        else if (ingredientDisplay == null)
+        if (recipe == null || panelIngredientItemPrefab == null)
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                "Button object missing RecipeIngredientDisplay component. Make sure ingredientDisplayContainerPrefab is assigned.", ComponentId);
-            
-            // Fallback: set button text with recipe name if there's a text component
-            SetButtonText(buttonObj, displayName);
+                "Recipe or panelIngredientItemPrefab is null - cannot setup visuals", ComponentId);
+            return;
         }
+        
+        // The buttonObj is the IngredientDisplayContainer row
+        // We need to populate it with PanelIngredientItemPrefab instances:
+        // - One for each input ingredient
+        // - One arrow/separator (optional)
+        // - One for the output result
+        
+        // Find the container where we'll add ingredient item prefabs
+        // This could be the buttonObj itself or a child container
+        Transform container = buttonObj.transform;
+        
+        // Check if there's a specific child container (like "Content" or "ItemsContainer")
+        Transform contentChild = buttonObj.transform.Find("Content");
+        if (contentChild != null)
+        {
+            container = contentChild;
+        }
+        
+        // Clear any existing children
+        foreach (Transform child in container)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Creating ingredient items for recipe '{displayName}' with {recipe.inputItems?.Count ?? 0} inputs", ComponentId);
+        
+        // Create ingredient items for inputs
+        if (recipe.inputItems != null)
+        {
+            foreach (var ingredient in recipe.inputItems)
+            {
+                CreateIngredientItem(container, ingredient.item, ingredient.count);
+            }
+        }
+        
+        // TODO: Add arrow/separator visual if needed
+        // For now we can add a simple text element or skip
+        
+        // Create ingredient item for output/result
+        if (recipe.outputItems != null && recipe.outputItems.Count > 0)
+        {
+            var output = recipe.outputItems[0];
+            CreateIngredientItem(container, output.item, output.count);
+        }
+    }
+    
+    /// <summary>
+    /// Create a single ingredient item instance in the container
+    /// </summary>
+    private void CreateIngredientItem(Transform container, string itemId, int count)
+    {
+        GameObject itemObj = Instantiate(panelIngredientItemPrefab, container);
+        
+        // Get item definition
+        ItemDef itemDef = FactoryRegistry.Instance?.GetItem(itemId);
+        if (itemDef == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Item definition not found for '{itemId}'", ComponentId);
+            return;
+        }
+        
+        // Load sprite
+        Sprite itemSprite = null;
+        if (!string.IsNullOrEmpty(itemDef.sprite))
+        {
+            itemSprite = Resources.Load<Sprite>($"Sprites/Items/{itemDef.sprite}");
+        }
+        
+        // Find and set the icon image (looking for child named "ItemIcon")
+        Transform iconTransform = itemObj.transform.Find("ItemIcon");
+        UnityEngine.UI.Image iconImage = null;
+        
+        if (iconTransform != null)
+        {
+            iconImage = iconTransform.GetComponent<UnityEngine.UI.Image>();
+        }
+        else
+        {
+            iconImage = itemObj.GetComponentInChildren<UnityEngine.UI.Image>();
+        }
+        
+        if (iconImage != null && itemSprite != null)
+        {
+            iconImage.sprite = itemSprite;
+            iconImage.color = Color.white;
+        }
+        
+        // Find and set the count text (looking for child named "CountText")
+        Transform textTransform = itemObj.transform.Find("CountText");
+        TMPro.TextMeshProUGUI countText = null;
+        
+        if (textTransform != null)
+        {
+            countText = textTransform.GetComponent<TMPro.TextMeshProUGUI>();
+        }
+        else
+        {
+            countText = itemObj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+        }
+        
+        if (countText != null)
+        {
+            countText.text = count > 1 ? $"{count} x" : "";
+        }
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Created ingredient item: {count}x {itemDef.displayName ?? itemId}", ComponentId);
     }
     
     /// <summary>
