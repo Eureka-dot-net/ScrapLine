@@ -1,32 +1,39 @@
 # Recipe Ingredient Display UI Enhancement - Frontend Implementation Guide
 
-## ⚠️ CRITICAL: Different Architectures for Config vs Selection Panels
+## ⚠️ UNIFIED ARCHITECTURE: Both Panels Use RecipeIngredientDisplay
 
-**Config Panel**: Uses `RecipeIngredientDisplay` component to manage ingredient creation
-**Selection Panel**: Does NOT use `RecipeIngredientDisplay` - RecipeSelectionPanel code directly creates items
+**IMPORTANT UPDATE**: As of the latest changes, both panels now use the same standardized approach:
 
-**Common Mistake**: Adding RecipeIngredientDisplay component to IngredientDisplayContainer for selection panel will result in BLANK ROWS!
+- **Config Panel**: Uses `RecipeIngredientDisplay` component to display a single recipe
+- **Selection Panel**: Uses `RecipeIngredientDisplay` component to create a row for EACH recipe
+
+**Standardization Benefits**:
+- Single source of truth for recipe display logic
+- Consistent behavior between panels
+- Easier maintenance and debugging
+- Simpler Unity setup
 
 ## Overview
 This guide covers the Unity frontend setup required to implement recipe ingredient display functionality in fabricator machine UI configuration and selection panels.
 
-**KEY DESIGN CHANGE**: Selection panel uses a SIMPLER approach - directly creating ingredient items inside container rows without using RecipeIngredientDisplay component!
+**KEY DESIGN**: Both panels now use `RecipeIngredientDisplay` component for consistency. The selection panel creates multiple instances (one per recipe), while the config panel uses a single instance.
 
-## Debugging Blank Rows
+## Debugging Issues
 
-**MOST COMMON CAUSE**: IngredientDisplayContainer prefab has RecipeIngredientDisplay component (it shouldn't!)
+**MOST COMMON CAUSE**: ingredientDisplayRow prefab not assigned in RecipeSelectionPanel inspector
 
 Other possible causes - enable Unity logging and check console:
-- "panelIngredientItemPrefab is null" → Assign the prefab in RecipeSelectionPanel inspector
+- "ingredientDisplayRow is null" → Assign the RecipeIngredientDisplay prefab in RecipeSelectionPanel inspector
+- "No RecipeIngredientDisplay component found" → Ensure the prefab has RecipeIngredientDisplay component
 - "Failed to load sprite from path" → Check sprite paths in items.json
-- "No Image component found" → Ensure IngredientItemPrefab has child named "ItemIcon" with Image component
-- "No TextMeshProUGUI component found" → Ensure IngredientItemPrefab has child named "CountText" with TextMeshProUGUI component
+- "No Image component found" → Ensure ingredientPrefab has child named "ItemIcon" with Image component
+- "No TextMeshProUGUI component found" → Ensure ingredientPrefab has child named "CountText" with TextMeshProUGUI component
 - Check that FactoryRegistry has loaded recipe data correctly
 
-**To fix blank rows:**
-1. Select your IngredientDisplayContainer prefab
-2. Remove RecipeIngredientDisplay component if present
-3. Ensure you have assigned panelIngredientItemPrefab in RecipeSelectionPanel inspector
+**To fix issues:**
+1. Verify RecipeSelectionPanel has ingredientDisplayRow assigned
+2. Verify the assigned prefab has a RecipeIngredientDisplay component
+3. Verify RecipeIngredientDisplay has ingredientContainer and ingredientPrefab assigned
 4. Test again
 
 ## New Components Added
@@ -147,45 +154,46 @@ FabricatorMachineConfigPanel Component:
     └── ingredientDisplay: IngredientDisplayContainer (NEW)
 ```
 
-### 3. RecipeSelectionPanel Setup (Direct Ingredient Creation)
+### 3. RecipeSelectionPanel Setup (Unified Approach)
 
-**NEW SIMPLIFIED APPROACH**: RecipeSelectionPanel directly creates PanelIngredientItemPrefab instances inside each row container!
+**UPDATED STANDARDIZED APPROACH**: RecipeSelectionPanel now uses RecipeIngredientDisplay component (same as FabricatorMachineConfigPanel) for consistency!
 
-#### 3.1. Create IngredientDisplayContainer Prefab (Row Container)
+#### 3.1. Create RecipeIngredientDisplay Prefab (Row Container)
 
-This is a simple container with a Button component that becomes the clickable row:
+This is the same RecipeIngredientDisplay used in the config panel, but configured for horizontal layout:
 
 ```
-Create GameObject: "IngredientDisplayContainer"
+Create GameObject: "RecipeIngredientDisplayRow"
 ├── Add Component: Button (REQUIRED - makes row clickable)
 │   └── Navigation: None (to prevent interference with touch)
-├── Add Component: HorizontalLayoutGroup
-│   ├── Spacing: 8-10
-│   ├── Child Force Expand: false
-│   ├── Child Control Size: true (width and height)
-│   ├── Child Alignment: Middle Left
-│   └── Padding: Left/Right 10-15, Top/Bottom 5-8
-├── Add Component: Content Size Fitter
-│   ├── Horizontal Fit: Preferred Size
-│   └── Vertical Fit: Preferred Size
+├── Add Component: RecipeIngredientDisplay (REQUIRED)
+│   ├── ingredientContainer: IngredientContainer child (see below)
+│   ├── ingredientPrefab: IngredientItemPrefab
+│   ├── iconSize: (24, 24) or (32, 32)
+│   ├── fontSize: 12
+│   ├── maxIconsPerIngredient: 5
+│   ├── useVerticalLayout: FALSE (horizontal for selection panel)
+│   └── showArrow: true (optional - shows arrow between inputs and output)
+├── Create Child: "IngredientContainer"
+│   ├── Add Component: HorizontalLayoutGroup
+│   │   ├── Spacing: 8-10
+│   │   ├── Child Force Expand: false
+│   │   ├── Child Control Size: true (width and height)
+│   │   ├── Child Alignment: Middle Left
+│   │   └── Padding: Left/Right 10-15, Top/Bottom 5-8
+│   └── Add Component: Content Size Fitter
+│       ├── Horizontal Fit: Preferred Size
+│       └── Vertical Fit: Preferred Size
 └── Add Component: Image (optional background for row)
     ├── Color: Semi-transparent or themed color
     └── Material: None
 ```
 
-**⚠️ CRITICAL**: This prefab should NOT have RecipeIngredientDisplay component! 
-- Config panel: Uses RecipeIngredientDisplay component
-- Selection panel: Does NOT use RecipeIngredientDisplay - code directly creates items
-- It's just a container with Button + HorizontalLayoutGroup + Content Size Fitter
-
-**Optional Enhancement**: Add a child GameObject named "Content" if you want extra control over layout:
-```
-IngredientDisplayContainer
-├── Button (on root)
-├── HorizontalLayoutGroup (on root)
-└── Content (child - optional)
-    └── [Ingredient items will be added here at runtime]
-```
+**⚠️ IMPORTANT CHANGES**: 
+- This prefab DOES have RecipeIngredientDisplay component (unified approach!)
+- Set `useVerticalLayout = FALSE` for horizontal layout
+- Set `showArrow = TRUE` to show arrow between ingredients and output
+- The Button component should be on the root GameObject
 
 #### 3.2. RecipeSelectionPanel Inspector Configuration
 
@@ -197,39 +205,38 @@ RecipeSelectionPanel Component:
 │   └── buttonPrefab: (LEAVE EMPTY - not used)
 └── Recipe Selection Specific
     ├── machineId: "" (set at runtime)
-    ├── ingredientDisplayContainerPrefab: IngredientDisplayContainer prefab
-    └── panelIngredientItemPrefab: IngredientItemPrefab (SAME prefab used in config panel!)
+    └── ingredientDisplayRow: RecipeIngredientDisplayRow prefab (NEW!)
 ```
 
 #### 3.3. How It Works
 
 **For each recipe in the list, RecipeSelectionPanel:**
-1. Instantiates ONE `IngredientDisplayContainer` (the row)
-2. Inside that container, creates MULTIPLE `PanelIngredientItemPrefab` instances:
-   - One for each input ingredient (e.g., Ingredient1, Ingredient2, Ingredient3)
-   - One for the recipe result/output
+1. Instantiates ONE `RecipeIngredientDisplayRow` prefab (the row with Button + RecipeIngredientDisplay)
+2. Calls `DisplayRecipe(recipe)` on the RecipeIngredientDisplay component
+3. RecipeIngredientDisplay automatically creates ingredient items inside its container
 
 **Visual Result:**
 ```
-Recipe 1 Row (IngredientDisplayContainer):
-  Ingredient1 (PanelIngredientItemPrefab) + Ingredient2 (PanelIngredientItemPrefab) + Ingredient3 (PanelIngredientItemPrefab) → Result (PanelIngredientItemPrefab)
+Recipe 1 Row (RecipeIngredientDisplay with Button):
+  Ingredient1 [icon] + Ingredient2 [icon] → Result [icon]
 
-Recipe 2 Row (IngredientDisplayContainer):
-  Ingredient1 (PanelIngredientItemPrefab) + Ingredient2 (PanelIngredientItemPrefab) → Result (PanelIngredientItemPrefab)
+Recipe 2 Row (RecipeIngredientDisplay with Button):
+  Ingredient1 [icon] + Ingredient2 [icon] + Ingredient3 [icon] → Result [icon]
 
-Recipe 3 Row (IngredientDisplayContainer):
-  Ingredient1 (PanelIngredientItemPrefab) → Result (PanelIngredientItemPrefab)
+Recipe 3 Row (RecipeIngredientDisplay with Button):
+  Ingredient1 [icon] → Result [icon]
 ```
 
 **User clicks entire row** → Recipe is selected
 
 #### 3.4. Key Advantages
 
-- **Zero duplication**: Same `PanelIngredientItemPrefab` used for config panel AND selection panel
-- **Simple setup**: Just two prefab assignments (container + item)
-- **Flexible**: Easy to add arrows, separators, or other visual elements between items
-- **Performant**: Creates only the items needed per recipe
-- **Consistent**: Ingredients look identical in both panels
+- **Unified architecture**: SAME RecipeIngredientDisplay component used in both panels
+- **Single source of truth**: Recipe display logic is centralized
+- **Easier maintenance**: Changes to recipe display apply to both panels
+- **Simpler code**: RecipeSelectionPanel is ~120 lines shorter
+- **Consistent behavior**: Both panels handle recipes identically
+- **Flexible**: Easy to switch between vertical and horizontal layouts
 
 #### 3.5. Panel Structure
 
@@ -238,9 +245,26 @@ RecipeSelectionPanel
 ├── Background (Image - optional)
 ├── ScrollView
 │   └── Content (Grid Layout Group)
-│       ├── Recipe1Row (IngredientDisplayContainer instance)
-│       │   ├── Ingredient1 (PanelIngredientItemPrefab instance)
-│       │   ├── Ingredient2 (PanelIngredientItemPrefab instance)
+│       ├── Recipe1Row (RecipeIngredientDisplayRow instance with Button)
+│       │   └── IngredientContainer (child with HorizontalLayoutGroup)
+│       │       ├── Ingredient1 (IngredientItemPrefab - auto-created by RecipeIngredientDisplay)
+│       │       ├── Ingredient2 (IngredientItemPrefab - auto-created by RecipeIngredientDisplay)
+│       │       ├── Arrow (optional - auto-created if showArrow = true)
+│       │       └── Output (IngredientItemPrefab - auto-created by RecipeIngredientDisplay)
+│       ├── Recipe2Row (RecipeIngredientDisplayRow instance with Button)
+│       │   └── IngredientContainer (child with HorizontalLayoutGroup)
+│       │       ├── Ingredient1 (IngredientItemPrefab - auto-created)
+│       │       ├── Arrow (optional)
+│       │       └── Output (IngredientItemPrefab - auto-created)
+│       └── ... (one row per recipe - all auto-created by RecipeIngredientDisplay)
+└── ActionButtons (optional)
+```
+
+**Key Points:**
+- Each row is a complete RecipeIngredientDisplayRow prefab instance
+- RecipeIngredientDisplay component automatically creates all ingredient items
+- No manual item creation needed - just call DisplayRecipe()
+- Same component used as in FabricatorMachineConfigPanel (unified approach)
 │       │   └── Output (PanelIngredientItemPrefab instance)
 │       ├── Recipe2Row (IngredientDisplayContainer instance)
 │       │   ├── Ingredient1 (PanelIngredientItemPrefab instance)
@@ -347,26 +371,25 @@ Shows all ingredients side-by-side: [icon][icon][icon] or 3x[icon] + 2x[icon]
   - Verify hierarchy structure matches the required naming convention
   - Use "Find References in Scene" to ensure correct prefab is assigned
 
-**Problem 6: RecipeSelectionPanel showing individual items instead of recipe rows (UPDATED SOLUTION)**
-- **Symptom**: Grid shows 3 rows of "1 x" items instead of 3 recipe rows with complete recipes
-- **Root Cause**: Wrong prefab assigned to `ingredientDisplayContainerPrefab` field
-- **NEW SIMPLIFIED SOLUTION (after latest update)**: 
-  1. You should assign the SAME `IngredientDisplayContainer` prefab used in config panel to `ingredientDisplayContainerPrefab` field
+**Problem 6: RecipeSelectionPanel showing individual items instead of recipe rows**
+- **Symptom**: Grid shows individual items instead of complete recipe rows
+- **Root Cause**: Wrong prefab assigned to `ingredientDisplayRow` field or missing RecipeIngredientDisplay component
+- **UPDATED SOLUTION (unified approach)**: 
+  1. Assign a RecipeIngredientDisplay prefab to `ingredientDisplayRow` field
   2. Make sure this prefab has:
      - Button component at root (makes it clickable)
-     - RecipeIngredientDisplay component
-     - HorizontalLayoutGroup (for horizontal layout)
+     - RecipeIngredientDisplay component (REQUIRED)
+     - ingredientContainer child with HorizontalLayoutGroup
      - `useVerticalLayout = FALSE` for selection panel
-     - `showArrow = TRUE` for "inputs → output" display
+     - `showArrow = TRUE` for "inputs → output" display (optional)
      - `ingredientPrefab` set to IngredientItemPrefab (the small "1 x [icon]" prefab)
-  3. Do NOT assign the IngredientItemPrefab to `ingredientDisplayContainerPrefab` - that's too small!
-  4. The IngredientDisplayContainer becomes a clickable recipe row that the panel duplicates
+  3. The prefab becomes a clickable recipe row that the panel duplicates
 - **Why this works**: 
-  - Config panel: Uses IngredientDisplayContainer as a child (shows one recipe vertically)
-  - Selection panel: Instantiates multiple copies of IngredientDisplayContainer as clickable rows
-  - SAME prefab, different usage context!
+  - Config panel: Uses RecipeIngredientDisplay with vertical layout (shows one recipe)
+  - Selection panel: Uses RecipeIngredientDisplay with horizontal layout (shows multiple recipe rows)
+  - SAME component, different layout configuration!
 - **Key Fields**:
-  - `ingredientDisplayContainerPrefab` in RecipeSelectionPanel = The container with RecipeIngredientDisplay
+  - `ingredientDisplayRow` in RecipeSelectionPanel = The RecipeIngredientDisplay prefab
   - `ingredientPrefab` INSIDE RecipeIngredientDisplay component = The small item prefab ("1 x [icon]")
   - These are TWO DIFFERENT prefabs at different levels!
 

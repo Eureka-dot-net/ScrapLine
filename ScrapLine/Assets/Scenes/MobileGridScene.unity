@@ -1598,9 +1598,10 @@ GameObject:
   m_Component:
   - component: {fileID: 332893579}
   - component: {fileID: 332893581}
-  - component: {fileID: 332893580}
+  - component: {fileID: 332893582}
+  - component: {fileID: 332893584}
   m_Layer: 5
-  m_Name: IngredientDisplayContainer
+  m_Name: IngredientDisplayRow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1620,37 +1621,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1209216475}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &332893580
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 332893578}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
-  m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_Spacing: 0
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 1
-  m_ChildControlHeight: 1
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!114 &332893581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1666,12 +1641,76 @@ MonoBehaviour:
   ingredientContainer: {fileID: 332893579}
   ingredientPrefab: {fileID: 3925377309417145555, guid: 3a937649d50f4e642a5d3645f4f28156, type: 3}
   spacerPrefab: {fileID: 1837805431968198997, guid: 3bd4de779dd7cd0479842e1122f44741, type: 3}
-  maxIconsPerIngredient: 5
   iconSize: {x: 32, y: 32}
   fontSize: 12
   useVerticalLayout: 0
   showArrow: 1
-  arrowSprite: {fileID: 0}
+  arrowSprite: {fileID: 4367426293593361832, guid: 9cb3e83796b66a047a68183ad5dd0c98, type: 3}
+  arrowColor: {r: 1, g: 0.6, b: 0, a: 1}
+--- !u!114 &332893582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332893578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 0}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &332893584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332893578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &361906910
 GameObject:
   m_ObjectHideFlags: 0
@@ -3464,10 +3503,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RecipeSelectionPanel
   selectionPanel: {fileID: 880526748}
   buttonContainer: {fileID: 1209216475}
-  buttonPrefab: {fileID: 3925377309417145555, guid: 3a937649d50f4e642a5d3645f4f28156, type: 3}
+  buttonPrefab: {fileID: 243617362569422418, guid: 8f5a80e3eeb1a8a408313f22cae7e0ad, type: 3}
   machineId: 
-  ingredientDisplayContainerPrefab: {fileID: 332893578}
-  panelIngredientItemPrefab: {fileID: 3925377309417145555, guid: 3a937649d50f4e642a5d3645f4f28156, type: 3}
+  ingredientDisplayRow: {fileID: 332893581}
 --- !u!114 &880526753
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5125,7 +5163,6 @@ GameObject:
   - component: {fileID: 1209216475}
   - component: {fileID: 1209216478}
   - component: {fileID: 1209216477}
-  - component: {fileID: 1209216476}
   m_Layer: 5
   m_Name: ScrollView
   m_TagString: Untagged
@@ -5153,32 +5190,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1209216476
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1209216474}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
-  m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_Spacing: 0
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 1
-  m_ChildControlHeight: 1
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!114 &1209216477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5402,12 +5413,12 @@ MonoBehaviour:
   ingredientContainer: {fileID: 1293187958}
   ingredientPrefab: {fileID: 3925377309417145555, guid: 3a937649d50f4e642a5d3645f4f28156, type: 3}
   spacerPrefab: {fileID: 1837805431968198997, guid: b4711d95eed07df45a16fce19631ae24, type: 3}
-  maxIconsPerIngredient: 1
   iconSize: {x: 32, y: 32}
   fontSize: 130
   useVerticalLayout: 1
   showArrow: 0
   arrowSprite: {fileID: 0}
+  arrowColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &1293187961
 MonoBehaviour:
   m_ObjectHideFlags: 0
