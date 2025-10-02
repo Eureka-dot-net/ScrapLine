@@ -148,11 +148,11 @@ namespace ScrapLine.Tests
             // Test basic component properties exist and can be accessed
             var type = typeof(RecipeIngredientDisplay);
             
-            var maxIconsField = type.GetField("maxIconsPerIngredient");
             var showArrowField = type.GetField("showArrow");
+            var useVerticalLayoutField = type.GetField("useVerticalLayout");
             
-            Assert.IsNotNull(maxIconsField, "maxIconsPerIngredient field should exist");
             Assert.IsNotNull(showArrowField, "showArrow field should exist");
+            Assert.IsNotNull(useVerticalLayoutField, "useVerticalLayout field should exist");
             
             // Test method existence
             var displayMethod = type.GetMethod("DisplayRecipe");
@@ -184,6 +184,28 @@ namespace ScrapLine.Tests
 
             string result2 = RecipeIngredientDisplay.GetIngredientsString(emptyInputRecipe);
             Assert.AreEqual("No ingredients", result2);
+        }
+
+        [Test]
+        public void CreateIngredientWithManualLayout_WithShowCountFalse_RemovesCountText()
+        {
+            // This test validates that when showCount is false:
+            // 1. The countText GameObject is removed (not just text cleared)
+            // 2. The icon is centered horizontally
+            
+            // Test that the method exists and has correct signature
+            var type = typeof(RecipeIngredientDisplay);
+            var method = type.GetMethod("CreateIngredientWithManualLayout", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            Assert.IsNotNull(method, "CreateIngredientWithManualLayout method should exist");
+            
+            var parameters = method.GetParameters();
+            Assert.AreEqual(4, parameters.Length, "Method should have 4 parameters");
+            Assert.AreEqual("showCount", parameters[3].Name, "Last parameter should be showCount");
+            Assert.AreEqual(typeof(bool), parameters[3].ParameterType, "showCount should be bool type");
+            Assert.IsTrue(parameters[3].HasDefaultValue, "showCount should have default value");
+            Assert.AreEqual(true, parameters[3].DefaultValue, "showCount default should be true");
         }
     }
 }

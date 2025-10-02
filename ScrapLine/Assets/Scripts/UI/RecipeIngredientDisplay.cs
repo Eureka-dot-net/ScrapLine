@@ -252,7 +252,40 @@ public class RecipeIngredientDisplay : MonoBehaviour
             }
             else
             {
-                countText.text = ""; // Clear text if not showing count
+                // Remove the countText GameObject instead of clearing text
+                if (countTextTransform != null)
+                {
+                    if (Application.isPlaying)
+                        Destroy(countTextTransform.gameObject);
+                    else
+                        DestroyImmediate(countTextTransform.gameObject);
+                }
+                else if (countText.gameObject != ingredientObj)
+                {
+                    // If countTextTransform is null but we found countText via GetComponentInChildren,
+                    // destroy the GameObject containing the text component
+                    if (Application.isPlaying)
+                        Destroy(countText.gameObject);
+                    else
+                        DestroyImmediate(countText.gameObject);
+                }
+                
+                GameLogger.Log(LoggingManager.LogCategory.UI,
+                    "CountText component removed - icon will be centered", ComponentId);
+                
+                // Center the icon horizontally within the ingredient container
+                if (iconImage != null)
+                {
+                    RectTransform iconRect = iconImage.GetComponent<RectTransform>();
+                    if (iconRect != null)
+                    {
+                        // Set anchors and pivot to center
+                        iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+                        iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+                        iconRect.pivot = new Vector2(0.5f, 0.5f);
+                        iconRect.anchoredPosition = Vector2.zero;
+                    }
+                }
             }
         }
         else
