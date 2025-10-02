@@ -219,7 +219,18 @@ public class RecipeIngredientDisplay : MonoBehaviour
         
         // Find and set count text
         Transform countTextTransform = ingredientObj.transform.Find("CountText");
-        TextMeshProUGUI countText = countTextTransform != null ? countTextTransform.GetComponent<TextMeshProUGUI>() : ingredientObj.GetComponentInChildren<TextMeshProUGUI>();
+        TextMeshProUGUI countText = null;
+        
+        if (countTextTransform != null)
+        {
+            countText = countTextTransform.GetComponent<TextMeshProUGUI>();
+        }
+        
+        // Fallback: search all children if not found
+        if (countText == null)
+        {
+            countText = ingredientObj.GetComponentInChildren<TextMeshProUGUI>();
+        }
         
         if (countText != null)
         {
