@@ -82,7 +82,7 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
         // Set button sprite if crate has one
         if (crate != null && !string.IsNullOrEmpty(crate.sprite))
         {
-            string spritePath = $"Sprites/WasteCrates/{crate.sprite}";
+            string spritePath = $"Sprites/Waste/{crate.sprite}";
             Sprite crateSprite = LoadSprite(spritePath);
             SetButtonImage(buttonObj, crateSprite);
         }

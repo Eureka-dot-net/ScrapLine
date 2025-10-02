@@ -89,7 +89,7 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
             if (crateDef != null && !string.IsNullOrEmpty(crateDef.sprite))
             {
                 // Try to load sprite from Resources
-                var sprite = Resources.Load<Sprite>($"Sprites/{crateDef.sprite}");
+                var sprite = Resources.Load<Sprite>($"Sprites/Waste/{crateDef.sprite}");
                 if (sprite != null)
                 {
                     currentCrateIcon.sprite = sprite;
