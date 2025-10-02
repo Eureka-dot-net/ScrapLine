@@ -1,62 +1,430 @@
-[5,57s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+Added Outline component to LeftConfigButton.
+UnityEngine.Debug:Log (object)
+ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
+
+Added Outline component to RecipeConfigButton.
+UnityEngine.Debug:Log (object)
+ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
+
+Added Outline component to RightConfigButton.
+UnityEngine.Debug:Log (object)
+ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
+
+Added Outline component to OKButton.
+UnityEngine.Debug:Log (object)
+ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
+
+[0,00s] [UI] Started SortingMachineConfigPanel
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:170)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:Start () (at Assets/Scripts/UI/BaseConfigPanel.cs:72)
+SortingMachineConfigPanel:Start () (at Assets/Scripts/UI/SortingMachineConfigPanel.cs:46)
+
+[0,00s] [UI] Started FabricatorMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, string>:Start () (at Assets/Scripts/UI/BaseConfigPanel.cs:72)
+
+[0,00s] [UI] Auto-discovering config panels...
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+UIPanelManager:DiscoverConfigPanels () (at Assets/Scripts/Game/UIPanelManager.cs:74)
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:44)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] Discovered 2 config panels
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+UIPanelManager:DiscoverConfigPanels () (at Assets/Scripts/Game/UIPanelManager.cs:95)
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:44)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] Selection panel hidden for ItemSelectionPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseSelectionPanel`1<ItemDef>:HidePanel () (at Assets/Scripts/UI/BaseSelectionPanel.cs:60)
+SortingMachineConfigPanel:HideSelectionPanels () (at Assets/Scripts/UI/SortingMachineConfigPanel.cs:98)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:InitializeHiddenState () (at Assets/Scripts/UI/BaseConfigPanel.cs:90)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:InitializePanelState () (at Assets/Scripts/UI/BaseConfigPanel.cs:58)
+System.Reflection.MethodBase:Invoke (object,object[])
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:58)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] Panel state initialized for SortingMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:InitializePanelState () (at Assets/Scripts/UI/BaseConfigPanel.cs:61)
+System.Reflection.MethodBase:Invoke (object,object[])
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:58)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] Initialized panel: SortingMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:59)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] Selection panel hidden for RecipeSelectionPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseSelectionPanel`1<RecipeDef>:HidePanel () (at Assets/Scripts/UI/BaseSelectionPanel.cs:60)
+FabricatorMachineConfigPanel:HideSelectionPanels () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:68)
+BaseConfigPanel`2<CellData, string>:InitializeHiddenState () (at Assets/Scripts/UI/BaseConfigPanel.cs:90)
+BaseConfigPanel`2<CellData, string>:InitializePanelState () (at Assets/Scripts/UI/BaseConfigPanel.cs:58)
+System.Reflection.MethodBase:Invoke (object,object[])
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:58)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] Panel state initialized for FabricatorMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, string>:InitializePanelState () (at Assets/Scripts/UI/BaseConfigPanel.cs:61)
+System.Reflection.MethodBase:Invoke (object,object[])
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:58)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] Initialized panel: FabricatorMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+UIPanelManager:InitializeAllPanels () (at Assets/Scripts/Game/UIPanelManager.cs:59)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:30)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [UI] UIPanelManager initialized with 2 panels
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+UIPanelManager:Awake () (at Assets/Scripts/Game/UIPanelManager.cs:31)
+UnityEngine.GameObject:AddComponent<UIPanelManager> ()
+GameManager:InitializeManagers () (at Assets/Scripts/Game/GameManager.cs:123)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:94)
+
+[0,00s] [MACHINE] Positioned LeftConfig config sprite at (-60.00, 40.00)
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+GameLogger:LogMachine (string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:164)
+MachineRenderer:CreateConfigurationSprite (string,string,UnityEngine.GameObject,single,single) (at Assets/Scripts/Machines/MachineRenderer.cs:963)
+MachineRenderer:CreateConfigurationSprites (BaseMachine,UnityEngine.GameObject) (at Assets/Scripts/Machines/MachineRenderer.cs:786)
+MachineRenderer:CreateSeparatedBuildingSprite (BaseMachine,UICell/Direction) (at Assets/Scripts/Machines/MachineRenderer.cs:369)
+MachineRenderer:Setup (BaseMachine,UICell/Direction,UIGridManager,int,int,UnityEngine.Texture,UnityEngine.Material) (at Assets/Scripts/Machines/MachineRenderer.cs:150)
+UICell:SetupMachineRenderer (BaseMachine,UICell/Direction) (at Assets/Scripts/Grid/Cell/UICell.cs:153)
+UICell:SetCellType (UICell/CellType,UICell/Direction,BaseMachine) (at Assets/Scripts/Grid/Cell/UICell.cs:98)
+UIGridManager:InitGrid (GridData) (at Assets/Scripts/Grid/UIGridManager.cs:117)
+GridManager:InitializeUIGrid () (at Assets/Scripts/Game/GridManager.cs:211)
+GameManager:InitializeGame () (at Assets/Scripts/Game/GameManager.cs:165)
+GameManager:Start () (at Assets/Scripts/Game/GameManager.cs:95)
+
+[3,84s] [UI] Registered open panel: FabricatorMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+UIPanelManager:RegisterOpenPanel (UnityEngine.MonoBehaviour) (at Assets/Scripts/Game/UIPanelManager.cs:110)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:120)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Loaded fabricator config: Recipe='fabricator_can:1,plasticBottle:1_aluminumPlate:1'
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+FabricatorMachineConfigPanel:LoadCurrentConfiguration () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:45)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:143)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Cleared all ingredient displays
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeIngredientDisplay:ClearIngredients () (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:453)
+RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:56)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:188)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Displaying recipe with 2 ingredient types
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:64)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:188)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Set icon sprite for Aluminum Can
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeIngredientDisplay:CreateIngredientIcon (UnityEngine.Sprite,string,int) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:310)
+RecipeIngredientDisplay:DisplayIngredient (RecipeItemDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:153)
+RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:78)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:188)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Created ingredient icon: Aluminum Can
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeIngredientDisplay:CreateIngredientIcon (UnityEngine.Sprite,string,int) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:372)
+RecipeIngredientDisplay:DisplayIngredient (RecipeItemDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:153)
+RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:78)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:188)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Set icon sprite for Plastic Bottle
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeIngredientDisplay:CreateIngredientIcon (UnityEngine.Sprite,string,int) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:310)
+RecipeIngredientDisplay:DisplayIngredient (RecipeItemDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:153)
+RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:78)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:188)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Created ingredient icon: Plastic Bottle
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeIngredientDisplay:CreateIngredientIcon (UnityEngine.Sprite,string,int) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:372)
+RecipeIngredientDisplay:DisplayIngredient (RecipeItemDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:153)
+RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:78)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:188)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Created spacer
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeIngredientDisplay:CreateSpacer () (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:402)
+RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:82)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:188)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Updated ingredient display for recipe: 1x Aluminum Can + 1x Plastic Bottle
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:189)
+FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:146)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[3,84s] [UI] Configuration shown for FabricatorMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, string>:ShowConfiguration (CellData,System.Action`1<string>) (at Assets/Scripts/UI/BaseConfigPanel.cs:157)
+FabricatorMachine:OnConfigured () (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:52)
+MachineManager:OnCellClicked (int,int) (at Assets/Scripts/Game/MachineManager.cs:81)
+GameManager:OnCellClicked (int,int) (at Assets/Scripts/Game/GameManager.cs:223)
+UICell:OnPointerUp (UnityEngine.EventSystems.PointerEventData) (at Assets/Scripts/Grid/Cell/UICell.cs:404)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+Added Outline component to CancelButton.
+UnityEngine.Debug:Log (object)
+ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
+
+[4,81s] [UI] Using buttonPrefab for None option. buttonPrefab null? False
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:147)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Positioned button at index 1, y=-216, height=216
+[4,81s] [UI] Instantiated button 'SunkenButton_Instance_1_No Recipe' at index 1
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:184)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:171)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Added click listener to button for recipe: No Recipe
+[4,81s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:195)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:183)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Button prefab missing Text component for: No Recipe
+[4,81s] [UI] Positioned button at index 1, y=-216, height=216
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:197)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Added click listener to button for recipe: No Recipe
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:219)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Button prefab missing Text component for: No Recipe
 UnityEngine.Debug:LogWarning (object,UnityEngine.Object)
 LoggingManager:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:137)
 GameLogger:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:43)
 BaseSelectionPanel`1<RecipeDef>:SetButtonText (UnityEngine.GameObject,string) (at Assets/Scripts/UI/BaseSelectionPanel.cs:234)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:98)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Setup None option button with text: No Recipe
+[4,81s] [UI] Setup None option button with text: No Recipe
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:99)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Found 2 recipes for machine 'fabricator'
+[4,81s] [UI] Found 1 Image components in button hierarchy
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:252)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Keeping raycast enabled on Button's own Image: SunkenButton_Instance_1_No Recipe
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:260)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Completed disabling raycasts for button
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:291)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Found 2 recipes for machine 'fabricator'
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -67,287 +435,403 @@ RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+[4,81s] [UI] Using ingredientDisplayRow for recipe 'Reinforced Aluminum Plate'. ingredientDisplayRow null? False, prefab: IngredientDisplayRow
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:170)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:154)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Positioned button at index 2, y=-432, height=216
+[4,81s] [UI] Instantiated button 'IngredientDisplayRow_Instance_2_Reinforced Aluminum Plate' at index 2
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:184)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:171)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Added click listener to button for recipe: Reinforced Aluminum Plate
+[4,81s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:195)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:183)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Displaying recipe 'Reinforced Aluminum Plate' with 2 inputs using RecipeIngredientDisplay
+[4,81s] [UI] Positioned button at index 2, y=-432, height=216
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:197)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Added click listener to button for recipe: Reinforced Aluminum Plate
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:219)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Displaying recipe 'Reinforced Aluminum Plate' with 2 inputs using RecipeIngredientDisplay
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:128)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Cleared all ingredient displays
+[4,81s] [UI] Cleared all ingredient displays
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:ClearIngredients () (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:453)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:56)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Displaying recipe with 2 ingredient types
+[4,81s] [UI] Displaying recipe with 2 ingredient types
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:64)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created ingredient at index 0: 1x Aluminum Plate
+[4,81s] [UI] Created ingredient at index 0: 1x Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateIngredientWithManualLayout (RecipeItemDef,int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:230)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:106)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created ingredient at index 1: 5x Granulated Plastic
+[4,81s] [UI] Created ingredient at index 1: 5x Granulated Plastic
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateIngredientWithManualLayout (RecipeItemDef,int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:230)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:106)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created arrow at index 3
+[4,81s] [UI] Created arrow at index 3
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateArrowWithManualLayout (int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:277)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:113)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created ingredient at index 4: 1x Reinforced Aluminum Plate
+[4,81s] [UI] Created ingredient at index 4: 1x Reinforced Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateIngredientWithManualLayout (RecipeItemDef,int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:230)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:121)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Disabled raycast target on child Image: ItemIcon
+[4,81s] [UI] Found 5 Image components in button hierarchy
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:225)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:203)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:252)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+[4,81s] [UI] Keeping raycast enabled on Button's own Image: IngredientDisplayRow_Instance_2_Reinforced Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:170)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:260)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Positioned button at index 3, y=-648, height=216
+[4,81s] [UI] Disabled raycast target on child Image: ItemIcon (was True)
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:184)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:267)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Added click listener to button for recipe: Aluminum Plate
+[4,81s] [UI] Completed disabling raycasts for button
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:195)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:291)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Displaying recipe 'Aluminum Plate' with 2 inputs using RecipeIngredientDisplay
+[4,81s] [UI] Using ingredientDisplayRow for recipe 'Aluminum Plate'. ingredientDisplayRow null? False, prefab: IngredientDisplayRow
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:154)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Instantiated button 'IngredientDisplayRow_Instance_3_Aluminum Plate' at index 3
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:171)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:183)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Positioned button at index 3, y=-648, height=216
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:197)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Added click listener to button for recipe: Aluminum Plate
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:219)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Displaying recipe 'Aluminum Plate' with 2 inputs using RecipeIngredientDisplay
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:128)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Cleared all ingredient displays
+[4,81s] [UI] Cleared all ingredient displays
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:ClearIngredients () (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:453)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:56)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Displaying recipe with 2 ingredient types
+[4,81s] [UI] Displaying recipe with 2 ingredient types
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:64)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created ingredient at index 0: 1x Aluminum Can
+[4,81s] [UI] Created ingredient at index 0: 1x Aluminum Can
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateIngredientWithManualLayout (RecipeItemDef,int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:230)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:106)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created ingredient at index 1: 1x Plastic Bottle
+[4,81s] [UI] Created ingredient at index 1: 1x Plastic Bottle
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateIngredientWithManualLayout (RecipeItemDef,int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:230)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:106)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created arrow at index 3
+[4,81s] [UI] Created arrow at index 3
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateArrowWithManualLayout (int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:277)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:113)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Created ingredient at index 4: 1x Aluminum Plate
+[4,81s] [UI] Created ingredient at index 4: 1x Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeIngredientDisplay:CreateIngredientWithManualLayout (RecipeItemDef,int,single) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:230)
 RecipeIngredientDisplay:DisplayRecipe (RecipeDef) (at Assets/Scripts/UI/RecipeIngredientDisplay.cs:121)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:132)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Disabled raycast target on child Image: ItemIcon
+[4,81s] [UI] Found 5 Image components in button hierarchy
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:225)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:203)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:252)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Populated RecipeSelectionPanel with 2 items
+[4,81s] [UI] Keeping raycast enabled on Button's own Image: IngredientDisplayRow_Instance_3_Aluminum Plate
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:260)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Disabled raycast target on child Image: ItemIcon (was True)
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:267)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Completed disabling raycasts for button
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:291)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[4,81s] [UI] Populated RecipeSelectionPanel with 2 items
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -357,7 +841,7 @@ RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[5,57s] [UI] Selection panel shown for RecipeSelectionPanel
+[4,81s] [UI] Selection panel shown for RecipeSelectionPanel
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -366,20 +850,20 @@ RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-Added Outline component to SunkenButton(Clone).
+Added Outline component to SunkenButton_Instance_1_No Recipe.
 UnityEngine.Debug:Log (object)
 ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
 
-[25,30s] [UI] Selected recipe: ''
+[10,66s] [UI] Selected recipe: ''
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:94)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[25,30s] [UI] Cleared all ingredient displays
+[10,66s] [UI] Cleared all ingredient displays
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -388,85 +872,143 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[25,30s] [UI] Item selected in RecipeSelectionPanel: Unknown Recipe
+[10,66s] [UI] Item selected in RecipeSelectionPanel: Unknown Recipe
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:195)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[25,30s] [UI] Selection panel hidden for RecipeSelectionPanel
+[10,66s] [UI] Selection panel hidden for RecipeSelectionPanel
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 BaseSelectionPanel`1<RecipeDef>:HidePanel () (at Assets/Scripts/UI/BaseSelectionPanel.cs:60)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:198)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+[11,56s] [UI] Using buttonPrefab for None option. buttonPrefab null? False
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:170)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:147)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Positioned button at index 3, y=-648, height=216
+[11,56s] [UI] Instantiated button 'SunkenButton_Instance_3_No Recipe' at index 3
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:184)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:171)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Added click listener to button for recipe: No Recipe
+[11,56s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:195)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:183)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Button prefab missing Text component for: No Recipe
+[11,56s] [UI] Positioned button at index 3, y=-648, height=216
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:197)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Added click listener to button for recipe: No Recipe
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:219)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Button prefab missing Text component for: No Recipe
 UnityEngine.Debug:LogWarning (object,UnityEngine.Object)
 LoggingManager:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:137)
 GameLogger:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:43)
 BaseSelectionPanel`1<RecipeDef>:SetButtonText (UnityEngine.GameObject,string) (at Assets/Scripts/UI/BaseSelectionPanel.cs:234)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:98)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Setup None option button with text: No Recipe
+[11,56s] [UI] Setup None option button with text: No Recipe
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:99)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Found 2 recipes for machine 'fabricator'
+[11,56s] [UI] Found 1 Image components in button hierarchy
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:252)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Keeping raycast enabled on Button's own Image: SunkenButton_Instance_3_No Recipe
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:260)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Completed disabling raycasts for button
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:291)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:92)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Found 2 recipes for machine 'fabricator'
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -477,97 +1019,213 @@ RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+[11,56s] [UI] Using ingredientDisplayRow for recipe 'Reinforced Aluminum Plate'. ingredientDisplayRow null? True, prefab: SunkenButton
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:170)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:154)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Positioned button at index 4, y=-864, height=216
+[11,56s] [UI] Instantiated button 'SunkenButton_Instance_4_Reinforced Aluminum Plate' at index 4
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:184)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:171)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Added click listener to button for recipe: Reinforced Aluminum Plate
+[11,56s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:195)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:183)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] ingredientDisplayRow is null - cannot setup visuals
+[11,56s] [UI] Positioned button at index 4, y=-864, height=216
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:197)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Added click listener to button for recipe: Reinforced Aluminum Plate
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:219)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] ingredientDisplayRow is null - cannot setup visuals
 UnityEngine.Debug:LogWarning (object,UnityEngine.Object)
 LoggingManager:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:137)
 GameLogger:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:43)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:106)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+[11,56s] [UI] Found 1 Image components in button hierarchy
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:170)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:252)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Positioned button at index 5, y=-1080, height=216
+[11,56s] [UI] Keeping raycast enabled on Button's own Image: SunkenButton_Instance_4_Reinforced Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:184)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:260)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Added click listener to button for recipe: Aluminum Plate
+[11,56s] [UI] Completed disabling raycasts for button
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:195)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:291)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] ingredientDisplayRow is null - cannot setup visuals
+[11,56s] [UI] Using ingredientDisplayRow for recipe 'Aluminum Plate'. ingredientDisplayRow null? True, prefab: SunkenButton
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:154)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Instantiated button 'SunkenButton_Instance_5_Aluminum Plate' at index 5
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:171)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Calculated buttonHeight = 216 from parentWidth = 1080
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:183)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Positioned button at index 5, y=-1080, height=216
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:197)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Added click listener to button for recipe: Aluminum Plate
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:219)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] ingredientDisplayRow is null - cannot setup visuals
 UnityEngine.Debug:LogWarning (object,UnityEngine.Object)
 LoggingManager:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:137)
 GameLogger:LogWarning (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:43)
 RecipeSelectionPanel:SetupButtonVisuals (UnityEngine.GameObject,RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:106)
-RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:199)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:223)
 BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
 BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
 RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Populated RecipeSelectionPanel with 2 items
+[11,56s] [UI] Found 1 Image components in button hierarchy
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:252)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Keeping raycast enabled on Button's own Image: SunkenButton_Instance_5_Aluminum Plate
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:260)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Completed disabling raycasts for button
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+RecipeSelectionPanel:DisableChildRaycastTargets (UnityEngine.GameObject) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:291)
+RecipeSelectionPanel:CreateSelectionButton (RecipeDef,string) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:227)
+BaseSelectionPanel`1<RecipeDef>:PopulateButtons () (at Assets/Scripts/UI/BaseSelectionPanel.cs:102)
+BaseSelectionPanel`1<RecipeDef>:ShowPanel (System.Action`1<RecipeDef>) (at Assets/Scripts/UI/BaseSelectionPanel.cs:43)
+RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/Scripts/UI/RecipeSelectionPanel.cs:46)
+FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[11,56s] [UI] Populated RecipeSelectionPanel with 2 items
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -577,7 +1235,7 @@ RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[27,16s] [UI] Selection panel shown for RecipeSelectionPanel
+[11,56s] [UI] Selection panel shown for RecipeSelectionPanel
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -586,28 +1244,28 @@ RecipeSelectionPanel:ShowPanel (CellData,System.Action`1<RecipeDef>) (at Assets/
 FabricatorMachineConfigPanel:ShowRecipeSelection () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:78)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-Added Outline component to SunkenButton(Clone).
+Added Outline component to SunkenButton_Instance_3_No Recipe.
 UnityEngine.Debug:Log (object)
 ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
 
-Added Outline component to SunkenButton(Clone).
+Added Outline component to SunkenButton_Instance_4_Reinforced Aluminum Plate.
 UnityEngine.Debug:Log (object)
 ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
 
-Added Outline component to SunkenButton(Clone).
+Added Outline component to SunkenButton_Instance_5_Aluminum Plate.
 UnityEngine.Debug:Log (object)
 ButtonHoverOutline:Start () (at Assets/Scripts/UI/ButtonHoverOutline.cs:42)
 
-[28,45s] [UI] Selected recipe: 'fabricator_aluminumPlate:1,granulatedPlastic:5_reinforcedAluminumPlate:1'
+[12,86s] [UI] Selected recipe: 'fabricator_aluminumPlate:1,granulatedPlastic:5_reinforcedAluminumPlate:1'
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:94)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Cleared all ingredient displays
+[12,86s] [UI] Cleared all ingredient displays
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -617,10 +1275,10 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Displaying recipe with 2 ingredient types
+[12,86s] [UI] Displaying recipe with 2 ingredient types
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -629,10 +1287,10 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Set icon sprite for Aluminum Plate
+[12,86s] [UI] Set icon sprite for Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -643,10 +1301,10 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Created ingredient icon: Aluminum Plate
+[12,86s] [UI] Created ingredient icon: Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -657,10 +1315,10 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Set icon sprite for Granulated Plastic
+[12,86s] [UI] Set icon sprite for Granulated Plastic
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -671,10 +1329,10 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Created ingredient icon: 5x Granulated Plastic
+[12,86s] [UI] Created ingredient icon: 5x Granulated Plastic
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -685,10 +1343,10 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Created spacer
+[12,86s] [UI] Created spacer
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -698,10 +1356,10 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Updated ingredient display for recipe: 1x Aluminum Plate + 5x Granulated Plastic
+[12,86s] [UI] Updated ingredient display for recipe: 1x Aluminum Plate + 5x Granulated Plastic
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
@@ -709,23 +1367,105 @@ FabricatorMachineConfigPanel:UpdateIngredientDisplay () (at Assets/Scripts/UI/Fa
 FabricatorMachineConfigPanel:UpdateUIFromCurrentState () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:51)
 FabricatorMachineConfigPanel:OnRecipeSelected (RecipeDef) (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:97)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:190)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Item selected in RecipeSelectionPanel: Reinforced Aluminum Plate
+[12,86s] [UI] Item selected in RecipeSelectionPanel: Reinforced Aluminum Plate
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:195)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
-[28,45s] [UI] Selection panel hidden for RecipeSelectionPanel
+[12,86s] [UI] Selection panel hidden for RecipeSelectionPanel
 UnityEngine.Debug:Log (object,UnityEngine.Object)
 LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
 GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
 BaseSelectionPanel`1<RecipeDef>:HidePanel () (at Assets/Scripts/UI/BaseSelectionPanel.cs:60)
 BaseSelectionPanel`1<RecipeDef>:OnItemSelected (RecipeDef) (at Assets/Scripts/UI/BaseSelectionPanel.cs:198)
-RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:193)
+RecipeSelectionPanel/<>c__DisplayClass7_0:<CreateSelectionButton>b__0 () (at Assets/Scripts/UI/RecipeSelectionPanel.cs:217)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [UI] Configuration confirmed for SortingMachineConfigPanel: (, )
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:215)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [UI] Selection panel hidden for ItemSelectionPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseSelectionPanel`1<ItemDef>:HidePanel () (at Assets/Scripts/UI/BaseSelectionPanel.cs:60)
+SortingMachineConfigPanel:HideSelectionPanels () (at Assets/Scripts/UI/SortingMachineConfigPanel.cs:98)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:HideConfiguration () (at Assets/Scripts/UI/BaseConfigPanel.cs:186)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:218)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [UI] Configuration hidden for SortingMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:HideConfiguration () (at Assets/Scripts/UI/BaseConfigPanel.cs:195)
+BaseConfigPanel`2<CellData, System.Tuple`2<string, string>>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:218)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [MACHINE] Refreshed building icon sprite to 'reinforcedAluminumPlate' for machine at (3, 5)
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+GameLogger:LogMachine (string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:164)
+MachineRenderer:RefreshBuildingIconSprite (UnityEngine.GameObject) (at Assets/Scripts/Machines/MachineRenderer.cs:896)
+MachineRenderer:RefreshConfigurationSprites () (at Assets/Scripts/Machines/MachineRenderer.cs:838)
+BaseMachine:RefreshConfigurationVisuals () (at Assets/Scripts/Backend/BaseMachine.cs:86)
+FabricatorMachine:OnConfigurationConfirmed (string) (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:80)
+BaseConfigPanel`2<CellData, string>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:210)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [MACHINE] Refreshed configuration sprites for machine at (3, 5)
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+GameLogger:LogMachine (string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:164)
+MachineRenderer:RefreshConfigurationSprites () (at Assets/Scripts/Machines/MachineRenderer.cs:840)
+BaseMachine:RefreshConfigurationVisuals () (at Assets/Scripts/Backend/BaseMachine.cs:86)
+FabricatorMachine:OnConfigurationConfirmed (string) (at Assets/Scripts/Backend/MachineTypes/FabricatorMachine.cs:80)
+BaseConfigPanel`2<CellData, string>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:210)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [UI] Configuration confirmed for FabricatorMachineConfigPanel: fabricator_aluminumPlate:1,granulatedPlastic:5_reinforcedAluminumPlate:1
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, string>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:215)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [UI] Unregistered panel: FabricatorMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+UIPanelManager:UnregisterPanel (UnityEngine.MonoBehaviour) (at Assets/Scripts/Game/UIPanelManager.cs:122)
+BaseConfigPanel`2<CellData, string>:HideConfiguration () (at Assets/Scripts/UI/BaseConfigPanel.cs:169)
+BaseConfigPanel`2<CellData, string>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:218)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [UI] Selection panel hidden for RecipeSelectionPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseSelectionPanel`1<RecipeDef>:HidePanel () (at Assets/Scripts/UI/BaseSelectionPanel.cs:60)
+FabricatorMachineConfigPanel:HideSelectionPanels () (at Assets/Scripts/UI/FabricatorMachineConfigPanel.cs:68)
+BaseConfigPanel`2<CellData, string>:HideConfiguration () (at Assets/Scripts/UI/BaseConfigPanel.cs:186)
+BaseConfigPanel`2<CellData, string>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:218)
+UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
+
+[15,28s] [UI] Configuration hidden for FabricatorMachineConfigPanel
+UnityEngine.Debug:Log (object,UnityEngine.Object)
+LoggingManager:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/LoggingManager.cs:120)
+GameLogger:Log (LoggingManager/LogCategory,string,string,UnityEngine.Object) (at Assets/Scripts/Debug/GameLogger.cs:23)
+BaseConfigPanel`2<CellData, string>:HideConfiguration () (at Assets/Scripts/UI/BaseConfigPanel.cs:195)
+BaseConfigPanel`2<CellData, string>:OnConfirmClicked () (at Assets/Scripts/UI/BaseConfigPanel.cs:218)
 UnityEngine.EventSystems.EventSystem:Update () (at ./Library/PackageCache/com.unity.ugui@f33505fcd0e6/Runtime/UGUI/EventSystem/EventSystem.cs:514)
 
