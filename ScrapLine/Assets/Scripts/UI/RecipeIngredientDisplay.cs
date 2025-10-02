@@ -244,7 +244,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
                 countText.text = $"{ingredient.count} x";
 
                 // Disable text wrapping to keep "1 x" on one line
-                countText.enableWordWrapping = false;
+                countText.textWrappingMode = TextWrappingModes.NoWrap;
                 countText.overflowMode = TextOverflowModes.Overflow;
 
                 GameLogger.Log(LoggingManager.LogCategory.UI,
@@ -425,7 +425,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
                 iconText.text = $"{count} x";
 
                 // Disable text wrapping to keep "1 x" on one line
-                iconText.enableWordWrapping = false;
+                iconText.textWrappingMode = TextWrappingModes.NoWrap;
                 iconText.overflowMode = TextOverflowModes.Overflow;
             }
         }
