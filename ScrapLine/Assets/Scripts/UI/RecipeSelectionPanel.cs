@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 /// <summary>
 /// Selection panel for recipes (used by fabricator machines).
@@ -9,11 +11,16 @@ using System.Collections.Generic;
 /// 1. Create UI Panel with Grid Layout Group  
 /// 2. Add this component to the panel
 /// 3. Assign selectionPanel, buttonContainer
-/// 4. Create a RecipeIngredientDisplay prefab and assign to ingredientDisplayRow
-/// 5. The prefab should have a Button component to make it clickable
+/// 4. Assign buttonPrefab (simple clickable button - used for ALL rows)
+/// 5. Create a RecipeIngredientDisplay prefab and assign to ingredientDisplayRow (visual display only, no Button needed)
 /// 
-/// NOTE: This now uses the same RecipeIngredientDisplay pattern as FabricatorMachineConfigPanel
-/// for consistency. Each recipe gets its own RecipeIngredientDisplay instance.
+/// ARCHITECTURE:
+/// - buttonPrefab is used as the clickable background for ALL buttons (None and recipes)
+/// - For recipes: ingredientDisplayRow is instantiated as a child ON TOP of the button, with all raycasts disabled
+/// - This allows the recipe visuals to display while clicks pass through to the button underneath
+/// 
+/// NOTE: The ingredientDisplayRow should NOT have a Button component - it's purely for visual display.
+/// All clicking is handled by the buttonPrefab underneath.
 /// </summary>
 public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 {
@@ -25,6 +32,76 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     public RecipeIngredientDisplay ingredientDisplayRow;
 
     private CellData contextCellData; // Used to determine machine type
+    
+    // Static dictionary to preserve references across Unity serialization cycles
+    // Unity's serialization can lose derived class fields, so we store them statically
+    private static Dictionary<int, RecipeIngredientDisplay> staticPrefabCache = new Dictionary<int, RecipeIngredientDisplay>();
+    
+    /// <summary>
+    /// Get ingredientDisplayRow with fallback to static cache
+    /// Unity serialization sometimes loses this reference, so we maintain it statically
+    /// </summary>
+    private RecipeIngredientDisplay GetIngredientDisplayRow()
+    {
+        int instanceId = GetInstanceID();
+        
+        // If current reference is valid, cache it and return it
+        if (ingredientDisplayRow != null)
+        {
+            if (!staticPrefabCache.ContainsKey(instanceId) || staticPrefabCache[instanceId] != ingredientDisplayRow)
+            {
+                staticPrefabCache[instanceId] = ingredientDisplayRow;
+                GameLogger.Log(LoggingManager.LogCategory.UI,
+                    $"Cached ingredientDisplayRow in static dictionary: {ingredientDisplayRow.name}", ComponentId);
+            }
+            return ingredientDisplayRow;
+        }
+        
+        // If reference is null but we have it in cache, restore and return it
+        if (staticPrefabCache.ContainsKey(instanceId) && staticPrefabCache[instanceId] != null)
+        {
+            ingredientDisplayRow = staticPrefabCache[instanceId];
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                $"Restored ingredientDisplayRow from static cache: {ingredientDisplayRow.name}", ComponentId);
+            return ingredientDisplayRow;
+        }
+        
+        // Both null - this is a problem
+        GameLogger.LogError(LoggingManager.LogCategory.UI,
+            "GetIngredientDisplayRow: Both current and cached references are NULL!", ComponentId);
+        return null;
+    }
+    
+    /// <summary>
+    /// Cache the ingredientDisplayRow reference early to prevent Unity serialization issues
+    /// </summary>
+    private void Awake()
+    {
+        // Ensure reference is cached in static dictionary
+        var prefab = GetIngredientDisplayRow();
+        if (prefab != null)
+        {
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Awake: ingredientDisplayRow cached: {prefab.name}", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                "Awake: ingredientDisplayRow is null - check Unity inspector assignment!", ComponentId);
+        }
+    }
+    
+    /// <summary>
+    /// Ensure cache is valid whenever enabled
+    /// </summary>
+    private void OnEnable()
+    {
+        // Restore reference if needed
+        var prefab = GetIngredientDisplayRow();
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"OnEnable: ingredientDisplayRow={(prefab != null ? prefab.name : "NULL")}", ComponentId);
+    }
 
     /// <summary>
     /// Show the recipe selection panel for a specific machine
@@ -88,8 +165,10 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     {
         if (recipe == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                "Recipe is null - cannot setup visuals", ComponentId);
+            // None option - just set the text on the button
+            SetButtonText(buttonObj, displayName);
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Setup None option button with text: {displayName}", ComponentId);
             return;
         }
 
@@ -124,21 +203,201 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         displayComponent.DisplayRecipe(recipe);
     }
     
+    private int currentButtonIndex = 0; // Track button index across multiple CreateSelectionButton calls
+    
     /// <summary>
-    /// Override to use ingredientDisplayRow prefab's GameObject if assigned, otherwise use buttonPrefab
+    /// Override PopulateButtons to reset button index counter before creating buttons
     /// </summary>
-    protected override GameObject GetButtonPrefabToUse()
+    protected override void PopulateButtons()
     {
-        // If user assigned the RecipeIngredientDisplay prefab, use its GameObject as the button
-        if (ingredientDisplayRow != null)
+        // Get reference (with fallback to static cache)
+        var prefab = GetIngredientDisplayRow();
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"PopulateButtons START: machineId='{machineId}', ingredientDisplayRow={(prefab != null ? prefab.name : "NULL")}", ComponentId);
+        
+        // Reset button index counter before populating
+        currentButtonIndex = 0;
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"PopulateButtons END: About to call base.PopulateButtons()", ComponentId);
+        
+        // Call base implementation which will call CreateSelectionButton for each item
+        base.PopulateButtons();
+    }
+    
+    /// <summary>
+    /// Override to create selection buttons with proper prefab based on whether it's the "None" option
+    /// For recipes: Create a buttonPrefab as clickable background, then add ingredientDisplayRow on top with raycasts disabled
+    /// </summary>
+    protected override void CreateSelectionButton(RecipeDef item, string displayName)
+    {
+        if (buttonContainer == null || buttonPrefab == null)
         {
-            return ingredientDisplayRow.gameObject;
+            GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                $"Cannot create button - buttonContainer null? {buttonContainer == null}, buttonPrefab null? {buttonPrefab == null}", ComponentId);
+            return;
+        }
+
+        // Use tracked index instead of childCount (which includes old buttons marked for destruction)
+        int buttonIndex = currentButtonIndex++;
+        
+        // ALWAYS create buttonPrefab as the clickable button background
+        GameObject buttonObj = Instantiate(buttonPrefab, buttonContainer);
+        buttonObj.name = $"Button_{buttonIndex}_{displayName}";
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Created button background '{buttonObj.name}' at index {buttonIndex}", ComponentId);
+        
+        // Manually position the button/row to avoid LayoutGroup issues
+        RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            // Calculate height: parent width / 5 (same as RecipeIngredientDisplay does)
+            RectTransform containerRect = buttonContainer as RectTransform;
+            float parentWidth = containerRect != null ? containerRect.rect.width : 500f;
+            float buttonHeight = parentWidth / 5f;
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Calculated buttonHeight = {buttonHeight} from parentWidth = {parentWidth}", ComponentId);
+            
+            // Set anchors to top-left FIRST
+            rectTransform.anchorMin = new Vector2(0, 1);
+            rectTransform.anchorMax = new Vector2(1, 1); // Stretch horizontally
+            rectTransform.pivot = new Vector2(0.5f, 1);
+            
+            // Set the height explicitly
+            rectTransform.sizeDelta = new Vector2(0, buttonHeight);
+            
+            // Position from top, each row below the previous
+            rectTransform.anchoredPosition = new Vector2(0, -buttonIndex * buttonHeight);
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Positioned button at index {buttonIndex}, y={-buttonIndex * buttonHeight}, height={buttonHeight}", ComponentId);
         }
         
-        // Otherwise fallback to standard buttonPrefab
-        return buttonPrefab;
+        Button button = buttonObj.GetComponent<Button>();
+        
+        if (button != null)
+        {
+            // Set up button click listener
+            button.onClick.AddListener(() => OnItemSelected(item));
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Added click listener to button for recipe: {displayName}", ComponentId);
+            
+            // For recipes (not None option), add ingredientDisplayRow on top
+            var displayRowPrefab = GetIngredientDisplayRow();
+            if (item != null && displayRowPrefab != null)
+            {
+                GameLogger.Log(LoggingManager.LogCategory.UI, 
+                    $"Creating RecipeDisplay for '{displayName}' - using prefab: {displayRowPrefab.name}", ComponentId);
+                
+                // Create ingredientDisplayRow as a child of the button (on top, non-blocking)
+                GameObject displayObj = Instantiate(displayRowPrefab.gameObject, buttonObj.transform);
+                displayObj.name = "RecipeDisplay";
+                
+                // Set the RectTransform FIRST so DisplayRecipe can calculate sizes correctly
+                RectTransform displayRect = displayObj.GetComponent<RectTransform>();
+                RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
+                if (displayRect != null && buttonRect != null)
+                {
+                    // Set anchors to stretch in both directions
+                    displayRect.anchorMin = Vector2.zero;
+                    displayRect.anchorMax = Vector2.one;
+                    displayRect.pivot = new Vector2(0.5f, 0.5f);
+                    
+                    // Set sizeDelta to match button size so DisplayRecipe can calculate widths correctly
+                    displayRect.sizeDelta = buttonRect.sizeDelta;
+                    displayRect.anchoredPosition = Vector2.zero;
+                    
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"RecipeDisplay rect BEFORE DisplayRecipe: sizeDelta={displayRect.sizeDelta}, button sizeDelta={buttonRect.sizeDelta}", ComponentId);
+                }
+                
+                // NOW call DisplayRecipe with correct sizing
+                RecipeIngredientDisplay displayComponent = displayObj.GetComponent<RecipeIngredientDisplay>();
+                if (displayComponent != null)
+                {
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"Displaying recipe '{displayName}' with {item.inputItems?.Count ?? 0} inputs", ComponentId);
+                    displayComponent.DisplayRecipe(item);
+                }
+                else
+                {
+                    GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                        $"No RecipeIngredientDisplay component found on ingredientDisplayRow!", ComponentId);
+                }
+                
+                // FINALLY reset to anchor-based sizing
+                if (displayRect != null)
+                {
+                    // Force offsets to 0 to fill parent completely
+                    displayRect.offsetMin = Vector2.zero;  // Left and Bottom
+                    displayRect.offsetMax = Vector2.zero;  // Right and Top
+                    displayRect.sizeDelta = Vector2.zero; // Size controlled by anchors
+                    
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"RecipeDisplay rect AFTER reset: offsetMin={displayRect.offsetMin}, offsetMax={displayRect.offsetMax}, sizeDelta={displayRect.sizeDelta}", ComponentId);
+                }
+                
+                // Disable ALL raycasts on the display so clicks pass through to button
+                DisableAllRaycastsRecursive(displayObj);
+            }
+            else
+            {
+                GameLogger.Log(LoggingManager.LogCategory.UI, 
+                    $"Skipping RecipeDisplay - item null? {item == null}, displayRowPrefab null? {displayRowPrefab == null}", ComponentId);
+                
+                // None option - just set button text
+                SetupButtonVisuals(buttonObj, item, displayName);
+            }
+        }
+        else
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                $"{GetType().Name}: buttonPrefab missing Button component!", ComponentId);
+        }
     }
-
+    
+    /// <summary>
+    /// Disable ALL raycasts recursively on a GameObject and all its children
+    /// This makes the entire hierarchy transparent to clicks
+    /// </summary>
+    private void DisableAllRaycastsRecursive(GameObject obj)
+    {
+        if (obj == null) return;
+        
+        // Disable raycasts on all UI components
+        var images = obj.GetComponentsInChildren<UnityEngine.UI.Image>();
+        foreach (var img in images)
+        {
+            img.raycastTarget = false;
+        }
+        
+        var texts = obj.GetComponentsInChildren<UnityEngine.UI.Text>();
+        foreach (var txt in texts)
+        {
+            txt.raycastTarget = false;
+        }
+        
+        var tmps = obj.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+        foreach (var tmp in tmps)
+        {
+            tmp.raycastTarget = false;
+        }
+        
+        // Also disable any CanvasGroup to be safe
+        var canvasGroups = obj.GetComponentsInChildren<CanvasGroup>();
+        foreach (var cg in canvasGroups)
+        {
+            cg.blocksRaycasts = false;
+        }
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Disabled all raycasts on '{obj.name}': {images.Length} Images, {texts.Length} Texts, {tmps.Length} TMPs, {canvasGroups.Length} CanvasGroups", ComponentId);
+    }
+    
     protected override string GetNoneDisplayName()
     {
         return "No Recipe";
