@@ -224,7 +224,11 @@ public class RecipeIngredientDisplay : MonoBehaviour
         if (countText != null)
         {
             countText.fontSize = fontSize;
-            countText.text = $"{ingredient.count}x";
+            countText.text = $"{ingredient.count} x";
+            
+            // Disable text wrapping to keep "1 x" on one line
+            countText.enableWordWrapping = false;
+            countText.overflowMode = TextOverflowModes.Overflow;
         }
         
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Created ingredient at index {index}: {ingredient.count}x {itemDef.displayName ?? ingredient.item}", ComponentId);
@@ -354,16 +358,12 @@ public class RecipeIngredientDisplay : MonoBehaviour
             }
             else
             {
-                // Horizontal layout - original behavior
-                if (count > 1)
-                {
-                    iconText.text = $"{count}x";
-                }
-                else
-                {
-                    // For single items, we might not want to show text or show item name
-                    iconText.text = ""; // Clean look with just icons
-                }
+                // Horizontal layout - show count with space to prevent wrapping
+                iconText.text = $"{count} x";
+                
+                // Disable text wrapping to keep "1 x" on one line
+                iconText.enableWordWrapping = false;
+                iconText.overflowMode = TextOverflowModes.Overflow;
             }
         }
 
