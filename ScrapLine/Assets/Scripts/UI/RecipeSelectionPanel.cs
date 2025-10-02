@@ -210,11 +210,28 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             // For recipes (not None option), add ingredientDisplayRow on top
             if (item != null && ingredientDisplayRow != null)
             {
+                GameLogger.Log(LoggingManager.LogCategory.UI, 
+                    $"Creating RecipeDisplay for '{displayName}' - ingredientDisplayRow: {ingredientDisplayRow?.name ?? "NULL"}", ComponentId);
+                
                 // Create ingredientDisplayRow as a child of the button (on top, non-blocking)
                 GameObject displayObj = Instantiate(ingredientDisplayRow.gameObject, buttonObj.transform);
                 displayObj.name = "RecipeDisplay";
                 
-                // Make it fill the button area perfectly
+                // Get RecipeIngredientDisplay component and display the recipe FIRST
+                RecipeIngredientDisplay displayComponent = displayObj.GetComponent<RecipeIngredientDisplay>();
+                if (displayComponent != null)
+                {
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"Displaying recipe '{displayName}' with {item.inputItems?.Count ?? 0} inputs", ComponentId);
+                    displayComponent.DisplayRecipe(item);
+                }
+                else
+                {
+                    GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                        $"No RecipeIngredientDisplay component found on ingredientDisplayRow!", ComponentId);
+                }
+                
+                // NOW set the RectTransform AFTER DisplayRecipe (which might modify container sizes)
                 RectTransform displayRect = displayObj.GetComponent<RectTransform>();
                 if (displayRect != null)
                 {
@@ -230,28 +247,17 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
                     displayRect.sizeDelta = Vector2.zero; // Size controlled by anchors
                     
                     GameLogger.Log(LoggingManager.LogCategory.UI, 
-                        $"RecipeDisplay rect: offsetMin={displayRect.offsetMin}, offsetMax={displayRect.offsetMax}", ComponentId);
+                        $"RecipeDisplay rect AFTER reset: offsetMin={displayRect.offsetMin}, offsetMax={displayRect.offsetMax}, sizeDelta={displayRect.sizeDelta}", ComponentId);
                 }
                 
                 // Disable ALL raycasts on the display so clicks pass through to button
                 DisableAllRaycastsRecursive(displayObj);
-                
-                // Get RecipeIngredientDisplay component and display the recipe
-                RecipeIngredientDisplay displayComponent = displayObj.GetComponent<RecipeIngredientDisplay>();
-                if (displayComponent != null)
-                {
-                    GameLogger.Log(LoggingManager.LogCategory.UI, 
-                        $"Displaying recipe '{displayName}' with {item.inputItems?.Count ?? 0} inputs", ComponentId);
-                    displayComponent.DisplayRecipe(item);
-                }
-                else
-                {
-                    GameLogger.LogError(LoggingManager.LogCategory.UI, 
-                        $"No RecipeIngredientDisplay component found on ingredientDisplayRow!", ComponentId);
-                }
             }
             else
             {
+                GameLogger.Log(LoggingManager.LogCategory.UI, 
+                    $"Skipping RecipeDisplay - item null? {item == null}, ingredientDisplayRow null? {ingredientDisplayRow == null}", ComponentId);
+                
                 // None option - just set button text
                 SetupButtonVisuals(buttonObj, item, displayName);
             }
