@@ -32,19 +32,57 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     public RecipeIngredientDisplay ingredientDisplayRow;
 
     private CellData contextCellData; // Used to determine machine type
-    private RecipeIngredientDisplay cachedIngredientDisplayRow; // Cache to prevent null reference issues
+    
+    // Static dictionary to preserve references across Unity serialization cycles
+    // Unity's serialization can lose derived class fields, so we store them statically
+    private static Dictionary<int, RecipeIngredientDisplay> staticPrefabCache = new Dictionary<int, RecipeIngredientDisplay>();
+    
+    /// <summary>
+    /// Get ingredientDisplayRow with fallback to static cache
+    /// Unity serialization sometimes loses this reference, so we maintain it statically
+    /// </summary>
+    private RecipeIngredientDisplay GetIngredientDisplayRow()
+    {
+        int instanceId = GetInstanceID();
+        
+        // If current reference is valid, cache it and return it
+        if (ingredientDisplayRow != null)
+        {
+            if (!staticPrefabCache.ContainsKey(instanceId) || staticPrefabCache[instanceId] != ingredientDisplayRow)
+            {
+                staticPrefabCache[instanceId] = ingredientDisplayRow;
+                GameLogger.Log(LoggingManager.LogCategory.UI,
+                    $"Cached ingredientDisplayRow in static dictionary: {ingredientDisplayRow.name}", ComponentId);
+            }
+            return ingredientDisplayRow;
+        }
+        
+        // If reference is null but we have it in cache, restore and return it
+        if (staticPrefabCache.ContainsKey(instanceId) && staticPrefabCache[instanceId] != null)
+        {
+            ingredientDisplayRow = staticPrefabCache[instanceId];
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                $"Restored ingredientDisplayRow from static cache: {ingredientDisplayRow.name}", ComponentId);
+            return ingredientDisplayRow;
+        }
+        
+        // Both null - this is a problem
+        GameLogger.LogError(LoggingManager.LogCategory.UI,
+            "GetIngredientDisplayRow: Both current and cached references are NULL!", ComponentId);
+        return null;
+    }
     
     /// <summary>
     /// Cache the ingredientDisplayRow reference early to prevent Unity serialization issues
     /// </summary>
     private void Awake()
     {
-        // Cache the reference as soon as component wakes up
-        if (ingredientDisplayRow != null)
+        // Ensure reference is cached in static dictionary
+        var prefab = GetIngredientDisplayRow();
+        if (prefab != null)
         {
-            cachedIngredientDisplayRow = ingredientDisplayRow;
             GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Awake: Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
+                $"Awake: ingredientDisplayRow cached: {prefab.name}", ComponentId);
         }
         else
         {
@@ -58,25 +96,11 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     private void OnEnable()
     {
-        // Double-check cache whenever panel is enabled
-        if (cachedIngredientDisplayRow == null && ingredientDisplayRow != null)
-        {
-            cachedIngredientDisplayRow = ingredientDisplayRow;
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"OnEnable: Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
-        }
+        // Restore reference if needed
+        var prefab = GetIngredientDisplayRow();
         
-        // If original is null but cache exists, restore it
-        if (ingredientDisplayRow == null && cachedIngredientDisplayRow != null)
-        {
-            ingredientDisplayRow = cachedIngredientDisplayRow;
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                $"OnEnable: Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
-        }
-        
-        // Log current state
         GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"OnEnable: ingredientDisplayRow={(ingredientDisplayRow != null ? ingredientDisplayRow.name : "NULL")}, cache={(cachedIngredientDisplayRow != null ? cachedIngredientDisplayRow.name : "NULL")}", ComponentId);
+            $"OnEnable: ingredientDisplayRow={(prefab != null ? prefab.name : "NULL")}", ComponentId);
     }
 
     /// <summary>
@@ -186,31 +210,11 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     protected override void PopulateButtons()
     {
+        // Get reference (with fallback to static cache)
+        var prefab = GetIngredientDisplayRow();
+        
         GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"PopulateButtons START: machineId='{machineId}', ingredientDisplayRow={(ingredientDisplayRow != null ? ingredientDisplayRow.name : "NULL")}, cache={(cachedIngredientDisplayRow != null ? cachedIngredientDisplayRow.name : "NULL")}", ComponentId);
-        
-        // Cache ingredientDisplayRow reference if not already cached
-        if (cachedIngredientDisplayRow == null && ingredientDisplayRow != null)
-        {
-            cachedIngredientDisplayRow = ingredientDisplayRow;
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"PopulateButtons: Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
-        }
-        
-        // If original reference is null but we have cache, restore it
-        if (ingredientDisplayRow == null && cachedIngredientDisplayRow != null)
-        {
-            ingredientDisplayRow = cachedIngredientDisplayRow;
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                $"PopulateButtons: Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
-        }
-        
-        // If BOTH are null, this is a problem
-        if (ingredientDisplayRow == null && cachedIngredientDisplayRow == null)
-        {
-            GameLogger.LogError(LoggingManager.LogCategory.UI, 
-                "PopulateButtons: Both ingredientDisplayRow and cache are NULL! Check Unity inspector assignment.", ComponentId);
-        }
+            $"PopulateButtons START: machineId='{machineId}', ingredientDisplayRow={(prefab != null ? prefab.name : "NULL")}", ComponentId);
         
         // Reset button index counter before populating
         currentButtonIndex = 0;
@@ -283,13 +287,14 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
                 $"Added click listener to button for recipe: {displayName}", ComponentId);
             
             // For recipes (not None option), add ingredientDisplayRow on top
-            if (item != null && ingredientDisplayRow != null)
+            var displayRowPrefab = GetIngredientDisplayRow();
+            if (item != null && displayRowPrefab != null)
             {
                 GameLogger.Log(LoggingManager.LogCategory.UI, 
-                    $"Creating RecipeDisplay for '{displayName}' - ingredientDisplayRow: {ingredientDisplayRow?.name ?? "NULL"}", ComponentId);
+                    $"Creating RecipeDisplay for '{displayName}' - using prefab: {displayRowPrefab.name}", ComponentId);
                 
                 // Create ingredientDisplayRow as a child of the button (on top, non-blocking)
-                GameObject displayObj = Instantiate(ingredientDisplayRow.gameObject, buttonObj.transform);
+                GameObject displayObj = Instantiate(displayRowPrefab.gameObject, buttonObj.transform);
                 displayObj.name = "RecipeDisplay";
                 
                 // Set the RectTransform FIRST so DisplayRecipe can calculate sizes correctly
@@ -342,7 +347,7 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             else
             {
                 GameLogger.Log(LoggingManager.LogCategory.UI, 
-                    $"Skipping RecipeDisplay - item null? {item == null}, ingredientDisplayRow null? {ingredientDisplayRow == null}", ComponentId);
+                    $"Skipping RecipeDisplay - item null? {item == null}, displayRowPrefab null? {displayRowPrefab == null}", ComponentId);
                 
                 // None option - just set button text
                 SetupButtonVisuals(buttonObj, item, displayName);
