@@ -19,28 +19,28 @@ public class RecipeIngredientDisplay : MonoBehaviour
     [Header("Ingredient Display Configuration")]
     [Tooltip("Container with VerticalLayoutGroup or HorizontalLayoutGroup for ingredient items")]
     public Transform ingredientContainer;
-    
+
     [Tooltip("Prefab for each ingredient item (should have Image and TextMeshProUGUI components)")]
     public GameObject ingredientPrefab;
-    
+
     [Tooltip("Prefab for spacer (blank GameObject with fixed height)")]
     public GameObject spacerPrefab;
-    
+
     [Tooltip("Size for ingredient icons (default 32x32 for mobile touch)")]
     public Vector2 iconSize = new Vector2(32, 32);
-    
+
     [Tooltip("Font size for count text")]
     public float fontSize = 12f;
-    
+
     [Tooltip("Use vertical layout (for config panel) vs horizontal layout (for selection panel)")]
     public bool useVerticalLayout = false;
-    
+
     [Tooltip("Show arrow between ingredients and output")]
     public bool showArrow = false;
-    
+
     [Tooltip("Arrow sprite (optional)")]
     public Sprite arrowSprite;
-    
+
     [Tooltip("Arrow color (default: white)")]
     public Color arrowColor = Color.white;
 
@@ -54,7 +54,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
     {
         // Clear existing ingredients
         ClearIngredients();
-        
+
         if (recipe?.inputItems == null || recipe.inputItems.Count == 0)
         {
             GameLogger.Log(LoggingManager.LogCategory.UI, "Recipe has no input items to display", ComponentId);
@@ -71,13 +71,13 @@ public class RecipeIngredientDisplay : MonoBehaviour
             {
                 CreateSpacer();
             }
-            
+
             // Display each ingredient type
             foreach (var ingredient in recipe.inputItems)
             {
                 DisplayIngredient(ingredient);
             }
-            
+
             // Add bottom spacer
             CreateSpacer();
         }
@@ -91,34 +91,34 @@ public class RecipeIngredientDisplay : MonoBehaviour
                 GameLogger.LogError(LoggingManager.LogCategory.UI, "ingredientContainer is not a RectTransform", ComponentId);
                 return;
             }
-            
+
             float parentWidth = containerRect.rect.width;
             float itemSize = parentWidth / 5f;
-            
+
             // Set container height to match item size (square items)
             containerRect.sizeDelta = new Vector2(containerRect.sizeDelta.x, itemSize);
-            
+
             int itemIndex = 0;
-            
+
             // Display input ingredients (always at indices 0, 1, 2)
             foreach (var ingredient in recipe.inputItems)
             {
                 CreateIngredientWithManualLayout(ingredient, itemIndex, itemSize);
                 itemIndex++;
             }
-            
+
             // Add arrow at index 3 (right-aligned, always at same position)
             if (showArrow && arrowSprite != null)
             {
                 CreateArrowWithManualLayout(3, itemSize);
             }
-            
+
             // Display output items at index 4 (right-aligned, always at same position)
             if (recipe.outputItems != null && recipe.outputItems.Count > 0)
             {
                 foreach (var output in recipe.outputItems)
                 {
-                    CreateIngredientWithManualLayout(output, 4, itemSize);
+                    CreateIngredientWithManualLayout(output, 4, itemSize, false);
                 }
             }
         }
@@ -162,7 +162,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
     /// <summary>
     /// Create an ingredient item with manual positioning (no layout groups)
     /// </summary>
-    private void CreateIngredientWithManualLayout(RecipeItemDef ingredient, int index, float itemSize)
+    private void CreateIngredientWithManualLayout(RecipeItemDef ingredient, int index, float itemSize, bool showCount = true)
     {
         if (ingredient == null || ingredientContainer == null || ingredientPrefab == null)
             return;
@@ -183,7 +183,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
 
         // Always show count text (e.g., "1x", "2x", etc.)
         GameObject ingredientObj = Instantiate(ingredientPrefab, ingredientContainer);
-        
+
         // Set size and position manually
         RectTransform rectTransform = ingredientObj.GetComponent<RectTransform>();
         if (rectTransform != null)
@@ -192,23 +192,23 @@ public class RecipeIngredientDisplay : MonoBehaviour
             rectTransform.anchorMin = new Vector2(0, 1);
             rectTransform.anchorMax = new Vector2(0, 1);
             rectTransform.pivot = new Vector2(0, 1);
-            
+
             // Set size
             rectTransform.sizeDelta = new Vector2(itemSize, itemSize);
-            
+
             // Set position (index * itemSize from left, 0 from top)
             rectTransform.anchoredPosition = new Vector2(index * itemSize, 0);
         }
-        
+
         // Find and set icon image
         Transform itemIconTransform = ingredientObj.transform.Find("ItemIcon");
         Image iconImage = itemIconTransform != null ? itemIconTransform.GetComponent<Image>() : ingredientObj.GetComponentInChildren<Image>();
-        
+
         if (iconImage != null && itemSprite != null)
         {
             iconImage.sprite = itemSprite;
             iconImage.color = Color.white;
-            
+
             // Set icon size
             RectTransform iconRect = iconImage.GetComponent<RectTransform>();
             if (iconRect != null)
@@ -216,43 +216,51 @@ public class RecipeIngredientDisplay : MonoBehaviour
                 iconRect.sizeDelta = iconSize;
             }
         }
-        
+
+
         // Find and set count text
         Transform countTextTransform = ingredientObj.transform.Find("CountText");
         TextMeshProUGUI countText = null;
-        
+
         if (countTextTransform != null)
         {
             countText = countTextTransform.GetComponent<TextMeshProUGUI>();
         }
-        
+
         // Fallback: search all children if not found
         if (countText == null)
         {
             countText = ingredientObj.GetComponentInChildren<TextMeshProUGUI>();
         }
-        
+
         if (countText != null)
         {
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"BEFORE text set: countText.text='{countText.text}', setting to '{ingredient.count} x'", ComponentId);
-            
-            countText.fontSize = fontSize;
-            countText.text = $"{ingredient.count} x";
-            
-            // Disable text wrapping to keep "1 x" on one line
-            countText.enableWordWrapping = false;
-            countText.overflowMode = TextOverflowModes.Overflow;
-            
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"AFTER text set: countText.text='{countText.text}'", ComponentId);
+            if (showCount)
+            {
+                GameLogger.Log(LoggingManager.LogCategory.UI,
+                    $"BEFORE text set: countText.text='{countText.text}', setting to '{ingredient.count} x'", ComponentId);
+
+                countText.fontSize = fontSize;
+                countText.text = $"{ingredient.count} x";
+
+                // Disable text wrapping to keep "1 x" on one line
+                countText.enableWordWrapping = false;
+                countText.overflowMode = TextOverflowModes.Overflow;
+
+                GameLogger.Log(LoggingManager.LogCategory.UI,
+                    $"AFTER text set: countText.text='{countText.text}'", ComponentId);
+            }
+            else
+            {
+                countText.text = ""; // Clear text if not showing count
+            }
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
                 $"CountText component not found! countTextTransform={(countTextTransform != null ? "found" : "null")}", ComponentId);
         }
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Created ingredient at index {index}: {ingredient.count}x {itemDef.displayName ?? ingredient.item}", ComponentId);
     }
 
@@ -265,7 +273,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
             return;
 
         GameObject arrowObj = Instantiate(ingredientPrefab, ingredientContainer);
-        
+
         // Set size and position manually
         RectTransform rectTransform = arrowObj.GetComponent<RectTransform>();
         if (rectTransform != null)
@@ -274,32 +282,32 @@ public class RecipeIngredientDisplay : MonoBehaviour
             rectTransform.anchorMin = new Vector2(0, 1);
             rectTransform.anchorMax = new Vector2(0, 1);
             rectTransform.pivot = new Vector2(0, 1);
-            
+
             // Set size
             rectTransform.sizeDelta = new Vector2(itemSize, itemSize);
-            
+
             // Set position
             rectTransform.anchoredPosition = new Vector2(index * itemSize, 0);
         }
-        
+
         // Set arrow image with specified color
         Image arrowImage = arrowObj.GetComponent<Image>();
         if (arrowImage == null)
             arrowImage = arrowObj.GetComponentInChildren<Image>();
-        
+
         if (arrowImage != null)
         {
             arrowImage.sprite = arrowSprite;
             arrowImage.color = arrowColor;  // Use the specified arrow color
         }
-        
+
         // Hide text for arrow
         TextMeshProUGUI text = arrowObj.GetComponentInChildren<TextMeshProUGUI>();
         if (text != null)
         {
             text.text = "";
         }
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Created arrow at index {index}", ComponentId);
     }
 
@@ -312,11 +320,11 @@ public class RecipeIngredientDisplay : MonoBehaviour
     private void CreateIngredientIcon(Sprite sprite, string itemName, int count)
     {
         GameObject ingredientObj = Instantiate(ingredientPrefab, ingredientContainer);
-        
+
         // Find ItemIcon by name (common prefab naming convention)
         Transform itemIconTransform = ingredientObj.transform.Find("ItemIcon");
         Image iconImage = null;
-        
+
         if (itemIconTransform != null)
         {
             iconImage = itemIconTransform.GetComponent<Image>();
@@ -326,7 +334,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
             // Fallback: search all Images in children
             iconImage = ingredientObj.GetComponentInChildren<Image>();
         }
-        
+
         if (iconImage != null)
         {
             if (sprite != null)
@@ -339,7 +347,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
             {
                 GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"No sprite found for {itemName}", ComponentId);
             }
-            
+
             // Set icon size for consistent layout
             RectTransform iconRect = iconImage.GetComponent<RectTransform>();
             if (iconRect != null)
@@ -349,14 +357,14 @@ public class RecipeIngredientDisplay : MonoBehaviour
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
                 "No Image component found in ingredient prefab. Check prefab structure.", ComponentId);
         }
 
         // Find CountText by name (common prefab naming convention)
         Transform countTextTransform = ingredientObj.transform.Find("CountText");
         TextMeshProUGUI iconText = null;
-        
+
         if (countTextTransform != null)
         {
             iconText = countTextTransform.GetComponent<TextMeshProUGUI>();
@@ -368,11 +376,11 @@ public class RecipeIngredientDisplay : MonoBehaviour
             // Fallback: search all TextMeshPro components
             iconText = ingredientObj.GetComponentInChildren<TextMeshProUGUI>();
         }
-        
+
         if (iconText != null)
         {
             iconText.fontSize = fontSize;
-            
+
             // For vertical layout, always show count
             if (useVerticalLayout)
             {
@@ -382,7 +390,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
             {
                 // Horizontal layout - show count with space to prevent wrapping
                 iconText.text = $"{count} x";
-                
+
                 // Disable text wrapping to keep "1 x" on one line
                 iconText.enableWordWrapping = false;
                 iconText.overflowMode = TextOverflowModes.Overflow;
@@ -400,7 +408,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
     private void CreateSpacer()
     {
         if (ingredientContainer == null) return;
-        
+
         GameObject spacer;
         if (spacerPrefab != null)
         {
@@ -411,16 +419,16 @@ public class RecipeIngredientDisplay : MonoBehaviour
             // Create a simple spacer GameObject if no prefab provided
             spacer = new GameObject("Spacer");
             spacer.transform.SetParent(ingredientContainer);
-            
+
             RectTransform rectTransform = spacer.AddComponent<RectTransform>();
             rectTransform.sizeDelta = new Vector2(0, 10); // 10 pixel height spacer
-            
+
             // Optional: Add LayoutElement for better control
             LayoutElement layoutElement = spacer.AddComponent<LayoutElement>();
             layoutElement.minHeight = 10;
             layoutElement.preferredHeight = 10;
         }
-        
+
         GameLogger.Log(LoggingManager.LogCategory.UI, "Created spacer", ComponentId);
     }
 
@@ -432,11 +440,11 @@ public class RecipeIngredientDisplay : MonoBehaviour
         if (arrowSprite == null || ingredientPrefab == null) return;
 
         GameObject arrowObj = Instantiate(ingredientPrefab, ingredientContainer);
-        
+
         Image arrowImage = arrowObj.GetComponent<Image>();
         if (arrowImage == null)
             arrowImage = arrowObj.GetComponentInChildren<Image>();
-        
+
         if (arrowImage != null)
         {
             arrowImage.sprite = arrowSprite;
