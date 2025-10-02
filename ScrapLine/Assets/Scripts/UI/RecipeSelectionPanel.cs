@@ -39,37 +39,40 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     private RecipeIngredientDisplay GetIngredientDisplayRow()
     {
-        // Find manager
-        UIPanelManager manager = FindFirstObjectByType<UIPanelManager>();
-        if (manager == null)
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
-                "GetIngredientDisplayRow: UIPanelManager not found, using current reference", ComponentId);
-            return ingredientDisplayRow; // Return current value as fallback
-        }
-        
-        int instanceId = GetInstanceID();
-        
-        // If current reference is valid, cache it in manager and return it
+        // Always try the field first - it might be valid even if cache isn't
         if (ingredientDisplayRow != null)
         {
-            manager.CacheRecipeDisplayPrefab(instanceId, ingredientDisplayRow);
+            // Field is valid, try to cache it if manager is available
+            UIPanelManager mgr = FindFirstObjectByType<UIPanelManager>();
+            if (mgr != null)
+            {
+                mgr.CacheRecipeDisplayPrefab(GetInstanceID(), ingredientDisplayRow);
+            }
             return ingredientDisplayRow;
         }
         
-        // If reference is null but manager has it in cache, restore and return it
-        RecipeIngredientDisplay cachedPrefab = manager.GetRecipeDisplayPrefab(instanceId);
-        if (cachedPrefab != null)
+        // Field is null, try to restore from cache
+        UIPanelManager manager = FindFirstObjectByType<UIPanelManager>();
+        if (manager != null)
         {
-            ingredientDisplayRow = cachedPrefab;
-            GameLogger.Log(LoggingManager.LogCategory.UI,
-                $"Restored ingredientDisplayRow from UIPanelManager cache: {ingredientDisplayRow.name}", ComponentId);
-            return ingredientDisplayRow;
+            RecipeIngredientDisplay cachedPrefab = manager.GetRecipeDisplayPrefab(GetInstanceID());
+            if (cachedPrefab != null)
+            {
+                ingredientDisplayRow = cachedPrefab;
+                GameLogger.Log(LoggingManager.LogCategory.UI,
+                    $"Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
+                return ingredientDisplayRow;
+            }
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                "GetIngredientDisplayRow: UIPanelManager not found", ComponentId);
         }
         
         // Both null - this is a problem
         GameLogger.LogError(LoggingManager.LogCategory.UI,
-            "GetIngredientDisplayRow: Both current and cached references are NULL!", ComponentId);
+            "GetIngredientDisplayRow: Both field and cached references are NULL!", ComponentId);
         return null;
     }
     

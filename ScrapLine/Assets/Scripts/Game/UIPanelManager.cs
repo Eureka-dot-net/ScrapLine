@@ -198,13 +198,12 @@ public class UIPanelManager : MonoBehaviour
         {
             var prefab = recipeDisplayPrefabCache[panelInstanceId];
             
-            // Check if Unity object has been destroyed
+            // Check if Unity object has been destroyed or is invalid
             if (prefab == null)
             {
-                // Remove destroyed reference from cache
-                recipeDisplayPrefabCache.Remove(panelInstanceId);
+                // Don't remove from cache - keep the slot so we know it was cached before
                 GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                    $"Cached prefab for panel instance {panelInstanceId} was destroyed, removed from cache", ComponentId);
+                    $"Cached prefab for panel instance {panelInstanceId} is invalid (destroyed or null)", ComponentId);
                 return null;
             }
             
