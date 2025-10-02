@@ -33,6 +33,51 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     private CellData contextCellData; // Used to determine machine type
     private RecipeIngredientDisplay cachedIngredientDisplayRow; // Cache to prevent null reference issues
+    
+    /// <summary>
+    /// Cache the ingredientDisplayRow reference early to prevent Unity serialization issues
+    /// </summary>
+    private void Awake()
+    {
+        // Cache the reference as soon as component wakes up
+        if (ingredientDisplayRow != null)
+        {
+            cachedIngredientDisplayRow = ingredientDisplayRow;
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Awake: Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                "Awake: ingredientDisplayRow is null - check Unity inspector assignment!", ComponentId);
+        }
+    }
+    
+    /// <summary>
+    /// Ensure cache is valid whenever enabled
+    /// </summary>
+    private void OnEnable()
+    {
+        // Double-check cache whenever panel is enabled
+        if (cachedIngredientDisplayRow == null && ingredientDisplayRow != null)
+        {
+            cachedIngredientDisplayRow = ingredientDisplayRow;
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"OnEnable: Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
+        }
+        
+        // If original is null but cache exists, restore it
+        if (ingredientDisplayRow == null && cachedIngredientDisplayRow != null)
+        {
+            ingredientDisplayRow = cachedIngredientDisplayRow;
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                $"OnEnable: Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
+        }
+        
+        // Log current state
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"OnEnable: ingredientDisplayRow={(ingredientDisplayRow != null ? ingredientDisplayRow.name : "NULL")}, cache={(cachedIngredientDisplayRow != null ? cachedIngredientDisplayRow.name : "NULL")}", ComponentId);
+    }
 
     /// <summary>
     /// Show the recipe selection panel for a specific machine
@@ -141,12 +186,15 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     protected override void PopulateButtons()
     {
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"PopulateButtons START: machineId='{machineId}', ingredientDisplayRow={(ingredientDisplayRow != null ? ingredientDisplayRow.name : "NULL")}, cache={(cachedIngredientDisplayRow != null ? cachedIngredientDisplayRow.name : "NULL")}", ComponentId);
+        
         // Cache ingredientDisplayRow reference if not already cached
         if (cachedIngredientDisplayRow == null && ingredientDisplayRow != null)
         {
             cachedIngredientDisplayRow = ingredientDisplayRow;
             GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
+                $"PopulateButtons: Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
         }
         
         // If original reference is null but we have cache, restore it
@@ -154,11 +202,21 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         {
             ingredientDisplayRow = cachedIngredientDisplayRow;
             GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                $"Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
+                $"PopulateButtons: Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
+        }
+        
+        // If BOTH are null, this is a problem
+        if (ingredientDisplayRow == null && cachedIngredientDisplayRow == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                "PopulateButtons: Both ingredientDisplayRow and cache are NULL! Check Unity inspector assignment.", ComponentId);
         }
         
         // Reset button index counter before populating
         currentButtonIndex = 0;
+        
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"PopulateButtons END: About to call base.PopulateButtons()", ComponentId);
         
         // Call base implementation which will call CreateSelectionButton for each item
         base.PopulateButtons();
