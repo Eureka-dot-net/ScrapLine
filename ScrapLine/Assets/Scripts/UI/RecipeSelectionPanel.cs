@@ -11,15 +11,16 @@ using TMPro;
 /// 1. Create UI Panel with Grid Layout Group  
 /// 2. Add this component to the panel
 /// 3. Assign selectionPanel, buttonContainer
-/// 4. Assign buttonPrefab (simple button for "None" option)
-/// 5. Create a RecipeIngredientDisplay prefab and assign to ingredientDisplayRow (for actual recipes)
-/// 6. The ingredientDisplayRow prefab should have a Button component to make it clickable
+/// 4. Assign buttonPrefab (simple clickable button - used for ALL rows)
+/// 5. Create a RecipeIngredientDisplay prefab and assign to ingredientDisplayRow (visual display only, no Button needed)
 /// 
-/// NOTE: This now uses the same RecipeIngredientDisplay pattern as FabricatorMachineConfigPanel
-/// for consistency. Each recipe gets its own RecipeIngredientDisplay instance.
+/// ARCHITECTURE:
+/// - buttonPrefab is used as the clickable background for ALL buttons (None and recipes)
+/// - For recipes: ingredientDisplayRow is instantiated as a child ON TOP of the button, with all raycasts disabled
+/// - This allows the recipe visuals to display while clicks pass through to the button underneath
 /// 
-/// IMPORTANT: Child UI elements (Images, Text) will have their raycastTarget disabled automatically
-/// to prevent them from blocking button clicks. The Button component must be on the root GameObject.
+/// NOTE: The ingredientDisplayRow should NOT have a Button component - it's purely for visual display.
+/// All clicking is handled by the buttonPrefab underneath.
 /// </summary>
 public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 {
@@ -134,42 +135,26 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     
     /// <summary>
     /// Override to create selection buttons with proper prefab based on whether it's the "None" option
+    /// For recipes: Create a buttonPrefab as clickable background, then add ingredientDisplayRow on top with raycasts disabled
     /// </summary>
     protected override void CreateSelectionButton(RecipeDef item, string displayName)
     {
-        GameObject prefabToUse;
-        
-        // Use buttonPrefab for "None" option, ingredientDisplayRow for actual recipes
-        if (item == null)
-        {
-            // None option - use simple button prefab from base class
-            prefabToUse = buttonPrefab;
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Using buttonPrefab for None option. buttonPrefab null? {buttonPrefab == null}", ComponentId);
-        }
-        else
-        {
-            // Actual recipe - use ingredientDisplayRow
-            prefabToUse = ingredientDisplayRow != null ? ingredientDisplayRow.gameObject : buttonPrefab;
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Using ingredientDisplayRow for recipe '{displayName}'. ingredientDisplayRow null? {ingredientDisplayRow == null}, prefab: {prefabToUse?.name}", ComponentId);
-        }
-        
-        if (buttonContainer == null || prefabToUse == null)
+        if (buttonContainer == null || buttonPrefab == null)
         {
             GameLogger.LogError(LoggingManager.LogCategory.UI, 
-                $"Cannot create button - buttonContainer null? {buttonContainer == null}, prefabToUse null? {prefabToUse == null}", ComponentId);
+                $"Cannot create button - buttonContainer null? {buttonContainer == null}, buttonPrefab null? {buttonPrefab == null}", ComponentId);
             return;
         }
 
         // Count how many buttons already exist BEFORE instantiation
         int buttonIndex = buttonContainer.childCount;
         
-        GameObject buttonObj = Instantiate(prefabToUse, buttonContainer);
-        buttonObj.name = $"{prefabToUse.name}_Instance_{buttonIndex}_{displayName}";
+        // ALWAYS create buttonPrefab as the clickable button background
+        GameObject buttonObj = Instantiate(buttonPrefab, buttonContainer);
+        buttonObj.name = $"Button_{buttonIndex}_{displayName}";
         
         GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"Instantiated button '{buttonObj.name}' at index {buttonIndex}", ComponentId);
+            $"Created button background '{buttonObj.name}' at index {buttonIndex}", ComponentId);
         
         // Manually position the button/row to avoid LayoutGroup issues
         RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
@@ -200,17 +185,6 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         
         Button button = buttonObj.GetComponent<Button>();
         
-        // If Button not on root, try to find it in children
-        if (button == null)
-        {
-            button = buttonObj.GetComponentInChildren<Button>();
-            if (button != null)
-            {
-                GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                    $"Button component found on child GameObject '{button.gameObject.name}' instead of root. This may cause click issues. Please move Button component to root of prefab '{prefabToUse.name}'.", ComponentId);
-            }
-        }
-        
         if (button != null)
         {
             // Set up button click listener
@@ -219,77 +193,90 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             GameLogger.Log(LoggingManager.LogCategory.UI, 
                 $"Added click listener to button for recipe: {displayName}", ComponentId);
             
-            // Setup button visuals using derived class implementation (this creates child elements)
-            SetupButtonVisuals(buttonObj, item, displayName);
-            
-            // Disable raycast on all child Images to prevent blocking button clicks
-            // MUST be called AFTER SetupButtonVisuals since that creates the child elements
-            DisableChildRaycastTargets(buttonObj);
+            // For recipes (not None option), add ingredientDisplayRow on top
+            if (item != null && ingredientDisplayRow != null)
+            {
+                // Create ingredientDisplayRow as a child of the button (on top, non-blocking)
+                GameObject displayObj = Instantiate(ingredientDisplayRow.gameObject, buttonObj.transform);
+                displayObj.name = "RecipeDisplay";
+                
+                // Make it fill the button area
+                RectTransform displayRect = displayObj.GetComponent<RectTransform>();
+                if (displayRect != null)
+                {
+                    displayRect.anchorMin = Vector2.zero;
+                    displayRect.anchorMax = Vector2.one;
+                    displayRect.offsetMin = Vector2.zero;
+                    displayRect.offsetMax = Vector2.zero;
+                    displayRect.anchoredPosition = Vector2.zero;
+                }
+                
+                // Disable ALL raycasts on the display so clicks pass through to button
+                DisableAllRaycastsRecursive(displayObj);
+                
+                // Get RecipeIngredientDisplay component and display the recipe
+                RecipeIngredientDisplay displayComponent = displayObj.GetComponent<RecipeIngredientDisplay>();
+                if (displayComponent != null)
+                {
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"Displaying recipe '{displayName}' with {item.inputItems?.Count ?? 0} inputs", ComponentId);
+                    displayComponent.DisplayRecipe(item);
+                }
+                else
+                {
+                    GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                        $"No RecipeIngredientDisplay component found on ingredientDisplayRow!", ComponentId);
+                }
+            }
+            else
+            {
+                // None option - just set button text
+                SetupButtonVisuals(buttonObj, item, displayName);
+            }
         }
         else
         {
             GameLogger.LogError(LoggingManager.LogCategory.UI, 
-                $"{GetType().Name}: Button prefab '{prefabToUse.name}' missing Button component on root GameObject or children! Button will not be clickable.", ComponentId);
+                $"{GetType().Name}: buttonPrefab missing Button component!", ComponentId);
         }
     }
     
     /// <summary>
-    /// Disable raycast targets on all child UI elements to prevent them from blocking button clicks
+    /// Disable ALL raycasts recursively on a GameObject and all its children
+    /// This makes the entire hierarchy transparent to clicks
     /// </summary>
-    private void DisableChildRaycastTargets(GameObject buttonObj)
+    private void DisableAllRaycastsRecursive(GameObject obj)
     {
-        // Find the Button component (might be on root or child)
-        Button button = buttonObj.GetComponent<Button>();
-        if (button == null)
-        {
-            button = buttonObj.GetComponentInChildren<Button>();
-        }
+        if (obj == null) return;
         
-        GameObject buttonGameObject = button != null ? button.gameObject : buttonObj;
-        
-        // Get all Image components in children (including self)
-        UnityEngine.UI.Image[] childImages = buttonObj.GetComponentsInChildren<UnityEngine.UI.Image>();
-        GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"Found {childImages.Length} Image components in button hierarchy", ComponentId);
-            
-        foreach (var img in childImages)
+        // Disable raycasts on all UI components
+        var images = obj.GetComponentsInChildren<UnityEngine.UI.Image>();
+        foreach (var img in images)
         {
-            // Don't disable raycast on the Button's own Image component (if it has one)
-            if (img.gameObject == buttonGameObject)
-            {
-                GameLogger.Log(LoggingManager.LogCategory.UI, 
-                    $"Keeping raycast enabled on Button's own Image: {img.gameObject.name}", ComponentId);
-                continue;
-            }
-            
-            bool wasEnabled = img.raycastTarget;
             img.raycastTarget = false;
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Disabled raycast target on child Image: {img.gameObject.name} (was {wasEnabled})", ComponentId);
         }
         
-        // Also disable Text components
-        UnityEngine.UI.Text[] childTexts = buttonObj.GetComponentsInChildren<UnityEngine.UI.Text>();
-        foreach (var txt in childTexts)
+        var texts = obj.GetComponentsInChildren<UnityEngine.UI.Text>();
+        foreach (var txt in texts)
         {
-            if (txt.gameObject != buttonGameObject)
-            {
-                txt.raycastTarget = false;
-            }
+            txt.raycastTarget = false;
         }
         
-        // And TextMeshPro components
-        TMPro.TextMeshProUGUI[] childTMPs = buttonObj.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
-        foreach (var tmp in childTMPs)
+        var tmps = obj.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+        foreach (var tmp in tmps)
         {
-            if (tmp.gameObject != buttonGameObject)
-            {
-                tmp.raycastTarget = false;
-            }
+            tmp.raycastTarget = false;
+        }
+        
+        // Also disable any CanvasGroup to be safe
+        var canvasGroups = obj.GetComponentsInChildren<CanvasGroup>();
+        foreach (var cg in canvasGroups)
+        {
+            cg.blocksRaycasts = false;
         }
         
         GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"Completed disabling raycasts for button", ComponentId);
+            $"Disabled all raycasts on '{obj.name}': {images.Length} Images, {texts.Length} Texts, {tmps.Length} TMPs, {canvasGroups.Length} CanvasGroups", ComponentId);
     }
     
     protected override string GetNoneDisplayName()
