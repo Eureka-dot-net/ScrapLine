@@ -223,12 +223,23 @@ public class RecipeIngredientDisplay : MonoBehaviour
         
         if (countText != null)
         {
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"BEFORE text set: countText.text='{countText.text}', setting to '{ingredient.count} x'", ComponentId);
+            
             countText.fontSize = fontSize;
             countText.text = $"{ingredient.count} x";
             
             // Disable text wrapping to keep "1 x" on one line
             countText.enableWordWrapping = false;
             countText.overflowMode = TextOverflowModes.Overflow;
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"AFTER text set: countText.text='{countText.text}'", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                $"CountText component not found! countTextTransform={(countTextTransform != null ? "found" : "null")}", ComponentId);
         }
         
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Created ingredient at index {index}: {ingredient.count}x {itemDef.displayName ?? ingredient.item}", ComponentId);
