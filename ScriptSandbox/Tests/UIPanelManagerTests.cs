@@ -118,51 +118,5 @@ namespace ScrapLine.Tests
             Assert.AreEqual(typeof(MonoBehaviour), registerParams[0].ParameterType);
             Assert.AreEqual(typeof(MonoBehaviour), unregisterParams[0].ParameterType);
         }
-        
-        [Test]
-        public void UIPanelManager_HasCacheRecipeDisplayPrefabMethod()
-        {
-            // Verify method exists
-            var method = typeof(UIPanelManager).GetMethod("CacheRecipeDisplayPrefab");
-            Assert.IsNotNull(method, "CacheRecipeDisplayPrefab method should exist");
-            Assert.AreEqual(typeof(void), method.ReturnType);
-            
-            // Check parameters
-            var parameters = method.GetParameters();
-            Assert.AreEqual(2, parameters.Length);
-            Assert.AreEqual(typeof(int), parameters[0].ParameterType, "First parameter should be int (panelInstanceId)");
-            Assert.AreEqual(typeof(RecipeIngredientDisplay), parameters[1].ParameterType, "Second parameter should be RecipeIngredientDisplay");
-        }
-        
-        [Test]
-        public void UIPanelManager_HasGetRecipeDisplayPrefabMethod()
-        {
-            // Verify method exists
-            var method = typeof(UIPanelManager).GetMethod("GetRecipeDisplayPrefab");
-            Assert.IsNotNull(method, "GetRecipeDisplayPrefab method should exist");
-            Assert.AreEqual(typeof(RecipeIngredientDisplay), method.ReturnType, "Should return RecipeIngredientDisplay");
-            
-            // Check parameters
-            var parameters = method.GetParameters();
-            Assert.AreEqual(1, parameters.Length);
-            Assert.AreEqual(typeof(int), parameters[0].ParameterType, "Parameter should be int (panelInstanceId)");
-        }
-        
-        [Test]
-        public void UIPanelManager_RecipeDisplayPrefabCache_HasCorrectFieldType()
-        {
-            // Verify the private field exists with correct type
-            var field = typeof(UIPanelManager).GetField("recipeDisplayPrefabCache",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
-            Assert.IsNotNull(field, "recipeDisplayPrefabCache field should exist");
-            Assert.IsTrue(field.FieldType.IsGenericType, "Field should be a generic type (Dictionary)");
-            Assert.AreEqual(typeof(Dictionary<,>), field.FieldType.GetGenericTypeDefinition(), "Field should be a Dictionary");
-            
-            // Check dictionary key/value types
-            var genericArgs = field.FieldType.GetGenericArguments();
-            Assert.AreEqual(typeof(int), genericArgs[0], "Dictionary key should be int");
-            Assert.AreEqual(typeof(RecipeIngredientDisplay), genericArgs[1], "Dictionary value should be RecipeIngredientDisplay");
-        }
     }
 }

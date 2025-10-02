@@ -34,58 +34,15 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     private CellData contextCellData; // Used to determine machine type
     
     /// <summary>
-    /// Get ingredientDisplayRow with fallback to UIPanelManager cache
-    /// Unity serialization sometimes loses this reference, so we store it in UIPanelManager
-    /// </summary>
-    private RecipeIngredientDisplay GetIngredientDisplayRow()
-    {
-        // Always try the field first - it might be valid even if cache isn't
-        if (ingredientDisplayRow != null)
-        {
-            // Field is valid, try to cache it if manager is available
-            UIPanelManager mgr = FindFirstObjectByType<UIPanelManager>();
-            if (mgr != null)
-            {
-                mgr.CacheRecipeDisplayPrefab(GetInstanceID(), ingredientDisplayRow);
-            }
-            return ingredientDisplayRow;
-        }
-        
-        // Field is null, try to restore from cache
-        UIPanelManager manager = FindFirstObjectByType<UIPanelManager>();
-        if (manager != null)
-        {
-            RecipeIngredientDisplay cachedPrefab = manager.GetRecipeDisplayPrefab(GetInstanceID());
-            if (cachedPrefab != null)
-            {
-                ingredientDisplayRow = cachedPrefab;
-                GameLogger.Log(LoggingManager.LogCategory.UI,
-                    $"Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
-                return ingredientDisplayRow;
-            }
-        }
-        else
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
-                "GetIngredientDisplayRow: UIPanelManager not found", ComponentId);
-        }
-        
-        // Both null - this is a problem
-        GameLogger.LogError(LoggingManager.LogCategory.UI,
-            "GetIngredientDisplayRow: Both field and cached references are NULL!", ComponentId);
-        return null;
-    }
-    
-    /// <summary>
-    /// Ensure cache is valid whenever enabled
+    /// Ensure ingredientDisplayRow is valid whenever enabled
     /// </summary>
     private void OnEnable()
     {
-        // Restore reference if needed
-        var prefab = GetIngredientDisplayRow();
-        
-        GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"OnEnable: ingredientDisplayRow={(prefab != null ? prefab.name : "NULL")}", ComponentId);
+        if (ingredientDisplayRow == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                "OnEnable: ingredientDisplayRow is NULL - check Unity inspector assignment!", ComponentId);
+        }
     }
 
     /// <summary>
@@ -195,11 +152,8 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     protected override void PopulateButtons()
     {
-        // Get reference (with fallback to static cache)
-        var prefab = GetIngredientDisplayRow();
-        
         GameLogger.Log(LoggingManager.LogCategory.UI, 
-            $"PopulateButtons START: machineId='{machineId}', ingredientDisplayRow={(prefab != null ? prefab.name : "NULL")}", ComponentId);
+            $"PopulateButtons START: machineId='{machineId}', ingredientDisplayRow={(ingredientDisplayRow != null ? ingredientDisplayRow.name : "NULL")}", ComponentId);
         
         // Reset button index counter before populating
         currentButtonIndex = 0;
@@ -272,14 +226,13 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
                 $"Added click listener to button for recipe: {displayName}", ComponentId);
             
             // For recipes (not None option), add ingredientDisplayRow on top
-            var displayRowPrefab = GetIngredientDisplayRow();
-            if (item != null && displayRowPrefab != null)
+            if (item != null && ingredientDisplayRow != null)
             {
                 GameLogger.Log(LoggingManager.LogCategory.UI, 
-                    $"Creating RecipeDisplay for '{displayName}' - using prefab: {displayRowPrefab.name}", ComponentId);
+                    $"Creating RecipeDisplay for '{displayName}' - using prefab: {ingredientDisplayRow.name}", ComponentId);
                 
                 // Create ingredientDisplayRow as a child of the button (on top, non-blocking)
-                GameObject displayObj = Instantiate(displayRowPrefab.gameObject, buttonObj.transform);
+                GameObject displayObj = Instantiate(ingredientDisplayRow.gameObject, buttonObj.transform);
                 displayObj.name = "RecipeDisplay";
                 
                 // Set the RectTransform FIRST so DisplayRecipe can calculate sizes correctly
@@ -332,7 +285,7 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             else
             {
                 GameLogger.Log(LoggingManager.LogCategory.UI, 
-                    $"Skipping RecipeDisplay - item null? {item == null}, displayRowPrefab null? {displayRowPrefab == null}", ComponentId);
+                    $"Skipping RecipeDisplay - item null? {item == null}, displayRowPrefab null? {ingredientDisplayRow == null}", ComponentId);
                 
                 // None option - just set button text
                 SetupButtonVisuals(buttonObj, item, displayName);
