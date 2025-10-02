@@ -197,8 +197,19 @@ public class UIPanelManager : MonoBehaviour
         if (recipeDisplayPrefabCache.ContainsKey(panelInstanceId))
         {
             var prefab = recipeDisplayPrefabCache[panelInstanceId];
+            
+            // Check if Unity object has been destroyed
+            if (prefab == null)
+            {
+                // Remove destroyed reference from cache
+                recipeDisplayPrefabCache.Remove(panelInstanceId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                    $"Cached prefab for panel instance {panelInstanceId} was destroyed, removed from cache", ComponentId);
+                return null;
+            }
+            
             GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Retrieved cached prefab '{prefab?.name ?? "NULL"}' for panel instance {panelInstanceId}", ComponentId);
+                $"Retrieved cached prefab '{prefab.name}' for panel instance {panelInstanceId}", ComponentId);
             return prefab;
         }
         
