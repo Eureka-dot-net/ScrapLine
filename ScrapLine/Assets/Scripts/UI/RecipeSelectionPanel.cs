@@ -43,8 +43,8 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         UIPanelManager manager = FindFirstObjectByType<UIPanelManager>();
         if (manager == null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.UI,
-                "GetIngredientDisplayRow: UIPanelManager not found!", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                "GetIngredientDisplayRow: UIPanelManager not found, using current reference", ComponentId);
             return ingredientDisplayRow; // Return current value as fallback
         }
         
@@ -62,7 +62,7 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         if (cachedPrefab != null)
         {
             ingredientDisplayRow = cachedPrefab;
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+            GameLogger.Log(LoggingManager.LogCategory.UI,
                 $"Restored ingredientDisplayRow from UIPanelManager cache: {ingredientDisplayRow.name}", ComponentId);
             return ingredientDisplayRow;
         }
@@ -71,31 +71,6 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         GameLogger.LogError(LoggingManager.LogCategory.UI,
             "GetIngredientDisplayRow: Both current and cached references are NULL!", ComponentId);
         return null;
-    }
-    
-    /// <summary>
-    /// Cache the ingredientDisplayRow reference early to prevent Unity serialization issues
-    /// </summary>
-    private void Awake()
-    {
-        // Find UIPanelManager and cache reference
-        UIPanelManager manager = FindFirstObjectByType<UIPanelManager>();
-        if (manager != null && ingredientDisplayRow != null)
-        {
-            manager.CacheRecipeDisplayPrefab(GetInstanceID(), ingredientDisplayRow);
-            GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Awake: ingredientDisplayRow cached in UIPanelManager: {ingredientDisplayRow.name}", ComponentId);
-        }
-        else if (ingredientDisplayRow == null)
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
-                "Awake: ingredientDisplayRow is null - check Unity inspector assignment!", ComponentId);
-        }
-        else
-        {
-            GameLogger.LogError(LoggingManager.LogCategory.UI, 
-                "Awake: UIPanelManager not found - cannot cache prefab reference!", ComponentId);
-        }
     }
     
     /// <summary>
