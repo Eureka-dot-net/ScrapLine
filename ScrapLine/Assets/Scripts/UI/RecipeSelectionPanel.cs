@@ -32,6 +32,7 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     public RecipeIngredientDisplay ingredientDisplayRow;
 
     private CellData contextCellData; // Used to determine machine type
+    private RecipeIngredientDisplay cachedIngredientDisplayRow; // Cache to prevent null reference issues
 
     /// <summary>
     /// Show the recipe selection panel for a specific machine
@@ -140,6 +141,22 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     protected override void PopulateButtons()
     {
+        // Cache ingredientDisplayRow reference if not already cached
+        if (cachedIngredientDisplayRow == null && ingredientDisplayRow != null)
+        {
+            cachedIngredientDisplayRow = ingredientDisplayRow;
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Cached ingredientDisplayRow reference: {cachedIngredientDisplayRow.name}", ComponentId);
+        }
+        
+        // If original reference is null but we have cache, restore it
+        if (ingredientDisplayRow == null && cachedIngredientDisplayRow != null)
+        {
+            ingredientDisplayRow = cachedIngredientDisplayRow;
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                $"Restored ingredientDisplayRow from cache: {ingredientDisplayRow.name}", ComponentId);
+        }
+        
         // Reset button index counter before populating
         currentButtonIndex = 0;
         
@@ -217,7 +234,25 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
                 GameObject displayObj = Instantiate(ingredientDisplayRow.gameObject, buttonObj.transform);
                 displayObj.name = "RecipeDisplay";
                 
-                // Get RecipeIngredientDisplay component and display the recipe FIRST
+                // Set the RectTransform FIRST so DisplayRecipe can calculate sizes correctly
+                RectTransform displayRect = displayObj.GetComponent<RectTransform>();
+                RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
+                if (displayRect != null && buttonRect != null)
+                {
+                    // Set anchors to stretch in both directions
+                    displayRect.anchorMin = Vector2.zero;
+                    displayRect.anchorMax = Vector2.one;
+                    displayRect.pivot = new Vector2(0.5f, 0.5f);
+                    
+                    // Set sizeDelta to match button size so DisplayRecipe can calculate widths correctly
+                    displayRect.sizeDelta = buttonRect.sizeDelta;
+                    displayRect.anchoredPosition = Vector2.zero;
+                    
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"RecipeDisplay rect BEFORE DisplayRecipe: sizeDelta={displayRect.sizeDelta}, button sizeDelta={buttonRect.sizeDelta}", ComponentId);
+                }
+                
+                // NOW call DisplayRecipe with correct sizing
                 RecipeIngredientDisplay displayComponent = displayObj.GetComponent<RecipeIngredientDisplay>();
                 if (displayComponent != null)
                 {
@@ -231,19 +266,12 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
                         $"No RecipeIngredientDisplay component found on ingredientDisplayRow!", ComponentId);
                 }
                 
-                // NOW set the RectTransform AFTER DisplayRecipe (which might modify container sizes)
-                RectTransform displayRect = displayObj.GetComponent<RectTransform>();
+                // FINALLY reset to anchor-based sizing
                 if (displayRect != null)
                 {
-                    // Set anchors to stretch in both directions
-                    displayRect.anchorMin = Vector2.zero;
-                    displayRect.anchorMax = Vector2.one;
-                    displayRect.pivot = new Vector2(0.5f, 0.5f);
-                    
                     // Force offsets to 0 to fill parent completely
                     displayRect.offsetMin = Vector2.zero;  // Left and Bottom
-                    displayRect.offsetMax = Vector2.zero;  // Right and Top (negative values extend, 0 means flush)
-                    displayRect.anchoredPosition = Vector2.zero;
+                    displayRect.offsetMax = Vector2.zero;  // Right and Top
                     displayRect.sizeDelta = Vector2.zero; // Size controlled by anchors
                     
                     GameLogger.Log(LoggingManager.LogCategory.UI, 
