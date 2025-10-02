@@ -33,6 +33,7 @@ namespace UnityEngine
         public static T FindObjectOfType<T>() where T : Object => default(T);
         public static T[] FindObjectsOfType<T>() where T : Object => new T[0];
         public static T[] FindObjectsByType<T>(FindObjectsSortMode sortMode) where T : Object => new T[0];
+        public static T[] FindObjectsByType<T>(FindObjectsInactive findObjectsInactive, FindObjectsSortMode sortMode) where T : Object => new T[0];
         
         // Instantiate methods
         public static T Instantiate<T>(T original) where T : Object => original;

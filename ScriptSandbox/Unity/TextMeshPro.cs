@@ -17,6 +17,8 @@ namespace TMPro
         public float fontSizeMin { get; set; } = 0f;
         public float fontSizeMax { get; set; } = 72f;
         public TMP_FontAsset font { get; set; }
+        public bool enableWordWrapping { get; set; } = true;
+        public TextOverflowModes overflowMode { get; set; } = TextOverflowModes.Overflow;
         
         public enum FontStyles
         {
@@ -43,6 +45,18 @@ namespace TMPro
             CaplineLeft, Capline, CaplineRight, CaplineJustified, CaplineFlush, CaplineGeoAligned,
             Converted
         }
+    }
+    
+    // TextOverflowModes enum for TMP
+    public enum TextOverflowModes
+    {
+        Overflow = 0,
+        Ellipsis = 1,
+        Masking = 2,
+        Truncate = 3,
+        ScrollRect = 4,
+        Page = 5,
+        Linked = 6
     }
 
     // TextMeshProUGUI class for UI text
