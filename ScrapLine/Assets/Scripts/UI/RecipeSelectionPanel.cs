@@ -133,6 +133,20 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
         displayComponent.DisplayRecipe(recipe);
     }
     
+    private int currentButtonIndex = 0; // Track button index across multiple CreateSelectionButton calls
+    
+    /// <summary>
+    /// Override PopulateButtons to reset button index counter before creating buttons
+    /// </summary>
+    protected override void PopulateButtons()
+    {
+        // Reset button index counter before populating
+        currentButtonIndex = 0;
+        
+        // Call base implementation which will call CreateSelectionButton for each item
+        base.PopulateButtons();
+    }
+    
     /// <summary>
     /// Override to create selection buttons with proper prefab based on whether it's the "None" option
     /// For recipes: Create a buttonPrefab as clickable background, then add ingredientDisplayRow on top with raycasts disabled
@@ -146,8 +160,8 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
             return;
         }
 
-        // Count how many buttons already exist BEFORE instantiation
-        int buttonIndex = buttonContainer.childCount;
+        // Use tracked index instead of childCount (which includes old buttons marked for destruction)
+        int buttonIndex = currentButtonIndex++;
         
         // ALWAYS create buttonPrefab as the clickable button background
         GameObject buttonObj = Instantiate(buttonPrefab, buttonContainer);
@@ -200,15 +214,23 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
                 GameObject displayObj = Instantiate(ingredientDisplayRow.gameObject, buttonObj.transform);
                 displayObj.name = "RecipeDisplay";
                 
-                // Make it fill the button area
+                // Make it fill the button area perfectly
                 RectTransform displayRect = displayObj.GetComponent<RectTransform>();
                 if (displayRect != null)
                 {
+                    // Set anchors to stretch in both directions
                     displayRect.anchorMin = Vector2.zero;
                     displayRect.anchorMax = Vector2.one;
-                    displayRect.offsetMin = Vector2.zero;
-                    displayRect.offsetMax = Vector2.zero;
+                    displayRect.pivot = new Vector2(0.5f, 0.5f);
+                    
+                    // Force offsets to 0 to fill parent completely
+                    displayRect.offsetMin = Vector2.zero;  // Left and Bottom
+                    displayRect.offsetMax = Vector2.zero;  // Right and Top (negative values extend, 0 means flush)
                     displayRect.anchoredPosition = Vector2.zero;
+                    displayRect.sizeDelta = Vector2.zero; // Size controlled by anchors
+                    
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"RecipeDisplay rect: offsetMin={displayRect.offsetMin}, offsetMax={displayRect.offsetMax}", ComponentId);
                 }
                 
                 // Disable ALL raycasts on the display so clicks pass through to button
