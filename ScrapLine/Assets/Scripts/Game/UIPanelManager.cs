@@ -17,6 +17,11 @@ public class UIPanelManager : MonoBehaviour
 
     // Track currently open panel
     private MonoBehaviour currentOpenPanel;
+    
+    // Dictionary to cache RecipeIngredientDisplay prefab references
+    // Key: panel instance ID, Value: prefab reference
+    // This solves Unity serialization issues with derived class fields
+    private Dictionary<int, RecipeIngredientDisplay> recipeDisplayPrefabCache = new Dictionary<int, RecipeIngredientDisplay>();
 
     // Component ID for logging
     private string ComponentId => $"UIPanelManager_{GetInstanceID()}";
@@ -159,5 +164,46 @@ public class UIPanelManager : MonoBehaviour
     public MonoBehaviour GetCurrentOpenPanel()
     {
         return currentOpenPanel;
+    }
+    
+    /// <summary>
+    /// Cache a RecipeIngredientDisplay prefab reference for a specific panel instance
+    /// This prevents Unity serialization from losing derived class field references
+    /// </summary>
+    /// <param name="panelInstanceId">Instance ID of the panel (use GetInstanceID())</param>
+    /// <param name="prefab">RecipeIngredientDisplay prefab to cache</param>
+    public void CacheRecipeDisplayPrefab(int panelInstanceId, RecipeIngredientDisplay prefab)
+    {
+        if (prefab == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                $"Attempted to cache null prefab for panel instance {panelInstanceId}", ComponentId);
+            return;
+        }
+        
+        recipeDisplayPrefabCache[panelInstanceId] = prefab;
+        GameLogger.Log(LoggingManager.LogCategory.UI, 
+            $"Cached RecipeIngredientDisplay prefab '{prefab.name}' for panel instance {panelInstanceId}", ComponentId);
+    }
+    
+    /// <summary>
+    /// Get a cached RecipeIngredientDisplay prefab reference for a specific panel instance
+    /// Returns null if no cached reference exists
+    /// </summary>
+    /// <param name="panelInstanceId">Instance ID of the panel (use GetInstanceID())</param>
+    /// <returns>Cached prefab or null</returns>
+    public RecipeIngredientDisplay GetRecipeDisplayPrefab(int panelInstanceId)
+    {
+        if (recipeDisplayPrefabCache.ContainsKey(panelInstanceId))
+        {
+            var prefab = recipeDisplayPrefabCache[panelInstanceId];
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Retrieved cached prefab '{prefab?.name ?? "NULL"}' for panel instance {panelInstanceId}", ComponentId);
+            return prefab;
+        }
+        
+        GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+            $"No cached prefab found for panel instance {panelInstanceId}", ComponentId);
+        return null;
     }
 }

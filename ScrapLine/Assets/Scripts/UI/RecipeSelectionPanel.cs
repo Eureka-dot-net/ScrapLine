@@ -33,36 +33,37 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
 
     private CellData contextCellData; // Used to determine machine type
     
-    // Static dictionary to preserve references across Unity serialization cycles
-    // Unity's serialization can lose derived class fields, so we store them statically
-    private static Dictionary<int, RecipeIngredientDisplay> staticPrefabCache = new Dictionary<int, RecipeIngredientDisplay>();
-    
     /// <summary>
-    /// Get ingredientDisplayRow with fallback to static cache
-    /// Unity serialization sometimes loses this reference, so we maintain it statically
+    /// Get ingredientDisplayRow with fallback to UIPanelManager cache
+    /// Unity serialization sometimes loses this reference, so we store it in UIPanelManager
     /// </summary>
     private RecipeIngredientDisplay GetIngredientDisplayRow()
     {
+        // Find manager
+        UIPanelManager manager = FindFirstObjectByType<UIPanelManager>();
+        if (manager == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI,
+                "GetIngredientDisplayRow: UIPanelManager not found!", ComponentId);
+            return ingredientDisplayRow; // Return current value as fallback
+        }
+        
         int instanceId = GetInstanceID();
         
-        // If current reference is valid, cache it and return it
+        // If current reference is valid, cache it in manager and return it
         if (ingredientDisplayRow != null)
         {
-            if (!staticPrefabCache.ContainsKey(instanceId) || staticPrefabCache[instanceId] != ingredientDisplayRow)
-            {
-                staticPrefabCache[instanceId] = ingredientDisplayRow;
-                GameLogger.Log(LoggingManager.LogCategory.UI,
-                    $"Cached ingredientDisplayRow in static dictionary: {ingredientDisplayRow.name}", ComponentId);
-            }
+            manager.CacheRecipeDisplayPrefab(instanceId, ingredientDisplayRow);
             return ingredientDisplayRow;
         }
         
-        // If reference is null but we have it in cache, restore and return it
-        if (staticPrefabCache.ContainsKey(instanceId) && staticPrefabCache[instanceId] != null)
+        // If reference is null but manager has it in cache, restore and return it
+        RecipeIngredientDisplay cachedPrefab = manager.GetRecipeDisplayPrefab(instanceId);
+        if (cachedPrefab != null)
         {
-            ingredientDisplayRow = staticPrefabCache[instanceId];
+            ingredientDisplayRow = cachedPrefab;
             GameLogger.LogWarning(LoggingManager.LogCategory.UI,
-                $"Restored ingredientDisplayRow from static cache: {ingredientDisplayRow.name}", ComponentId);
+                $"Restored ingredientDisplayRow from UIPanelManager cache: {ingredientDisplayRow.name}", ComponentId);
             return ingredientDisplayRow;
         }
         
@@ -77,17 +78,23 @@ public class RecipeSelectionPanel : BaseSelectionPanel<RecipeDef>
     /// </summary>
     private void Awake()
     {
-        // Ensure reference is cached in static dictionary
-        var prefab = GetIngredientDisplayRow();
-        if (prefab != null)
+        // Find UIPanelManager and cache reference
+        UIPanelManager manager = FindFirstObjectByType<UIPanelManager>();
+        if (manager != null && ingredientDisplayRow != null)
         {
+            manager.CacheRecipeDisplayPrefab(GetInstanceID(), ingredientDisplayRow);
             GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Awake: ingredientDisplayRow cached: {prefab.name}", ComponentId);
+                $"Awake: ingredientDisplayRow cached in UIPanelManager: {ingredientDisplayRow.name}", ComponentId);
         }
-        else
+        else if (ingredientDisplayRow == null)
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
                 "Awake: ingredientDisplayRow is null - check Unity inspector assignment!", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, 
+                "Awake: UIPanelManager not found - cannot cache prefab reference!", ComponentId);
         }
     }
     
