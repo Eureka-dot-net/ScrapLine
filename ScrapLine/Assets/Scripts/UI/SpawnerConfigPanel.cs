@@ -20,8 +20,6 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
     [Tooltip("Button to select required crate type")]
     public Button crateSelectionButton;
     
-    [Tooltip("Text showing current required crate type")]
-    public TextMeshProUGUI currentCrateTypeText;
     
     [Tooltip("Image showing current crate icon")]
     public Image currentCrateIcon;
@@ -74,14 +72,6 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
 
     protected override void UpdateUIFromCurrentState()
     {
-        // Update current crate type display
-        if (currentCrateTypeText != null)
-        {
-            var crateDef = FactoryRegistry.Instance?.GetWasteCrate(selectedRequiredCrateId);
-            string displayName = crateDef?.displayName ?? selectedRequiredCrateId;
-            currentCrateTypeText.text = $"Required: {displayName}";
-        }
-
         // Update crate icon
         if (currentCrateIcon != null && !string.IsNullOrEmpty(selectedRequiredCrateId))
         {
