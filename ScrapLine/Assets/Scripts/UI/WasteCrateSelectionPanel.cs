@@ -42,6 +42,36 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
     }
     
     /// <summary>
+    /// Override to prevent manual positioning - let Grid Layout Group handle it
+    /// </summary>
+    protected override void CreateSelectionButton(WasteCrateDef item, string displayName)
+    {
+        GameObject prefabToUse = GetButtonPrefabToUse();
+        
+        if (buttonContainer == null || prefabToUse == null) return;
+
+        // Instantiate button and let Grid Layout Group position it
+        GameObject buttonObj = Instantiate(prefabToUse, buttonContainer);
+        
+        // Do NOT manually set RectTransform - Grid Layout Group will handle sizing and positioning
+        
+        Button button = buttonObj.GetComponent<Button>();
+        
+        if (button != null)
+        {
+            // Set up button click listener
+            button.onClick.AddListener(() => OnItemSelected(item));
+            
+            // Setup button visuals using derived class implementation
+            SetupButtonVisuals(buttonObj, item, displayName);
+        }
+        else
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, $"{GetType().Name}: Button prefab missing Button component!", ComponentId);
+        }
+    }
+    
+    /// <summary>
     /// Configure Grid Layout Group for responsive 3-column waste crate display
     /// </summary>
     private void ConfigureGridLayoutForWasteCrates()

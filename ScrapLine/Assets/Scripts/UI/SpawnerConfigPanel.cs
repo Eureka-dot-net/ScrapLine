@@ -177,6 +177,9 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
             string previousCrateId = currentSpawnerMachine.RequiredCrateId;
             currentSpawnerMachine.RequiredCrateId = string.IsNullOrEmpty(selection) ? "" : selection;
             
+            // Update the local state to trigger UI refresh
+            selectedRequiredCrateId = currentSpawnerMachine.RequiredCrateId;
+            
             if (string.IsNullOrEmpty(selection))
             {
                 GameLogger.LogMachine($"Cleared spawner crate type filter", ComponentId);
