@@ -276,10 +276,16 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
     /// <param name="selectedCrateId">ID of the selected crate</param>
     private void OnCrateTypeSelected(string selectedCrateId)
     {
-        if (!string.IsNullOrEmpty(selectedCrateId))
+        // Allow empty string for "No Filter" option
+        selectedRequiredCrateId = selectedCrateId ?? "";
+        UpdateUIFromCurrentState();
+        
+        if (string.IsNullOrEmpty(selectedCrateId))
         {
-            selectedRequiredCrateId = selectedCrateId;
-            UpdateUIFromCurrentState();
+            GameLogger.LogUI($"Cleared crate type filter", ComponentId);
+        }
+        else
+        {
             GameLogger.LogUI($"Selected crate type: '{selectedCrateId}'", ComponentId);
         }
     }

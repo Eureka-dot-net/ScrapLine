@@ -85,6 +85,13 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
             RectTransform containerRect = buttonContainer as RectTransform;
             float containerWidth = containerRect != null ? containerRect.rect.width : 500f;
             
+            // If container width is 0, we need to force a layout rebuild first
+            if (containerWidth <= 0)
+            {
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
+                containerWidth = containerRect != null ? containerRect.rect.width : 500f;
+            }
+            
             // Calculate cell size for 3 columns with spacing
             float spacingX = gridLayout.spacing.x > 0 ? gridLayout.spacing.x : 10f;
             float spacingY = gridLayout.spacing.y > 0 ? gridLayout.spacing.y : 10f;
@@ -98,6 +105,11 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
             gridLayout.cellSize = new Vector2(cellSize, cellSize);
             // Also ensure spacing is applied correctly
             gridLayout.spacing = new Vector2(spacingX, spacingY);
+            
+            // Force layout rebuild to apply changes immediately
+            gridLayout.enabled = false;
+            gridLayout.enabled = true;
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
             
             GameLogger.Log(LoggingManager.LogCategory.UI, 
                 $"Configured Grid Layout: containerWidth={containerWidth}, cellSize={cellSize}x{cellSize}, spacing={spacingX}x{spacingY}", ComponentId);

@@ -164,6 +164,20 @@ namespace UnityEngine.UI
         public enum AspectMode { None, WidthControlsHeight, HeightControlsWidth, FitInParent, EnvelopeParent }
     }
 
+    // LayoutRebuilder class
+    public static class LayoutRebuilder
+    {
+        public static void ForceRebuildLayoutImmediate(RectTransform layoutRoot)
+        {
+            // Mock implementation - does nothing in sandbox
+        }
+        
+        public static void MarkLayoutForRebuild(RectTransform rect)
+        {
+            // Mock implementation - does nothing in sandbox
+        }
+    }
+
     // Outline effect
     public class Outline : MonoBehaviour
     {
