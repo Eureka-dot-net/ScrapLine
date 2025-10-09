@@ -8,13 +8,15 @@ using System.Collections.Generic;
 /// 
 /// UNITY SETUP:
 /// 1. Create UI Panel with Grid Layout Group
-///    - Grid Layout: Cell Size set to consistent dimensions (e.g., 100x100)
-///    - Constraint: Fixed Column Count = 3 (for 3 sprites per row)
-///    - Spacing as desired (e.g., 10, 10)
+///    - The Grid Layout will be configured at runtime for responsive sizing
+///    - No manual cell size configuration needed
 /// 2. Add this component to the panel
 /// 3. Assign selectionPanel, buttonContainer, buttonPrefab
-/// 4. Button prefab should have Button, Image, and Text components
-/// 5. Image should have "Preserve Aspect" enabled for proper sprite display
+/// 4. Button prefab should have Button and Image components
+/// 5. Image component should be a child of the button for proper sizing
+/// 
+/// NOTE: This panel uses responsive sizing - sprites are sized based on container width
+/// to show 3 items per row with consistent dimensions.
 /// </summary>
 public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
 {
@@ -26,6 +28,52 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
     /// Event fired when a crate is selected (for spawner configuration)
     /// </summary>
     public System.Action<string> OnCrateSelected;
+
+    /// <summary>
+    /// Override to configure Grid Layout Group for responsive 3-column layout
+    /// </summary>
+    protected override void PopulateButtons()
+    {
+        // Configure Grid Layout Group for this panel specifically
+        ConfigureGridLayoutForWasteCrates();
+        
+        // Call base implementation to create buttons
+        base.PopulateButtons();
+    }
+    
+    /// <summary>
+    /// Configure Grid Layout Group for responsive 3-column waste crate display
+    /// </summary>
+    private void ConfigureGridLayoutForWasteCrates()
+    {
+        if (buttonContainer == null) return;
+        
+        var gridLayout = buttonContainer.GetComponent<GridLayoutGroup>();
+        if (gridLayout != null)
+        {
+            // Get container width for responsive sizing
+            RectTransform containerRect = buttonContainer as RectTransform;
+            float containerWidth = containerRect != null ? containerRect.rect.width : 500f;
+            
+            // Calculate cell size for 3 columns with spacing
+            float spacing = gridLayout.spacing.x > 0 ? gridLayout.spacing.x : 10f;
+            float totalSpacing = spacing * 2; // 2 gaps for 3 columns
+            float cellSize = (containerWidth - totalSpacing) / 3f;
+            
+            // Set Grid Layout to fixed 3 columns with calculated cell size
+            gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            gridLayout.constraintCount = 3;
+            gridLayout.cellSize = new Vector2(cellSize, cellSize);
+            
+            GameLogger.Log(LoggingManager.LogCategory.UI, 
+                $"Configured Grid Layout: containerWidth={containerWidth}, cellSize={cellSize}, spacing={spacing}", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, 
+                "Button container does not have GridLayoutGroup component!", ComponentId);
+        }
+    }
 
     /// <summary>
     /// Show crate selection for spawner configuration (different from purchase)
