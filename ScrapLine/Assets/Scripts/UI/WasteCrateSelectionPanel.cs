@@ -56,17 +56,21 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
             float containerWidth = containerRect != null ? containerRect.rect.width : 500f;
             
             // Calculate cell size for 3 columns with spacing
-            float spacing = gridLayout.spacing.x > 0 ? gridLayout.spacing.x : 10f;
-            float totalSpacing = spacing * 2; // 2 gaps for 3 columns
+            float spacingX = gridLayout.spacing.x > 0 ? gridLayout.spacing.x : 10f;
+            float spacingY = gridLayout.spacing.y > 0 ? gridLayout.spacing.y : 10f;
+            float totalSpacing = spacingX * 2; // 2 gaps for 3 columns
             float cellSize = (containerWidth - totalSpacing) / 3f;
             
-            // Set Grid Layout to fixed 3 columns with calculated cell size
+            // Set Grid Layout to fixed 3 columns with square cells
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             gridLayout.constraintCount = 3;
+            // Ensure cells are perfectly square by setting both width and height to the same value
             gridLayout.cellSize = new Vector2(cellSize, cellSize);
+            // Also ensure spacing is applied correctly
+            gridLayout.spacing = new Vector2(spacingX, spacingY);
             
             GameLogger.Log(LoggingManager.LogCategory.UI, 
-                $"Configured Grid Layout: containerWidth={containerWidth}, cellSize={cellSize}, spacing={spacing}", ComponentId);
+                $"Configured Grid Layout: containerWidth={containerWidth}, cellSize={cellSize}x{cellSize}, spacing={spacingX}x{spacingY}", ComponentId);
         }
         else
         {
@@ -185,8 +189,14 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
 
     protected override bool SupportsNoneOption()
     {
-        // Waste crate selection typically doesn't support "None" since you're purchasing
-        return false;
+        // Support "None" option to allow clearing the selection
+        // This is needed for spawner configuration to remove crate type filter
+        return true;
+    }
+    
+    protected override string GetNoneDisplayName()
+    {
+        return "No Filter";
     }
 
     /// <summary>
