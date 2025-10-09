@@ -10,25 +10,34 @@ using System.Collections.Generic;
 /// UNITY SETUP REQUIRED:
 /// 1. Create main UI Panel GameObject with this component
 /// 2. Assign configPanel, confirmButton, cancelButton (from BaseConfigPanel)
-/// 3. Assign crateSelectionButton for opening crate selection
-/// 4. Create WasteCrateSelectionPanel and assign wasteCrateSelectionPanel reference
-/// 5. Set panels inactive by default (activated when configuration needed)
+/// 3. Assign currentCrateButton (button with Image child showing crate icon)
+/// 4. Assign currentCrateIcon (Image component within the button)
+/// 5. Assign currentCrateProgressBar (vertical Slider for showing crate fullness)
+/// 6. Create WasteCrateSelectionPanel and assign wasteCrateSelectionPanel reference
+/// 7. Create WasteCrateQueuePanel and assign queuePanel reference
+/// 8. Optionally assign wasteCrateConfigPanel (or it will be found at runtime)
+/// 9. Set panels inactive by default (activated when configuration needed)
 /// </summary>
 public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
 {
     [Header("Spawner Configuration")]
-    [Tooltip("Button to select required crate type")]
-    public Button crateSelectionButton;
+    [Tooltip("Button showing current crate icon - clicking opens waste crate selection")]
+    public Button currentCrateButton;
     
-    
-    [Tooltip("Image showing current crate icon")]
+    [Tooltip("Image component within currentCrateButton showing current crate icon")]
     public Image currentCrateIcon;
+    
+    [Tooltip("Vertical progress bar showing current crate fullness")]
+    public Slider currentCrateProgressBar;
     
     [Tooltip("Waste crate selection panel component")]
     public WasteCrateSelectionPanel wasteCrateSelectionPanel;
     
-    [Tooltip("Button to navigate to purchase panel")]
-    public Button purchaseButton;
+    [Tooltip("Queue panel showing top 3 queued waste crates")]
+    public WasteCrateQueuePanel queuePanel;
+    
+    [Tooltip("Waste crate config panel for purchasing")]
+    public WasteCrateConfigPanel wasteCrateConfigPanel;
 
     // State
     private string selectedRequiredCrateId = "";
@@ -36,16 +45,16 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
 
     protected override void SetupCustomButtonListeners()
     {
-        // Setup crate selection button
-        if (crateSelectionButton != null)
+        // Setup current crate button to open selection panel
+        if (currentCrateButton != null)
         {
-            crateSelectionButton.onClick.AddListener(OnSelectCrateTypeClicked);
+            currentCrateButton.onClick.AddListener(OnSelectCrateTypeClicked);
         }
         
-        // Setup purchase navigation button
-        if (purchaseButton != null)
+        // Setup queue panel click to open purchase panel
+        if (queuePanel != null)
         {
-            purchaseButton.onClick.AddListener(OnPurchaseClicked);
+            queuePanel.OnQueueClicked += OnQueuePanelClicked;
         }
 
         // Setup selection panel callback
@@ -97,16 +106,11 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
             }
         }
 
-        // Update button text to show current selection
-        if (crateSelectionButton != null)
-        {
-            var buttonText = crateSelectionButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText != null)
-            {
-                var crateDef = FactoryRegistry.Instance?.GetWasteCrate(selectedRequiredCrateId);
-                buttonText.text = crateDef?.displayName ?? "Select Crate Type";
-            }
-        }
+        // Update current crate progress bar
+        UpdateCrateProgressBar();
+        
+        // Update queue panel display
+        UpdateQueuePanelDisplay();
     }
 
     protected override string GetCurrentSelection()
@@ -160,21 +164,89 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
     }
 
     /// <summary>
-    /// Called when the "Purchase Crates" button is clicked
+    /// Called when the queue panel is clicked
     /// </summary>
-    private void OnPurchaseClicked()
+    private void OnQueuePanelClicked()
     {
         HideConfiguration();
         
         // Find and show the waste crate config panel (purchase interface)
-        var purchasePanel = FindFirstObjectByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
-        if (purchasePanel != null && currentData != null)
+        if (wasteCrateConfigPanel != null && currentData != null)
         {
-            purchasePanel.ShowConfiguration(currentData, null); // No callback needed for purchase
+            wasteCrateConfigPanel.ShowConfiguration(currentData, null); // No callback needed for purchase
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteCrateConfigPanel not found for purchase navigation", ComponentId);
+            // Fallback to finding the panel if not assigned
+            var purchasePanel = FindFirstObjectByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
+            if (purchasePanel != null && currentData != null)
+            {
+                purchasePanel.ShowConfiguration(currentData, null);
+            }
+            else
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteCrateConfigPanel not found for purchase navigation", ComponentId);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Update the current crate progress bar based on spawner's current crate
+    /// </summary>
+    private void UpdateCrateProgressBar()
+    {
+        if (currentCrateProgressBar == null || currentSpawnerMachine == null)
+            return;
+            
+        try
+        {
+            // Use reflection to get spawner methods (since we can't directly reference SpawnerMachine)
+            var spawnerType = currentSpawnerMachine.GetType();
+            var getTotalItemsMethod = spawnerType.GetMethod("GetTotalItemsInWasteCrate");
+            var getInitialTotalMethod = spawnerType.GetMethod("GetInitialWasteCrateTotal");
+            
+            if (getTotalItemsMethod != null && getInitialTotalMethod != null)
+            {
+                int currentItems = (int)getTotalItemsMethod.Invoke(currentSpawnerMachine, null);
+                int initialItems = (int)getInitialTotalMethod.Invoke(currentSpawnerMachine, null);
+                
+                // Update progress bar (fills from top to bottom for vertical bar)
+                float fillPercent = initialItems > 0 ? (float)currentItems / initialItems : 0f;
+                currentCrateProgressBar.value = fillPercent;
+                currentCrateProgressBar.gameObject.SetActive(true);
+            }
+            else
+            {
+                currentCrateProgressBar.gameObject.SetActive(false);
+            }
+        }
+        catch (System.Exception e)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not update crate progress bar: {e.Message}", ComponentId);
+            currentCrateProgressBar.gameObject.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// Update the queue panel display with current queue data
+    /// </summary>
+    private void UpdateQueuePanelDisplay()
+    {
+        if (queuePanel == null)
+            return;
+            
+        // Get global queue status from WasteSupplyManager
+        var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+        if (wasteSupplyManager != null)
+        {
+            var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
+            queuePanel.UpdateQueueDisplay(queueStatus.queuedCrateIds);
+            queuePanel.ShowPanel();
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteSupplyManager not found for queue display", ComponentId);
+            queuePanel.HidePanel();
         }
     }
 
@@ -187,22 +259,7 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
     {
         base.ShowConfiguration(cellData, onConfirmed);
         
-        // Additional setup for spawner-specific UI
-        if (purchaseButton != null && cellData?.machine is SpawnerMachine spawner)
-        {
-            // Enable purchase button and show global queue status
-            purchaseButton.gameObject.SetActive(true);
-            
-            // Get global queue status instead of per-spawner queue
-            var gameManager = GameManager.Instance;
-            if (gameManager?.gameData != null)
-            {
-                var buttonText = purchaseButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (buttonText != null)
-                {
-                    buttonText.text = $"Purchase Crates (Global: {gameManager.gameData.wasteQueue.Count}/{gameManager.gameData.wasteQueueLimit})";
-                }
-            }
-        }
+        // Update queue panel when showing configuration
+        UpdateQueuePanelDisplay();
     }
 }
