@@ -10,8 +10,8 @@ using System.Collections.Generic;
 /// UNITY SETUP REQUIRED:
 /// 1. Create main UI Panel GameObject with this component
 /// 2. Assign configPanel, confirmButton, cancelButton (from BaseConfigPanel)
-/// 3. Assign currentCrateButton (button with Image child showing crate icon)
-/// 4. Assign currentCrateIcon (Image component within the button)
+/// 3. Assign currentCrateButton (button that will display crate icon - must have Image component on it or child)
+/// 4. Assign emptySelectionSprite and emptySelectionColor for when no crate is selected
 /// 5. Assign currentCrateProgressBar (vertical Slider for showing crate fullness)
 /// 6. Create WasteCrateSelectionPanel and assign wasteCrateSelectionPanel reference
 /// 7. Create WasteCrateQueuePanel and assign queuePanel reference
@@ -24,8 +24,11 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
     [Tooltip("Button showing current crate icon - clicking opens waste crate selection")]
     public Button currentCrateButton;
     
-    [Tooltip("Image component within currentCrateButton showing current crate icon")]
-    public Image currentCrateIcon;
+    [Tooltip("Sprite to show when no crate is selected")]
+    public Sprite emptySelectionSprite;
+    
+    [Tooltip("Color to use when no crate is selected")]
+    public Color emptySelectionColor = Color.gray;
     
     [Tooltip("Vertical progress bar showing current crate fullness")]
     public Slider currentCrateProgressBar;
@@ -42,6 +45,7 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
     // State
     private string selectedRequiredCrateId = "";
     private SpawnerMachine currentSpawnerMachine;
+    private Image currentCrateIconImage; // Cached reference to Image within button
 
     protected override void SetupCustomButtonListeners()
     {
@@ -81,28 +85,54 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
 
     protected override void UpdateUIFromCurrentState()
     {
-        // Update crate icon
-        if (currentCrateIcon != null && !string.IsNullOrEmpty(selectedRequiredCrateId))
+        // Get the Image component within the current crate button
+        if (currentCrateIconImage == null && currentCrateButton != null)
         {
-            var crateDef = FactoryRegistry.Instance?.GetWasteCrate(selectedRequiredCrateId);
-            if (crateDef != null && !string.IsNullOrEmpty(crateDef.sprite))
+            currentCrateIconImage = currentCrateButton.GetComponent<Image>();
+            if (currentCrateIconImage == null)
             {
-                // Try to load sprite from Resources
-                var sprite = Resources.Load<Sprite>($"Sprites/Waste/{crateDef.sprite}");
-                if (sprite != null)
+                currentCrateIconImage = currentCrateButton.GetComponentInChildren<Image>();
+            }
+            
+            if (currentCrateIconImage == null)
+            {
+                GameLogger.LogError(LoggingManager.LogCategory.UI, "Current crate button has no Image component!", ComponentId);
+            }
+        }
+        
+        // Update crate icon
+        if (currentCrateIconImage != null)
+        {
+            if (!string.IsNullOrEmpty(selectedRequiredCrateId))
+            {
+                var crateDef = FactoryRegistry.Instance?.GetWasteCrate(selectedRequiredCrateId);
+                if (crateDef != null && !string.IsNullOrEmpty(crateDef.sprite))
                 {
-                    currentCrateIcon.sprite = sprite;
-                    currentCrateIcon.gameObject.SetActive(true);
+                    // Try to load sprite from Resources
+                    var sprite = Resources.Load<Sprite>($"Sprites/Waste/{crateDef.sprite}");
+                    if (sprite != null)
+                    {
+                        currentCrateIconImage.sprite = sprite;
+                        currentCrateIconImage.color = Color.white; // Configured crate uses white color
+                        currentCrateIconImage.gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not load sprite '{crateDef.sprite}' for crate", ComponentId);
+                        // Fall back to empty state
+                        SetEmptySelectionState();
+                    }
                 }
                 else
                 {
-                    GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not load sprite '{crateDef.sprite}' for crate", ComponentId);
-                    currentCrateIcon.gameObject.SetActive(false);
+                    // Fall back to empty state
+                    SetEmptySelectionState();
                 }
             }
             else
             {
-                currentCrateIcon.gameObject.SetActive(false);
+                // No selection - use empty state
+                SetEmptySelectionState();
             }
         }
 
@@ -111,6 +141,27 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
         
         // Update queue panel display
         UpdateQueuePanelDisplay();
+    }
+    
+    /// <summary>
+    /// Set the current crate icon to empty selection state
+    /// </summary>
+    private void SetEmptySelectionState()
+    {
+        if (currentCrateIconImage != null)
+        {
+            if (emptySelectionSprite != null)
+            {
+                currentCrateIconImage.sprite = emptySelectionSprite;
+                currentCrateIconImage.color = emptySelectionColor;
+                currentCrateIconImage.gameObject.SetActive(true);
+            }
+            else
+            {
+                // If no empty sprite is set, hide the image
+                currentCrateIconImage.gameObject.SetActive(false);
+            }
+        }
     }
 
     protected override string GetCurrentSelection()

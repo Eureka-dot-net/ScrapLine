@@ -74,6 +74,7 @@ namespace UnityEngine.UI
         public float fillAmount { get; set; } = 1f;
         public FillMethod fillMethod { get; set; } = FillMethod.Horizontal;
         public int fillOrigin { get; set; } = 0;
+        public bool preserveAspect { get; set; } = false;
         public RectTransform rectTransform => GetComponent<RectTransform>();
         
         public enum Type { Simple, Sliced, Tiled, Filled }

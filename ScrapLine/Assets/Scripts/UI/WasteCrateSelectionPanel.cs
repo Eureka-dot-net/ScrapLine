@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 /// <summary>
@@ -7,9 +8,13 @@ using System.Collections.Generic;
 /// 
 /// UNITY SETUP:
 /// 1. Create UI Panel with Grid Layout Group
+///    - Grid Layout: Cell Size set to consistent dimensions (e.g., 100x100)
+///    - Constraint: Fixed Column Count = 3 (for 3 sprites per row)
+///    - Spacing as desired (e.g., 10, 10)
 /// 2. Add this component to the panel
 /// 3. Assign selectionPanel, buttonContainer, buttonPrefab
 /// 4. Button prefab should have Button, Image, and Text components
+/// 5. Image should have "Preserve Aspect" enabled for proper sprite display
 /// </summary>
 public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
 {
@@ -84,7 +89,29 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
         {
             string spritePath = $"Sprites/Waste/{crate.sprite}";
             Sprite crateSprite = LoadSprite(spritePath);
-            SetButtonImage(buttonObj, crateSprite);
+            
+            if (crateSprite != null)
+            {
+                // Find the Image component in the button
+                var buttonImage = buttonObj.GetComponent<Image>();
+                if (buttonImage == null)
+                    buttonImage = buttonObj.GetComponentInChildren<Image>();
+                
+                if (buttonImage != null)
+                {
+                    buttonImage.sprite = crateSprite;
+                    buttonImage.color = Color.white;
+                    
+                    // Enable preserve aspect to maintain sprite proportions
+                    buttonImage.preserveAspect = true;
+                    
+                    // Set the Image to fill the button while preserving aspect
+                    buttonImage.type = Image.Type.Simple;
+                    
+                    GameLogger.Log(LoggingManager.LogCategory.UI, 
+                        $"Set sprite for crate {crate.id} with preserveAspect=true", ComponentId);
+                }
+            }
         }
 
         // Disable button if player can't afford it
