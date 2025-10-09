@@ -171,10 +171,77 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
 
     protected override void UpdateDataWithSelection(string selection)
     {
-        if (currentSpawnerMachine != null && !string.IsNullOrEmpty(selection))
+        if (currentSpawnerMachine != null)
         {
-            currentSpawnerMachine.RequiredCrateId = selection;
-            GameLogger.LogMachine($"Updated spawner required crate type to '{selection}'", ComponentId);
+            // Allow empty string to clear the filter
+            string previousCrateId = currentSpawnerMachine.RequiredCrateId;
+            currentSpawnerMachine.RequiredCrateId = string.IsNullOrEmpty(selection) ? "" : selection;
+            
+            if (string.IsNullOrEmpty(selection))
+            {
+                GameLogger.LogMachine($"Cleared spawner crate type filter", ComponentId);
+            }
+            else
+            {
+                GameLogger.LogMachine($"Updated spawner required crate type to '{selection}'", ComponentId);
+            }
+            
+            // If the required crate type changed, handle the current waste crate
+            if (previousCrateId != currentSpawnerMachine.RequiredCrateId)
+            {
+                HandleCrateTypeChange(previousCrateId);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Handle when the required crate type changes - return incompatible crate to queue
+    /// </summary>
+    /// <param name="previousCrateId">The previous required crate ID</param>
+    private void HandleCrateTypeChange(string previousCrateId)
+    {
+        if (currentSpawnerMachine == null || currentData == null) return;
+        
+        var gridData = GameManager.Instance?.GetCurrentGrid();
+        var cellData = gridData?.cells?.Find(c => c.x == currentData.x && c.y == currentData.y);
+        
+        if (cellData?.wasteCrate != null && !string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId))
+        {
+            string currentCrateId = cellData.wasteCrate.wasteCrateDefId;
+            
+            // If current crate doesn't match new required type, return it to queue
+            bool crateMatches = string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId) || 
+                               currentCrateId == currentSpawnerMachine.RequiredCrateId;
+            
+            if (!crateMatches)
+            {
+                // Return the current crate to the global queue
+                var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+                if (wasteSupplyManager != null)
+                {
+                    wasteSupplyManager.ReturnCrateToQueue(currentCrateId);
+                    GameLogger.LogMachine($"Returned incompatible crate '{currentCrateId}' to queue (new filter: '{currentSpawnerMachine.RequiredCrateId}')", ComponentId);
+                    
+                    // Clear the spawner's current crate
+                    cellData.wasteCrate = null;
+                    
+                    // Try to get a matching crate from queue
+                    if (currentSpawnerMachine != null)
+                    {
+                        // Use reflection to call TryRefillFromGlobalQueue
+                        var spawnerType = currentSpawnerMachine.GetType();
+                        var refillMethod = spawnerType.GetMethod("TryRefillFromGlobalQueue");
+                        if (refillMethod != null)
+                        {
+                            refillMethod.Invoke(currentSpawnerMachine, null);
+                        }
+                    }
+                }
+                else
+                {
+                    GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteSupplyManager not found - cannot return crate to queue", ComponentId);
+                }
+            }
         }
     }
 

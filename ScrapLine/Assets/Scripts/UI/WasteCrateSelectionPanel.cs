@@ -88,11 +88,10 @@ public class WasteCrateSelectionPanel : BaseSelectionPanel<WasteCrateDef>
     {
         ShowPanel((selectedCrate) => 
         {
-            if (selectedCrate != null)
-            {
-                OnCrateSelected?.Invoke(selectedCrate.id);
-                HidePanel();
-            }
+            // Handle both crate selection and None/clear selection
+            string selectedId = selectedCrate?.id ?? ""; // null means "No Filter" was selected
+            OnCrateSelected?.Invoke(selectedId);
+            HidePanel();
         });
     }
 

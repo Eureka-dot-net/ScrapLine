@@ -116,6 +116,38 @@ public class WasteSupplyManager : MonoBehaviour
             canAddToQueue = (gameData.wasteQueue?.Count ?? 0) < gameData.wasteQueueLimit
         };
     }
+    
+    /// <summary>
+    /// Return a waste crate to the global queue (e.g., when spawner configuration changes)
+    /// </summary>
+    /// <param name="crateId">ID of the waste crate to return</param>
+    /// <returns>True if crate was successfully returned to queue</returns>
+    public bool ReturnCrateToQueue(string crateId)
+    {
+        if (string.IsNullOrEmpty(crateId))
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, "Cannot return null/empty crate to queue", ComponentId);
+            return false;
+        }
+        
+        var gameData = GameManager.Instance.gameData;
+        
+        // Check if queue has space
+        if (gameData.wasteQueue.Count >= gameData.wasteQueueLimit)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Cannot return crate '{crateId}' - global queue is full ({gameData.wasteQueue.Count}/{gameData.wasteQueueLimit})", ComponentId);
+            return false;
+        }
+        
+        // Add crate back to queue
+        gameData.wasteQueue.Add(crateId);
+        GameLogger.LogEconomy($"Returned waste crate '{crateId}' to global queue ({gameData.wasteQueue.Count}/{gameData.wasteQueueLimit})", ComponentId);
+        
+        // Notify spawners that a crate is available
+        NotifySpawnersOfNewCrate(crateId);
+        
+        return true;
+    }
 
     /// <summary>
     /// Get all available waste crate types for UI selection
