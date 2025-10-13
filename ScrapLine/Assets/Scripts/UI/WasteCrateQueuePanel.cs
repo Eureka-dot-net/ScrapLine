@@ -71,9 +71,11 @@ public class WasteCrateQueuePanel : MonoBehaviour
     
     void Start()
     {
-        // Auto-detect button component from queuePanel
+        // Ensure queue panel is visible and active
         if (queuePanel != null)
         {
+            queuePanel.SetActive(true);
+            
             queueButton = queuePanel.GetComponent<Button>();
             if (queueButton == null)
             {
@@ -96,6 +98,8 @@ public class WasteCrateQueuePanel : MonoBehaviour
         
         // Configure layout direction
         ConfigureLayoutDirection();
+        
+        GameLogger.LogUI("WasteCrateQueuePanel initialized and visible", ComponentId);
     }
     
     /// <summary>
@@ -187,6 +191,13 @@ public class WasteCrateQueuePanel : MonoBehaviour
     /// <param name="queuedCrateIds">List of waste crate IDs in the queue</param>
     public void UpdateQueueDisplay(List<string> queuedCrateIds)
     {
+        // Ensure queue panel is visible
+        if (queuePanel != null && !queuePanel.activeSelf)
+        {
+            queuePanel.SetActive(true);
+            GameLogger.LogUI("Queue panel was inactive - activating it", ComponentId);
+        }
+        
         // Clear existing queue items
         ClearQueueItems();
         
@@ -206,6 +217,12 @@ public class WasteCrateQueuePanel : MonoBehaviour
                 queueButton.interactable = true;
             }
             
+            // Ensure queue container is active even when empty
+            if (queueContainer != null)
+            {
+                queueContainer.gameObject.SetActive(true);
+            }
+            
             GameLogger.LogUI("Queue is empty - button remains clickable for purchasing", ComponentId);
             return;
         }
@@ -220,6 +237,12 @@ public class WasteCrateQueuePanel : MonoBehaviour
         if (queueButton != null)
         {
             queueButton.interactable = true;
+        }
+        
+        // Ensure queue container is active
+        if (queueContainer != null)
+        {
+            queueContainer.gameObject.SetActive(true);
         }
         
         // Display up to maxDisplayItems from the queue
