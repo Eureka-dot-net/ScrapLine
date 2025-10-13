@@ -83,6 +83,8 @@ public class WasteCrateQueuePanel : MonoBehaviour
             if (queueButton != null)
             {
                 queueButton.onClick.AddListener(OnQueueButtonClicked);
+                // Ensure button starts enabled - users should always be able to click to purchase
+                queueButton.interactable = true;
             }
             else
             {
@@ -196,6 +198,15 @@ public class WasteCrateQueuePanel : MonoBehaviour
                 emptyQueueText.gameObject.SetActive(true);
                 emptyQueueText.text = "Queue Empty";
             }
+            
+            // Ensure button remains enabled even when queue is empty
+            // Users should be able to click to purchase new crates
+            if (queueButton != null)
+            {
+                queueButton.interactable = true;
+            }
+            
+            GameLogger.LogUI("Queue is empty - button remains clickable for purchasing", ComponentId);
             return;
         }
         
@@ -203,6 +214,12 @@ public class WasteCrateQueuePanel : MonoBehaviour
         if (emptyQueueText != null)
         {
             emptyQueueText.gameObject.SetActive(false);
+        }
+        
+        // Ensure button is enabled when queue has items
+        if (queueButton != null)
+        {
+            queueButton.interactable = true;
         }
         
         // Display up to maxDisplayItems from the queue
