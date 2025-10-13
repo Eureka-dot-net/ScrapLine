@@ -362,18 +362,21 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
         if (queuePanel == null)
             return;
             
+        // Ensure panel is always visible (users need to click it to purchase)
+        queuePanel.ShowPanel();
+            
         // Get global queue status from WasteSupplyManager
         var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
         if (wasteSupplyManager != null)
         {
             var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
             queuePanel.UpdateQueueDisplay(queueStatus.queuedCrateIds);
-            queuePanel.ShowPanel();
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteSupplyManager not found for queue display", ComponentId);
-            queuePanel.HidePanel();
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteSupplyManager not found - showing empty queue", ComponentId);
+            // Show empty queue but keep panel visible so users can purchase
+            queuePanel.UpdateQueueDisplay(new List<string>());
         }
     }
 
