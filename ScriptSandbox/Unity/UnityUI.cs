@@ -74,6 +74,7 @@ namespace UnityEngine.UI
         public float fillAmount { get; set; } = 1f;
         public FillMethod fillMethod { get; set; } = FillMethod.Horizontal;
         public int fillOrigin { get; set; } = 0;
+        public bool preserveAspect { get; set; } = false;
         public RectTransform rectTransform => GetComponent<RectTransform>();
         
         public enum Type { Simple, Sliced, Tiled, Filled }
@@ -141,6 +142,20 @@ namespace UnityEngine.UI
         public bool childForceExpandHeight { get; set; } = true;
         public bool childControlWidth { get; set; } = true;
         public bool childControlHeight { get; set; } = true;
+        public TextAnchor childAlignment { get; set; } = TextAnchor.UpperLeft;
+        public bool reverseArrangement { get; set; } = false;
+    }
+
+    // VerticalLayoutGroup class
+    public class VerticalLayoutGroup : MonoBehaviour
+    {
+        public float spacing { get; set; } = 0f;
+        public bool childForceExpandWidth { get; set; } = true;
+        public bool childForceExpandHeight { get; set; } = true;
+        public bool childControlWidth { get; set; } = true;
+        public bool childControlHeight { get; set; } = true;
+        public TextAnchor childAlignment { get; set; } = TextAnchor.UpperLeft;
+        public bool reverseArrangement { get; set; } = false;
     }
 
     // GridLayoutGroup class
@@ -161,6 +176,20 @@ namespace UnityEngine.UI
         public float aspectRatio { get; set; } = 1f;
         
         public enum AspectMode { None, WidthControlsHeight, HeightControlsWidth, FitInParent, EnvelopeParent }
+    }
+
+    // LayoutRebuilder class
+    public static class LayoutRebuilder
+    {
+        public static void ForceRebuildLayoutImmediate(RectTransform layoutRoot)
+        {
+            // Mock implementation - does nothing in sandbox
+        }
+        
+        public static void MarkLayoutForRebuild(RectTransform rect)
+        {
+            // Mock implementation - does nothing in sandbox
+        }
     }
 
     // Outline effect

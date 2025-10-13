@@ -19,6 +19,7 @@ namespace TMPro
         public TMP_FontAsset font { get; set; }
         public bool enableWordWrapping { get; set; } = true;
         public TextOverflowModes overflowMode { get; set; } = TextOverflowModes.Overflow;
+        public TextWrappingModes textWrappingMode { get; set; } = TextWrappingModes.Normal;
         
         public enum FontStyles
         {
@@ -57,6 +58,13 @@ namespace TMPro
         ScrollRect = 4,
         Page = 5,
         Linked = 6
+    }
+    
+    // TextWrappingModes enum for TMP
+    public enum TextWrappingModes
+    {
+        Normal = 0,
+        NoWrap = 1
     }
 
     // TextMeshProUGUI class for UI text

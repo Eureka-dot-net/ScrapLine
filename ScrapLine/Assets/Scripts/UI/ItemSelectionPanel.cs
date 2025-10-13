@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// Displays all available ItemDef objects from FactoryRegistry.
 /// 
 /// UNITY SETUP:
-/// 1. Create UI Panel with Grid Layout Group
+/// 1. Create UI Panel WITHOUT Grid Layout Group (uses manual row positioning)
 /// 2. Add this component to the panel
 /// 3. Assign selectionPanel, buttonContainer, buttonPrefab
 /// 4. Button prefab should have Button, Image, and Text components
@@ -16,6 +16,17 @@ public class ItemSelectionPanel : BaseSelectionPanel<ItemDef>
     [Header("Item Selection Specific")]
     [Tooltip("Filter items by type (leave empty for all items)")]
     public List<string> itemTypeFilter = new List<string>();
+
+    /// <summary>
+    /// Override to use manual row-based positioning (5-6 items per row)
+    /// This ensures ItemSelectionPanel is not affected by WasteCrateSelectionPanel's Grid Layout approach
+    /// </summary>
+    protected override void CreateSelectionButton(ItemDef item, string displayName)
+    {
+        // Use the base class implementation which does manual row positioning
+        // This gives us the 5-6 items per row layout that works well for items
+        base.CreateSelectionButton(item, displayName);
+    }
 
     protected override List<ItemDef> GetAvailableItems()
     {
