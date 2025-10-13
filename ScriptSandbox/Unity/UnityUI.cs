@@ -142,6 +142,20 @@ namespace UnityEngine.UI
         public bool childForceExpandHeight { get; set; } = true;
         public bool childControlWidth { get; set; } = true;
         public bool childControlHeight { get; set; } = true;
+        public TextAnchor childAlignment { get; set; } = TextAnchor.UpperLeft;
+        public bool reverseArrangement { get; set; } = false;
+    }
+
+    // VerticalLayoutGroup class
+    public class VerticalLayoutGroup : MonoBehaviour
+    {
+        public float spacing { get; set; } = 0f;
+        public bool childForceExpandWidth { get; set; } = true;
+        public bool childForceExpandHeight { get; set; } = true;
+        public bool childControlWidth { get; set; } = true;
+        public bool childControlHeight { get; set; } = true;
+        public TextAnchor childAlignment { get; set; } = TextAnchor.UpperLeft;
+        public bool reverseArrangement { get; set; } = false;
     }
 
     // GridLayoutGroup class
