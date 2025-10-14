@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// Manages game state serialization and persistence.

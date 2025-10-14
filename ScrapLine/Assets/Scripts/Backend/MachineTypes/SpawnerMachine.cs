@@ -37,7 +37,7 @@ public class SpawnerMachine : BaseMachine
         RequiredCrateId = "starter_crate";
         
         // Assign the starter waste crate to this spawner when created
-        CreateWasteCrate();
+        //CreateWasteCrate();
     }
     
     /// <summary>
