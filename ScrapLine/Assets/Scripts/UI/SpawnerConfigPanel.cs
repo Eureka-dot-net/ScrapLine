@@ -212,11 +212,13 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
         {
             string currentCrateId = cellData.wasteCrate.wasteCrateDefId;
             
-            // If current crate doesn't match new required type, return it to queue
-            bool crateMatches = string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId) || 
-                               currentCrateId == currentSpawnerMachine.RequiredCrateId;
+            // Return crate to queue if:
+            // 1. Configuration was cleared (RequiredCrateId is empty) - return current crate
+            // 2. New required type doesn't match current crate - return current crate
+            bool shouldReturnCrate = string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId) || 
+                                     currentCrateId != currentSpawnerMachine.RequiredCrateId;
             
-            if (!crateMatches)
+            if (shouldReturnCrate)
             {
                 // Return the current crate to the global queue
                 var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
