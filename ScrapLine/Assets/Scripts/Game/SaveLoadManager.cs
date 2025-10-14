@@ -105,6 +105,13 @@ public class SaveLoadManager : MonoBehaviour
                 return false;
             }
 
+            // Initialize wasteQueue if it's null (for backwards compatibility with old saves)
+            if (data.wasteQueue == null)
+            {
+                data.wasteQueue = new List<string>();
+                GameLogger.LogSaveLoad("Initialized null wasteQueue for backwards compatibility", ComponentId);
+            }
+
             // Store loaded data in GameManager
             GameManager.Instance.gameData = data;
 
