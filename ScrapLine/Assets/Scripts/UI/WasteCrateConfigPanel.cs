@@ -1,167 +1,364 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 /// <summary>
-/// Configuration panel for waste crate purchasing using Plan A base classes.
-/// Reduces original 314 lines to ~70 lines by leveraging BaseConfigPanel.
+/// Configuration panel for waste crate purchasing - combines queue display and purchase grid.
+/// This panel is different from other config panels as it's a direct purchase interface.
 /// 
-/// Handles waste crate purchasing for spawner machines with current crate display.
-/// Note: This is different from other config panels as it's more of a purchase interface.
+/// CHANGES FROM PREVIOUS VERSION:
+/// - Combines queue display and crate selection in a single panel
+/// - Shows current queue status using WasteCrateQueuePanel
+/// - Displays grid of all purchasable crates (similar to WasteCrateSelectionPanel)
+/// - Immediate purchase on crate click - no confirm/cancel workflow
+/// - Does NOT inherit from BaseConfigPanel (too different in behavior)
 /// 
 /// UNITY SETUP REQUIRED:
 /// 1. Create main UI Panel GameObject with this component
-/// 2. Assign configPanel, confirmButton, cancelButton (from BaseConfigPanel)
-/// 3. Assign currentCrateInfo components and buyButton
-/// 4. Create WasteCrateSelectionPanel and assign wasteCrateSelectionPanel reference  
-/// 5. Set panels inactive by default (activated when configuration needed)
+/// 2. Assign mainPanel (the panel to show/hide)
+/// 3. Assign queuePanel component (WasteCrateQueuePanel)
+/// 4. Assign crateGridContainer (Transform with GridLayoutGroup for crate buttons)
+/// 5. Assign crateButtonPrefab (button prefab for each purchasable crate)
+/// 6. Optionally assign closeButton to close the panel
+/// 7. Set panel inactive by default (activated when needed)
 /// </summary>
-public class WasteCrateConfigPanel : BaseConfigPanel<CellData, string>
+public class WasteCrateConfigPanel : MonoBehaviour
 {
-    [Header("Waste Crate Specific")]
-    [Tooltip("Button to open purchase panel")]
-    public Button buyButton;
+    [Header("Main Panel Components")]
+    [Tooltip("Main panel GameObject to show/hide")]
+    public GameObject mainPanel;
     
-    [Tooltip("Waste crate selection panel component")]
-    public WasteCrateSelectionPanel wasteCrateSelectionPanel;
+    [Tooltip("Button to close the panel")]
+    public Button closeButton;
 
-    [Header("Current Crate Display")]
-    [Tooltip("Text showing current crate name")]
-    public TextMeshProUGUI currentCrateNameText;
-    
-    [Tooltip("Text showing crate fullness (e.g. '75/100 items')")]
-    public TextMeshProUGUI currentCrateFullnessText;
-    
-    [Tooltip("Progress bar showing crate fullness")]
-    public Slider currentCrateProgressBar;
-    
-    [Tooltip("Text showing queue status")]
-    public TextMeshProUGUI queueStatusText;
+    [Header("Queue Display")]
+    [Tooltip("Queue panel component showing current waste crate queue")]
+    public WasteCrateQueuePanel queuePanel;
 
-    // State for current spawner
-    private int currentSpawnerX;
-    private int currentSpawnerY;
-    private WasteCrateQueueStatus currentQueueStatus;
-    private string selectedCrateId = "";
+    [Header("Purchase Grid")]
+    [Tooltip("Container for crate purchase buttons (should have GridLayoutGroup)")]
+    public Transform crateGridContainer;
+    
+    [Tooltip("Prefab for crate purchase buttons (must have Button, Image, TextMeshProUGUI)")]
+    public GameObject crateButtonPrefab;
+    
+    [Tooltip("Show cost in button text")]
+    public bool showCostInText = true;
 
     /// <summary>
-    /// Show configuration for a specific spawner location
+    /// Component ID for logging purposes
     /// </summary>
-    /// <param name="spawnerX">X coordinate of spawner</param>
-    /// <param name="spawnerY">Y coordinate of spawner</param>
-    /// <param name="onConfirmed">Callback when purchase is confirmed</param>
-    public void ShowConfiguration(int spawnerX, int spawnerY, System.Action<string> onConfirmed)
+    private string ComponentId => $"WasteCrateConfigPanel_{GetInstanceID()}";
+    
+    /// <summary>
+    /// List of instantiated crate button objects
+    /// </summary>
+    private List<GameObject> crateButtons = new List<GameObject>();
+    
+    /// <summary>
+    /// Callback when panel is closed
+    /// </summary>
+    private System.Action onPanelClosed;
+
+    void Start()
     {
-        currentSpawnerX = spawnerX;
-        currentSpawnerY = spawnerY;
+        // Setup close button listener
+        if (closeButton != null)
+        {
+            closeButton.onClick.AddListener(HidePanel);
+        }
         
-        // Create a fake CellData for base class compatibility
-        var cellData = new CellData { x = spawnerX, y = spawnerY };
+        // Initialize panel as hidden
+        if (mainPanel != null)
+        {
+            mainPanel.SetActive(false);
+        }
         
-        ShowConfiguration(cellData, onConfirmed);
+        GameLogger.LogUI("WasteCrateConfigPanel initialized", ComponentId);
     }
 
-    protected override void SetupCustomButtonListeners()
+    /// <summary>
+    /// Show the waste crate configuration panel
+    /// </summary>
+    /// <param name="onClosed">Optional callback when panel is closed</param>
+    public void ShowPanel(System.Action onClosed = null)
     {
-        if (buyButton != null)
-            buyButton.onClick.AddListener(ShowWasteCrateSelection);
+        onPanelClosed = onClosed;
+        
+        // Register with panel manager
+        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        if (panelManager != null)
+        {
+            panelManager.RegisterOpenPanel(this);
+        }
+        
+        // Update queue display
+        UpdateQueueDisplay();
+        
+        // Populate purchase grid
+        PopulatePurchaseGrid();
+        
+        // Show main panel
+        if (mainPanel != null)
+        {
+            mainPanel.SetActive(true);
+        }
+        
+        GameLogger.LogUI("Waste crate config panel shown", ComponentId);
     }
 
-    protected override void LoadCurrentConfiguration()
+    /// <summary>
+    /// Hide the waste crate configuration panel
+    /// </summary>
+    public void HidePanel()
     {
-        // Get global queue status from WasteSupplyManager instead
+        // Unregister from panel manager
+        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        if (panelManager != null)
+        {
+            panelManager.UnregisterPanel(this);
+        }
+        
+        // Hide main panel
+        if (mainPanel != null)
+        {
+            mainPanel.SetActive(false);
+        }
+        
+        // Call close callback
+        onPanelClosed?.Invoke();
+        onPanelClosed = null;
+        
+        GameLogger.LogUI("Waste crate config panel hidden", ComponentId);
+    }
+
+    /// <summary>
+    /// Update the queue display with current queue data
+    /// </summary>
+    private void UpdateQueueDisplay()
+    {
+        if (queuePanel == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "Queue panel not assigned", ComponentId);
+            return;
+        }
+        
+        // Get queue status from WasteSupplyManager
         var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
         if (wasteSupplyManager != null)
         {
-            currentQueueStatus = wasteSupplyManager.GetGlobalQueueStatus();
+            var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
+            queuePanel.UpdateQueueDisplay(queueStatus.queuedCrateIds);
         }
         else
         {
             GameLogger.LogError(LoggingManager.LogCategory.UI, "WasteSupplyManager not found", ComponentId);
         }
+    }
+
+    /// <summary>
+    /// Populate the grid with all purchasable waste crates
+    /// </summary>
+    private void PopulatePurchaseGrid()
+    {
+        // Clear existing buttons
+        ClearPurchaseGrid();
         
-        selectedCrateId = "";
-    }
-
-    protected override void UpdateUIFromCurrentState()
-    {
-        UpdateCurrentCrateDisplay();
-        UpdateBuyButtonState();
-    }
-
-    protected override string GetCurrentSelection()
-    {
-        return selectedCrateId;
-    }
-
-    protected override void UpdateDataWithSelection(string selection)
-    {
-        // For waste crates, the "selection" is actually a purchase action
-        // The actual purchase happens in OnWasteCrateSelected
-        selectedCrateId = selection;
-    }
-
-    protected override void HideSelectionPanels()
-    {
-        if (wasteCrateSelectionPanel != null)
-            wasteCrateSelectionPanel.HidePanel();
-    }
-
-    /// <summary>
-    /// Override to customize behavior for waste crate "confirmation"
-    /// </summary>
-    protected override void OnConfigurationConfirmed(string selection)
-    {
-        // For waste crates, confirmation means successful purchase
-        GameLogger.LogEconomy($"Waste crate purchase confirmed: {selection}", ComponentId);
-    }
-
-    /// <summary>
-    /// Show waste crate selection panel
-    /// </summary>
-    private void ShowWasteCrateSelection()
-    {
-        if (wasteCrateSelectionPanel != null)
+        if (crateGridContainer == null || crateButtonPrefab == null)
         {
-            wasteCrateSelectionPanel.ShowPanel(OnWasteCrateSelected);
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "Crate grid container or button prefab not assigned", ComponentId);
+            return;
+        }
+        
+        // Configure grid layout (3 columns like WasteCrateSelectionPanel)
+        ConfigureGridLayout();
+        
+        // Get all available waste crates
+        var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+        var availableCrates = wasteSupplyManager?.GetAvailableWasteCrates() ?? new List<WasteCrateDef>();
+        
+        if (availableCrates.Count == 0)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "No waste crates available", ComponentId);
+            return;
+        }
+        
+        // Create button for each crate
+        foreach (var crate in availableCrates)
+        {
+            CreateCrateButton(crate);
+        }
+        
+        GameLogger.LogUI($"Populated purchase grid with {availableCrates.Count} crates", ComponentId);
+    }
+
+    /// <summary>
+    /// Configure the grid layout for 3-column responsive display
+    /// </summary>
+    private void ConfigureGridLayout()
+    {
+        var gridLayout = crateGridContainer.GetComponent<GridLayoutGroup>();
+        if (gridLayout != null)
+        {
+            // Get container width for responsive sizing
+            RectTransform containerRect = crateGridContainer as RectTransform;
+            float containerWidth = containerRect != null ? containerRect.rect.width : 500f;
+            
+            // If container width is 0, force layout rebuild
+            if (containerWidth <= 0)
+            {
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
+                containerWidth = containerRect != null ? containerRect.rect.width : 500f;
+            }
+            
+            // Calculate cell size for 3 columns with spacing
+            float spacingX = gridLayout.spacing.x > 0 ? gridLayout.spacing.x : 10f;
+            float spacingY = gridLayout.spacing.y > 0 ? gridLayout.spacing.y : 10f;
+            float totalSpacing = spacingX * 2; // 2 gaps for 3 columns
+            float cellSize = (containerWidth - totalSpacing) / 3f;
+            
+            // Configure grid layout
+            gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            gridLayout.constraintCount = 3;
+            gridLayout.cellSize = new Vector2(cellSize, cellSize);
+            gridLayout.spacing = new Vector2(spacingX, spacingY);
+            
+            // Force layout rebuild
+            gridLayout.enabled = false;
+            gridLayout.enabled = true;
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
+            
+            GameLogger.LogUI($"Configured grid layout: cellSize={cellSize}x{cellSize}", ComponentId);
         }
         else
         {
-            GameLogger.LogError(LoggingManager.LogCategory.UI, "WasteCrateSelectionPanel not assigned!", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "Crate grid container missing GridLayoutGroup", ComponentId);
         }
     }
 
     /// <summary>
-    /// Handle waste crate selection and immediate purchase
+    /// Create a purchase button for a waste crate
     /// </summary>
-    /// <param name="crate">Selected waste crate</param>
-    private void OnWasteCrateSelected(WasteCrateDef crate)
+    /// <param name="crate">Crate definition to create button for</param>
+    private void CreateCrateButton(WasteCrateDef crate)
+    {
+        GameObject buttonObj = Instantiate(crateButtonPrefab, crateGridContainer);
+        crateButtons.Add(buttonObj);
+        
+        Button button = buttonObj.GetComponent<Button>();
+        if (button != null)
+        {
+            // Setup click listener for immediate purchase
+            button.onClick.AddListener(() => OnCratePurchaseClicked(crate));
+            
+            // Setup button visuals
+            SetupButtonVisuals(buttonObj, crate);
+            
+            // Enable/disable based on affordability
+            var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+            if (wasteSupplyManager != null)
+            {
+                bool canAfford = wasteSupplyManager.CanAffordWasteCrate(crate.id);
+                var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
+                bool queueHasSpace = queueStatus.canAddToQueue;
+                
+                button.interactable = canAfford && queueHasSpace;
+                
+                if (!canAfford || !queueHasSpace)
+                {
+                    // Dim the button if can't afford or queue full
+                    var colors = button.colors;
+                    colors.normalColor = colors.disabledColor;
+                    button.colors = colors;
+                }
+            }
+        }
+        else
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI, "Crate button prefab missing Button component", ComponentId);
+        }
+    }
+
+    /// <summary>
+    /// Setup visual appearance for a crate button
+    /// </summary>
+    /// <param name="buttonObj">Button GameObject</param>
+    /// <param name="crate">Crate definition</param>
+    private void SetupButtonVisuals(GameObject buttonObj, WasteCrateDef crate)
+    {
+        // Set button text
+        var buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
+        if (buttonText != null)
+        {
+            string displayText = crate.displayName ?? crate.id ?? "Crate";
+            
+            if (showCostInText)
+            {
+                var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+                int cost = wasteSupplyManager?.GetWasteCrateCost(crate.id) ?? 0;
+                displayText += $"\n{cost} credits";
+            }
+            
+            buttonText.text = displayText;
+        }
+        
+        // Set button sprite
+        if (!string.IsNullOrEmpty(crate.sprite))
+        {
+            string spritePath = $"Sprites/Waste/{crate.sprite}";
+            Sprite crateSprite = Resources.Load<Sprite>(spritePath);
+            
+            if (crateSprite != null)
+            {
+                var buttonImage = buttonObj.GetComponent<Image>();
+                if (buttonImage == null)
+                    buttonImage = buttonObj.GetComponentInChildren<Image>();
+                
+                if (buttonImage != null)
+                {
+                    buttonImage.sprite = crateSprite;
+                    buttonImage.color = Color.white;
+                    buttonImage.preserveAspect = true;
+                    buttonImage.type = Image.Type.Simple;
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not load sprite '{spritePath}'", ComponentId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handle crate purchase button click - immediate purchase
+    /// </summary>
+    /// <param name="crate">Crate to purchase</param>
+    private void OnCratePurchaseClicked(WasteCrateDef crate)
     {
         if (crate == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "No crate selected", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "Attempted to purchase null crate", ComponentId);
             return;
         }
-
-        selectedCrateId = crate.id;
         
-        // Attempt immediate purchase using WasteSupplyManager
+        // Attempt to purchase the crate
         var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
-        bool success = wasteSupplyManager?.PurchaseWasteCrate(crate.id) ?? false;
+        if (wasteSupplyManager == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.Economy, "WasteSupplyManager not found", ComponentId);
+            return;
+        }
+        
+        bool success = wasteSupplyManager.PurchaseWasteCrate(crate.id);
         
         if (success)
         {
             GameLogger.LogEconomy($"Successfully purchased {crate.displayName}", ComponentId);
             
-            // Refresh the queue status and update display
-            currentQueueStatus = wasteSupplyManager.GetGlobalQueueStatus();
-            UpdateUIFromCurrentState();
-            
-            // Call the callback to notify of successful purchase
-            onConfigurationConfirmed?.Invoke(selectedCrateId);
-            
-            // Hide the configuration (purchase complete)
-            HideConfiguration();
+            // Refresh the display to show updated queue and button states
+            UpdateQueueDisplay();
+            PopulatePurchaseGrid();
         }
         else
         {
@@ -170,101 +367,22 @@ public class WasteCrateConfigPanel : BaseConfigPanel<CellData, string>
     }
 
     /// <summary>
-    /// Update the current crate display with latest information
+    /// Clear all purchase grid buttons
     /// </summary>
-    private void UpdateCurrentCrateDisplay()
+    private void ClearPurchaseGrid()
     {
-        if (currentQueueStatus == null) return;
-        
-        // Get current crate definition
-        var crateDef = FactoryRegistry.Instance?.GetWasteCrate(currentQueueStatus.currentCrateId);
-        if (crateDef != null)
+        foreach (var button in crateButtons)
         {
-            if (currentCrateNameText != null)
-                currentCrateNameText.text = crateDef.displayName;
-        }
-        else
-        {
-            if (currentCrateNameText != null)
-                currentCrateNameText.text = "No Crate";
-        }
-        
-        // Get spawner to check current fullness
-        var gridData = GameManager.Instance?.GetCurrentGrid();
-        var cellData = gridData?.cells?.Find(c => c.x == currentSpawnerX && c.y == currentSpawnerY);
-        var spawner = cellData?.machine as SpawnerMachine;
-        
-        if (spawner != null)
-        {
-            // Use reflection to get spawner methods (since we can't directly reference SpawnerMachine)
-            try
+            if (button != null)
             {
-                var spawnerType = spawner.GetType();
-                var getTotalItemsMethod = spawnerType.GetMethod("GetTotalItemsInWasteCrate");
-                var getInitialTotalMethod = spawnerType.GetMethod("GetInitialWasteCrateTotal");
-                
-                if (getTotalItemsMethod != null && getInitialTotalMethod != null)
-                {
-                    int currentItems = (int)getTotalItemsMethod.Invoke(spawner, null);
-                    int initialItems = (int)getInitialTotalMethod.Invoke(spawner, null);
-                    
-                    if (currentCrateFullnessText != null)
-                        currentCrateFullnessText.text = $"{currentItems}/{initialItems} items";
-                        
-                    if (currentCrateProgressBar != null)
-                    {
-                        float fillPercent = initialItems > 0 ? (float)currentItems / initialItems : 0f;
-                        currentCrateProgressBar.value = fillPercent;
-                    }
-                }
-            }
-            catch (System.Exception e)
-            {
-                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not get spawner crate info: {e.Message}", ComponentId);
+                Destroy(button);
             }
         }
-        
-        // Update queue status
-        if (queueStatusText != null)
-        {
-            if (currentQueueStatus.queuedCrateIds.Count > 0)
-            {
-                string queuedCrateName = "Unknown";
-                var queuedCrateDef = FactoryRegistry.Instance?.GetWasteCrate(currentQueueStatus.queuedCrateIds[0]);
-                if (queuedCrateDef != null)
-                    queuedCrateName = queuedCrateDef.displayName;
-                    
-                queueStatusText.text = $"Queue: {queuedCrateName} ({currentQueueStatus.queuedCrateIds.Count}/{currentQueueStatus.maxQueueSize})";
-            }
-            else
-            {
-                queueStatusText.text = $"Queue: Empty ({currentQueueStatus.queuedCrateIds.Count}/{currentQueueStatus.maxQueueSize})";
-            }
-        }
+        crateButtons.Clear();
     }
 
-    /// <summary>
-    /// Update the state of the buy button based on queue capacity
-    /// </summary>
-    private void UpdateBuyButtonState()
+    void OnDestroy()
     {
-        if (buyButton != null && currentQueueStatus != null)
-        {
-            buyButton.interactable = currentQueueStatus.canAddToQueue;
-            
-            // Update button text based on state
-            var buttonText = buyButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText != null)
-            {
-                if (currentQueueStatus.canAddToQueue)
-                {
-                    buttonText.text = "Buy Crate";
-                }
-                else
-                {
-                    buttonText.text = "Queue Full";
-                }
-            }
-        }
+        ClearPurchaseGrid();
     }
 }

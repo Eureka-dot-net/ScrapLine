@@ -36,6 +36,10 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
 
     [Tooltip("Button to cancel configuration")]
     public Button cancelButton;
+    
+    [Header("Panel Behavior")]
+    [Tooltip("Hide cancel button for this panel (useful for immediate-action panels)")]
+    public bool hideCancelButton = false;
 
     // Protected state available to derived classes
     protected TData currentData;
@@ -103,7 +107,15 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
             confirmButton.onClick.AddListener(OnConfirmClicked);
 
         if (cancelButton != null)
+        {
             cancelButton.onClick.AddListener(OnCancelClicked);
+            
+            // Hide cancel button if configured to do so
+            if (hideCancelButton)
+            {
+                cancelButton.gameObject.SetActive(false);
+            }
+        }
     }
 
     /// <summary>
