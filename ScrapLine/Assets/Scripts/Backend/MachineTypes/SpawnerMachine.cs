@@ -37,7 +37,7 @@ public class SpawnerMachine : BaseMachine
         RequiredCrateId = "starter_crate";
         
         // Assign the starter waste crate to this spawner when created
-        CreateWasteCrate();
+        //CreateWasteCrate();
     }
     
     /// <summary>
@@ -79,9 +79,15 @@ public class SpawnerMachine : BaseMachine
     /// <param name="selectedCrateId">The selected crate type ID</param>
     private void OnConfigurationConfirmed(string selectedCrateId)
     {
-        if (!string.IsNullOrEmpty(selectedCrateId))
+        // Allow empty string to clear the filter
+        RequiredCrateId = selectedCrateId ?? "";
+        
+        if (string.IsNullOrEmpty(selectedCrateId))
         {
-            RequiredCrateId = selectedCrateId;
+            GameLogger.LogMachine($"Spawner configuration cleared (no crate filter)", ComponentId);
+        }
+        else
+        {
             GameLogger.LogMachine($"Spawner configured to require '{selectedCrateId}' crates", ComponentId);
             
             // Trigger supply check immediately after configuration change
@@ -376,7 +382,20 @@ public class SpawnerMachine : BaseMachine
     public bool TryRefillFromGlobalQueue()
     {
         var gameManager = GameManager.Instance;
-        if (gameManager?.gameData?.wasteQueue == null || gameManager.gameData.wasteQueue.Count == 0)
+        if (gameManager?.gameData == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "GameManager or gameData is null", ComponentId);
+            return false;
+        }
+
+        // Initialize wasteQueue if null (defensive programming for loaded games)
+        if (gameManager.gameData.wasteQueue == null)
+        {
+            gameManager.gameData.wasteQueue = new List<string>();
+            GameLogger.LogWarning(LoggingManager.LogCategory.Spawning, "Initialized null wasteQueue", ComponentId);
+        }
+
+        if (gameManager.gameData.wasteQueue.Count == 0)
         {
             return false;
         }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// Manages game state serialization and persistence.
@@ -103,6 +104,13 @@ public class SaveLoadManager : MonoBehaviour
             {
                 GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to deserialize save data!", ComponentId);
                 return false;
+            }
+
+            // Initialize wasteQueue if it's null (for backwards compatibility with old saves)
+            if (data.wasteQueue == null)
+            {
+                data.wasteQueue = new List<string>();
+                GameLogger.LogSaveLoad("Initialized null wasteQueue for backwards compatibility", ComponentId);
             }
 
             // Store loaded data in GameManager

@@ -212,11 +212,13 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
         {
             string currentCrateId = cellData.wasteCrate.wasteCrateDefId;
             
-            // If current crate doesn't match new required type, return it to queue
-            bool crateMatches = string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId) || 
-                               currentCrateId == currentSpawnerMachine.RequiredCrateId;
+            // Return crate to queue if:
+            // 1. Configuration was cleared (RequiredCrateId is empty) - return current crate
+            // 2. New required type doesn't match current crate - return current crate
+            bool shouldReturnCrate = string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId) || 
+                                     currentCrateId != currentSpawnerMachine.RequiredCrateId;
             
-            if (!crateMatches)
+            if (shouldReturnCrate)
             {
                 // Return the current crate to the global queue
                 var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
@@ -228,8 +230,9 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
                     // Clear the spawner's current crate
                     cellData.wasteCrate = null;
                     
-                    // Try to get a matching crate from queue
-                    if (currentSpawnerMachine != null)
+                    // Try to get a matching crate from queue ONLY if we're setting a specific filter
+                    // Don't try to refill when clearing the filter (empty RequiredCrateId)
+                    if (currentSpawnerMachine != null && !string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId))
                     {
                         // Use reflection to call TryRefillFromGlobalQueue
                         var spawnerType = currentSpawnerMachine.GetType();

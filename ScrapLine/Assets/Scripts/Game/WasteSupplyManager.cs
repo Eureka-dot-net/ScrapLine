@@ -44,8 +44,15 @@ public class WasteSupplyManager : MonoBehaviour
             return false;
         }
         
-        // Check if global queue has space
+        // Get game data and initialize wasteQueue if null
         var gameData = GameManager.Instance.gameData;
+        if (gameData.wasteQueue == null)
+        {
+            gameData.wasteQueue = new List<string>();
+            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, "Initialized null wasteQueue in PurchaseWasteCrate", ComponentId);
+        }
+        
+        // Check if global queue has space
         if (gameData.wasteQueue.Count >= gameData.wasteQueueLimit)
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Global waste queue is full ({gameData.wasteQueue.Count}/{gameData.wasteQueueLimit})", ComponentId);
@@ -131,6 +138,13 @@ public class WasteSupplyManager : MonoBehaviour
         }
         
         var gameData = GameManager.Instance.gameData;
+        
+        // Initialize wasteQueue if null
+        if (gameData.wasteQueue == null)
+        {
+            gameData.wasteQueue = new List<string>();
+            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, "Initialized null wasteQueue in ReturnCrateToQueue", ComponentId);
+        }
         
         // Check if queue has space
         if (gameData.wasteQueue.Count >= gameData.wasteQueueLimit)
