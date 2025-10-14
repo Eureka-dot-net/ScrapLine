@@ -230,8 +230,9 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
                     // Clear the spawner's current crate
                     cellData.wasteCrate = null;
                     
-                    // Try to get a matching crate from queue
-                    if (currentSpawnerMachine != null)
+                    // Try to get a matching crate from queue ONLY if we're setting a specific filter
+                    // Don't try to refill when clearing the filter (empty RequiredCrateId)
+                    if (currentSpawnerMachine != null && !string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId))
                     {
                         // Use reflection to call TryRefillFromGlobalQueue
                         var spawnerType = currentSpawnerMachine.GetType();
