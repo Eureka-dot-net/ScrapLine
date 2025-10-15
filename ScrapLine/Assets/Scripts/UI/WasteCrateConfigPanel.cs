@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -76,6 +77,29 @@ public class WasteCrateConfigPanel : MonoBehaviour
         }
         
         GameLogger.LogUI("WasteCrateConfigPanel initialized", ComponentId);
+        
+        // Auto-open panel if waste queue is empty on game start
+        StartCoroutine(CheckAndAutoOpenPanel());
+    }
+    
+    /// <summary>
+    /// Check if the waste queue is empty and auto-open the panel if needed
+    /// </summary>
+    private IEnumerator CheckAndAutoOpenPanel()
+    {
+        // Wait a frame to ensure GameManager is fully initialized
+        yield return new WaitForEndOfFrame();
+        
+        // Check if waste queue is empty
+        if (GameManager.Instance?.gameData != null)
+        {
+            var wasteQueue = GameManager.Instance.gameData.wasteQueue;
+            if (wasteQueue == null || wasteQueue.Count == 0)
+            {
+                GameLogger.LogUI("Waste queue is empty - auto-opening purchase panel", ComponentId);
+                ShowPanel();
+            }
+        }
     }
 
     /// <summary>
@@ -174,19 +198,21 @@ public class WasteCrateConfigPanel : MonoBehaviour
         // Configure grid layout (3 columns like WasteCrateSelectionPanel)
         ConfigureGridLayout();
         
-        // Get all available waste crates
-        var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
-        var availableCrates = wasteSupplyManager?.GetAvailableWasteCrates() ?? new List<WasteCrateDef>();
+        // Get all available waste crates - use FactoryRegistry directly for reliability
+        var availableCrates = FactoryRegistry.Instance?.GetAllWasteCrates() ?? new List<WasteCrateDef>();
+        
+        GameLogger.LogUI($"FactoryRegistry returned {availableCrates.Count} waste crates", ComponentId);
         
         if (availableCrates.Count == 0)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "No waste crates available", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "No waste crates available - check if wastecrates.json loaded correctly", ComponentId);
             return;
         }
         
         // Create button for each crate
         foreach (var crate in availableCrates)
         {
+            GameLogger.LogUI($"Creating button for crate: {crate.id} - {crate.displayName}", ComponentId);
             CreateCrateButton(crate);
         }
         
@@ -287,20 +313,30 @@ public class WasteCrateConfigPanel : MonoBehaviour
     /// <param name="crate">Crate definition</param>
     private void SetupButtonVisuals(GameObject buttonObj, WasteCrateDef crate)
     {
-        // Set button text
+        // Get the cost first (needed for both text and logging)
+        int crateCost = crate.cost > 0 ? crate.cost : 0;
+        if (crateCost == 0)
+        {
+            // Fallback: Calculate from WasteSupplyManager if cost is 0
+            var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+            crateCost = wasteSupplyManager?.GetWasteCrateCost(crate.id) ?? 0;
+        }
+        
+        // Set button text with price
         var buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
         if (buttonText != null)
         {
             string displayText = crate.displayName ?? crate.id ?? "Crate";
             
-            if (showCostInText)
-            {
-                var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
-                int cost = wasteSupplyManager?.GetWasteCrateCost(crate.id) ?? 0;
-                displayText += $"\n{cost} credits";
-            }
+            // Always show the cost (showCostInText is always true by default)
+            displayText += $"\n{crateCost} credits";
             
             buttonText.text = displayText;
+            GameLogger.LogUI($"Set button text: '{displayText}' for crate {crate.id}", ComponentId);
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"No TextMeshProUGUI found in button prefab for crate {crate.id}", ComponentId);
         }
         
         // Set button sprite
@@ -321,12 +357,17 @@ public class WasteCrateConfigPanel : MonoBehaviour
                     buttonImage.color = Color.white;
                     buttonImage.preserveAspect = true;
                     buttonImage.type = Image.Type.Simple;
+                    GameLogger.LogUI($"Set sprite '{spritePath}' for crate {crate.id}", ComponentId);
                 }
             }
             else
             {
-                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not load sprite '{spritePath}'", ComponentId);
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not load sprite '{spritePath}' for crate {crate.id}", ComponentId);
             }
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"No sprite defined for crate {crate.id}", ComponentId);
         }
     }
 

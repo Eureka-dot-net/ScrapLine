@@ -189,26 +189,31 @@ QueueItemPrefab (GameObject)
 
 ### Purchase Workflow (Simplified)
 
-1. **Open Purchase Panel**:
+1. **Auto-Open on Game Start** (NEW):
+   - **If waste queue is empty** when game starts → WasteCrateConfigPanel **automatically opens**
+   - This ensures players always have access to purchase crates when needed
+
+2. **Manual Open (if closed)**:
    - Click spawner machine → SpawnerConfigPanel opens
    - Click "Purchase Crates" button → WasteCrateConfigPanel opens
 
-2. **View Current State**:
+3. **View Current State**:
    - **Queue Section** (top): Shows up to 3 crates currently in queue
-   - **Purchase Grid** (bottom): Shows all available crate types with costs
+   - **Purchase Grid** (bottom): Shows all available crate types **with prices displayed**
 
-3. **Purchase Crate**:
+4. **Purchase Crate**:
    - Click on any crate in the purchase grid
    - **Immediate purchase** (if affordable and queue has space)
    - Panel updates to show new queue state
    - Credits deducted automatically
 
-4. **Close Panel**:
+5. **Close Panel**:
    - Click close button (X) or click outside panel
    - No confirmation needed - purchases are immediate
 
 ### Visual Feedback
 
+- **Crate prices**: Always displayed on each button (e.g., "250 credits")
 - **Affordable crates**: Full color, clickable
 - **Unaffordable crates**: Grayed out, disabled
 - **Queue full**: All crate buttons disabled with "Queue Full" indication
@@ -256,6 +261,19 @@ QueueItemPrefab (GameObject)
 2. **Reopen panel** → verify queue display persists correctly
 3. **Purchase another crate** → verify updates work correctly
 
+### Test 7: Auto-Open on Game Start (NEW)
+1. **Start a new game** with empty waste queue
+2. **Verify panel automatically opens** showing purchase grid
+3. **Purchase a crate** to fill the queue
+4. **Save and reload game** → panel should NOT auto-open (queue not empty)
+5. **Consume all queue items** → restart game → panel should auto-open again
+
+### Test 8: Price Display (NEW)
+1. **Open purchase panel**
+2. **Verify all crate buttons** show price in credits (e.g., "250 credits")
+3. **Check prices match** wastecrates.json definitions
+4. **Verify prices are readable** and properly formatted
+
 ## 🔧 Common Unity Setup Issues
 
 ### Issue: "Panel doesn't show when opened"
@@ -269,6 +287,22 @@ QueueItemPrefab (GameObject)
 - Verify crateGridContainer and crateButtonPrefab are assigned
 - Check GridLayoutGroup is attached to crateGridContainer
 - Ensure FactoryRegistry has waste crates defined in JSON
+- Check Console logs for "FactoryRegistry returned X waste crates" message
+- Verify wastecrates.json is in Assets/Resources/ folder
+
+### Issue: "Panel doesn't auto-open on game start"
+**Solution**:
+- Verify waste queue is actually empty in GameData
+- Check Console logs for "Waste queue is empty - auto-opening purchase panel"
+- Ensure WasteCrateConfigPanel is in the scene and enabled
+- Verify GameManager.Instance is initialized before panel's Start() method
+
+### Issue: "Prices not showing on buttons"
+**Solution**:
+- Verify showCostInText is set to true in inspector
+- Check that wastecrates.json has "cost" field for each crate
+- Ensure TextMeshProUGUI component exists in button prefab
+- Check Console logs for "Set button text" messages
 
 ### Issue: "Queue display is empty"
 **Solution**:

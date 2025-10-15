@@ -12,10 +12,11 @@ The Waste Crate Configuration Panel has been redesigned to provide a streamlined
 5. Close panels
 
 ### After: Single-Panel Workflow
-1. Click spawner → SpawnerConfigPanel opens
-2. Click "Purchase Crates" → WasteCrateConfigPanel opens (shows queue + grid)
-3. Click on crate → **Immediate purchase** (if affordable)
-4. Close panel
+1. **Auto-opens on game start if queue is empty** → WasteCrateConfigPanel opens automatically
+2. Click spawner → SpawnerConfigPanel opens (if needed)
+3. Click "Purchase Crates" → WasteCrateConfigPanel opens (shows queue + grid with prices)
+4. Click on crate → **Immediate purchase** (if affordable)
+5. Close panel
 
 ## 📝 Key Changes
 
@@ -25,6 +26,8 @@ The Waste Crate Configuration Panel has been redesigned to provide a streamlined
 - ✅ **Immediate purchase** - click on crate → instant purchase (no confirm/cancel)
 - ✅ **Simplified API** - `ShowPanel()` instead of `ShowConfiguration()`
 - ✅ **No cancel button** - purchases are immediate, no need to cancel
+- ✅ **Auto-open on startup** - automatically opens if waste queue is empty when game starts
+- ✅ **Price display** - always shows cost in credits on each crate button
 
 ### BaseConfigPanel (Enhancement)
 - ✅ **New field**: `hideCancelButton` - allows hiding cancel button for specific panels
