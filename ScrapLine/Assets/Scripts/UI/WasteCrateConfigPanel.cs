@@ -414,25 +414,38 @@ public class WasteCrateConfigPanel : MonoBehaviour
         
         if (crate == null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "Attempted to purchase null crate", ComponentId);
+            GameLogger.LogUI("ERROR: Attempted to purchase null crate", ComponentId);
             return;
         }
+        
+        GameLogger.LogUI($"Crate is valid: {crate.id}, checking GameManager...", ComponentId);
+        
+        // Check GameManager
+        if (GameManager.Instance == null)
+        {
+            GameLogger.LogUI("ERROR: GameManager.Instance is null!", ComponentId);
+            return;
+        }
+        
+        GameLogger.LogUI("GameManager.Instance exists, checking wasteSupplyManager...", ComponentId);
         
         // Attempt to purchase the crate
-        var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
+        var wasteSupplyManager = GameManager.Instance.wasteSupplyManager;
         if (wasteSupplyManager == null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.Economy, "WasteSupplyManager not found", ComponentId);
+            GameLogger.LogUI("ERROR: WasteSupplyManager not found or not assigned!", ComponentId);
             return;
         }
         
-        GameLogger.LogUI($"Attempting to purchase {crate.displayName} (ID: {crate.id})", ComponentId);
+        GameLogger.LogUI($"WasteSupplyManager found, attempting to purchase {crate.displayName} (ID: {crate.id})", ComponentId);
         
         bool success = wasteSupplyManager.PurchaseWasteCrate(crate.id);
         
+        GameLogger.LogUI($"Purchase result: success={success}", ComponentId);
+        
         if (success)
         {
-            GameLogger.LogEconomy($"Successfully purchased {crate.displayName}", ComponentId);
+            GameLogger.LogUI($"Successfully purchased {crate.displayName}", ComponentId);
             
             // Refresh the display to show updated queue and button states
             UpdateQueueDisplay();
@@ -440,7 +453,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Failed to purchase {crate.displayName} - check credits and queue space", ComponentId);
+            GameLogger.LogUI($"Failed to purchase {crate.displayName} - check credits and queue space", ComponentId);
         }
     }
 
