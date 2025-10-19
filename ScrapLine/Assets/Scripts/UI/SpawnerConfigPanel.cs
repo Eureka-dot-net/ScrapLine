@@ -301,17 +301,17 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
         HideConfiguration();
         
         // Find and show the waste crate config panel (purchase interface)
-        if (wasteCrateConfigPanel != null && currentData != null)
+        if (wasteCrateConfigPanel != null)
         {
-            wasteCrateConfigPanel.ShowConfiguration(currentData, null); // No callback needed for purchase
+            wasteCrateConfigPanel.ShowPanel(); // No callback needed - panel shows queue and purchase grid
         }
         else
         {
             // Fallback to finding the panel if not assigned
             var purchasePanel = FindFirstObjectByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
-            if (purchasePanel != null && currentData != null)
+            if (purchasePanel != null)
             {
-                purchasePanel.ShowConfiguration(currentData, null);
+                purchasePanel.ShowPanel();
             }
             else
             {
