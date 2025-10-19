@@ -324,18 +324,31 @@ public class WasteCrateConfigPanel : MonoBehaviour
                 
                 GameLogger.LogUI($"Button for {crate.id}: interactable={button.interactable}, canAfford={canAfford}, queueHasSpace={queueHasSpace}", ComponentId);
                 
+                // Visual feedback for disabled buttons
                 if (!canAfford || !queueHasSpace)
                 {
-                    // Dim the button if can't afford or queue full
-                    var colors = button.colors;
-                    colors.normalColor = colors.disabledColor;
-                    button.colors = colors;
+                    // Reduce alpha for disabled buttons instead of changing colors permanently
+                    var canvasGroup = buttonObj.GetComponent<CanvasGroup>();
+                    if (canvasGroup == null)
+                    {
+                        canvasGroup = buttonObj.AddComponent<CanvasGroup>();
+                    }
+                    canvasGroup.alpha = 0.5f;
+                }
+                else
+                {
+                    // Ensure full alpha for enabled buttons
+                    var canvasGroup = buttonObj.GetComponent<CanvasGroup>();
+                    if (canvasGroup != null)
+                    {
+                        canvasGroup.alpha = 1.0f;
+                    }
                 }
             }
         }
         else
         {
-            GameLogger.LogError(LoggingManager.LogCategory.UI, $"Crate button prefab missing Button component for {crate.id}", ComponentId);
+            GameLogger.LogUI($"ERROR: Crate button prefab missing Button component for {crate.id}", ComponentId);
         }
     }
 
