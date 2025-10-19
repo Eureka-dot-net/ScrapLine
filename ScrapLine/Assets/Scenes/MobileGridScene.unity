@@ -12660,6 +12660,7 @@ MonoBehaviour:
   crateGridContainer: {fileID: 924799498}
   crateButtonPrefab: {fileID: 1585238107036809448, guid: 08fcd5d68d2a01e4089c45daf1c31d55, type: 3}
   showCostInText: 1
+  showNameInText: 0
 --- !u!1 &2072901395
 GameObject:
   m_ObjectHideFlags: 0
