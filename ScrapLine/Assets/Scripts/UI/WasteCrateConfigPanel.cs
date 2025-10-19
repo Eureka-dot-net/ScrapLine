@@ -319,10 +319,11 @@ public class WasteCrateConfigPanel : MonoBehaviour
                 bool canAfford = wasteSupplyManager.CanAffordWasteCrate(crate.id);
                 var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
                 bool queueHasSpace = queueStatus.canAddToQueue;
+                int queueCount = queueStatus.queuedCrateIds?.Count ?? 0;
                 
                 button.interactable = canAfford && queueHasSpace;
                 
-                GameLogger.LogUI($"Button for {crate.id}: interactable={button.interactable}, canAfford={canAfford}, queueHasSpace={queueHasSpace}", ComponentId);
+                GameLogger.LogUI($"Button for {crate.id}: interactable={button.interactable}, canAfford={canAfford}, queueHasSpace={queueHasSpace}, queueCount={queueCount}, maxQueue={queueStatus.maxQueueSize}", ComponentId);
                 
                 // Visual feedback for disabled buttons
                 if (!canAfford || !queueHasSpace)
