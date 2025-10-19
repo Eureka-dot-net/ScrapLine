@@ -295,11 +295,19 @@ public class WasteCrateConfigPanel : MonoBehaviour
         GameObject buttonObj = Instantiate(crateButtonPrefab, crateGridContainer);
         crateButtons.Add(buttonObj);
         
+        // Try to find Button component on the object or its children
         Button button = buttonObj.GetComponent<Button>();
+        if (button == null)
+        {
+            button = buttonObj.GetComponentInChildren<Button>();
+        }
+        
         if (button != null)
         {
             // Setup click listener for immediate purchase
             button.onClick.AddListener(() => OnCratePurchaseClicked(crate));
+            
+            GameLogger.LogUI($"Added click listener to button for crate {crate.id}", ComponentId);
             
             // Setup button visuals
             SetupButtonVisuals(buttonObj, crate);
@@ -314,6 +322,8 @@ public class WasteCrateConfigPanel : MonoBehaviour
                 
                 button.interactable = canAfford && queueHasSpace;
                 
+                GameLogger.LogUI($"Button for {crate.id}: interactable={button.interactable}, canAfford={canAfford}, queueHasSpace={queueHasSpace}", ComponentId);
+                
                 if (!canAfford || !queueHasSpace)
                 {
                     // Dim the button if can't afford or queue full
@@ -325,7 +335,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         }
         else
         {
-            GameLogger.LogError(LoggingManager.LogCategory.UI, "Crate button prefab missing Button component", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.UI, $"Crate button prefab missing Button component for {crate.id}", ComponentId);
         }
     }
 
@@ -400,6 +410,8 @@ public class WasteCrateConfigPanel : MonoBehaviour
     /// <param name="crate">Crate to purchase</param>
     private void OnCratePurchaseClicked(WasteCrateDef crate)
     {
+        GameLogger.LogUI($"Button clicked for crate: {crate?.id ?? "null"}", ComponentId);
+        
         if (crate == null)
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.UI, "Attempted to purchase null crate", ComponentId);
@@ -414,6 +426,8 @@ public class WasteCrateConfigPanel : MonoBehaviour
             return;
         }
         
+        GameLogger.LogUI($"Attempting to purchase {crate.displayName} (ID: {crate.id})", ComponentId);
+        
         bool success = wasteSupplyManager.PurchaseWasteCrate(crate.id);
         
         if (success)
@@ -426,7 +440,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Failed to purchase {crate.displayName}", ComponentId);
+            GameLogger.LogWarning(LoggingManager.LogCategory.Economy, $"Failed to purchase {crate.displayName} - check credits and queue space", ComponentId);
         }
     }
 

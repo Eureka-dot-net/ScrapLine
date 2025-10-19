@@ -93,20 +93,32 @@ Purchase Grid:
 
 1. **Right-click in Project** → Create → Prefab
 2. **Name it**: `CrateButtonPrefab`
-3. **Structure**:
+3. **Structure** (minimum required):
 
+```
+CrateButtonPrefab (GameObject)
+├── Button (Button component) - REQUIRED for click handling
+└── TextMeshProUGUI component - REQUIRED for displaying name and price
+```
+
+**Advanced Structure** (optional, for better visuals):
 ```
 CrateButtonPrefab (GameObject)
 ├── Button (Button component)
 ├── Background (Image - crate sprite)
-├── CostText (TextMeshProUGUI - shows "X credits")
-└── CrateNameText (TextMeshProUGUI - shows crate name)
+└── TextMeshProUGUI (shows crate name and price together)
 ```
 
 **Button Configuration:**
-- **Image component**: Will be set at runtime with crate sprite
-- **Button component**: Click listener added at runtime
-- **TextMeshProUGUI components**: Updated at runtime with crate info
+- **Button component**: MUST be on the root GameObject or a child. Click listener added at runtime.
+- **TextMeshProUGUI**: Can be anywhere in the prefab hierarchy. The code uses `GetComponentInChildren<TextMeshProUGUI>()` to find the FIRST TextMeshProUGUI component.
+- **Image component** (optional): Will be set at runtime with crate sprite from Resources if available.
+
+**Important Notes:**
+- The **first TextMeshProUGUI** found (searching recursively through children) will display both the crate name AND price.
+- The `showCostInText` field is always treated as true - prices are always shown.
+- Text format: `"{Crate Name}\n{Cost} credits"`
+- Example: "Starter Waste Crate\n250 credits"
 
 ### Step 4: Configure GridLayoutGroup
 
@@ -299,22 +311,29 @@ QueueItemPrefab (GameObject)
 
 ### Issue: "Prices not showing on buttons"
 **Solution**:
-- Verify showCostInText is set to true in inspector
-- Check that wastecrates.json has "cost" field for each crate
-- Ensure TextMeshProUGUI component exists in button prefab
-- Check Console logs for "Set button text" messages
+- The `showCostInText` field is always treated as true - prices are always displayed
+- Check that wastecrates.json has "cost" field for each crate (must be > 0)
+- Ensure TextMeshProUGUI component exists somewhere in button prefab hierarchy
+- Check Console logs for "Set button text: '{text}'" messages to see what's being set
+- The price format is: "{Crate Name}\n{Cost} credits"
+
+### Issue: "Button clicks don't work / nothing happens when clicking crate buttons"
+**Solution**:
+- Check Console logs for "Button clicked for crate: {id}" when you click - if this doesn't appear, the click isn't registering
+- Check Console logs for "Added click listener to button for crate {id}" - this confirms listeners were added
+- Check Console logs for "Button for {id}: interactable={true/false}" - buttons may be disabled if you can't afford them or queue is full
+- Verify Button component exists on crateButtonPrefab (root or child GameObject)
+- Check EventSystem exists in scene (Unity creates this automatically)
+- Ensure GraphicRaycaster is on the Canvas
+- Verify button.interactable is true (check inspector or logs)
+- Try increasing credits and ensure queue isn't full (check "queueHasSpace=true" in logs)
+- Check for UI elements blocking clicks (e.g., transparent panels in front)
 
 ### Issue: "Queue display is empty"
 **Solution**:
 - Verify queuePanel (WasteCrateQueuePanel) is assigned
 - Check queueItemPrefab is assigned to WasteCrateQueuePanel
 - Ensure queue has items (purchase a crate first)
-
-### Issue: "Clicks don't register on crate buttons"
-**Solution**:
-- Verify Button component exists on crateButtonPrefab
-- Check EventSystem exists in scene
-- Ensure GraphicRaycaster is on Canvas
 
 ### Issue: "Grid layout looks wrong"
 **Solution**:
