@@ -43,9 +43,11 @@ public class WasteCrateConfigPanel : MonoBehaviour
     
     [Tooltip("Prefab for crate purchase buttons (must have Button, Image, TextMeshProUGUI)")]
     public GameObject crateButtonPrefab;
-    
+
     [Tooltip("Show cost in button text")]
     public bool showCostInText = true;
+    [Tooltip("Show name in button text")]
+    public bool showNameInText = true;
 
     /// <summary>
     /// Component ID for logging purposes
@@ -373,11 +375,21 @@ public class WasteCrateConfigPanel : MonoBehaviour
         var buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
         if (buttonText != null)
         {
-            string displayText = crate.displayName ?? crate.id ?? "Crate";
-            
-            // Always show the cost (showCostInText is always true by default)
-            displayText += $"\n{crateCost} credits";
-            
+            string displayText = "";
+            if (showNameInText)
+            {
+                displayText += crate.displayName ?? crate.id ?? "Crate";
+            }
+
+            if (showCostInText)
+            {
+                if (displayText.Length > 0)
+                {
+                    displayText += "\n";
+                }
+                 displayText += $"{crateCost}";
+            }
+           
             buttonText.text = displayText;
             GameLogger.LogUI($"Set button text: '{displayText}' for crate {crate.id}", ComponentId);
         }
