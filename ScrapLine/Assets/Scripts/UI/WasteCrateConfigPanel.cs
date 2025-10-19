@@ -79,7 +79,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         GameLogger.LogUI("WasteCrateConfigPanel initialized", ComponentId);
         
         // Auto-open panel if waste queue is empty on game start
-        StartCoroutine(CheckAndAutoOpenPanel());
+        //StartCoroutine(CheckAndAutoOpenPanel());
     }
     
     /// <summary>
