@@ -117,19 +117,30 @@ public class WasteCrateConfigPanel : MonoBehaviour
             panelManager.RegisterOpenPanel(this);
         }
         
-        // Update queue display
-        UpdateQueueDisplay();
-        
-        // Populate purchase grid
-        PopulatePurchaseGrid();
-        
-        // Show main panel
+        // Show main panel first so layout can be calculated
         if (mainPanel != null)
         {
             mainPanel.SetActive(true);
         }
         
+        // Update queue display
+        UpdateQueueDisplay();
+        
+        // Populate purchase grid after panel is shown and layout calculated
+        StartCoroutine(PopulatePurchaseGridDelayed());
+        
         GameLogger.LogUI("Waste crate config panel shown", ComponentId);
+    }
+    
+    /// <summary>
+    /// Populate the purchase grid after a delay to ensure layout is calculated
+    /// </summary>
+    private IEnumerator PopulatePurchaseGridDelayed()
+    {
+        // Wait for end of frame to ensure layout has been calculated
+        yield return new WaitForEndOfFrame();
+        
+        PopulatePurchaseGrid();
     }
 
     /// <summary>
@@ -229,20 +240,37 @@ public class WasteCrateConfigPanel : MonoBehaviour
         {
             // Get container width for responsive sizing
             RectTransform containerRect = crateGridContainer as RectTransform;
-            float containerWidth = containerRect != null ? containerRect.rect.width : 500f;
             
-            // If container width is 0, force layout rebuild
-            if (containerWidth <= 0)
+            // Force layout rebuild to get accurate dimensions
+            if (containerRect != null)
             {
                 UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
-                containerWidth = containerRect != null ? containerRect.rect.width : 500f;
+            }
+            
+            float containerWidth = containerRect != null ? containerRect.rect.width : 500f;
+            
+            GameLogger.LogUI($"Container width: {containerWidth}", ComponentId);
+            
+            // If container width is still 0 or too small, use fallback
+            if (containerWidth <= 100f)
+            {
+                GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Container width too small ({containerWidth}), using fallback value of 500", ComponentId);
+                containerWidth = 500f;
             }
             
             // Calculate cell size for 3 columns with spacing
             float spacingX = gridLayout.spacing.x > 0 ? gridLayout.spacing.x : 10f;
             float spacingY = gridLayout.spacing.y > 0 ? gridLayout.spacing.y : 10f;
             float totalSpacing = spacingX * 2; // 2 gaps for 3 columns
-            float cellSize = (containerWidth - totalSpacing) / 3f;
+            
+            // Available width = container width - spacing
+            float availableWidth = containerWidth - totalSpacing;
+            float cellSize = availableWidth / 3f;
+            
+            // Ensure minimum cell size
+            cellSize = Mathf.Max(cellSize, 50f);
+            
+            GameLogger.LogUI($"Calculated cell size: containerWidth={containerWidth}, spacing={totalSpacing}, availableWidth={availableWidth}, cellSize={cellSize}", ComponentId);
             
             // Configure grid layout
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -250,12 +278,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
             gridLayout.cellSize = new Vector2(cellSize, cellSize);
             gridLayout.spacing = new Vector2(spacingX, spacingY);
             
-            // Force layout rebuild
-            gridLayout.enabled = false;
-            gridLayout.enabled = true;
-            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
-            
-            GameLogger.LogUI($"Configured grid layout: cellSize={cellSize}x{cellSize}", ComponentId);
+            GameLogger.LogUI($"Configured grid layout: cellSize={cellSize}x{cellSize}, spacing={spacingX}x{spacingY}", ComponentId);
         }
         else
         {
