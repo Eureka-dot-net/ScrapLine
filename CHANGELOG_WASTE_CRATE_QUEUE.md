@@ -7,24 +7,44 @@
 ### 1. Click Event Not Working When Queue Has Items
 **Problem**: Clicking on the WasteCrateQueuePanel didn't trigger the button when the queue contained items. The user tried adding `iconImage.raycastTarget = false` but it didn't resolve the issue.
 
-**Root Cause**: Queue item Images (instantiated as children of queueContainer) were blocking raycasts to the parent button. Even if the main Image had `raycastTarget = false`, child Images or additional Image components could still block clicks.
+**Root Cause**: Unity Buttons require a Graphic component (typically an Image) with `raycastTarget = true` to detect pointer events. If the queuePanel doesn't have an Image with raycast enabled, the button cannot detect clicks - even if queue items have raycast enabled.
 
 **Solution**: 
-- Get ALL Image components using `GetComponentsInChildren<Image>(true)` instead of just the main Image
-- Set `raycastTarget = false` on every Image component found
-- This ensures complete raycast transparency for all queue items
+- The script now automatically ensures the queuePanel has an Image component with `raycastTarget = true`
+- If no Image exists on the queuePanel, one is created (nearly transparent for invisibility)
+- The Image is assigned as the Button's `targetGraphic` for proper click detection
+- Queue item Images continue to have `raycastTarget = false` to prevent them from interfering
 
-**Code Change** (Lines 324-369 in WasteCrateQueuePanel.cs):
+**Code Change** (Lines 95-151 in WasteCrateQueuePanel.cs):
 ```csharp
-// Get ALL Image components (including children) to disable raycast blocking
-Image[] allImages = itemObj.GetComponentsInChildren<Image>(true);
-
-// ... sprite loading logic ...
-
-// CRITICAL FIX: Disable raycast on ALL Image components to prevent blocking button clicks
-foreach (var image in allImages)
+// In Start() method
+if (queueButton != null)
 {
-    image.raycastTarget = false;
+    queueButton.onClick.AddListener(OnQueueButtonClicked);
+    queueButton.interactable = true;
+    
+    // CRITICAL: Ensure the button has a target graphic for raycast detection
+    EnsureButtonHasTargetGraphic();
+}
+
+// New method to ensure proper button configuration
+private void EnsureButtonHasTargetGraphic()
+{
+    if (queueButton.targetGraphic != null)
+    {
+        queueButton.targetGraphic.raycastTarget = true;
+        return;
+    }
+    
+    Image panelImage = queuePanel.GetComponent<Image>();
+    if (panelImage == null)
+    {
+        panelImage = queuePanel.AddComponent<Image>();
+        panelImage.color = new Color(1, 1, 1, 0.01f); // Nearly transparent
+    }
+    
+    panelImage.raycastTarget = true;
+    queueButton.targetGraphic = panelImage;
 }
 ```
 

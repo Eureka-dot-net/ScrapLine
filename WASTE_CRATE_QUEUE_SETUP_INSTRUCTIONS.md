@@ -4,7 +4,7 @@
 This guide provides detailed instructions for setting up the WasteCrateQueuePanel in Unity with scrolling support and proper click handling.
 
 ## Problem Fixed
-1. **Raycast Blocking Issue**: Queue item images were blocking clicks to the parent button. This is now fixed by automatically disabling `raycastTarget` on all Image components within queue items.
+1. **Raycast Blocking Issue**: The button requires a target graphic (Image) to detect clicks. The fix ensures the queuePanel has an Image with `raycastTarget = true` for click detection, while queue items have `raycastTarget = false` to prevent blocking.
 2. **Limited Display**: The panel now shows ALL queue items with ScrollRect support instead of limiting to a fixed number (previously 3 items).
 
 ## Required Setup
@@ -25,8 +25,10 @@ QueuePanel (GameObject)
 1. **Create the Main Panel**:
    - Right-click in Hierarchy → UI → Panel
    - Rename to "WasteCrateQueuePanel"
+   - The Panel comes with an Image component - **keep it** (required for button clicks)
    - Add `Button` component to this GameObject
    - Add `WasteCrateQueuePanel` script to this GameObject
+   - The script will automatically configure the Image as the Button's target graphic
 
 2. **Add Queue Container**:
    - Right-click on WasteCrateQueuePanel → UI → Empty GameObject
@@ -50,7 +52,7 @@ QueuePanel (GameObject)
    - Name it "QueueItemPrefab"
    - Add `Image` component
    - Set desired size (e.g., 64x64)
-   - **IMPORTANT**: The script will automatically set `raycastTarget = false` on this Image and all child Images
+   - **IMPORTANT**: The script will automatically set `raycastTarget = false` on queue item Images to prevent them from blocking button clicks
 
 5. **Configure WasteCrateQueuePanel Component**:
    - Select WasteCrateQueuePanel GameObject
@@ -172,8 +174,9 @@ QueuePanel (GameObject)
 ## Common Issues
 
 ### Issue: Button not clicking
-- **Solution**: Ensure Button component is on the same GameObject as WasteCrateQueuePanel
-- **Note**: Raycast blocking is now automatically fixed by the script
+- **Solution**: The queuePanel needs an Image component with `raycastTarget = true` for the Button to work
+- **Note**: The script now automatically creates and configures this if missing
+- **Note**: Queue items have `raycastTarget = false` to prevent blocking clicks
 
 ### Issue: Items not displaying
 - **Check**: Queue Item Prefab has Image component

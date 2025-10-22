@@ -97,6 +97,10 @@ public class WasteCrateQueuePanel : MonoBehaviour
                 queueButton.onClick.AddListener(OnQueueButtonClicked);
                 // Ensure button starts enabled - users should always be able to click to purchase
                 queueButton.interactable = true;
+                
+                // CRITICAL: Ensure the button has a target graphic for raycast detection
+                // Without a target graphic, the button won't receive click events
+                EnsureButtonHasTargetGraphic();
             }
             else
             {
@@ -113,6 +117,42 @@ public class WasteCrateQueuePanel : MonoBehaviour
         ConfigureLayoutDirection();
         
         GameLogger.LogUI("WasteCrateQueuePanel initialized and visible", ComponentId);
+    }
+    
+    /// <summary>
+    /// Ensure the button has a target graphic (Image) with raycastTarget enabled for click detection.
+    /// Unity Buttons require a Graphic component to receive pointer events.
+    /// </summary>
+    private void EnsureButtonHasTargetGraphic()
+    {
+        if (queueButton == null) return;
+        
+        // Check if button already has a target graphic
+        if (queueButton.targetGraphic != null)
+        {
+            // Ensure the target graphic has raycastTarget enabled
+            queueButton.targetGraphic.raycastTarget = true;
+            GameLogger.LogUI($"Button has target graphic: {queueButton.targetGraphic.name}, raycastTarget enabled", ComponentId);
+            return;
+        }
+        
+        // Button doesn't have a target graphic - try to find or create an Image
+        Image panelImage = queuePanel.GetComponent<Image>();
+        if (panelImage == null)
+        {
+            // Create a transparent Image for click detection
+            panelImage = queuePanel.AddComponent<Image>();
+            panelImage.color = new Color(1, 1, 1, 0.01f); // Nearly transparent but still clickable
+            GameLogger.LogUI("Created transparent Image on queuePanel for button click detection", ComponentId);
+        }
+        
+        // Ensure raycast target is enabled
+        panelImage.raycastTarget = true;
+        
+        // Assign it as the button's target graphic
+        queueButton.targetGraphic = panelImage;
+        
+        GameLogger.LogUI("Assigned Image as button's target graphic with raycastTarget enabled", ComponentId);
     }
     
     /// <summary>
