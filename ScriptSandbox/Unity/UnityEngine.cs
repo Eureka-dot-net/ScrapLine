@@ -58,9 +58,11 @@ namespace UnityEngine
         
         public T GetComponent<T>() where T : Component => default(T);
         public T GetComponentInChildren<T>() where T : Component => default(T);
+        public T GetComponentInChildren<T>(bool includeInactive) where T : Component => default(T);
         public T GetComponentInParent<T>() where T : Component => default(T);
         public T[] GetComponents<T>() where T : Component => new T[0];
         public T[] GetComponentsInChildren<T>() where T : Component => new T[0];
+        public T[] GetComponentsInChildren<T>(bool includeInactive) where T : Component => new T[0];
         public T AddComponent<T>() where T : Component => default(T);
     }
 
@@ -107,9 +109,11 @@ namespace UnityEngine
         
         public T GetComponent<T>() where T : Component => default(T);
         public T GetComponentInChildren<T>() where T : Component => default(T);
+        public T GetComponentInChildren<T>(bool includeInactive) where T : Component => default(T);
         public T GetComponentInParent<T>() where T : Component => default(T);
         public T[] GetComponents<T>() where T : Component => new T[0];
         public T[] GetComponentsInChildren<T>() where T : Component => new T[0];
+        public T[] GetComponentsInChildren<T>(bool includeInactive) where T : Component => new T[0];
         public T AddComponent<T>() where T : Component => default(T);
         
         public void SetActive(bool value) { activeSelf = value; }

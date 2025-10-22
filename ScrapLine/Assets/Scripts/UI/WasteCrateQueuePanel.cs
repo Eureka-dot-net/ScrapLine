@@ -16,22 +16,35 @@ public enum QueueLayoutDirection
 
 /// <summary>
 /// Reusable panel for displaying queued waste crates.
-/// Shows up to a configurable number of waste crates from the queue with their icons.
+/// Shows ALL waste crates from the queue with their icons (uses ScrollRect for overflow).
 /// Can be clicked to open the WasteCrateConfigPanel for purchasing.
 /// 
 /// UNITY SETUP REQUIRED:
 /// 1. Create UI Panel GameObject with this component (must have Button component)
 /// 2. Assign queuePanel (the panel GameObject itself - button will be auto-detected)
-/// 3. Assign queueContainer (parent for queue item displays - should have Layout Group)
-/// 4. Assign queueItemPrefab (prefab with Image component for crate icon)
-/// 5. Optionally assign emptyQueueText to show when queue is empty
-/// 6. Set layoutDirection to control item arrangement (left, right, top, bottom)
+/// 3. Assign scrollView (optional - GameObject with ScrollRect for scrollable content)
+/// 4. Assign queueContainer (parent for queue item displays - should have Layout Group)
+///    - queueContainer should be child of scrollView's Content if using ScrollRect
+/// 5. Assign queueItemPrefab (prefab with Image component for crate icon)
+/// 6. Optionally assign emptyQueueText to show when queue is empty
+/// 7. Set layoutDirection to control item arrangement (left, right, top, bottom)
+/// 
+/// DETAILED SCROLL SETUP:
+/// For scrollable queue display, create hierarchy:
+/// - QueuePanel (this component + Button)
+///   - ScrollView (ScrollRect component)
+///     - Viewport (RectMask2D)
+///       - Content (assigned to scrollView.content)
+///         - queueContainer (assigned to this.queueContainer, has Layout Group)
 /// </summary>
 public class WasteCrateQueuePanel : MonoBehaviour
 {
     [Header("Queue Panel Components")]
     [Tooltip("The main panel GameObject (must have Button component)")]
     public GameObject queuePanel;
+    
+    [Tooltip("Optional ScrollRect GameObject for scrollable content - if null, all items shown without scrolling")]
+    public ScrollRect scrollView;
     
     [Tooltip("Container for queue item displays (should have Layout Group)")]
     public Transform queueContainer;
@@ -43,9 +56,6 @@ public class WasteCrateQueuePanel : MonoBehaviour
     public TextMeshProUGUI emptyQueueText;
     
     [Header("Configuration")]
-    [Tooltip("Maximum number of queue items to display (default: 3)")]
-    public int maxDisplayItems = 3;
-    
     [Tooltip("Direction to arrange queue items")]
     public QueueLayoutDirection layoutDirection = QueueLayoutDirection.Left;
     
@@ -87,6 +97,10 @@ public class WasteCrateQueuePanel : MonoBehaviour
                 queueButton.onClick.AddListener(OnQueueButtonClicked);
                 // Ensure button starts enabled - users should always be able to click to purchase
                 queueButton.interactable = true;
+                
+                // CRITICAL: Ensure the button has a target graphic for raycast detection
+                // Without a target graphic, the button won't receive click events
+                EnsureButtonHasTargetGraphic();
             }
             else
             {
@@ -96,10 +110,86 @@ public class WasteCrateQueuePanel : MonoBehaviour
             }
         }
         
+        // Configure scroll view if assigned
+        ConfigureScrollView();
+        
         // Configure layout direction
         ConfigureLayoutDirection();
         
         GameLogger.LogUI("WasteCrateQueuePanel initialized and visible", ComponentId);
+    }
+    
+    /// <summary>
+    /// Ensure the button has a target graphic (Image) with raycastTarget enabled for click detection.
+    /// Unity Buttons require a Graphic component to receive pointer events.
+    /// </summary>
+    private void EnsureButtonHasTargetGraphic()
+    {
+        if (queueButton == null) return;
+        
+        // Check if button already has a target graphic
+        if (queueButton.targetGraphic != null)
+        {
+            // Ensure the target graphic has raycastTarget enabled
+            queueButton.targetGraphic.raycastTarget = true;
+            GameLogger.LogUI($"Button has target graphic: {queueButton.targetGraphic.name}, raycastTarget enabled", ComponentId);
+            return;
+        }
+        
+        // Button doesn't have a target graphic - try to find or create an Image
+        Image panelImage = queuePanel.GetComponent<Image>();
+        if (panelImage == null)
+        {
+            // Create a transparent Image for click detection
+            panelImage = queuePanel.AddComponent<Image>();
+            panelImage.color = new Color(1, 1, 1, 0.01f); // Nearly transparent but still clickable
+            GameLogger.LogUI("Created transparent Image on queuePanel for button click detection", ComponentId);
+        }
+        
+        // Ensure raycast target is enabled
+        panelImage.raycastTarget = true;
+        
+        // Assign it as the button's target graphic
+        queueButton.targetGraphic = panelImage;
+        
+        GameLogger.LogUI("Assigned Image as button's target graphic with raycastTarget enabled", ComponentId);
+    }
+    
+    /// <summary>
+    /// Configure scroll view for queue items
+    /// </summary>
+    private void ConfigureScrollView()
+    {
+        if (scrollView == null)
+        {
+            GameLogger.LogUI("No ScrollRect assigned - all queue items will be shown without scrolling", ComponentId);
+            return;
+        }
+        
+        // Configure scroll direction based on layout direction
+        switch (layoutDirection)
+        {
+            case QueueLayoutDirection.Left:
+            case QueueLayoutDirection.Right:
+                scrollView.horizontal = true;
+                scrollView.vertical = false;
+                break;
+                
+            case QueueLayoutDirection.Top:
+            case QueueLayoutDirection.Bottom:
+                scrollView.horizontal = false;
+                scrollView.vertical = true;
+                break;
+        }
+        
+        // Ensure scrollView content is set to queueContainer
+        if (scrollView.content == null && queueContainer != null)
+        {
+            scrollView.content = queueContainer as RectTransform;
+            GameLogger.LogUI("Auto-assigned queueContainer to scrollView.content", ComponentId);
+        }
+        
+        GameLogger.LogUI($"Configured ScrollRect: horizontal={scrollView.horizontal}, vertical={scrollView.vertical}", ComponentId);
     }
     
     /// <summary>
@@ -245,15 +335,14 @@ public class WasteCrateQueuePanel : MonoBehaviour
             queueContainer.gameObject.SetActive(true);
         }
         
-        // Display up to maxDisplayItems from the queue
-        int displayCount = Mathf.Min(queuedCrateIds.Count, maxDisplayItems);
-        for (int i = 0; i < displayCount; i++)
+        // Display ALL items from the queue (ScrollRect will handle overflow)
+        for (int i = 0; i < queuedCrateIds.Count; i++)
         {
             string crateId = queuedCrateIds[i];
             CreateQueueItemDisplay(crateId);
         }
         
-        GameLogger.LogUI($"Updated queue display with {displayCount} items", ComponentId);
+        GameLogger.LogUI($"Updated queue display with {queuedCrateIds.Count} items", ComponentId);
     }
     
     /// <summary>
@@ -272,7 +361,10 @@ public class WasteCrateQueuePanel : MonoBehaviour
         GameObject itemObj = Instantiate(queueItemPrefab, queueContainer);
         queueItemObjects.Add(itemObj);
         
-        // Get the Image component to set the sprite
+        // Get ALL Image components (including children) to disable raycast blocking
+        Image[] allImages = itemObj.GetComponentsInChildren<Image>(true);
+        
+        // Get the main Image component to set the sprite
         Image iconImage = itemObj.GetComponent<Image>();
         if (iconImage == null)
         {
@@ -302,6 +394,18 @@ public class WasteCrateQueuePanel : MonoBehaviour
                 GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not find waste crate definition for '{crateId}'", ComponentId);
                 itemObj.SetActive(false);
             }
+        }
+        
+        // CRITICAL FIX: Disable raycast on ALL Image components to prevent blocking button clicks
+        // This ensures the parent button receives click events even when queue items are present
+        foreach (var image in allImages)
+        {
+            image.raycastTarget = false;
+        }
+        
+        if (allImages.Length > 0)
+        {
+            GameLogger.LogUI($"Disabled raycast blocking on {allImages.Length} Image component(s) for queue item '{crateId}'", ComponentId);
         }
     }
     
