@@ -662,6 +662,133 @@ namespace UnityEngine
     {
         public static void DontDestroyOnLoad(Object obj) => UnityGlobals.DontDestroyOnLoad(obj);
     }
+
+    // Animation curve for tweening
+    public class AnimationCurve
+    {
+        private List<Keyframe> keys = new List<Keyframe>();
+
+        public AnimationCurve() { }
+        
+        public AnimationCurve(params Keyframe[] keys)
+        {
+            this.keys = new List<Keyframe>(keys);
+        }
+
+        public float Evaluate(float time)
+        {
+            if (keys.Count == 0) return 0f;
+            if (keys.Count == 1) return keys[0].value;
+            
+            // Simple linear interpolation
+            for (int i = 0; i < keys.Count - 1; i++)
+            {
+                if (time >= keys[i].time && time <= keys[i + 1].time)
+                {
+                    float t = (time - keys[i].time) / (keys[i + 1].time - keys[i].time);
+                    return Mathf.Lerp(keys[i].value, keys[i + 1].value, t);
+                }
+            }
+            
+            return keys[keys.Count - 1].value;
+        }
+
+        public static AnimationCurve Linear(float timeStart, float valueStart, float timeEnd, float valueEnd)
+        {
+            return new AnimationCurve(
+                new Keyframe(timeStart, valueStart),
+                new Keyframe(timeEnd, valueEnd)
+            );
+        }
+
+        public static AnimationCurve EaseInOut(float timeStart, float valueStart, float timeEnd, float valueEnd)
+        {
+            return new AnimationCurve(
+                new Keyframe(timeStart, valueStart),
+                new Keyframe(timeEnd, valueEnd)
+            );
+        }
+    }
+
+    public struct Keyframe
+    {
+        public float time;
+        public float value;
+
+        public Keyframe(float time, float value)
+        {
+            this.time = time;
+            this.value = value;
+        }
+    }
+
+    // Audio clip mock
+    public class AudioClip : Object
+    {
+        public float length { get; set; }
+    }
+
+    // Audio source mock
+    public class AudioSource : Component
+    {
+        public AudioClip clip { get; set; }
+        public bool loop { get; set; }
+        public float volume { get; set; } = 1f;
+        
+        public void Play() { }
+        public void PlayOneShot(AudioClip clip) { }
+        public void Stop() { }
+    }
+
+    // Unity Events namespace
+    namespace Events
+    {
+        public class UnityEvent
+        {
+            private System.Collections.Generic.List<System.Action> listeners = new System.Collections.Generic.List<System.Action>();
+            
+            public void AddListener(System.Action call)
+            {
+                listeners.Add(call);
+            }
+            
+            public void RemoveListener(System.Action call)
+            {
+                listeners.Remove(call);
+            }
+            
+            public void Invoke()
+            {
+                foreach (var listener in listeners)
+                {
+                    listener?.Invoke();
+                }
+            }
+        }
+
+        public class UnityEvent<T>
+        {
+            private System.Collections.Generic.List<System.Action<T>> listeners = new System.Collections.Generic.List<System.Action<T>>();
+            
+            public void AddListener(System.Action<T> call)
+            {
+                listeners.Add(call);
+            }
+            
+            public void RemoveListener(System.Action<T> call)
+            {
+                listeners.Remove(call);
+            }
+            
+            public void Invoke(T arg0)
+            {
+                foreach (var listener in listeners)
+                {
+                    listener?.Invoke(arg0);
+                }
+            }
+        }
+    }
 }
 
 // Global Unity methods - available without namespace outside the UnityEngine namespace
