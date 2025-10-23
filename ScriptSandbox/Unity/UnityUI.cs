@@ -427,6 +427,44 @@ namespace UnityEngine.EventSystems
         public string cancelButton { get; set; } = "Cancel";
     }
 
+    // EventTrigger for handling UI events
+    public class EventTrigger : MonoBehaviour
+    {
+        public System.Collections.Generic.List<Entry> triggers = new System.Collections.Generic.List<Entry>();
+
+        public class Entry
+        {
+            public EventTriggerType eventID;
+            public TriggerEvent callback = new TriggerEvent();
+        }
+
+        public class TriggerEvent : UnityEngine.Events.UnityEvent<BaseEventData>
+        {
+        }
+    }
+
+    // EventTriggerType enum
+    public enum EventTriggerType
+    {
+        PointerEnter,
+        PointerExit,
+        PointerDown,
+        PointerUp,
+        PointerClick,
+        Drag,
+        Drop,
+        Scroll,
+        UpdateSelected,
+        Select,
+        Deselect,
+        Move,
+        InitializePotentialDrag,
+        BeginDrag,
+        EndDrag,
+        Submit,
+        Cancel
+    }
+
     // FindObjectsInactive enum
     public enum FindObjectsInactive
     {
