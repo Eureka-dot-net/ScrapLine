@@ -59,7 +59,7 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"GameManager_{GetInstanceID()}";
+    private string ComponentId => $"GameManager_{GetEntityId()}";
     
     /// <summary>
     /// Access to the current game data (creates if null)

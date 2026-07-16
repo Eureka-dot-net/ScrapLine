@@ -17,7 +17,7 @@ public class MachineBarUIManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"MachineBarUIManager_{GetInstanceID()}";
+    private string ComponentId => $"MachineBarUIManager_{GetEntityId()}";
 
     // Selection state
     private MachineDef selectedMachine;

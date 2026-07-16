@@ -44,7 +44,7 @@ public class RecipeIngredientDisplay : MonoBehaviour
     [Tooltip("Arrow color (default: white)")]
     public Color arrowColor = Color.white;
 
-    private string ComponentId => $"RecipeIngredientDisplay_{GetInstanceID()}";
+    private string ComponentId => $"RecipeIngredientDisplay_{GetEntityId()}";
 
     /// <summary>
     /// Display ingredients for a given recipe

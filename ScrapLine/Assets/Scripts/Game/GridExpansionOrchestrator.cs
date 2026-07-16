@@ -37,7 +37,7 @@ public class GridExpansionOrchestrator : MonoBehaviour
     [Tooltip("Enable debug logs for orchestration operations")]
     public bool enableOrchestrationLogs = true;
 
-    private string ComponentId => $"GridExpansionOrchestrator_{GetInstanceID()}";
+    private string ComponentId => $"GridExpansionOrchestrator_{GetEntityId()}";
 
     private void Awake()
     {

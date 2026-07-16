@@ -52,7 +52,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
     /// <summary>
     /// Component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"WasteCrateConfigPanel_{GetInstanceID()}";
+    private string ComponentId => $"WasteCrateConfigPanel_{GetEntityId()}";
     
     /// <summary>
     /// List of instantiated crate button objects
@@ -113,7 +113,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         onPanelClosed = onClosed;
         
         // Register with panel manager
-        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        var panelManager = FindAnyObjectByType<UIPanelManager>();
         if (panelManager != null)
         {
             panelManager.RegisterOpenPanel(this);
@@ -151,7 +151,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
     public void HidePanel()
     {
         // Unregister from panel manager
-        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        var panelManager = FindAnyObjectByType<UIPanelManager>();
         if (panelManager != null)
         {
             panelManager.UnregisterPanel(this);

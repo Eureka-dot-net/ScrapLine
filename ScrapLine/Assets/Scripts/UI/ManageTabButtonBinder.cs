@@ -28,7 +28,7 @@ public class ManageTabButtonBinder : MonoBehaviour
     [Tooltip("Enable debug logs for button operations")]
     public bool enableButtonLogs = true;
 
-    private string ComponentId => $"ManageTabButtonBinder_{GetInstanceID()}";
+    private string ComponentId => $"ManageTabButtonBinder_{GetEntityId()}";
 
     private void Awake()
     {

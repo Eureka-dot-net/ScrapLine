@@ -38,7 +38,7 @@ public class ExpandModeController : MonoBehaviour
     /// </summary>
     public bool IsActive => isExpandModeActive;
 
-    private string ComponentId => $"ExpandModeController_{GetInstanceID()}";
+    private string ComponentId => $"ExpandModeController_{GetEntityId()}";
 
     private void Awake()
     {

@@ -15,7 +15,7 @@ public class LoggingSystemDemo : MonoBehaviour
     
     private float lastDemoTime;
     private int demoStep = 0;
-    private string ComponentId => $"LoggingDemo_{GetInstanceID()}";
+    private string ComponentId => $"LoggingDemo_{GetEntityId()}";
 
     void Start()
     {
@@ -129,8 +129,8 @@ public class LoggingSystemDemo : MonoBehaviour
         var conveyorPosition = new { x = 2, y = 1 };
         
         // Manager components: "ManagerName_InstanceId"
-        string gridManagerId = $"GridManager_{GetInstanceID()}";
-        string saveManagerId = $"SaveLoadManager_{GetInstanceID()}";
+        string gridManagerId = $"GridManager_{GetEntityId()}";
+        string saveManagerId = $"SaveLoadManager_{GetEntityId()}";
         
         // UI components: "UIComponent_SpecificId"
         string buttonId = $"MachineButton_shredder";

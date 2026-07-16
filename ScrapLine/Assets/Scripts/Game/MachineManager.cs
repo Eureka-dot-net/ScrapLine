@@ -24,7 +24,7 @@ public class MachineManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"MachineManager_{GetInstanceID()}";
+    private string ComponentId => $"MachineManager_{GetEntityId()}";
 
     /// <summary>
     /// Initialize the machine manager

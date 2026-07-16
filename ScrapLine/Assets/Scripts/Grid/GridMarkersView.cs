@@ -68,7 +68,7 @@ public class GridMarkersView : MonoBehaviour
     private List<GameObject> activeMarkers = new List<GameObject>();
     private Dictionary<GameObject, Vector3> originalMarkerScales = new Dictionary<GameObject, Vector3>();
 
-    private string ComponentId => $"GridMarkersView_{GetInstanceID()}";
+    private string ComponentId => $"GridMarkersView_{GetEntityId()}";
 
     private void Awake()
     {

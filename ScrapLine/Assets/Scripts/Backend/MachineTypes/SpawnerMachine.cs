@@ -46,7 +46,7 @@ public class SpawnerMachine : BaseMachine
     public override void OnConfigured()
     {
         // Find the spawner configuration UI in the scene
-        var configUI = UnityEngine.Object.FindFirstObjectByType<SpawnerConfigPanel>(UnityEngine.FindObjectsInactive.Include);
+        var configUI = UnityEngine.Object.FindAnyObjectByType<SpawnerConfigPanel>(UnityEngine.FindObjectsInactive.Include);
         if (configUI != null)
         {
             configUI.ShowConfiguration(cellData, OnConfigurationConfirmed);

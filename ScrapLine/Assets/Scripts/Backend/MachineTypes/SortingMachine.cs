@@ -23,7 +23,7 @@ public class SortingMachine : BaseMachine
         // Configuration logic for sorting machine
 
         // Find the sorting configuration UI in the scene with improved search
-        SortingMachineConfigPanel configUI = UnityEngine.Object.FindFirstObjectByType<SortingMachineConfigPanel>(FindObjectsInactive.Include);
+        SortingMachineConfigPanel configUI = UnityEngine.Object.FindAnyObjectByType<SortingMachineConfigPanel>(FindObjectsInactive.Include);
         
         // If not found, try alternate search methods
         if (configUI == null)

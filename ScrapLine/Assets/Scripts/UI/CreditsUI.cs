@@ -9,7 +9,7 @@ public class CreditsUI : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"CreditsUI_{GetInstanceID()}";
+    private string ComponentId => $"CreditsUI_{GetEntityId()}";
 
     private void Awake()
     {

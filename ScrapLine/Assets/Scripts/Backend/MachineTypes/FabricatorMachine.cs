@@ -28,7 +28,7 @@ public class FabricatorMachine : ProcessorMachine
     public override void OnConfigured()
     {
         // Find the fabricator configuration UI in the scene with improved search
-        FabricatorMachineConfigPanel configUI = UnityEngine.Object.FindFirstObjectByType<FabricatorMachineConfigPanel>(FindObjectsInactive.Include);
+        FabricatorMachineConfigPanel configUI = UnityEngine.Object.FindAnyObjectByType<FabricatorMachineConfigPanel>(FindObjectsInactive.Include);
         
         // If not found, try alternate search methods
         if (configUI == null)

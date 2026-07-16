@@ -24,7 +24,7 @@ public class GridExpandAnimator : MonoBehaviour
     [Tooltip("Enable debug logs for animation operations")]
     public bool enableAnimationLogs = true;
 
-    private string ComponentId => $"GridExpandAnimator_{GetInstanceID()}";
+    private string ComponentId => $"GridExpandAnimator_{GetEntityId()}";
 
     /// <summary>
     /// Play row insertion animation

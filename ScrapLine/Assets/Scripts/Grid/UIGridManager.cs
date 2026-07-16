@@ -17,7 +17,7 @@ public class UIGridManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"UIGridManager_{GetInstanceID()}";
+    private string ComponentId => $"UIGridManager_{GetEntityId()}";
 
     private GridData gridData;
     private UICell[,] cellScripts;

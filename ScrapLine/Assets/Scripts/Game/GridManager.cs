@@ -25,7 +25,7 @@ public class GridManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"GridManager_{GetInstanceID()}";
+    private string ComponentId => $"GridManager_{GetEntityId()}";
 
     /// <summary>
     /// Initialize the grid manager

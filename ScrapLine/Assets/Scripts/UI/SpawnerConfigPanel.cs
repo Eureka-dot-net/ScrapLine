@@ -308,7 +308,7 @@ public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
         else
         {
             // Fallback to finding the panel if not assigned
-            var purchasePanel = FindFirstObjectByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
+            var purchasePanel = FindAnyObjectByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
             if (purchasePanel != null)
             {
                 purchasePanel.ShowPanel();

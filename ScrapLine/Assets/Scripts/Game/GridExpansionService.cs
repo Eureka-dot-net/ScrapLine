@@ -39,7 +39,7 @@ public class GridExpansionService : MonoBehaviour
         Right
     }
 
-    private string ComponentId => $"GridExpansionService_{GetInstanceID()}";
+    private string ComponentId => $"GridExpansionService_{GetEntityId()}";
 
     /// <summary>
     /// Compute the cost for an expansion operation

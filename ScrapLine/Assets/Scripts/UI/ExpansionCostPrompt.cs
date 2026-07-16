@@ -34,7 +34,7 @@ public class ExpansionCostPrompt : MonoBehaviour
     private Action onConfirmCallback;
     private Action onCancelCallback;
 
-    private string ComponentId => $"ExpansionCostPrompt_{GetInstanceID()}";
+    private string ComponentId => $"ExpansionCostPrompt_{GetEntityId()}";
 
     private void Awake()
     {
