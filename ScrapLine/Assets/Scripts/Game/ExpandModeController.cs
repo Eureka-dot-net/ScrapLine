@@ -42,6 +42,17 @@ public class ExpandModeController : MonoBehaviour
 
     private void Awake()
     {
+        // The overlay sits beside GridPanel so its markers share the same
+        // coordinate space. It must never consume space in the parent's layout.
+        if (dimOverlay != null && dimOverlay.transform.parent != null)
+        {
+            GameObject overlayRoot = dimOverlay.transform.parent.gameObject;
+            LayoutElement overlayLayout = overlayRoot.GetComponent<LayoutElement>();
+            if (overlayLayout == null)
+                overlayLayout = overlayRoot.AddComponent<LayoutElement>();
+            overlayLayout.ignoreLayout = true;
+        }
+
         // Ensure dim overlay starts hidden
         if (dimOverlay != null)
         {

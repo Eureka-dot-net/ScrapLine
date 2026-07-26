@@ -668,26 +668,22 @@ public class UIGridManager : MonoBehaviour
 
     public Vector3 GetCellWorldPosition(int x, int y)
     {
-        // Always use calculated position to ensure accuracy during initialization
+        // Calculate in GridPanel-local coordinates, then convert through the
+        // RectTransform so Canvas scaling is applied correctly.
         GridLayoutGroup layout = gridPanel.GetComponent<GridLayoutGroup>();
         if (layout != null && gridData != null)
         {
             Vector2 cellSize = layout.cellSize;
             Vector2 spacing = layout.spacing;
+            Vector2 pitch = cellSize + spacing;
 
-            // Calculate position within grid (using grid coordinates)
-            float xPos = x * (cellSize.x + spacing.x);
-            float yPos = -y * (cellSize.y + spacing.y); // Negative Y because UI goes down
-
-            // Get grid panel's world position and add offset
-            Vector3 gridWorldPos = gridPanel.transform.position;
-            Vector3 calculatedPos = new Vector3(
-                gridWorldPos.x + xPos - (gridData.width * (cellSize.x + spacing.x)) / 2 + cellSize.x / 2,
-                gridWorldPos.y + yPos + (gridData.height * (cellSize.y + spacing.y)) / 2 - cellSize.y / 2,
-                gridWorldPos.z
+            Vector3 localPosition = new Vector3(
+                x * pitch.x - (gridData.width * pitch.x) / 2f + cellSize.x / 2f,
+                -y * pitch.y + (gridData.height * pitch.y) / 2f - cellSize.y / 2f,
+                0f
             );
 
-            return calculatedPos;
+            return gridPanel.TransformPoint(localPosition);
         }
 
         // Fallback to cell transform if grid layout calculation fails

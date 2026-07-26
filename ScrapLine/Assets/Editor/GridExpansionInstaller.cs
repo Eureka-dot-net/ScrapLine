@@ -43,6 +43,8 @@ public static class GridExpansionInstaller
 
         RectTransform overlayRoot = CreateRect("GridExpansionOverlay", uiGrid.gridPanel.parent);
         CopyRect(uiGrid.gridPanel, overlayRoot);
+        LayoutElement overlayLayout = overlayRoot.gameObject.AddComponent<LayoutElement>();
+        overlayLayout.ignoreLayout = true;
         overlayRoot.SetAsLastSibling();
 
         Image dimOverlay = CreateImage("DimOverlay", overlayRoot, new Color(0f, 0f, 0f, 0.4f));
