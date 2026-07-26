@@ -45,9 +45,8 @@ public class ExpansionCostPrompt : MonoBehaviour
         if (cancelButton != null)
             cancelButton.onClick.AddListener(HandleCancel);
 
-        // Start hidden
-        if (promptPanel != null)
-            promptPanel.SetActive(false);
+        // Initial visibility is serialized in the scene/prefab. Do not deactivate here:
+        // Awake can run as Show() activates an initially-inactive prompt.
     }
 
     /// <summary>
@@ -105,11 +104,9 @@ public class ExpansionCostPrompt : MonoBehaviour
         if (enablePromptLogs)
             GameLogger.Log(LoggingManager.LogCategory.UI, "Expansion confirmed by user", ComponentId);
 
-        // Invoke callback
-        onConfirmCallback?.Invoke();
-
-        // Hide prompt
+        Action callback = onConfirmCallback;
         Hide();
+        callback?.Invoke();
     }
 
     /// <summary>
@@ -120,11 +117,9 @@ public class ExpansionCostPrompt : MonoBehaviour
         if (enablePromptLogs)
             GameLogger.Log(LoggingManager.LogCategory.UI, "Expansion cancelled by user", ComponentId);
 
-        // Invoke callback
-        onCancelCallback?.Invoke();
-
-        // Hide prompt
+        Action callback = onCancelCallback;
         Hide();
+        callback?.Invoke();
     }
 
     private void OnDestroy()

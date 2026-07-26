@@ -65,12 +65,12 @@ public class GridExpansionService : MonoBehaviour
     /// </summary>
     /// <param name="gridData">Grid data to modify</param>
     /// <param name="rowIndex">Index where the row should be inserted (0 = top, height = bottom)</param>
-    public void InsertRow(GridData gridData, int rowIndex)
+    public bool InsertRow(GridData gridData, int rowIndex)
     {
         if (gridData == null)
         {
             GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot insert row - gridData is null", ComponentId);
-            return;
+            return false;
         }
 
         // Validate row index (must be internal, not at edges)
@@ -79,7 +79,7 @@ public class GridExpansionService : MonoBehaviour
             GameLogger.LogError(LoggingManager.LogCategory.Grid, 
                 $"Cannot insert row at index {rowIndex} - must be between 1 and {gridData.height - 1} (internal rows only)", 
                 ComponentId);
-            return;
+            return false;
         }
 
         if (enableExpansionLogs)
@@ -115,6 +115,8 @@ public class GridExpansionService : MonoBehaviour
 
         if (enableExpansionLogs)
             GameLogger.LogGrid($"Row inserted successfully. New grid size: {gridData.width}x{gridData.height}", ComponentId);
+
+        return true;
     }
 
     /// <summary>
@@ -122,12 +124,12 @@ public class GridExpansionService : MonoBehaviour
     /// </summary>
     /// <param name="gridData">Grid data to modify</param>
     /// <param name="colIndex">Index where the column should be inserted (0 = left edge, width = right edge)</param>
-    public void InsertColumn(GridData gridData, int colIndex)
+    public bool InsertColumn(GridData gridData, int colIndex)
     {
         if (gridData == null)
         {
             GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot insert column - gridData is null", ComponentId);
-            return;
+            return false;
         }
 
         // Validate column index (0 to width inclusive for columns)
@@ -136,7 +138,7 @@ public class GridExpansionService : MonoBehaviour
             GameLogger.LogError(LoggingManager.LogCategory.Grid, 
                 $"Cannot insert column at index {colIndex} - must be between 0 and {gridData.width}", 
                 ComponentId);
-            return;
+            return false;
         }
 
         if (enableExpansionLogs)
@@ -187,6 +189,8 @@ public class GridExpansionService : MonoBehaviour
 
         if (enableExpansionLogs)
             GameLogger.LogGrid($"Column inserted successfully. New grid size: {gridData.width}x{gridData.height}", ComponentId);
+
+        return true;
     }
 
     /// <summary>
@@ -194,12 +198,12 @@ public class GridExpansionService : MonoBehaviour
     /// </summary>
     /// <param name="gridData">Grid data to modify</param>
     /// <param name="edge">Which edge to insert at</param>
-    public void InsertColumnAtEdge(GridData gridData, Edge edge)
+    public bool InsertColumnAtEdge(GridData gridData, Edge edge)
     {
         if (gridData == null)
         {
             GameLogger.LogError(LoggingManager.LogCategory.Grid, "Cannot insert column at edge - gridData is null", ComponentId);
-            return;
+            return false;
         }
 
         int colIndex = edge == Edge.Left ? 0 : gridData.width;
@@ -207,7 +211,7 @@ public class GridExpansionService : MonoBehaviour
         if (enableExpansionLogs)
             GameLogger.LogGrid($"Inserting column at {edge} edge (index {colIndex})", ComponentId);
 
-        InsertColumn(gridData, colIndex);
+        return InsertColumn(gridData, colIndex);
     }
 
     /// <summary>

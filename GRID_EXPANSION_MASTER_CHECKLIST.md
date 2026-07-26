@@ -1,5 +1,37 @@
 # Grid Expansion Feature - Master Checklist
 
+## Implementation Status (2026-07-26)
+
+The upgraded Unity 6000.5.3f1 project is now integrated in
+`Assets/Scenes/MobileGridScene.unity`. The original `SampleScene` Build Settings
+entry was obsolete and has been replaced with the gameplay scene.
+
+Completed in the repository:
+
+- [x] Expansion runtime components added and fully referenced
+- [x] Grid-only dim overlay and input blocker added
+- [x] Row, column, and edge marker containers added
+- [x] Inline and edge marker prefabs created
+- [x] Manage-panel expand toggle added
+- [x] Cost confirmation prompt created and wired
+- [x] Credits, grid data, UI refresh, and expand-mode workflow connected
+- [x] New cells animate into view after expansion
+- [x] Debug logging disabled for production defaults
+- [x] Unity editor integration validation passed
+- [x] Windows player build passed
+
+Still requires human visual/gameplay sign-off in Play Mode:
+
+- [ ] Confirm marker placement at every supported target resolution
+- [ ] Confirm final colors, spacing, and animation feel
+- [ ] Confirm touch interaction on a physical mobile device
+- [ ] Tune expansion costs after gameplay/balance testing
+
+The reusable editor command **ScrapLine > Grid Expansion > Install or Repair**
+can recreate the scene integration and prefabs. The companion **Validate**
+command checks all required serialized references, prefabs, cost calculation,
+and Build Settings.
+
 ## Quick Start Guide
 
 This is your master checklist for implementing the expandable grid feature. Follow these steps in order, checking off each item as you complete it.
@@ -10,7 +42,7 @@ This is your master checklist for implementing the expandable grid feature. Foll
 
 - [ ] Read `EXPANDABLE_GRID_SETUP_GUIDE.md` (overview and complete instructions)
 - [ ] Read `GRID_EXPANSION_PREFAB_GUIDE.md` (prefab creation details)
-- [ ] Open ScrapLine project in Unity 6000.2.3f1
+- [x] Open ScrapLine project in Unity 6000.5.3f1
 - [ ] Ensure latest scripts are pulled from repository
 - [ ] Backup current project before starting
 
@@ -386,6 +418,6 @@ When all items are checked and acceptance criteria verified:
 
 ---
 
-**Last Updated**: 2025-10-23  
-**Version**: 1.0  
-**Compatible with**: Unity 6000.2.3f1 (Unity 6 LTS)
+**Last Updated**: 2026-07-26
+**Version**: 1.1
+**Compatible with**: Unity 6000.5.3f1

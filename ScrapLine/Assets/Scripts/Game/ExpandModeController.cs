@@ -152,6 +152,12 @@ public class ExpandModeController : MonoBehaviour
         OnExpandModeEnabled = null;
         OnExpandModeDisabled = null;
     }
+
+    private void OnDisable()
+    {
+        if (isExpandModeActive)
+            DisableExpandMode();
+    }
 }
 
 /*

@@ -9,6 +9,10 @@ using System.Collections;
 /// </summary>
 public class GridExpandAnimator : MonoBehaviour
 {
+    [Header("References")]
+    [Tooltip("Grid whose newly-created cells should be animated")]
+    public UIGridManager uiGridManager;
+
     [Header("Animation Settings")]
     [Tooltip("Duration of slide animation in seconds")]
     public float slideDuration = 0.15f;
@@ -36,15 +40,8 @@ public class GridExpandAnimator : MonoBehaviour
         if (enableAnimationLogs)
             GameLogger.LogGrid($"Starting row insertion animation at index {rowIndex}", ComponentId);
 
-        // Note: This is a visual-only animation placeholder
-        // In a full implementation, you would:
-        // 1. Get all cells at rowIndex and below
-        // 2. Animate them sliding down
-        // 3. Fade in new row cells
-        // 4. Play sound effect
-
-        // Simple wait to simulate animation
-        yield return new WaitForSeconds(slideDuration);
+        if (uiGridManager != null)
+            yield return AnimateCells(index => uiGridManager.GetCell(index, rowIndex));
 
         // Play sound effect
         PlayBuildSound();
@@ -63,15 +60,8 @@ public class GridExpandAnimator : MonoBehaviour
         if (enableAnimationLogs)
             GameLogger.LogGrid($"Starting column insertion animation at index {colIndex}", ComponentId);
 
-        // Note: This is a visual-only animation placeholder
-        // In a full implementation, you would:
-        // 1. Get all cells at colIndex and to the right
-        // 2. Animate them sliding right
-        // 3. Fade in new column cells
-        // 4. Play sound effect
-
-        // Simple wait to simulate animation
-        yield return new WaitForSeconds(slideDuration);
+        if (uiGridManager != null)
+            yield return AnimateCells(index => uiGridManager.GetCell(colIndex, index));
 
         // Play sound effect
         PlayBuildSound();
@@ -90,21 +80,49 @@ public class GridExpandAnimator : MonoBehaviour
         if (enableAnimationLogs)
             GameLogger.LogGrid($"Starting edge column insertion animation at {edge} edge", ComponentId);
 
-        // Note: This is a visual-only animation placeholder
-        // In a full implementation, you would:
-        // 1. For left edge: slide all cells right
-        // 2. For right edge: slide new column in from right
-        // 3. Fade in new column cells
-        // 4. Play sound effect
+        int columnIndex = 0;
+        if (edge == GridExpansionService.Edge.Right && uiGridManager != null)
+        {
+            while (uiGridManager.GetCell(columnIndex + 1, 0) != null)
+                columnIndex++;
+        }
 
-        // Simple wait to simulate animation
-        yield return new WaitForSeconds(slideDuration);
+        yield return PlayInsertColumn(columnIndex);
+    }
 
-        // Play sound effect
-        PlayBuildSound();
+    private IEnumerator AnimateCells(System.Func<int, UICell> cellAtIndex)
+    {
+        var animated = new System.Collections.Generic.List<RectTransform>();
+        for (int i = 0; ; i++)
+        {
+            UICell cell = cellAtIndex(i);
+            if (cell == null)
+                break;
 
-        if (enableAnimationLogs)
-            GameLogger.LogGrid($"Edge column insertion animation completed", ComponentId);
+            RectTransform rect = cell.transform as RectTransform;
+            if (rect != null)
+            {
+                rect.localScale = Vector3.zero;
+                animated.Add(rect);
+            }
+        }
+
+        if (animated.Count == 0)
+            yield break;
+
+        float duration = Mathf.Max(0.01f, slideDuration);
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float eased = slideEase.Evaluate(Mathf.Clamp01(elapsed / duration));
+            foreach (RectTransform rect in animated)
+                if (rect != null) rect.localScale = Vector3.one * eased;
+            yield return null;
+        }
+
+        foreach (RectTransform rect in animated)
+            if (rect != null) rect.localScale = Vector3.one;
     }
 
     /// <summary>

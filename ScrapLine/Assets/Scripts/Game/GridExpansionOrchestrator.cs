@@ -178,16 +178,13 @@ public class GridExpansionOrchestrator : MonoBehaviour
             GameLogger.LogGrid($"Confirming row expansion at index {rowIndex} for {cost} credits", ComponentId);
 
         // Check if player can afford
-        if (!creditsManager.CanAfford(cost))
+        if (creditsManager == null || !creditsManager.TrySpendCredits(cost))
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Economy, 
                 $"Cannot afford row expansion - need {cost} credits", ComponentId);
             CancelExpansion();
             return;
         }
-
-        // Deduct credits
-        creditsManager.TrySpendCredits(cost);
 
         // Start expansion process
         StartCoroutine(ExecuteRowExpansion(rowIndex));
@@ -202,16 +199,13 @@ public class GridExpansionOrchestrator : MonoBehaviour
             GameLogger.LogGrid($"Confirming column expansion at index {colIndex} for {cost} credits", ComponentId);
 
         // Check if player can afford
-        if (!creditsManager.CanAfford(cost))
+        if (creditsManager == null || !creditsManager.TrySpendCredits(cost))
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Economy, 
                 $"Cannot afford column expansion - need {cost} credits", ComponentId);
             CancelExpansion();
             return;
         }
-
-        // Deduct credits
-        creditsManager.TrySpendCredits(cost);
 
         // Start expansion process
         StartCoroutine(ExecuteColumnExpansion(colIndex));
@@ -226,16 +220,13 @@ public class GridExpansionOrchestrator : MonoBehaviour
             GameLogger.LogGrid($"Confirming edge column expansion at {edge} for {cost} credits", ComponentId);
 
         // Check if player can afford
-        if (!creditsManager.CanAfford(cost))
+        if (creditsManager == null || !creditsManager.TrySpendCredits(cost))
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Economy, 
                 $"Cannot afford edge column expansion - need {cost} credits", ComponentId);
             CancelExpansion();
             return;
         }
-
-        // Deduct credits
-        creditsManager.TrySpendCredits(cost);
 
         // Start expansion process
         StartCoroutine(ExecuteEdgeColumnExpansion(edge));
@@ -263,20 +254,18 @@ public class GridExpansionOrchestrator : MonoBehaviour
         GridData gridData = gridManager?.GetCurrentGrid();
         if (gridData == null) yield break;
 
-        // Play animation
-        if (gridExpandAnimator != null)
-        {
-            yield return StartCoroutine(gridExpandAnimator.PlayInsertRow(rowIndex));
-        }
-
         // Mutate data
-        gridExpansionService.InsertRow(gridData, rowIndex);
+        if (!gridExpansionService.InsertRow(gridData, rowIndex))
+            yield break;
 
         // Refresh UI grid
         if (uiGridManager != null)
         {
             uiGridManager.InitGrid(gridData);
         }
+
+        if (gridExpandAnimator != null)
+            yield return StartCoroutine(gridExpandAnimator.PlayInsertRow(rowIndex));
 
         // Exit expand mode
         ExitExpandMode();
@@ -296,20 +285,18 @@ public class GridExpansionOrchestrator : MonoBehaviour
         GridData gridData = gridManager?.GetCurrentGrid();
         if (gridData == null) yield break;
 
-        // Play animation
-        if (gridExpandAnimator != null)
-        {
-            yield return StartCoroutine(gridExpandAnimator.PlayInsertColumn(colIndex));
-        }
-
         // Mutate data
-        gridExpansionService.InsertColumn(gridData, colIndex);
+        if (!gridExpansionService.InsertColumn(gridData, colIndex))
+            yield break;
 
         // Refresh UI grid
         if (uiGridManager != null)
         {
             uiGridManager.InitGrid(gridData);
         }
+
+        if (gridExpandAnimator != null)
+            yield return StartCoroutine(gridExpandAnimator.PlayInsertColumn(colIndex));
 
         // Exit expand mode
         ExitExpandMode();
@@ -329,20 +316,19 @@ public class GridExpansionOrchestrator : MonoBehaviour
         GridData gridData = gridManager?.GetCurrentGrid();
         if (gridData == null) yield break;
 
-        // Play animation
-        if (gridExpandAnimator != null)
-        {
-            yield return StartCoroutine(gridExpandAnimator.PlayInsertEdgeColumn(edge));
-        }
-
         // Mutate data
-        gridExpansionService.InsertColumnAtEdge(gridData, edge);
+        int insertedIndex = edge == GridExpansionService.Edge.Left ? 0 : gridData.width;
+        if (!gridExpansionService.InsertColumnAtEdge(gridData, edge))
+            yield break;
 
         // Refresh UI grid
         if (uiGridManager != null)
         {
             uiGridManager.InitGrid(gridData);
         }
+
+        if (gridExpandAnimator != null)
+            yield return StartCoroutine(gridExpandAnimator.PlayInsertColumn(insertedIndex));
 
         // Exit expand mode
         ExitExpandMode();
