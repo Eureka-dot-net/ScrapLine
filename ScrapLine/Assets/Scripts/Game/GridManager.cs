@@ -189,9 +189,16 @@ public class GridManager : MonoBehaviour
             // Reset cell state
             cell.cellType = CellType.Blank;
             cell.direction = Direction.Up;
-            cell.machineDefId = null;
+            cell.machineDefId = cell.cellRole == CellRole.Top
+                ? "blank_top"
+                : cell.cellRole == CellRole.Bottom ? "blank_bottom" : "blank";
             cell.items.Clear();
             cell.waitingItems.Clear();
+            cell.selectedRecipeId = null;
+            cell.sortingConfig = new SortingMachineConfig();
+            cell.requiredCrateId = "starter_crate";
+            cell.wasteCrate = null;
+            cell.machine = MachineFactory.CreateMachine(cell);
         }
 
         activeGridManager.UpdateAllVisuals();

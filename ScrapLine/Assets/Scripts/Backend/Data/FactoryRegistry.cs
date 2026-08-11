@@ -189,13 +189,17 @@ public class FactoryRegistry
         {
             progress.unlocked = true;
         }
+        GameManager.Instance?.RequestAutosave();
     }
 
     public void UpgradeMachine(string machineId)
     {
         var progress = FindMachineProgress(machineId);
         if (progress != null && progress.unlocked)
+        {
             progress.upgradeLevel++;
+            GameManager.Instance?.RequestAutosave();
+        }
     }
 
     public bool IsMachineUnlocked(string machineId)

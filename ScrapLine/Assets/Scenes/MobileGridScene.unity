@@ -2369,6 +2369,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaveLoadManager
   saveFileName: game_data.json
+  autosaveDelaySeconds: 2
+  autosaveRetryDelaySeconds: 5
+  autosaveMaxRetryDelaySeconds: 60
 --- !u!1 &273900165
 GameObject:
   m_ObjectHideFlags: 0

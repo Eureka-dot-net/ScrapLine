@@ -291,6 +291,10 @@ public class MachineManager : MonoBehaviour
         targetCellData.machineDefId = sourceCellData.machineDefId;
         targetCellData.direction = sourceCellData.direction;
         targetCellData.machine = sourceCellData.machine;
+        targetCellData.selectedRecipeId = sourceCellData.selectedRecipeId;
+        targetCellData.sortingConfig = sourceCellData.sortingConfig;
+        targetCellData.requiredCrateId = sourceCellData.requiredCrateId;
+        targetCellData.wasteCrate = sourceCellData.wasteCrate;
 
         // Update machine's position reference if it exists
         // if (targetCellData.machine != null)
@@ -301,9 +305,13 @@ public class MachineManager : MonoBehaviour
 
         // Clear source cell
         sourceCellData.cellType = CellType.Blank;
-        sourceCellData.machineDefId = null;
+        sourceCellData.machineDefId = BlankMachineId(sourceCellData.cellRole);
         sourceCellData.direction = Direction.Up;
         sourceCellData.machine = null;
+        sourceCellData.selectedRecipeId = null;
+        sourceCellData.sortingConfig = new SortingMachineConfig();
+        sourceCellData.requiredCrateId = "starter_crate";
+        sourceCellData.wasteCrate = null;
 
         // Update visuals for both cells
         if (activeGridManager != null)
@@ -359,6 +367,7 @@ public class MachineManager : MonoBehaviour
         // Preserve configuration data
         targetCellData.selectedRecipeId = machineData.selectedRecipeId;
         targetCellData.sortingConfig = machineData.sortingConfig;
+        targetCellData.requiredCrateId = machineData.requiredCrateId;
         targetCellData.wasteCrate = machineData.wasteCrate;
         
         // Update position to target location
@@ -460,8 +469,12 @@ public class MachineManager : MonoBehaviour
 
         // Reset cell to blank
         cellData.cellType = CellType.Blank;
-        cellData.machineDefId = null;
+        cellData.machineDefId = BlankMachineId(cellData.cellRole);
         cellData.direction = Direction.Up;
+        cellData.selectedRecipeId = null;
+        cellData.sortingConfig = new SortingMachineConfig();
+        cellData.requiredCrateId = "starter_crate";
+        cellData.wasteCrate = null;
 
         // Update visuals
         if (activeGridManager != null)
@@ -572,5 +585,12 @@ public class MachineManager : MonoBehaviour
     public void SetLastMachineDirection(Direction direction)
     {
         lastMachineDirection = direction;
+    }
+
+    private static string BlankMachineId(UICell.CellRole role)
+    {
+        return role == UICell.CellRole.Top
+            ? "blank_top"
+            : role == UICell.CellRole.Bottom ? "blank_bottom" : "blank";
     }
 }

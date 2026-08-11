@@ -116,7 +116,7 @@ public class ProcessorMachine : BaseMachine
         {
             ItemData item = cellData.waitingItems[i];
             
-            if (item.state == ItemState.Waiting && item.waitingStartTime > 0)
+            if (item.state == ItemState.Waiting)
             {
                 float timeWaiting = Time.time - item.waitingStartTime;
                 

@@ -117,6 +117,24 @@ namespace ScrapLine.Tests.EditMode
         }
 
         [Test]
+        public void InvalidUpgradeCostsAndTimesAreRejected()
+        {
+            string machines = ValidMachines.Replace(
+                "\"spawnableItems\":[\"ore\"]",
+                "\"upgradeMultipliers\":[{\"multiplier\":0.5,\"cost\":-1,\"upgradeTime\":0}]," +
+                "\"upgradeMaxNumbers\":[{\"max\":2,\"cost\":0}],\"spawnableItems\":[\"ore\"]");
+
+            ContentValidationResult result = Validate(machines: machines);
+
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.MachinesFile &&
+                                                    error.Message.Contains("upgradeMultipliers[0].cost")), Is.True);
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.MachinesFile &&
+                                                    error.Message.Contains("upgradeMultipliers[0].upgradeTime")), Is.True);
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.MachinesFile &&
+                                                    error.Message.Contains("upgradeMaxNumbers[0].cost")), Is.True);
+        }
+
+        [Test]
         public void ProjectContentDefinitionsAreValid()
         {
             ContentValidationResult result = ContentDataValidator.ValidateProject();

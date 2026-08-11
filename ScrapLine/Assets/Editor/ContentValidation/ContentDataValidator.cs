@@ -152,6 +152,46 @@ namespace ScrapLine.Editor.ContentValidation
                     Positive(machine.baseProcessTime, "baseProcessTime", MachinesFile, id, result);
                 else if (machine.baseProcessTime < 0f)
                     result.Add(MachinesFile, id, "baseProcessTime must not be negative.");
+
+                ValidateMachineUpgrades(machine, id, result);
+            }
+        }
+
+        private static void ValidateMachineUpgrades(
+            MachineData machine,
+            string machineId,
+            ContentValidationResult result)
+        {
+            if (machine.upgradeMultipliers != null)
+            {
+                for (int index = 0; index < machine.upgradeMultipliers.Count; index++)
+                {
+                    UpgradeMultiplierData upgrade = machine.upgradeMultipliers[index];
+                    if (upgrade == null)
+                    {
+                        result.Add(MachinesFile, machineId, $"upgradeMultipliers[{index}] is null.");
+                        continue;
+                    }
+                    Positive(upgrade.multiplier, $"upgradeMultipliers[{index}].multiplier", MachinesFile, machineId, result);
+                    Positive(upgrade.cost, $"upgradeMultipliers[{index}].cost", MachinesFile, machineId, result);
+                    if (upgrade.upgradeTime >= 0f)
+                        Positive(upgrade.upgradeTime, $"upgradeMultipliers[{index}].upgradeTime", MachinesFile, machineId, result);
+                }
+            }
+
+            if (machine.upgradeMaxNumbers != null)
+            {
+                for (int index = 0; index < machine.upgradeMaxNumbers.Count; index++)
+                {
+                    UpgradeMaxNumberData upgrade = machine.upgradeMaxNumbers[index];
+                    if (upgrade == null)
+                    {
+                        result.Add(MachinesFile, machineId, $"upgradeMaxNumbers[{index}] is null.");
+                        continue;
+                    }
+                    Positive(upgrade.max, $"upgradeMaxNumbers[{index}].max", MachinesFile, machineId, result);
+                    Positive(upgrade.cost, $"upgradeMaxNumbers[{index}].cost", MachinesFile, machineId, result);
+                }
             }
         }
 
@@ -499,11 +539,26 @@ namespace ScrapLine.Editor.ContentValidation
             public string id;
             public string type;
             public float baseProcessTime;
+            public List<UpgradeMultiplierData> upgradeMultipliers;
+            public List<UpgradeMaxNumberData> upgradeMaxNumbers;
             public List<string> gridPlacement;
             public bool displayInPanel = true;
             public int cost;
             public List<string> spawnableItems;
             public string className;
+        }
+        [Serializable]
+        private sealed class UpgradeMultiplierData
+        {
+            public float multiplier;
+            public int cost;
+            public float upgradeTime = -1f;
+        }
+        [Serializable]
+        private sealed class UpgradeMaxNumberData
+        {
+            public int max;
+            public int cost;
         }
 
         [Serializable]

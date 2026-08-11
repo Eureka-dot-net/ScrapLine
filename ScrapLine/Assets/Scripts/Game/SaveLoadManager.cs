@@ -1,144 +1,153 @@
-using UnityEngine;
-using System.IO;
 using System.Collections;
-using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
-/// Manages game state serialization and persistence.
-/// Handles saving and loading game data to/from JSON files.
+/// Coordinates versioned, durable game saves with scene state and lifecycle events.
 /// </summary>
 public class SaveLoadManager : MonoBehaviour
 {
     [Header("Save Configuration")]
     [Tooltip("Name of the save file")]
     public string saveFileName = "game_data.json";
-    
-    [Header("Debug")]
-    [Tooltip("Enable debug logs for save/load operations")]
+
+    [Tooltip("Seconds to coalesce frequent state changes before writing")]
+    [Min(0.1f)]
+    public float autosaveDelaySeconds = 2f;
+
+    [Tooltip("Initial delay before retrying a failed autosave")]
+    [Min(0.5f)]
+    public float autosaveRetryDelaySeconds = 5f;
+
+    [Tooltip("Maximum delay between repeated autosave failures")]
+    [Min(1f)]
+    public float autosaveMaxRetryDelaySeconds = 60f;
 
     private GridManager gridManager;
     private CreditsManager creditsManager;
-    
-    /// <summary>
-    /// Get the component ID for logging purposes
-    /// </summary>
+    private GameSaveStorage storage;
+    private bool autosavePending;
+    private float autosaveAtRealtime;
+    private int consecutiveAutosaveFailures;
+
     private string ComponentId => $"SaveLoadManager_{GetEntityId()}";
 
-    /// <summary>
-    /// Initialize the save/load manager
-    /// </summary>
-    /// <param name="gridManager">Reference to the grid manager</param>
-    /// <param name="creditsManager">Reference to the credits manager</param>
     public void Initialize(GridManager gridManager, CreditsManager creditsManager)
     {
         this.gridManager = gridManager;
         this.creditsManager = creditsManager;
+        storage = new GameSaveStorage(Application.persistentDataPath, saveFileName);
+        creditsManager.CreditsChanged -= RequestAutosave;
+        creditsManager.CreditsChanged += RequestAutosave;
     }
 
-    /// <summary>
-    /// Check if a save file exists
-    /// </summary>
-    /// <returns>True if save file exists, false otherwise</returns>
+    private void OnDestroy()
+    {
+        if (creditsManager != null)
+            creditsManager.CreditsChanged -= RequestAutosave;
+    }
+
+    private void Update()
+    {
+        if (autosavePending && Time.realtimeSinceStartup >= autosaveAtRealtime)
+            SaveGame();
+    }
+
     public bool SaveFileExists()
     {
-        string path = GetSaveFilePath();
-        return File.Exists(path);
+        EnsureStorage();
+        return storage.AnySaveExists;
     }
 
-    /// <summary>
-    /// Get the full path to the save file
-    /// </summary>
-    /// <returns>Full path to save file</returns>
-    private string GetSaveFilePath()
+    public void RequestAutosave()
     {
-        return Application.persistentDataPath + "/" + saveFileName;
+        if (autosavePending)
+            return;
+        autosavePending = true;
+        autosaveAtRealtime = Time.realtimeSinceStartup + Mathf.Max(0.1f, autosaveDelaySeconds);
     }
 
-    /// <summary>
-    /// Save the current game state
-    /// </summary>
-    public void SaveGame()
+    public bool SaveGame()
     {
-        try
+        if (gridManager == null || creditsManager == null || GameManager.Instance == null)
         {
-            // Get current game data from GameManager
-            GameData data = GameManager.Instance.gameData;
-            
-            // Update with current state
-            data.grids = gridManager.GetActiveGrids();
-            data.credits = creditsManager.GetCredits();
-            
-            FactoryRegistry.Instance.SaveToGameData(data);
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad,
+                "Cannot save before managers are initialized.", ComponentId);
+            return false;
+        }
 
-            string json = JsonUtility.ToJson(data);
-            string path = GetSaveFilePath();
-            File.WriteAllText(path, json);
-            
-            GameLogger.LogSaveLoad($"Game saved successfully. Queue items: {data.wasteQueue?.Count ?? 0}", ComponentId);
-        }
-        catch (System.Exception ex)
+        GameData data = GameManager.Instance.gameData;
+        data.grids = gridManager.GetActiveGrids();
+        data.credits = creditsManager.GetCredits();
+        data.hasRuntimeClockAnchor = true;
+        data.savedAtRuntimeTime = Time.time;
+        FactoryRegistry.Instance.SaveToGameData(data);
+
+        EnsureStorage();
+        if (!storage.TrySave(data, out string error))
         {
-            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to save game: {ex.Message}", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to save game: {error}", ComponentId);
+            ScheduleAutosaveRetry();
+            return false;
         }
+
+        autosavePending = false;
+        consecutiveAutosaveFailures = 0;
+        GameLogger.LogSaveLoad(
+            $"Game saved at schema {data.schemaVersion}. Queue items: {data.wasteQueue.Count}", ComponentId);
+        return true;
     }
 
-    /// <summary>
-    /// Load the game state from file
-    /// </summary>
-    /// <returns>True if loaded successfully, false otherwise</returns>
     public bool LoadGame()
     {
-        string path = GetSaveFilePath();
-        
-        if (!File.Exists(path))
+        EnsureStorage();
+        if (!storage.TryLoad(
+                out GameData data,
+                out bool loadedFromBackup,
+                out bool migrationApplied,
+                out string loadWarning))
         {
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to load game: {loadWarning}", ComponentId);
             return false;
         }
 
-        try
+        float itemMoveSpeed = GameManager.Instance.itemMovementManager != null
+            ? GameManager.Instance.itemMovementManager.itemMoveSpeed
+            : 1f;
+        if (!GameSaveRuntimeRehydrator.TryPrepareForResume(
+                data, Time.time, itemMoveSpeed, out string rehydrationError))
         {
-            string json = File.ReadAllText(path);
-            GameData data = JsonUtility.FromJson<GameData>(json);
-            
-            if (data == null)
-            {
-                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to deserialize save data!", ComponentId);
-                return false;
-            }
-
-            // Initialize wasteQueue if it's null (for backwards compatibility with old saves)
-            if (data.wasteQueue == null)
-            {
-                data.wasteQueue = new List<string>();
-                GameLogger.LogSaveLoad("Initialized null wasteQueue for backwards compatibility", ComponentId);
-            }
-
-            // Store loaded data in GameManager
-            GameManager.Instance.gameData = data;
-
-            // Load grid data
-            gridManager.SetActiveGrids(data.grids);
-
-            // Load credits
-            creditsManager.SetCredits(data.credits);
-
-            // Load factory registry data
-            FactoryRegistry.Instance.LoadFromGameData(data);
-            
-            GameLogger.LogSaveLoad($"Game loaded successfully. Queue items: {data.wasteQueue?.Count ?? 0}, Queue limit: {data.wasteQueueLimit}", ComponentId);
-
-            return true;
-        }
-        catch (System.Exception ex)
-        {
-            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to load game: {ex.Message}", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad,
+                $"Failed to restore runtime save state: {rehydrationError}", ComponentId);
             return false;
         }
+
+        GameManager.Instance.gameData = data;
+        gridManager.SetActiveGrids(data.grids);
+        creditsManager.SetCredits(data.credits, false);
+        FactoryRegistry.Instance.LoadFromGameData(data);
+        autosavePending = false;
+
+        if (loadedFromBackup)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.SaveLoad,
+                $"Primary save was invalid; recovered from backup. {loadWarning}", ComponentId);
+        }
+
+        // Preserve the previous backup during ordinary loads. Only migrations and backup recovery
+        // require an immediate rewrite of the primary generation.
+        if ((loadedFromBackup || migrationApplied) && !storage.TrySave(data, out string rewriteError))
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad,
+                $"Game loaded, but the migrated/primary save could not be written: {rewriteError}", ComponentId);
+            ScheduleAutosaveRetry();
+        }
+
+        GameLogger.LogSaveLoad(
+            $"Game loaded at schema {data.schemaVersion}. Queue items: {data.wasteQueue.Count}, " +
+            $"queue limit: {data.wasteQueueLimit}", ComponentId);
+        return true;
     }
 
-    /// <summary>
-    /// Initialize machines from saved data after FactoryRegistry is loaded
-    /// </summary>
     public IEnumerator InitializeMachinesFromSave()
     {
         yield return new WaitUntil(() => FactoryRegistry.Instance.IsLoaded());
@@ -146,40 +155,54 @@ public class SaveLoadManager : MonoBehaviour
         GridData currentGrid = gridManager.GetCurrentGrid();
         if (currentGrid == null)
         {
-            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"No current grid available for machine initialization!", ComponentId);
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad,
+                "No current grid available for machine initialization!", ComponentId);
             yield break;
         }
 
-        foreach (var cell in currentGrid.cells)
+        foreach (CellData cell in currentGrid.cells)
         {
-            if (cell.machine == null && !string.IsNullOrEmpty(cell.machineDefId))
-            {
+            if (cell.machine == null)
                 cell.machine = MachineFactory.CreateMachine(cell);
-            }
-            else if (cell.machine == null)
-            {
-                cell.machine = MachineFactory.CreateMachine(cell);
-            }
         }
     }
 
-    /// <summary>
-    /// Delete the save file
-    /// </summary>
-    public void DeleteSaveFile()
+    public bool DeleteSaveFile()
     {
-        string path = GetSaveFilePath();
-        
-        if (File.Exists(path))
-        {
-            try
-            {
-                File.Delete(path);
-            }
-            catch (System.Exception ex)
-            {
-                GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to delete save file: {ex.Message}", ComponentId);
-            }
-        }
+        EnsureStorage();
+        autosavePending = false;
+        if (storage.TryDeleteAll(out string error))
+            return true;
+        GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to delete save files: {error}", ComponentId);
+        return false;
+    }
+
+    private void OnApplicationPause(bool paused)
+    {
+        if (paused && GameManager.Instance != null)
+            SaveGame();
+    }
+
+    private void OnApplicationQuit()
+    {
+        // Desktop quit is best-effort. Mobile pause/background is the authoritative lifecycle flush.
+        if (GameManager.Instance != null)
+            SaveGame();
+    }
+
+    private void EnsureStorage()
+    {
+        storage ??= new GameSaveStorage(Application.persistentDataPath, saveFileName);
+    }
+
+    private void ScheduleAutosaveRetry()
+    {
+        consecutiveAutosaveFailures++;
+        float exponent = Mathf.Min(consecutiveAutosaveFailures - 1, 10);
+        float delay = Mathf.Min(
+            Mathf.Max(0.5f, autosaveRetryDelaySeconds) * Mathf.Pow(2f, exponent),
+            Mathf.Max(1f, autosaveMaxRetryDelaySeconds));
+        autosavePending = true;
+        autosaveAtRealtime = Time.realtimeSinceStartup + delay;
     }
 }

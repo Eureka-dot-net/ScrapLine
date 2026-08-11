@@ -15,7 +15,11 @@ public class SpawnerMachine : BaseMachine
     /// The crate type this spawner is configured to accept (e.g., "medium_crate")
     /// When empty or configuration changes, spawner checks global queue for this type
     /// </summary>
-    public string RequiredCrateId { get; set; } = "starter_crate";
+    public string RequiredCrateId
+    {
+        get => cellData.requiredCrateId;
+        set => cellData.requiredCrateId = value;
+    }
     
     /// <summary>
     /// Get the component ID for logging purposes
@@ -33,8 +37,9 @@ public class SpawnerMachine : BaseMachine
         
         GameLogger.LogSpawning($"Spawner created at ({cellData.x}, {cellData.y}) with interval {spawnInterval}s", ComponentId);
         
-        // Initialize with starter crate configuration by default
-        RequiredCrateId = "starter_crate";
+        // Old cells without an explicit filter use the starter crate; loaded configurations are preserved.
+        if (RequiredCrateId == null)
+            RequiredCrateId = "starter_crate";
         
         // Assign the starter waste crate to this spawner when created
         //CreateWasteCrate();
@@ -81,6 +86,7 @@ public class SpawnerMachine : BaseMachine
     {
         // Allow empty string to clear the filter
         RequiredCrateId = selectedCrateId ?? "";
+        GameManager.Instance?.RequestAutosave();
         
         if (string.IsNullOrEmpty(selectedCrateId))
         {

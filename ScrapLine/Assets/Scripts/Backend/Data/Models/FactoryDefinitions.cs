@@ -4,6 +4,13 @@ using System.Collections.Generic;
 public class UpgradeMultiplier {
     public float multiplier;
     public int cost;
+    public float upgradeTime = -1f;
+}
+
+[System.Serializable]
+public class UpgradeMaxNumber {
+    public int max;
+    public int cost;
 }
 
 [System.Serializable]
@@ -22,6 +29,7 @@ public class MachineDef
     public float buildingIconSpriteSize = 1.0f;  // size multiplier for icon sprite (0-1)
     public string buildingSpriteColour;    // hex color for building sprite tint (can be null)
     public List<UpgradeMultiplier> upgradeMultipliers;
+    public List<UpgradeMaxNumber> upgradeMaxNumbers;
     public List<string> gridPlacement;     // e.g., ["any"], ["bottom"]
     public int maxNumber;
     public bool displayInPanel = true;     // whether to show in machine selection panel

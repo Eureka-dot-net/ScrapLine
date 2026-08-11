@@ -45,7 +45,8 @@ namespace ScrapLine.Tests.EditMode
             {
                 Component creditsManager = gameObject.AddComponent(creditsType);
                 int startingCredits = GetIntField(creditsManager, "startingCredits");
-                object gameData = Activator.CreateInstance(gameDataType);
+                object gameData = gameDataType.GetMethod("CreateNewGame", BindingFlags.Public | BindingFlags.Static)
+                    .Invoke(null, null);
                 IList wasteQueue = (IList)gameDataType.GetField("wasteQueue").GetValue(gameData);
 
                 Assert.That(startingCredits, Is.EqualTo(250));

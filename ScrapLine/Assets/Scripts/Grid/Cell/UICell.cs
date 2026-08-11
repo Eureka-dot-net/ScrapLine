@@ -215,6 +215,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
                     machineDefId = cellData.machineDefId,
                     machineState = cellData.machineState,
                     selectedRecipeId = cellData.selectedRecipeId,
+                    requiredCrateId = cellData.requiredCrateId,
                     sortingConfig = cellData.sortingConfig != null ? new SortingMachineConfig 
                     {
                         leftItemType = cellData.sortingConfig.leftItemType,

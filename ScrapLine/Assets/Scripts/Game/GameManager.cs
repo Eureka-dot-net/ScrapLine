@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// Core game manager that orchestrates all subsystems.
@@ -171,9 +172,9 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void StartNewGame()
     {
+        _gameData = GameData.CreateNewGame();
         creditsManager.InitializeNewGame();
         gridManager.CreateDefaultGrid();
-
     }
 
     /// <summary>
@@ -221,6 +222,7 @@ public class GameManager : MonoBehaviour
     public void OnCellClicked(int x, int y)
     {
         machineManager.OnCellClicked(x, y);
+        RequestAutosave();
     }
 
     // <summary>
@@ -277,6 +279,7 @@ public class GameManager : MonoBehaviour
     public void OnMachineDraggedOutsideGrid(int x, int y)
     {
         machineManager.DeleteMachine(x, y);
+        RequestAutosave();
     }
 
     /// <summary>
@@ -288,7 +291,10 @@ public class GameManager : MonoBehaviour
     /// <returns>True if placement was successful, false otherwise</returns>
     public bool PlaceDraggedMachineWithData(int x, int y, CellData machineData)
     {
-        return machineManager.PlaceDraggedMachineWithData(x, y, machineData);
+        bool placed = machineManager.PlaceDraggedMachineWithData(x, y, machineData);
+        if (placed)
+            RequestAutosave();
+        return placed;
     }
 
     /// <summary>
@@ -301,7 +307,10 @@ public class GameManager : MonoBehaviour
     /// <returns>True if placement was successful, false otherwise</returns>
     public bool PlaceDraggedMachine(int x, int y, string machineDefId, UICell.Direction direction)
     {
-        return machineManager.PlaceDraggedMachine(x, y, machineDefId, direction);
+        bool placed = machineManager.PlaceDraggedMachine(x, y, machineDefId, direction);
+        if (placed)
+            RequestAutosave();
+        return placed;
     }
 
     /// <summary>
@@ -347,12 +356,35 @@ public class GameManager : MonoBehaviour
         saveLoadManager.SaveGame();
     }
 
+    public void RequestAutosave()
+    {
+        saveLoadManager?.RequestAutosave();
+    }
+
+    /// <summary>
+    /// Clears all persisted generations and starts a fresh, immediately saved game.
+    /// </summary>
+    public bool ResetGame()
+    {
+        if (!saveLoadManager.DeleteSaveFile())
+            return false;
+
+        _gameData = GameData.CreateNewGame();
+        FactoryRegistry.Instance.LoadFromGameData(_gameData);
+        creditsManager.InitializeNewGame();
+        gridManager.SetActiveGrids(new List<GridData>());
+        gridManager.CreateDefaultGrid();
+        gridManager.InitializeUIGrid();
+        return saveLoadManager.SaveGame();
+    }
+
     /// <summary>
     /// Clear the current grid
     /// </summary>
     public void ClearGrid()
     {
         gridManager.ClearGrid();
+        RequestAutosave();
     }
 
     /// <summary>

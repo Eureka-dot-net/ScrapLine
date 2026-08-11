@@ -86,6 +86,7 @@ public class CellData
     public BaseMachine machine; // Runtime-only machine object that handles behavior
     public string selectedRecipeId; // Player's configuration choice for this machine
     public SortingMachineConfig sortingConfig = new SortingMachineConfig(); // Configuration for sorting machines
+    public string requiredCrateId = "starter_crate"; // Spawner crate filter; empty string accepts no crate type
     public WasteCrateInstance wasteCrate; // WasteCrate assigned to spawner machines
 }
 
@@ -108,10 +109,20 @@ public class UserMachineProgress
 [System.Serializable]
 public class GameData
 {
+    public int schemaVersion = GameSaveMigrations.CurrentSchemaVersion;
+    public bool hasRuntimeClockAnchor;
+    public float savedAtRuntimeTime;
     public List<GridData> grids = new List<GridData>();
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public int credits = 0; // Credits (money) system for purchasing machines
     public int wasteQueueLimit = 3; // How many crates can be queued (upgradeable in future)
-    // New games receive one free can bale so the first line can earn before buying more supply.
-    public List<string> wasteQueue = new List<string> { "starter_crate" }; // Queue of waste crate IDs waiting to be used
+    public List<string> wasteQueue = new List<string>(); // Queue of waste crate IDs waiting to be used
+
+    public static GameData CreateNewGame()
+    {
+        return new GameData
+        {
+            wasteQueue = new List<string> { "starter_crate" }
+        };
+    }
 }

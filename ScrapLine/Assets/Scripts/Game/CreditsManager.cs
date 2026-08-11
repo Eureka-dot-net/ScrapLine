@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -6,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public class CreditsManager : MonoBehaviour
 {
+    public event Action CreditsChanged;
+
     [Header("Credits Configuration")]
     [Tooltip("Starting credits amount for new games")]
     public int startingCredits = 250;
@@ -45,6 +48,7 @@ public class CreditsManager : MonoBehaviour
     {
         currentCredits = startingCredits;
         UpdateCreditsDisplay();
+        CreditsChanged?.Invoke();
     }
 
     /// <summary>
@@ -53,8 +57,15 @@ public class CreditsManager : MonoBehaviour
     /// <param name="credits">The credits amount to set</param>
     public void SetCredits(int credits)
     {
+        SetCredits(credits, true);
+    }
+
+    public void SetCredits(int credits, bool notifyChange)
+    {
         currentCredits = credits;
         UpdateCreditsDisplay();
+        if (notifyChange)
+            CreditsChanged?.Invoke();
     }
 
     /// <summary>
@@ -74,6 +85,7 @@ public class CreditsManager : MonoBehaviour
     {
         currentCredits += amount;
         UpdateCreditsDisplay();
+        CreditsChanged?.Invoke();
     }
 
     /// <summary>
@@ -83,10 +95,14 @@ public class CreditsManager : MonoBehaviour
     /// <returns>True if credits were spent, false if insufficient funds</returns>
     public bool TrySpendCredits(int amount)
     {
+        if (amount < 0)
+            return false;
         if (currentCredits >= amount)
         {
             currentCredits -= amount;
             UpdateCreditsDisplay();
+            if (amount > 0)
+                CreditsChanged?.Invoke();
             return true;
         }
         else
@@ -116,10 +132,8 @@ public class CreditsManager : MonoBehaviour
     {
         int refundAmount = Mathf.RoundToInt(machineCost * machineRefundPercentage);
         currentCredits += refundAmount;
-        
-        if (enableCreditsLogs)
-        
         UpdateCreditsDisplay();
+        CreditsChanged?.Invoke();
         return refundAmount;
     }
 

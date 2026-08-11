@@ -67,6 +67,7 @@ public class SortingMachine : BaseMachine
             
         cellData.sortingConfig.leftItemType = leftItemType;
         cellData.sortingConfig.rightItemType = rightItemType;
+        GameManager.Instance?.RequestAutosave();
 
         // Refresh the visual configuration indicators
         RefreshConfigurationVisuals();

@@ -75,6 +75,7 @@ public class FabricatorMachine : ProcessorMachine
         
         // The configuration UI already updates cellData.selectedRecipeId, but let's be explicit
         cellData.selectedRecipeId = selectedRecipeId;
+        GameManager.Instance?.RequestAutosave();
         
         // Refresh the visual configuration indicators
         RefreshConfigurationVisuals();

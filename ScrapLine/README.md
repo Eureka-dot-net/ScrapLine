@@ -225,6 +225,12 @@ ScrapLine features a complete economic gameplay system:
 4. Expand factory with additional machines
 5. Optimize for maximum credits per minute
 
+### Save Safety
+
+Game saves are schema-versioned, migrated, written through a validated temporary file, and protected
+by one recoverable backup. Autosave and platform lifecycle behavior are documented in
+[`SAVE_SYSTEM.md`](SAVE_SYSTEM.md).
+
 ### UI Setup
 The CreditsUI system requires proper Unity setup:
 1. Create a TextMeshPro text element in your UI
