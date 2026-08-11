@@ -10,16 +10,6 @@
     "processMultiplier": 1
   },
   {
-    "machineId": "shredder",
-    "inputItems": [
-      { "item": "toaster", "count": 1 }
-    ],
-    "outputItems": [
-      { "item": "shreddedIron", "count": 3 }
-    ],
-    "processMultiplier": 1
-  },
-  {
     "machineId": "granulator",
     "inputItems": [
       { "item": "plasticBottle", "count": 1 }
@@ -49,16 +39,5 @@
       { "item": "reinforcedAluminumPlate", "count": 1 }
     ],
     "processMultiplier": 1
-  },
-  {
-    "machineId": "fabricator",
-    "inputItems": [
-      { "item": "can", "count": 1 },
-      { "item": "plasticBottle", "count": 1 }
-    ],
-    "outputItems": [
-      { "item": "aluminumPlate", "count": 1 }
-    ],
-    "processMultiplier": 0.5
   }
 ]

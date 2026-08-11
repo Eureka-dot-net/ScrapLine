@@ -39,7 +39,7 @@ public class ItemSelectionPanel : BaseSelectionPanel<ItemDef>
             // Fallback items if registry not available
             items.Add(new ItemDef { id = "can", displayName = "Aluminum Can", sprite = "can" });
             items.Add(new ItemDef { id = "shreddedAluminum", displayName = "Shredded Aluminum", sprite = "shredded_aluminum" });
-            items.Add(new ItemDef { id = "plastic", displayName = "Plastic", sprite = "plastic" });
+            items.Add(new ItemDef { id = "plasticBottle", displayName = "Plastic Bottle", sprite = "plasticBottle" });
             
             return items;
         }

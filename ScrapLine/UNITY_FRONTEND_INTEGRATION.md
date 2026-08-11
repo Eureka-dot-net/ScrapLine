@@ -1,10 +1,13 @@
 # Unity Frontend Integration Guide - Waste Crate System
 
+Current content uses Can, Plastic, Mixed, and Bulk Mixed bales. See `BALANCE_BASELINE.md` for the
+authoritative names, contents, and prices; legacy UI labels below are illustrative hierarchy text.
+
 This guide provides step-by-step instructions for integrating the waste crate system into the Unity frontend.
 
 ## Overview
 The waste crate system consists of:
-- 4 different waste crates with increasing costs
+- 4 waste bales with data-driven contents and costs
 - Queue management system (1 crate queue limit initially)
 - Interactive UI that opens when clicking spawner machines
 - Purchase validation and credit integration

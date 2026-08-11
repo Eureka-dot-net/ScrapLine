@@ -7,17 +7,18 @@ namespace ScrapLine.Tests.EditMode
     public sealed class ContentDataValidatorTests
     {
         private const string ValidItems =
-            "{\"items\":[{\"id\":\"ore\",\"displayName\":\"Ore\",\"sprite\":\"ore\",\"sellValue\":1}]}";
+            "{\"items\":[{\"id\":\"ore\",\"displayName\":\"Ore\",\"sprite\":\"ore\",\"sellValue\":2}," +
+            "{\"id\":\"refinedOre\",\"displayName\":\"Refined Ore\",\"sprite\":\"refined\",\"sellValue\":6}]}";
         private const string ValidMachines =
             "{\"machines\":[{\"id\":\"processor\",\"type\":\"Shredder\",\"baseProcessTime\":1," +
             "\"gridPlacement\":[\"grid\"],\"displayInPanel\":true,\"cost\":1," +
             "\"spawnableItems\":[\"ore\"],\"className\":\"ProcessorMachine\"}]}";
         private const string ValidRecipes =
             "[{\"machineId\":\"processor\",\"inputItems\":[{\"item\":\"ore\",\"count\":1}]," +
-            "\"outputItems\":[{\"item\":\"ore\",\"count\":1}],\"processMultiplier\":1}]";
+            "\"outputItems\":[{\"item\":\"refinedOre\",\"count\":1}],\"processMultiplier\":1}]";
         private const string ValidWasteCrates =
             "{\"wasteCrates\":[{\"id\":\"ore_crate\",\"displayName\":\"Ore Crate\",\"sprite\":\"crate\"," +
-            "\"cost\":1,\"items\":[{\"itemType\":\"ore\",\"count\":1}]}]}";
+            "\"cost\":40,\"items\":[{\"itemType\":\"ore\",\"count\":25}]}]}";
 
         [Test]
         public void ValidDefinitionsPass()
@@ -32,8 +33,9 @@ namespace ScrapLine.Tests.EditMode
         public void DuplicateItemIdReportsFileAndId()
         {
             string items =
-                "{\"items\":[{\"id\":\"ore\",\"displayName\":\"Ore\",\"sprite\":\"ore\",\"sellValue\":1}," +
-                "{\"id\":\"ore\",\"displayName\":\"More Ore\",\"sprite\":\"ore2\",\"sellValue\":2}]}";
+                "{\"items\":[{\"id\":\"ore\",\"displayName\":\"Ore\",\"sprite\":\"ore\",\"sellValue\":2}," +
+                "{\"id\":\"ore\",\"displayName\":\"More Ore\",\"sprite\":\"ore2\",\"sellValue\":3}," +
+                "{\"id\":\"refinedOre\",\"displayName\":\"Refined Ore\",\"sprite\":\"refined\",\"sellValue\":6}]}";
 
             ContentValidationResult result = Validate(items: items);
 
@@ -88,6 +90,30 @@ namespace ScrapLine.Tests.EditMode
 
             Assert.That(result.Errors.Any(error =>
                 error.File == ContentDataValidator.ItemsFile && error.Message.Contains("'items'")), Is.True);
+        }
+
+        [Test]
+        public void UnprofitableRecipeReportsInputAndOutputValues()
+        {
+            string recipes = ValidRecipes.Replace("refinedOre", "ore");
+
+            ContentValidationResult result = Validate(recipes: recipes);
+
+            Assert.That(result.Errors.Any(error =>
+                error.File == ContentDataValidator.RecipesFile &&
+                error.Message.Contains("output sale value (2)") && error.Message.Contains("input sale value (2)")), Is.True);
+        }
+
+        [Test]
+        public void WasteCrateMustCostEightyPercentOfRawContents()
+        {
+            string wasteCrates = ValidWasteCrates.Replace("\"cost\":40", "\"cost\":20");
+
+            ContentValidationResult result = Validate(wasteCrates: wasteCrates);
+
+            Assert.That(result.Errors.Any(error =>
+                error.File == ContentDataValidator.WasteCratesFile && error.Id == "ore_crate" &&
+                error.Message.Contains("80%") && error.Message.Contains("was 20")), Is.True);
         }
 
         [Test]

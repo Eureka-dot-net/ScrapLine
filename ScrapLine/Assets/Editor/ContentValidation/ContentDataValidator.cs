@@ -98,6 +98,8 @@ namespace ScrapLine.Editor.ContentValidation
             ValidateSpawnableItems(machineData, itemData, result);
             ValidateRecipes(recipeData, machineData, itemData, result);
             ValidateWasteCrates(wasteCrateData, itemData, result);
+            ValidateRecipeEconomy(recipeData, itemData, result);
+            ValidateWasteCrateEconomy(wasteCrateData, itemData, result);
             return result;
         }
 
@@ -277,6 +279,94 @@ namespace ScrapLine.Editor.ContentValidation
                             $"spawnableItems[{index}] references unknown item '{itemId}'.");
                 }
             }
+        }
+
+        private static void ValidateRecipeEconomy(
+            IReadOnlyList<RecipeData> recipes,
+            IReadOnlyList<ItemData> items,
+            ContentValidationResult result)
+        {
+            Dictionary<string, int> itemValues = ItemValueMap(items);
+            for (int index = 0; index < recipes.Count; index++)
+            {
+                RecipeData recipe = recipes[index];
+                if (recipe == null ||
+                    !TryCalculateRecipeValue(recipe.inputItems, itemValues, out int inputValue) ||
+                    !TryCalculateRecipeValue(recipe.outputItems, itemValues, out int outputValue))
+                    continue;
+
+                if (outputValue <= inputValue)
+                {
+                    result.Add(RecipesFile, RecipeId(recipe, index),
+                        $"output sale value ({outputValue}) must exceed input sale value ({inputValue}).");
+                }
+            }
+        }
+
+        private static void ValidateWasteCrateEconomy(
+            IReadOnlyList<WasteCrateData> wasteCrates,
+            IReadOnlyList<ItemData> items,
+            ContentValidationResult result)
+        {
+            Dictionary<string, int> itemValues = ItemValueMap(items);
+            foreach (WasteCrateData crate in wasteCrates.Where(crate => crate != null))
+            {
+                if (!TryCalculateCrateValue(crate.items, itemValues, out int rawSaleValue))
+                    continue;
+
+                int expectedCost = Mathf.RoundToInt(rawSaleValue * 0.8f);
+                if (crate.cost != expectedCost)
+                {
+                    result.Add(WasteCratesFile, crate.id,
+                        $"cost must be 80% of raw contents value ({expectedCost} for contents worth {rawSaleValue}, was {crate.cost}).");
+                }
+            }
+        }
+
+        private static Dictionary<string, int> ItemValueMap(IEnumerable<ItemData> items)
+        {
+            Dictionary<string, int> values = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (ItemData item in items.Where(item => item != null && !string.IsNullOrWhiteSpace(item.id)))
+            {
+                if (!values.ContainsKey(item.id))
+                    values.Add(item.id, item.sellValue);
+            }
+            return values;
+        }
+
+        private static bool TryCalculateRecipeValue(
+            IReadOnlyList<RecipeItemData> entries,
+            IReadOnlyDictionary<string, int> itemValues,
+            out int value)
+        {
+            value = 0;
+            if (entries == null || entries.Count == 0)
+                return false;
+            foreach (RecipeItemData entry in entries)
+            {
+                if (entry == null || entry.count <= 0 || !itemValues.TryGetValue(entry.item ?? "", out int itemValue))
+                    return false;
+                value += itemValue * entry.count;
+            }
+            return true;
+        }
+
+        private static bool TryCalculateCrateValue(
+            IReadOnlyList<WasteCrateItemData> entries,
+            IReadOnlyDictionary<string, int> itemValues,
+            out int value)
+        {
+            value = 0;
+            if (entries == null || entries.Count == 0)
+                return false;
+            foreach (WasteCrateItemData entry in entries)
+            {
+                if (entry == null || entry.count <= 0 ||
+                    !itemValues.TryGetValue(entry.itemType ?? "", out int itemValue))
+                    return false;
+                value += itemValue * entry.count;
+            }
+            return true;
         }
 
         private static void ValidateUniqueIds(

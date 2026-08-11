@@ -1,10 +1,10 @@
 {
   "items": [
-    { "id": "can", "displayName": "Aluminum Can", "sprite": "can", "sellValue": 5 },
-    { "id": "plasticBottle", "displayName": "Plastic Bottle", "sprite": "plasticBottle", "sellValue": 5 },
-    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shreddedAluminum", "sellValue": 15 },
-    { "id": "granulatedPlastic", "displayName": "Granulated Plastic", "sprite": "granulatedPlastic", "sellValue": 15 },
-    { "id": "aluminumPlate", "displayName": "Aluminum Plate", "sprite": "aluminumPlate", "sellValue": 30 },
+    { "id": "can", "displayName": "Aluminum Can", "sprite": "can", "sellValue": 2 },
+    { "id": "plasticBottle", "displayName": "Plastic Bottle", "sprite": "plasticBottle", "sellValue": 2 },
+    { "id": "shreddedAluminum", "displayName": "Shredded Aluminum", "sprite": "shreddedAluminum", "sellValue": 6 },
+    { "id": "granulatedPlastic", "displayName": "Granulated Plastic", "sprite": "granulatedPlastic", "sellValue": 6 },
+    { "id": "aluminumPlate", "displayName": "Aluminum Plate", "sprite": "aluminumPlate", "sellValue": 16 },
     { "id": "reinforcedAluminumPlate", "displayName": "Reinforced Aluminum Plate", "sprite": "reinforcedAluminumPlate", "sellValue": 75 }
   ]
 }

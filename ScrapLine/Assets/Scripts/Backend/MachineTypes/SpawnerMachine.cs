@@ -462,7 +462,7 @@ public class SpawnerMachine : BaseMachine
     }
     
     /// <summary>
-    /// Calculates the cost of a waste crate based on item values (50% of total item value)
+    /// Calculates the fallback cost of a waste crate at 80% of its raw contents value.
     /// </summary>
     public static int CalculateWasteCrateCost(WasteCrateDef crateDef)
     {
@@ -479,8 +479,8 @@ public class SpawnerMachine : BaseMachine
             }
         }
         
-        // Return 50% of total item value
-        return (int)(totalValue * 0.5f);
+        // Paid supply leaves a 20% raw-selling margin while strongly rewarding processing.
+        return Mathf.RoundToInt(totalValue * 0.8f);
     }
 
     

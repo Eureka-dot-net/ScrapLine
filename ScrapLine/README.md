@@ -198,23 +198,30 @@ Modify JSON files in `Assets/Resources/` to adjust:
 ScrapLine features a complete economic gameplay system:
 
 ### Starting Economy
-- **New Game**: Begin with 200 credits (exactly enough for basic setup)
-- **Minimum Factory**: 1 Spawner (50) + 5 Conveyors (100) + 1 Seller (50) = 200 credits
+- **New Game**: Begin with 250 credits and one free can bale
+- **Minimum Factory**: 1 Spawner (50) + 5 Conveyors (50) + 1 Seller (50) = 150 credits
+- **Mistake Buffer**: 100 credits remain, enough to add a Shredder or recover from a placement mistake
 
 ### Machine Costs
-- **Conveyor Belt**: 20 credits
+- **Conveyor Belt**: 10 credits
 - **Spawner**: 50 credits  
 - **Seller**: 50 credits
-- **Shredder**: 75 credits
+- **Shredder**: 100 credits
+- **Granulator**: 125 credits
+- **Sorter**: 150 credits
+- **Plate Press**: 250 credits
+- **Fabricator**: 500 credits
 
 ### Item Values
-- **Aluminum Can**: 5 credits when sold
-- **Shredded Aluminum**: 15 credits when sold (3x more valuable!)
+- **Aluminum Can / Plastic Bottle**: 2 credits when sold
+- **Shredded Aluminum / Granulated Plastic**: 6 credits when sold
+- **Aluminum Plate**: 16 credits when sold
+- **Reinforced Aluminum Panel**: 75 credits when sold
 
 ### Strategic Gameplay
 1. Build basic production line with starting credits
-2. Earn credits by selling aluminum cans (5 each)
-3. Invest in shredders for higher-value output (15 vs 5)
+2. Sell the free can bale raw for early liquidity, or process it for a larger return
+3. Invest in a shredder to turn 2-credit cans into 6-credit shredded aluminum
 4. Expand factory with additional machines
 5. Optimize for maximum credits per minute
 

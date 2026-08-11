@@ -2,78 +2,40 @@
   "wasteCrates": [
     {
       "id": "starter_crate",
-      "displayName": "Starter Waste Crate",
+      "displayName": "Can Bale",
       "sprite": "waste_1",
-      "cost": 250,
+      "cost": 40,
       "items": [
-        {
-          "itemType": "can",
-          "count": 50
-        },
-        {
-          "itemType": "plasticBottle", 
-          "count": 50
-        }
+        { "itemType": "can", "count": 25 }
       ]
     },
     {
-      "id": "medium_crate",
-      "displayName": "Medium Waste Crate", 
+      "id": "plastic_bale",
+      "displayName": "Plastic Bale",
       "sprite": "waste_2",
-      "cost": 375,
+      "cost": 40,
       "items": [
-        {
-          "itemType": "can",
-          "count": 75
-        },
-        {
-          "itemType": "plasticBottle",
-          "count": 75
-        }
+        { "itemType": "plasticBottle", "count": 25 }
       ]
     },
     {
-      "id": "large_crate",
-      "displayName": "Large Waste Crate",
-      "sprite": "waste_3", 
-      "cost": 562,
+      "id": "mixed_bale",
+      "displayName": "Mixed Bale",
+      "sprite": "waste_3",
+      "cost": 80,
       "items": [
-        {
-          "itemType": "can",
-          "count": 100
-        },
-        {
-          "itemType": "plasticBottle",
-          "count": 100
-        },
-        {
-          "itemType": "shreddedAluminum",
-          "count": 25
-        }
+        { "itemType": "can", "count": 25 },
+        { "itemType": "plasticBottle", "count": 25 }
       ]
     },
     {
-      "id": "premium_crate",
-      "displayName": "Premium Waste Crate",
+      "id": "bulk_mixed_bale",
+      "displayName": "Bulk Mixed Bale",
       "sprite": "waste_4",
-      "cost": 937,
+      "cost": 160,
       "items": [
-        {
-          "itemType": "can", 
-          "count": 150
-        },
-        {
-          "itemType": "plasticBottle",
-          "count": 150
-        },
-        {
-          "itemType": "shreddedAluminum",
-          "count": 50
-        },
-        {
-          "itemType": "granulatedPlastic",
-          "count": 25
-        }
+        { "itemType": "can", "count": 50 },
+        { "itemType": "plasticBottle", "count": 50 }
       ]
     }
   ]

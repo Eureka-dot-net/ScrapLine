@@ -10769,7 +10769,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91facc967f8f20e4fa49a5f9d1d2eb7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreditsManager
-  startingCredits: 2000
+  startingCredits: 250
   machineRefundPercentage: 0.8
   enableCreditsLogs: 1
 --- !u!4 &1416304988

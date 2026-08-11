@@ -74,7 +74,7 @@
             ],
             "maxNumber": -1,
             "displayInPanel": true,
-            "cost": 20,
+            "cost": 10,
             "canRotate": true,
             "className": "ConveyorMachine"
         },
@@ -101,7 +101,7 @@
             ],
             "spawnableItems": [
                 "can",
-                "plastic"
+                "plasticBottle"
             ],
             "gridPlacement": [
                 "bottom"
@@ -178,7 +178,7 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "displayInPanel": true,
-            "cost": 75,
+            "cost": 100,
             "canRotate": true,
             "className": "ProcessorMachine"
         },
@@ -215,7 +215,7 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "displayInPanel": true,
-            "cost": 75,
+            "cost": 150,
             "canRotate": true,
             "className": "SortingMachine"
         },
@@ -234,7 +234,7 @@
                 "grid"
             ],
             "displayInPanel": true,
-            "cost": 100,
+            "cost": 250,
             "canRotate": true,
             "className": "ProcessorMachine"
         },
@@ -253,7 +253,7 @@
                 "grid"
             ],
             "displayInPanel": true,
-            "cost": 100,
+            "cost": 125,
             "canRotate": true,
             "className": "ProcessorMachine"
         }
@@ -273,7 +273,7 @@
                 "grid"
             ],
             "displayInPanel": true,
-            "cost": 100,
+            "cost": 500,
             "canRotate": true,
             "className": "FabricatorMachine"
         }

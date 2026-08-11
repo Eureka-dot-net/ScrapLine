@@ -112,5 +112,6 @@ public class GameData
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public int credits = 0; // Credits (money) system for purchasing machines
     public int wasteQueueLimit = 3; // How many crates can be queued (upgradeable in future)
-    public List<string> wasteQueue = new List<string>(); // Queue of waste crate IDs waiting to be used
+    // New games receive one free can bale so the first line can earn before buying more supply.
+    public List<string> wasteQueue = new List<string> { "starter_crate" }; // Queue of waste crate IDs waiting to be used
 }

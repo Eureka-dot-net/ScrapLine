@@ -8,7 +8,7 @@ public class CreditsManager : MonoBehaviour
 {
     [Header("Credits Configuration")]
     [Tooltip("Starting credits amount for new games")]
-    public int startingCredits = 2000;
+    public int startingCredits = 250;
     
     [Tooltip("Percentage of machine cost refunded when dropped outside grid (0.0 to 1.0)")]
     [UnityEngine.Range(0f, 1f)]

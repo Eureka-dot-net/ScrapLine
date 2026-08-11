@@ -1,15 +1,14 @@
 # Waste Crate System Implementation Summary
 
+> This is a historical implementation record. Current crate contents, prices, and economy rules are
+> defined in `BALANCE_BASELINE.md` and `Assets/Resources/wastecrates.json`.
+
 ## Overview
 Successfully implemented a comprehensive waste crate system for ScrapLine that includes 4 different waste crates, a queue system, UI components, and full integration with the existing game systems.
 
 ## Features Implemented
 
-### 1. Four Waste Crates with Increasing Value
-- **Starter Crate**: 100 items (50 cans + 50 bottles) - cost: 250 credits
-- **Medium Crate**: 150 items (75 each) - cost: 375 credits  
-- **Large Crate**: 225 items (100+100+25 shredded) - cost: 562 credits
-- **Premium Crate**: 375 items (150+150+50+25 granulated) - cost: 937 credits
+### 1. Four Waste Bales (original implementation values below are superseded)
 
 **Cost Formula**: 50% of total item sell value (e.g., Starter = (50×5 + 50×5) × 0.5 = 250)
 
