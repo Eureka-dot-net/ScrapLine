@@ -380,11 +380,12 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Clear the current grid
+    /// Reset the current grid and restore the starting credits.
     /// </summary>
-    public void ClearGrid()
+    public void ResetGrid()
     {
         gridManager.ClearGrid();
+        creditsManager.InitializeNewGame();
         RequestAutosave();
     }
 
