@@ -399,6 +399,6 @@ If you encounter issues:
 1. Check that all component references are assigned in Unity Inspector
 2. Verify button prefabs have all required components (Button, Image, Text)
 3. Ensure selection panels have Grid Layout Groups properly configured
-4. Test base class compilation in ScriptSandbox before Unity integration
+4. Compile in Unity and run the relevant Unity Test Framework tests
 
 This implementation delivers exactly what was requested: **significant code reduction AND uniform look and feel** through a single, adaptable panel design system.

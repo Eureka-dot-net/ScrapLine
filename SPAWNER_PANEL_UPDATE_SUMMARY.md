@@ -111,17 +111,17 @@ Created comprehensive implementation guide:
 - Testing checklist
 - Troubleshooting guide
 
-### 5. Unit Tests
+### 5. Historical Unit Tests
 
-Created test suite for WasteCrateQueuePanel:
-**File**: `ScriptSandbox/Tests/WasteCrateQueuePanelTests.cs`
+The original standalone WasteCrateQueuePanel tests were removed when
+ScriptSandbox was retired. Recreate this coverage in Unity Test Framework.
 
 **Test Coverage**:
 - ✅ Component structure validation (14 tests)
 - ✅ Public API verification
 - ✅ Data handling logic
 - ✅ Integration compatibility
-- All tests passing in ScriptSandbox
+- Coverage needs migration to Unity EditMode/PlayMode tests
 
 ## Migration Path for Unity Setup
 
@@ -265,14 +265,7 @@ if (sprite != null)
 2. **ScrapLine/Assets/Scripts/UI/WasteCrateQueuePanel.cs** (NEW)
    - Complete new component implementation
 
-3. **ScriptSandbox/Unity/TextMeshPro.cs**
-   - Added `textWrappingMode` property
-   - Added `TextWrappingModes` enum
-
-4. **ScriptSandbox/Tests/WasteCrateQueuePanelTests.cs** (NEW)
-   - 14 comprehensive tests
-
-5. **QUEUE_PANEL_IMPLEMENTATION_GUIDE.md** (NEW)
+3. **QUEUE_PANEL_IMPLEMENTATION_GUIDE.md** (NEW)
    - Complete implementation documentation
 
 ## Backward Compatibility
@@ -293,10 +286,9 @@ if (sprite != null)
 
 ## Testing Status
 
-### ScriptSandbox Tests:
-- ✅ All 14 WasteCrateQueuePanel tests passing
-- ✅ Compilation successful
-- ✅ No new errors or warnings
+### Automated Tests:
+- ⚠️ Retired sandbox coverage should be migrated to Unity Test Framework
+- ✅ Unity project compilation is the authoritative build check
 
 ### Unity Tests Required:
 - ⏳ Create queue panel in Unity Editor
@@ -338,7 +330,7 @@ All required changes have been successfully implemented:
 - ✅ Removed purchaseButton
 - ✅ Created reusable WasteCrateQueuePanel component
 - ✅ Integrated queue panel with click-to-purchase functionality
-- ✅ Updated ScriptSandbox with full compilation and testing
+- ✅ Validated compilation in the Unity project
 - ✅ Created comprehensive implementation guide
 
 The code is ready for Unity implementation following the provided guides.

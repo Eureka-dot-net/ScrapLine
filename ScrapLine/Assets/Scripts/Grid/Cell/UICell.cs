@@ -588,7 +588,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         machineText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         machineText.fontSize = 12;
         machineText.color = Color.black;
-        //DO NOT update TextAnchor.MiddleCenter to use the ScriptSandbox fqdn as that breaks the unity project
+        // Keep the Unity TextAnchor enum here; substituting mock-framework types breaks the Unity project.
         machineText.alignment = TextAnchor.MiddleCenter;
 
         RectTransform textRT = textObj.GetComponent<RectTransform>();
@@ -613,7 +613,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         Vector2 localPosition;
         RectTransform canvasRT = canvas.transform as RectTransform;
 
-        //DO NOT update RenderMode.ScreenSpaceOverlay to use the ScriptSandbox fqdn as that breaks the unity project
+        // Keep the Unity RenderMode enum here; substituting mock-framework types breaks the Unity project.
         bool converted = RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvasRT,
             eventData.position,

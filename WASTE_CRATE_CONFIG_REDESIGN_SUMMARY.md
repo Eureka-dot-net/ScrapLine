@@ -95,7 +95,7 @@ WasteCrateConfigPanel:
 
 **Full guide**: See `WASTE_CRATE_CONFIG_PANEL_REDESIGN_GUIDE.md` for complete Unity setup instructions.
 
-**Backend code**: All changes validated in ScriptSandbox (compilation successful).
+**Backend code**: Validate changes directly in Unity; the former ScriptSandbox has been retired.
 
 ---
 

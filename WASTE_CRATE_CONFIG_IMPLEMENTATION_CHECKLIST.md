@@ -7,7 +7,7 @@ Before starting Unity implementation, verify these backend changes are complete:
 - [x] **BaseConfigPanel.cs**: Added `hideCancelButton` field
 - [x] **WasteCrateConfigPanel.cs**: Complete redesign (no longer inherits from BaseConfigPanel)
 - [x] **SpawnerConfigPanel.cs**: Updated to call `ShowPanel()` instead of `ShowConfiguration()`
-- [x] **ScriptSandbox compilation**: All changes compile successfully
+- [x] **Unity compilation**: All changes compile successfully
 - [x] **Core tests passing**: WasteCrate data structures and logic working
 
 ## 📋 Unity Implementation Steps

@@ -159,11 +159,8 @@ The `UIPanelManagerTests` class provides comprehensive validation:
 - ✅ Integration with BaseConfigPanel
 - ✅ Public API consistency
 
-Run tests:
-```bash
-cd ScriptSandbox
-dotnet test --filter "UIPanelManagerTests"
-```
+Run the relevant EditMode and PlayMode tests from Unity Test Runner. The former
+standalone ScriptSandbox test project has been retired.
 
 ### Manual Testing
 

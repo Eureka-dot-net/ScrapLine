@@ -118,7 +118,9 @@ Modified files in `ScrapLine/Assets/Scripts/UI/`:
 - `WasteCrateConfigPanel.cs` - Complete redesign
 - `SpawnerConfigPanel.cs` - API update
 
-All changes are also reflected in `ScriptSandbox/Scripts/UI/` (symlinked).
+`ScriptSandbox` has been retired. The Unity project under `ScrapLine/Assets` is
+the source of truth, and automated tests should use Unity Test Framework
+EditMode or PlayMode assemblies.
 
 ## ✅ Quick Reference
 

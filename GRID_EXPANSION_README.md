@@ -110,7 +110,7 @@ Root/
 
 ### Code (7 C# Scripts)
 - ✅ All scripts written and documented
-- ✅ Compiled successfully in ScriptSandbox
+- ✅ Compiled successfully in the Unity project
 - ✅ 0 compilation errors
 - ✅ Inline Unity wiring instructions in each file
 - ✅ Follows project coding standards

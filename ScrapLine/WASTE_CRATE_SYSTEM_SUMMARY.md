@@ -106,12 +106,10 @@ private void ShowSpawnerWasteCrateMenu(int spawnerX, int spawnerY)
 
 ## Testing & Validation
 
-### ScriptSandbox Validation
-- ✅ All code compiles successfully (0 errors, warnings only)
-- ✅ 6/6 basic functionality tests pass
-- ✅ Data structure validation complete
-- ✅ Cost calculation logic verified
-- ✅ JSON files validated for syntax
+### Unity Validation
+- ✅ All code compiles successfully in the Unity project
+- ⚠️ Recreate the retired sandbox coverage as Unity EditMode/PlayMode tests
+- ✅ Data structure and JSON syntax were validated during implementation
 
 ### Test Coverage
 - Data model functionality (WasteCrateDef, GameData, WasteCrateQueueStatus)
@@ -133,7 +131,6 @@ private void ShowSpawnerWasteCrateMenu(int spawnerX, int spawnerY)
 
 ### New Files
 1. `Assets/Scripts/UI/WasteCrateUI.cs` - Complete UI system (311 lines)
-2. `ScriptSandbox/Tests/WasteCrateBasicTests.cs` - Basic validation tests
 
 ## Usage Instructions
 
@@ -141,7 +138,7 @@ private void ShowSpawnerWasteCrateMenu(int spawnerX, int spawnerY)
 1. **Adding New Crates**: Add to `wastecrates.json` with proper cost calculation
 2. **Modifying Queue Limit**: Change `GameData.wasteQueueLimit` (saves to user data)
 3. **UI Customization**: Modify `WasteCrateUI.cs` and wire to Unity prefabs
-4. **Testing**: Run `dotnet test --filter "WasteCrateBasicTests"` in ScriptSandbox
+4. **Testing**: Run the waste-crate EditMode and PlayMode tests in Unity Test Runner
 
 ### For Players
 1. **Open Menu**: Click on any spawner machine
@@ -191,8 +188,8 @@ private void ShowSpawnerWasteCrateMenu(int spawnerX, int spawnerY)
 
 ### ✅ Completed
 - All core functionality implemented
-- ScriptSandbox compilation verified
-- Basic test suite passes
+- Unity compilation verified
+- Sandbox tests retired; equivalent Unity tests should be added
 - JSON files validated
 - Save/load integration complete
 - UI system fully designed
