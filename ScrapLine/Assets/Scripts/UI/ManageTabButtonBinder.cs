@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// Binds a button in the Manage tab to toggle grid expand mode.
@@ -32,6 +33,9 @@ public class ManageTabButtonBinder : MonoBehaviour
 
     private void Awake()
     {
+        PlaceInManageContent();
+        ApplyExpandIcon();
+
         // Setup button click listener
         if (expandToggleButton != null)
         {
@@ -55,6 +59,67 @@ public class ManageTabButtonBinder : MonoBehaviour
 
         // Set initial visual state
         UpdateButtonVisual(false);
+    }
+
+    private void ApplyExpandIcon()
+    {
+        if (buttonImage == null)
+            buttonImage = GetComponent<Image>();
+
+        Sprite expandIcon = Resources.Load<Sprite>("Sprites/UI/GridExpandIcon");
+        if (expandIcon == null)
+        {
+            Texture2D texture = Resources.Load<Texture2D>("Sprites/UI/GridExpandIcon");
+            if (texture != null)
+            {
+                expandIcon = Sprite.Create(texture,
+                    new Rect(0f, 0f, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f), 100f);
+                expandIcon.name = "GridExpandIcon_Runtime";
+            }
+        }
+        if (buttonImage != null && expandIcon != null)
+        {
+            buttonImage.sprite = expandIcon;
+            buttonImage.type = Image.Type.Simple;
+            buttonImage.preserveAspect = true;
+        }
+
+        TMP_Text label = GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+            label.gameObject.SetActive(false);
+    }
+
+    private void PlaceInManageContent()
+    {
+        ScrollRect manageScroll = GetComponentInParent<ScrollRect>();
+        if (manageScroll != null && manageScroll.content != null &&
+            transform.parent != manageScroll.content)
+        {
+            transform.SetParent(manageScroll.content, false);
+        }
+
+        RectTransform rect = transform as RectTransform;
+        if (rect != null)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.zero;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(180f, 0f);
+        }
+
+        LayoutElement layout = GetComponent<LayoutElement>();
+        if (layout == null)
+            layout = gameObject.AddComponent<LayoutElement>();
+        layout.ignoreLayout = false;
+        layout.minWidth = 180f;
+        layout.preferredWidth = 180f;
+        layout.flexibleWidth = 0f;
+
+        TMP_Text label = GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+            label.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -104,7 +169,9 @@ public class ManageTabButtonBinder : MonoBehaviour
     {
         if (buttonImage == null) return;
 
-        buttonImage.color = isActive ? activeColor : inactiveColor;
+        buttonImage.color = buttonImage.sprite != null
+            ? (isActive ? new Color(0.75f, 1f, 0.75f, 1f) : Color.white)
+            : (isActive ? activeColor : inactiveColor);
     }
 
     private void OnDestroy()

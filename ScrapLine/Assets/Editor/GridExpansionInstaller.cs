@@ -203,19 +203,30 @@ public static class GridExpansionInstaller
     private static ManageTabButtonBinder CreateToggleButton(Transform canvas)
     {
         Transform managePanel = FindByName("ManagePanel")?.transform ?? canvas;
-        Image image = CreateImage("ExpandToggleButton", managePanel, new Color32(255, 153, 51, 255));
+        ScrollRect manageScroll = managePanel.GetComponent<ScrollRect>();
+        Transform buttonParent = manageScroll != null && manageScroll.content != null
+            ? manageScroll.content
+            : managePanel;
+        Image image = CreateImage("ExpandToggleButton", buttonParent, new Color32(255, 153, 51, 255));
         RectTransform rect = image.rectTransform;
-        rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
-        rect.sizeDelta = new Vector2(64f, 64f);
-        rect.anchoredPosition = new Vector2(-38f, -38f);
+        rect.anchorMin = rect.anchorMax = Vector2.zero;
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(180f, 0f);
+        rect.anchoredPosition = Vector2.zero;
         LayoutElement layout = image.gameObject.AddComponent<LayoutElement>();
-        layout.ignoreLayout = true;
+        layout.ignoreLayout = false;
+        layout.minWidth = 180f;
+        layout.preferredWidth = 180f;
+        layout.flexibleWidth = 0f;
 
         Button button = image.gameObject.AddComponent<Button>();
         button.targetGraphic = image;
-        TextMeshProUGUI plus = CreateText("Plus", rect, "+", 38f, Color.white);
-        Stretch(plus.rectTransform);
-        plus.raycastTarget = false;
+        TextMeshProUGUI label = CreateText("Label", rect, "Expand Grid", 24f, Color.white);
+        Stretch(label.rectTransform);
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 14f;
+        label.fontSizeMax = 28f;
+        label.raycastTarget = false;
 
         ManageTabButtonBinder binder = image.gameObject.AddComponent<ManageTabButtonBinder>();
         binder.expandToggleButton = button;
