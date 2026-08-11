@@ -57,7 +57,7 @@ public class WasteCrateQueuePanel : MonoBehaviour
     /// <summary>
     /// Component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"WasteCrateQueuePanel_{GetInstanceID()}";
+    private string ComponentId => $"WasteCrateQueuePanel_{GetEntityId()}";
     
     /// <summary>
     /// List of currently instantiated queue item GameObjects

@@ -14,7 +14,7 @@ public class ResourceManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"ResourceManager_{GetInstanceID()}";
+    private string ComponentId => $"ResourceManager_{GetEntityId()}";
 
     private MachineBarUIManager machineBarManager;
     private CreditsUI creditsUI;
@@ -79,7 +79,7 @@ public class ResourceManager : MonoBehaviour
     /// </summary>
     private void InitializeUIManagers()
     {
-        machineBarManager = FindFirstObjectByType<MachineBarUIManager>();
+        machineBarManager = FindAnyObjectByType<MachineBarUIManager>();
         if (machineBarManager != null)
         {
             machineBarManager.InitBar();
@@ -89,7 +89,7 @@ public class ResourceManager : MonoBehaviour
             GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "MachineBarUIManager not found in scene!", ComponentId);
         }
 
-        creditsUI = FindFirstObjectByType<CreditsUI>();
+        creditsUI = FindAnyObjectByType<CreditsUI>();
         if (creditsUI == null)
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "CreditsUI not found in scene!", ComponentId);

@@ -19,7 +19,7 @@ public class WasteSupplyManager : MonoBehaviour
     /// <summary>
     /// Component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"WasteSupplyManager_{GetInstanceID()}";
+    private string ComponentId => $"WasteSupplyManager_{GetEntityId()}";
 
     /// <summary>
     /// Purchase a waste crate and add it to the global queue

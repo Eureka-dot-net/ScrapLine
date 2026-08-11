@@ -29,7 +29,7 @@ public abstract class BaseSelectionPanel<TItem> : MonoBehaviour
 
     // Protected state available to derived classes
     protected Action<TItem> onItemSelected;
-    protected string ComponentId => $"{GetType().Name}_{GetInstanceID()}";
+    protected string ComponentId => $"{GetType().Name}_{GetEntityId()}";
 
     /// <summary>
     /// Show the selection panel with available options

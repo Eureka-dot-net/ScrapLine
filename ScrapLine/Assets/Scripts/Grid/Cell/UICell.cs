@@ -419,8 +419,8 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         }
 
         // Find the UI Canvas
-        Canvas targetCanvas = FindFirstObjectByType<UIGridManager>()?.gridPanel?.GetComponentInParent<Canvas>()
-                             ?? FindFirstObjectByType<Canvas>();
+        Canvas targetCanvas = FindAnyObjectByType<UIGridManager>()?.gridPanel?.GetComponentInParent<Canvas>()
+                             ?? FindAnyObjectByType<Canvas>();
 
         if (targetCanvas == null)
         {
@@ -479,7 +479,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         MachineRenderer machineRenderer = tempRenderer.AddComponent<MachineRenderer>();
         machineRenderer.isInMenu = true;  // Keep sprites local, don't use grid containers
 
-        var gridManager = FindFirstObjectByType<UIGridManager>();
+        var gridManager = FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
             // Create BaseMachine instance using complete configuration data
@@ -528,7 +528,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         MachineRenderer machineRenderer = tempRenderer.AddComponent<MachineRenderer>();
         machineRenderer.isInMenu = true;  // Keep sprites local, don't use grid containers
 
-        var gridManager = FindFirstObjectByType<UIGridManager>();
+        var gridManager = FindAnyObjectByType<UIGridManager>();
         if (gridManager != null)
         {
             // Create temporary CellData and BaseMachine instance for drag visual (basic data only)
@@ -689,7 +689,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
     private void ClearDropTargetHighlights()
     {
         // Find all cells and clear their highlights
-        UICell[] allCells = UnityEngine.Object.FindObjectsByType<UICell>(FindObjectsSortMode.None);
+        UICell[] allCells = UnityEngine.Object.FindObjectsByType<UICell>();
         foreach (UICell cell in allCells)
         {
             cell.SetHighlight(false);

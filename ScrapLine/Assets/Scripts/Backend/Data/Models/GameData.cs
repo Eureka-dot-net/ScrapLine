@@ -82,7 +82,8 @@ public class CellData
     public List<ItemData> items = new List<ItemData>();
     public List<ItemData> waitingItems = new List<ItemData>(); // List for items waiting to enter this machine
     public MachineState machineState = MachineState.Idle; // Current state of the machine
-    public BaseMachine machine; // Runtime machine object that handles behavior
+    [System.NonSerialized]
+    public BaseMachine machine; // Runtime-only machine object that handles behavior
     public string selectedRecipeId; // Player's configuration choice for this machine
     public SortingMachineConfig sortingConfig = new SortingMachineConfig(); // Configuration for sorting machines
     public WasteCrateInstance wasteCrate; // WasteCrate assigned to spawner machines

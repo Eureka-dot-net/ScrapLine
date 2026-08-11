@@ -22,7 +22,7 @@ public class SaveLoadManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"SaveLoadManager_{GetInstanceID()}";
+    private string ComponentId => $"SaveLoadManager_{GetEntityId()}";
 
     /// <summary>
     /// Initialize the save/load manager

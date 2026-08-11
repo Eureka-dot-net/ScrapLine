@@ -21,7 +21,7 @@ public class CreditsManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"CreditsManager_{GetInstanceID()}";
+    private string ComponentId => $"CreditsManager_{GetEntityId()}";
 
     private int currentCredits = 0;
     private CreditsUI creditsUI;

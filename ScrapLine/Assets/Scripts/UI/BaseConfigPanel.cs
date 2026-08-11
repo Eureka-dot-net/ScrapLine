@@ -44,7 +44,7 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     // Protected state available to derived classes
     protected TData currentData;
     protected Action<TSelection> onConfigurationConfirmed;
-    protected string ComponentId => $"{GetType().Name}_{GetInstanceID()}";
+    protected string ComponentId => $"{GetType().Name}_{GetEntityId()}";
 
     // Track if panel has been initialized
     private bool isInitialized = false;
@@ -126,7 +126,7 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     public virtual void ShowConfiguration(TData data, Action<TSelection> onConfirmed)
     {
         // Register this panel with UIPanelManager (preferred) or GameManager (fallback) to ensure only one panel is open
-        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        var panelManager = FindAnyObjectByType<UIPanelManager>();
         if (panelManager != null)
         {
             panelManager.RegisterOpenPanel(this);
@@ -175,7 +175,7 @@ public abstract class BaseConfigPanel<TData, TSelection> : MonoBehaviour
     protected virtual void HideConfiguration()
     {
         // Unregister this panel from UIPanelManager (preferred) or GameManager (fallback)
-        var panelManager = FindFirstObjectByType<UIPanelManager>();
+        var panelManager = FindAnyObjectByType<UIPanelManager>();
         if (panelManager != null)
         {
             panelManager.UnregisterPanel(this);

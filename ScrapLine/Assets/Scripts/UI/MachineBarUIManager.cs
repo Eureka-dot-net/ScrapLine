@@ -17,7 +17,7 @@ public class MachineBarUIManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"MachineBarUIManager_{GetInstanceID()}";
+    private string ComponentId => $"MachineBarUIManager_{GetEntityId()}";
 
     // Selection state
     private MachineDef selectedMachine;
@@ -69,6 +69,25 @@ public class MachineBarUIManager : MonoBehaviour
 
     public void InitBar()
     {
+        Canvas.ForceUpdateCanvases();
+
+        RectTransform parentRect = machineBarPanel.GetComponent<RectTransform>();
+        HorizontalLayoutGroup horizontalLayout = machineBarPanel.GetComponent<HorizontalLayoutGroup>();
+        float verticalPadding = horizontalLayout != null
+            ? horizontalLayout.padding.top + horizontalLayout.padding.bottom
+            : 0f;
+        float targetSize = Mathf.Max(1f, parentRect.rect.height - verticalPadding);
+
+        if (horizontalLayout != null)
+        {
+            // Each machine owns an explicit square size. The content-size fitter
+            // grows the strip horizontally and the parent ScrollRect handles overflow.
+            horizontalLayout.childControlWidth = false;
+            horizontalLayout.childControlHeight = false;
+            horizontalLayout.childForceExpandWidth = false;
+            horizontalLayout.childForceExpandHeight = false;
+        }
+
         foreach (var machine in FactoryRegistry.Instance.Machines.Values)
         {
             // Skip machines that shouldn't be displayed in panel
@@ -78,28 +97,19 @@ public class MachineBarUIManager : MonoBehaviour
             }
 
             GameObject buttonObj = Instantiate(machineButtonPrefab, machineBarPanel);
-
-            RectTransform parentRect = machineBarPanel.GetComponent<RectTransform>();
-            float unscaledHeight = parentRect.rect.height;
-            float scale = parentRect.lossyScale.y; // Get the actual scale factor
-            float targetSize = unscaledHeight * scale;
-
-            // targetSize = 200;
             RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
             buttonRect.sizeDelta = new Vector2(targetSize, targetSize);
 
-            // Set fixed size instead of flexible + aspect ratio
-            // LayoutElement layoutElement = buttonObj.GetComponent<LayoutElement>();
-            // if (layoutElement == null)
-            // {
-            //     layoutElement = buttonObj.AddComponent<LayoutElement>();
-            // }
-            // targetSize = 200;
-            // layoutElement.preferredWidth = targetSize;
-            // layoutElement.preferredHeight = targetSize;
-            // layoutElement.minHeight = targetSize;
-            // layoutElement.minWidth = targetSize;
-            // LayoutRebuilder.MarkLayoutForRebuild(buttonObj.GetComponent<RectTransform>());
+            LayoutElement layoutElement = buttonObj.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+                layoutElement = buttonObj.AddComponent<LayoutElement>();
+
+            layoutElement.minWidth = targetSize;
+            layoutElement.minHeight = targetSize;
+            layoutElement.preferredWidth = targetSize;
+            layoutElement.preferredHeight = targetSize;
+            layoutElement.flexibleWidth = 0f;
+            layoutElement.flexibleHeight = 0f;
 
             // Remove AspectRatioFitter to avoid conflicts
             AspectRatioFitter aspectFitter = buttonObj.GetComponent<AspectRatioFitter>();
@@ -150,6 +160,8 @@ public class MachineBarUIManager : MonoBehaviour
                 GameLogger.LogWarning(LoggingManager.LogCategory.UI, "MachineRenderer not found on prefab for machine '{machine.id}'", ComponentId);
             }
         }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
     }
 
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)

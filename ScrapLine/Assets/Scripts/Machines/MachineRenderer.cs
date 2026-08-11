@@ -14,7 +14,7 @@ public class MachineRenderer : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"MachineRenderer_{GetInstanceID()}";
+    private string ComponentId => $"MachineRenderer_{GetEntityId()}";
 
     // For separated building rendering
     private UIGridManager gridManager;

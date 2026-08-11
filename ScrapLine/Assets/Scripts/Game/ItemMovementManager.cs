@@ -35,7 +35,7 @@ public class ItemMovementManager : MonoBehaviour
     /// <summary>
     /// Get the component ID for logging purposes
     /// </summary>
-    private string ComponentId => $"ItemMovementManager_{GetInstanceID()}";
+    private string ComponentId => $"ItemMovementManager_{GetEntityId()}";
 
     /// <summary>
     /// Initialize the item movement manager

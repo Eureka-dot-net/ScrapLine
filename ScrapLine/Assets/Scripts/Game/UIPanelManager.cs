@@ -19,7 +19,7 @@ public class UIPanelManager : MonoBehaviour
     private MonoBehaviour currentOpenPanel;
 
     // Component ID for logging
-    private string ComponentId => $"UIPanelManager_{GetInstanceID()}";
+    private string ComponentId => $"UIPanelManager_{GetEntityId()}";
 
     /// <summary>
     /// Initialize in Awake to run before any Start() methods
@@ -74,10 +74,10 @@ public class UIPanelManager : MonoBehaviour
         GameLogger.Log(LoggingManager.LogCategory.UI, "Auto-discovering config panels...", ComponentId);
 
         // Find all types of config panels - include inactive objects
-        var sortingPanels = FindObjectsByType<SortingMachineConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var fabricatorPanels = FindObjectsByType<FabricatorMachineConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var wasteCratePanels = FindObjectsByType<WasteCrateConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var spawnerPanels = FindObjectsByType<SpawnerConfigPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var sortingPanels = FindObjectsByType<SortingMachineConfigPanel>(FindObjectsInactive.Include);
+        var fabricatorPanels = FindObjectsByType<FabricatorMachineConfigPanel>(FindObjectsInactive.Include);
+        var wasteCratePanels = FindObjectsByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
+        var spawnerPanels = FindObjectsByType<SpawnerConfigPanel>(FindObjectsInactive.Include);
 
         // Add to list
         foreach (var panel in sortingPanels)
