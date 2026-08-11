@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// </summary>
 public static class GameSaveMigrations
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     public static GameData Migrate(GameData data)
     {
@@ -26,6 +26,9 @@ public static class GameSaveMigrations
                 case 0:
                     MigrateUnversionedToVersion1(data);
                     break;
+                case 1:
+                    MigrateVersion1ToVersion2(data);
+                    break;
                 default:
                     throw new InvalidOperationException($"No migration exists for schema version {data.schemaVersion}.");
             }
@@ -41,6 +44,12 @@ public static class GameSaveMigrations
         // migration only supplies fields that old JsonUtility payloads may omit.
         NormalizeOptionalFields(data);
         data.schemaVersion = 1;
+    }
+
+    private static void MigrateVersion1ToVersion2(GameData data)
+    {
+        MachineUnlockState.Normalize(data);
+        data.schemaVersion = 2;
     }
 
     private static void NormalizeOptionalFields(GameData data)
@@ -74,5 +83,8 @@ public static class GameSaveMigrations
                     cell.wasteCrate.remainingItems ??= new List<WasteCrateItemDef>();
             }
         }
+
+        if (data.schemaVersion >= 2)
+            MachineUnlockState.Normalize(data);
     }
 }

@@ -122,6 +122,7 @@ public class GameData
     {
         return new GameData
         {
+            userMachineProgress = MachineUnlockState.CreateCleanSaveProgress(),
             wasteQueue = new List<string> { "starter_crate" }
         };
     }

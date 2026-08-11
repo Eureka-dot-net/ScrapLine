@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class FactoryRegistry
@@ -18,8 +20,18 @@ public class FactoryRegistry
     public Dictionary<string, ItemDef> Items = new();
     public Dictionary<string, WasteCrateDef> WasteCrates = new();
 
-    // Per-user machine progress
-    public List<UserMachineProgress> UserMachines = new();
+    // Per-user machine progress. Snapshots are exposed so callers cannot bypass the unlock API.
+    private List<UserMachineProgress> userMachines = new();
+    public IReadOnlyList<UserMachineProgress> UserMachines => userMachines
+        .Where(progress => progress != null)
+        .Select(CloneProgress)
+        .ToList();
+
+    /// <summary>Raised exactly once when a machine transitions from locked to unlocked.</summary>
+    public event Action<string, string> MachineUnlocked;
+
+    /// <summary>Raised after save state is loaded so unlock-dependent UI can rebuild.</summary>
+    public event Action MachineUnlockStateReloaded;
 
     public bool IsLoaded()
     {
@@ -92,7 +104,12 @@ public class FactoryRegistry
 
     public UserMachineProgress FindMachineProgress(string machineId)
     {
-        return UserMachines.Find(mp => mp.machineId == machineId);
+        return CloneProgress(FindMutableMachineProgress(machineId));
+    }
+
+    private UserMachineProgress FindMutableMachineProgress(string machineId)
+    {
+        return userMachines.Find(progress => progress != null && progress.machineId == machineId);
     }
 
     public MachineDef GetMachine(string machineId)
@@ -178,23 +195,103 @@ public class FactoryRegistry
         return machineRecipes;
     }
 
-    public void UnlockMachine(string machineId)
+    public const string CreditPurchaseUnlockSource = "credit_purchase";
+
+    /// <summary>
+    /// Purchases one permanent machine license as a single validated economy transaction.
+    /// </summary>
+    public bool TryPurchaseMachineLicense(string machineId, CreditsManager creditsManager, out string error)
     {
-        var progress = FindMachineProgress(machineId);
+        if (!TryGetLockedMachine(machineId, out MachineDef machine, out error))
+            return false;
+        if (creditsManager == null)
+        {
+            error = $"Cannot purchase '{machineId}' without an initialized credits manager.";
+            return false;
+        }
+        if (!creditsManager.CanAfford(machine.unlockCost))
+        {
+            error = $"Machine license '{machineId}' costs {machine.unlockCost} credits; " +
+                    $"only {creditsManager.GetCredits()} are available.";
+            return false;
+        }
+        if (!creditsManager.TrySpendCredits(machine.unlockCost))
+        {
+            error = $"Could not deduct {machine.unlockCost} credits for machine license '{machineId}'.";
+            return false;
+        }
+
+        if (TryGrantMachineLicenseInternal(machineId, CreditPurchaseUnlockSource, out error))
+            return true;
+
+        // The state transition is expected to be infallible after prevalidation, but preserve the
+        // economy transaction if a future grant rule introduces another failure mode.
+        creditsManager.AddCredits(machine.unlockCost);
+        return false;
+    }
+
+    /// <summary>
+    /// Grants a permanent license without charging credits (objectives, migration, recovery, tools).
+    /// </summary>
+    public bool TryGrantMachineLicense(string machineId, string unlockSource, out string error)
+    {
+        return TryGrantMachineLicenseInternal(machineId, unlockSource, out error);
+    }
+
+    private bool TryGrantMachineLicenseInternal(string machineId, string unlockSource, out string error)
+    {
+        if (!TryGetLockedMachine(machineId, out _, out error))
+            return false;
+        if (string.IsNullOrWhiteSpace(unlockSource))
+        {
+            error = $"Cannot grant machine license '{machineId}' without an unlock source.";
+            return false;
+        }
+
+        UserMachineProgress progress = FindMutableMachineProgress(machineId);
         if (progress == null)
         {
-            UserMachines.Add(new UserMachineProgress { machineId = machineId, unlocked = true, upgradeLevel = 0 });
+            userMachines.Add(new UserMachineProgress
+            {
+                machineId = machineId,
+                unlocked = true,
+                upgradeLevel = 0
+            });
         }
         else
-        {
             progress.unlocked = true;
-        }
+
+        error = null;
+        MachineUnlocked?.Invoke(machineId, unlockSource);
         GameManager.Instance?.RequestAutosave();
+        return true;
+    }
+
+    private bool TryGetLockedMachine(string machineId, out MachineDef machine, out string error)
+    {
+        machine = null;
+        if (string.IsNullOrWhiteSpace(machineId) || !Machines.TryGetValue(machineId, out machine))
+        {
+            error = $"Unknown machine ID '{machineId ?? "<null>"}'.";
+            return false;
+        }
+        if (IsMachineUnlocked(machineId))
+        {
+            error = $"Machine '{machineId}' is already licensed.";
+            return false;
+        }
+        if (machine.unlockCost <= 0)
+        {
+            error = $"Machine '{machineId}' has invalid license cost {machine.unlockCost}.";
+            return false;
+        }
+        error = null;
+        return true;
     }
 
     public void UpgradeMachine(string machineId)
     {
-        var progress = FindMachineProgress(machineId);
+        var progress = FindMutableMachineProgress(machineId);
         if (progress != null && progress.unlocked)
         {
             progress.upgradeLevel++;
@@ -204,25 +301,101 @@ public class FactoryRegistry
 
     public bool IsMachineUnlocked(string machineId)
     {
-        var progress = FindMachineProgress(machineId);
+        if (string.IsNullOrWhiteSpace(machineId) || !Machines.TryGetValue(machineId, out MachineDef machine))
+            return false;
+        if (machine.unlockedByDefault)
+            return true;
+        var progress = FindMutableMachineProgress(machineId);
         return progress != null && progress.unlocked;
+    }
+
+    public IReadOnlyList<MachineDef> GetPanelMachines()
+    {
+        return Machines.Values
+            .Where(machine => machine.displayInPanel)
+            .OrderBy(machine => machine.id, StringComparer.Ordinal)
+            .ToList();
     }
 
     public int GetMachineUpgradeLevel(string machineId)
     {
-        var progress = FindMachineProgress(machineId);
+        var progress = FindMutableMachineProgress(machineId);
         return progress != null ? progress.upgradeLevel : 0;
     }
 
     // --- Serialization Helpers for Save/Load ---
     public void LoadFromGameData(GameData data)
     {
-        UserMachines = data.userMachineProgress ?? new List<UserMachineProgress>();
+        if (!TryLoadFromGameData(data, out string error))
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, error, ComponentId);
+    }
+
+    public bool TryLoadFromGameData(GameData data, out string error)
+    {
+        if (!ValidateMachineProgress(data, out error))
+            return false;
+
+        MachineUnlockState.Normalize(data);
+        userMachines = data.userMachineProgress;
+        error = null;
+        MachineUnlockStateReloaded?.Invoke();
+        return true;
+    }
+
+    /// <summary>Validates a save candidate without mutating registry or game state.</summary>
+    public bool ValidateMachineProgress(GameData data, out string error)
+    {
+        if (data == null)
+        {
+            error = "Cannot load machine unlocks from null game data.";
+            return false;
+        }
+
+        if (data.userMachineProgress != null)
+        {
+            foreach (UserMachineProgress progress in data.userMachineProgress)
+            {
+                if (progress == null || string.IsNullOrWhiteSpace(progress.machineId))
+                {
+                    error = "Saved machine progress contains a missing machine ID.";
+                    return false;
+                }
+                if (!Machines.ContainsKey(progress.machineId))
+                {
+                    error = $"Saved machine progress references unknown machine ID '{progress.machineId}'.";
+                    return false;
+                }
+                if (progress.upgradeLevel < 0)
+                {
+                    error = $"Saved machine progress for '{progress.machineId}' has a negative upgrade level.";
+                    return false;
+                }
+            }
+        }
+
+        error = null;
+        return true;
     }
 
     public void SaveToGameData(GameData data)
     {
-        data.userMachineProgress = UserMachines;
+        data.userMachineProgress = userMachines
+            .Where(progress => progress != null)
+            .Select(CloneProgress)
+            .ToList();
+        MachineUnlockState.Normalize(data);
+    }
+
+    private static UserMachineProgress CloneProgress(UserMachineProgress progress)
+    {
+        if (progress == null)
+            return null;
+        return new UserMachineProgress
+        {
+            machineId = progress.machineId,
+            unlocked = progress.unlocked,
+            upgradeLevel = progress.upgradeLevel
+        };
     }
 
     /// <summary>

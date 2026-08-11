@@ -11,7 +11,7 @@ namespace ScrapLine.Tests.EditMode
             "{\"id\":\"refinedOre\",\"displayName\":\"Refined Ore\",\"sprite\":\"refined\",\"sellValue\":6}]}";
         private const string ValidMachines =
             "{\"machines\":[{\"id\":\"processor\",\"type\":\"Shredder\",\"baseProcessTime\":1," +
-            "\"gridPlacement\":[\"grid\"],\"displayInPanel\":true,\"cost\":1," +
+            "\"gridPlacement\":[\"grid\"],\"displayInPanel\":true,\"unlockedByDefault\":true,\"cost\":1," +
             "\"spawnableItems\":[\"ore\"],\"className\":\"ProcessorMachine\"}]}";
         private const string ValidRecipes =
             "[{\"machineId\":\"processor\",\"inputItems\":[{\"item\":\"ore\",\"count\":1}]," +
@@ -132,6 +132,32 @@ namespace ScrapLine.Tests.EditMode
                                                     error.Message.Contains("upgradeMultipliers[0].upgradeTime")), Is.True);
             Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.MachinesFile &&
                                                     error.Message.Contains("upgradeMaxNumbers[0].cost")), Is.True);
+        }
+
+        [Test]
+        public void LockedPanelMachineWithNonPositiveLicenseCostIsRejected()
+        {
+            string machines = ValidMachines.Replace("\"unlockedByDefault\":true,", string.Empty);
+
+            ContentValidationResult result = Validate(machines: machines);
+
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.MachinesFile &&
+                                                    error.Id == "processor" &&
+                                                    error.Message.Contains("unlockCost")), Is.True);
+        }
+
+        [Test]
+        public void DefaultMachineWithPositiveLicenseCostIsRejected()
+        {
+            string machines = ValidMachines.Replace(
+                "\"unlockedByDefault\":true,",
+                "\"unlockedByDefault\":true,\"unlockCost\":10,");
+
+            ContentValidationResult result = Validate(machines: machines);
+
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.MachinesFile &&
+                                                    error.Id == "processor" &&
+                                                    error.Message.Contains("unlockCost must be zero")), Is.True);
         }
 
         [Test]

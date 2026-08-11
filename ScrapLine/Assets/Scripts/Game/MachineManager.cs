@@ -45,6 +45,13 @@ public class MachineManager : MonoBehaviour
     /// <param name="machine">The machine definition to select</param>
     public void SetSelectedMachine(MachineDef machine)
     {
+        if (machine != null && !FactoryRegistry.Instance.IsMachineUnlocked(machine.id))
+        {
+            selectedMachine = null;
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine,
+                $"Cannot select locked machine '{machine.id}'.", ComponentId);
+            return;
+        }
         selectedMachine = machine;
     }
 
@@ -492,6 +499,10 @@ public class MachineManager : MonoBehaviour
     /// <returns>True if placement is valid, false otherwise</returns>
     private bool IsValidMachinePlacement(CellData cellData, MachineDef machineDef)
     {
+        if (cellData == null || machineDef == null ||
+            !FactoryRegistry.Instance.IsMachineUnlocked(machineDef.id))
+            return false;
+
         foreach (string placement in machineDef.gridPlacement)
         {
             switch (placement.ToLower())
@@ -512,6 +523,13 @@ public class MachineManager : MonoBehaviour
     /// <param name="machineDef">The machine definition to place</param>
     private void PlaceMachine(CellData cellData, MachineDef machineDef)
     {
+        if (!FactoryRegistry.Instance.IsMachineUnlocked(machineDef?.id))
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Machine,
+                $"Rejected placement of locked machine '{machineDef?.id ?? "<null>"}'.", ComponentId);
+            return;
+        }
+
         if (!creditsManager.TrySpendCredits(machineDef.cost))
         {
             GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Failed to place machine {machineDef.id} - insufficient credits!", ComponentId);

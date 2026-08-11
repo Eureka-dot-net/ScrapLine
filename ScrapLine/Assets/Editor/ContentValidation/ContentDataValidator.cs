@@ -144,9 +144,17 @@ namespace ScrapLine.Editor.ContentValidation
                     result.Add(MachinesFile, id, "gridPlacement must contain at least one non-empty value.");
 
                 if (machine.displayInPanel)
+                {
                     Positive(machine.cost, "cost", MachinesFile, id, result);
+                    if (machine.unlockedByDefault && machine.unlockCost != 0)
+                        result.Add(MachinesFile, id, "unlockCost must be zero when unlockedByDefault is true.");
+                    else if (!machine.unlockedByDefault)
+                        Positive(machine.unlockCost, "unlockCost", MachinesFile, id, result);
+                }
                 else if (machine.cost < 0)
                     result.Add(MachinesFile, id, "cost must not be negative.");
+                else if (machine.unlockCost != 0)
+                    result.Add(MachinesFile, id, "hidden machines must have an unlockCost of zero.");
 
                 if (RequiresProcessTime(machine.type))
                     Positive(machine.baseProcessTime, "baseProcessTime", MachinesFile, id, result);
@@ -543,6 +551,8 @@ namespace ScrapLine.Editor.ContentValidation
             public List<UpgradeMaxNumberData> upgradeMaxNumbers;
             public List<string> gridPlacement;
             public bool displayInPanel = true;
+            public bool unlockedByDefault;
+            public int unlockCost;
             public int cost;
             public List<string> spawnableItems;
             public string className;

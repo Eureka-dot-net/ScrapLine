@@ -74,6 +74,8 @@
             ],
             "maxNumber": -1,
             "displayInPanel": true,
+            "unlockedByDefault": true,
+            "unlockCost": 0,
             "cost": 10,
             "canRotate": true,
             "className": "ConveyorMachine"
@@ -118,6 +120,8 @@
                 }
             ],
             "displayInPanel": true,
+            "unlockedByDefault": true,
+            "unlockCost": 0,
             "cost": 50,
             "canRotate": false,
             "className": "SpawnerMachine",
@@ -139,6 +143,8 @@
             ],
             "maxNumber": 1,
             "displayInPanel": true,
+            "unlockedByDefault": true,
+            "unlockCost": 0,
             "cost": 50,
             "canRotate": false,
             "className": "SellerMachine",
@@ -178,6 +184,8 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "displayInPanel": true,
+            "unlockedByDefault": false,
+            "unlockCost": 100,
             "cost": 100,
             "canRotate": true,
             "className": "ProcessorMachine"
@@ -215,6 +223,8 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "displayInPanel": true,
+            "unlockedByDefault": false,
+            "unlockCost": 150,
             "cost": 150,
             "canRotate": true,
             "className": "SortingMachine"
@@ -234,6 +244,8 @@
                 "grid"
             ],
             "displayInPanel": true,
+            "unlockedByDefault": false,
+            "unlockCost": 300,
             "cost": 250,
             "canRotate": true,
             "className": "ProcessorMachine"
@@ -253,6 +265,8 @@
                 "grid"
             ],
             "displayInPanel": true,
+            "unlockedByDefault": false,
+            "unlockCost": 125,
             "cost": 125,
             "canRotate": true,
             "className": "ProcessorMachine"
@@ -273,6 +287,8 @@
                 "grid"
             ],
             "displayInPanel": true,
+            "unlockedByDefault": false,
+            "unlockCost": 600,
             "cost": 500,
             "canRotate": true,
             "className": "FabricatorMachine"

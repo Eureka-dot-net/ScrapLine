@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -64,8 +65,8 @@ namespace ScrapLine.Tests.EditMode
             Assert.That(Field<string>(sorting, "leftItemType"), Is.EqualTo("can"));
 
             IList progress = (IList)GetField(data, "userMachineProgress");
-            Assert.That(Field<string>(progress[0], "machineId"), Is.EqualTo("fabricator"));
-            Assert.That(Field<int>(progress[0], "upgradeLevel"), Is.EqualTo(2));
+            object fabricatorProgress = FindByStringField(progress, "machineId", "fabricator");
+            Assert.That(Field<int>(fabricatorProgress, "upgradeLevel"), Is.EqualTo(2));
         }
 
         [Test]
@@ -259,6 +260,37 @@ namespace ScrapLine.Tests.EditMode
         }
 
         [Test]
+        public void SemanticUnlockFailureInPrimaryRecoversValidBackup()
+        {
+            using (RuntimeSaveHarness harness = new RuntimeSaveHarness(ParseGameData(VersionedFactoryJson(0))))
+            {
+                Assert.That(TrySave(harness.Storage, ParseGameData(VersionedFactoryJson(111)), out string validError),
+                    Is.True, validError);
+                string invalidJson = VersionedFactoryJson(222).Replace(
+                    "\"userMachineProgress\":[]",
+                    "\"userMachineProgress\":[{\"machineId\":\"retired_machine\"," +
+                    "\"unlocked\":true,\"upgradeLevel\":0}]");
+                Assert.That(TrySave(harness.Storage, ParseGameData(invalidJson), out string invalidError),
+                    Is.True, invalidError);
+
+                bool loaded = (bool)harness.SaveManager.GetType().GetMethod("LoadGame")
+                    .Invoke(harness.SaveManager, null);
+
+                Assert.That(loaded, Is.True);
+                object loadedData = harness.GameManager.GetType().GetProperty("gameData")
+                    .GetValue(harness.GameManager);
+                Assert.That(Field<int>(loadedData, "credits"), Is.EqualTo(111));
+                StringAssert.DoesNotContain("retired_machine",
+                    File.ReadAllText(PathProperty(harness.Storage, "PrimaryPath")));
+                StringAssert.DoesNotContain("retired_machine",
+                    File.ReadAllText(PathProperty(harness.Storage, "BackupPath")),
+                    "Semantic recovery must not rotate the invalid primary over the good backup.");
+                StringAssert.Contains("retired_machine",
+                    File.ReadAllText(PathProperty(harness.Storage, "CorruptPath")));
+            }
+        }
+
+        [Test]
         public void MobilePauseCallbackWritesCurrentStateImmediately()
         {
             using (RuntimeSaveHarness harness = new RuntimeSaveHarness(ParseGameData(VersionedFactoryJson(77))))
@@ -295,7 +327,10 @@ namespace ScrapLine.Tests.EditMode
             Assert.That(((IList)GetField(grid, "cells")).Count, Is.EqualTo(1));
             object cell = ((IList)GetField(grid, "cells"))[0];
             Assert.That(((IList)GetField(cell, "items")).Count, Is.EqualTo(1));
-            Assert.That(((IList)GetField(roundTripped, "userMachineProgress")).Count, Is.EqualTo(1));
+            IList progress = (IList)GetField(roundTripped, "userMachineProgress");
+            Assert.That(progress.Count, Is.EqualTo(4));
+            Assert.That(Field<int>(FindByStringField(progress, "machineId", "fabricator"), "upgradeLevel"),
+                Is.EqualTo(2));
         }
 
         private object CreateStorage()
@@ -320,7 +355,9 @@ namespace ScrapLine.Tests.EditMode
         private static bool TrySave(object storage, object data, out string error)
         {
             object[] arguments = { data, null };
-            bool saved = (bool)storage.GetType().GetMethod("TrySave").Invoke(storage, arguments);
+            MethodInfo method = storage.GetType().GetMethods()
+                .Single(candidate => candidate.Name == "TrySave" && candidate.GetParameters().Length == 2);
+            bool saved = (bool)method.Invoke(storage, arguments);
             error = (string)arguments[1];
             return saved;
         }
@@ -328,7 +365,9 @@ namespace ScrapLine.Tests.EditMode
         private static bool TryLoad(object storage, out object data, out bool fromBackup, out string error)
         {
             object[] arguments = { null, false, false, null };
-            bool loaded = (bool)storage.GetType().GetMethod("TryLoad").Invoke(storage, arguments);
+            MethodInfo method = storage.GetType().GetMethods()
+                .Single(candidate => candidate.Name == "TryLoad" && candidate.GetParameters().Length == 4);
+            bool loaded = (bool)method.Invoke(storage, arguments);
             data = arguments[0];
             fromBackup = (bool)arguments[1];
             error = (string)arguments[3];
@@ -391,6 +430,17 @@ namespace ScrapLine.Tests.EditMode
             return null;
         }
 
+        private static object FindByStringField(IList records, string field, string value)
+        {
+            foreach (object record in records)
+            {
+                if (Field<string>(record, field) == value)
+                    return record;
+            }
+            Assert.Fail($"Missing record whose {field} is '{value}'.");
+            return null;
+        }
+
         private static Type ProductionType(string name)
         {
             return Type.GetType($"{name}, Assembly-CSharp", true);
@@ -441,6 +491,15 @@ namespace ScrapLine.Tests.EditMode
             public RuntimeSaveHarness(object data)
             {
                 gameObject = new GameObject("RuntimeSaveHarness");
+                object registry = ProductionType("FactoryRegistry").GetProperty("Instance").GetValue(null);
+                registry.GetType().GetMethod("LoadFromJson").Invoke(registry, new object[]
+                {
+                    Resources.Load<TextAsset>("machines").text,
+                    Resources.Load<TextAsset>("recipes").text,
+                    Resources.Load<TextAsset>("items").text,
+                    Resources.Load<TextAsset>("wastecrates").text,
+                    null
+                });
                 Type gameManagerType = ProductionType("GameManager");
                 Type creditsType = ProductionType("CreditsManager");
                 Type gridType = ProductionType("GridManager");

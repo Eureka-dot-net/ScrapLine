@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,9 +30,21 @@ public class MachineBarUIManager : MonoBehaviour
     public Button editButton;
 
     private bool isInEditMode = false;
+    private readonly List<GameObject> generatedMachineButtons = new List<GameObject>();
+    private string pendingUnlockMachineId;
 
     void Awake()
     {
+        FactoryRegistry.Instance.MachineUnlocked -= OnMachineUnlocked;
+        FactoryRegistry.Instance.MachineUnlocked += OnMachineUnlocked;
+        FactoryRegistry.Instance.MachineUnlockStateReloaded -= OnMachineUnlockStateReloaded;
+        FactoryRegistry.Instance.MachineUnlockStateReloaded += OnMachineUnlockStateReloaded;
+    }
+
+    private void OnDestroy()
+    {
+        FactoryRegistry.Instance.MachineUnlocked -= OnMachineUnlocked;
+        FactoryRegistry.Instance.MachineUnlockStateReloaded -= OnMachineUnlockStateReloaded;
     }
 
     void Start()
@@ -69,6 +82,8 @@ public class MachineBarUIManager : MonoBehaviour
 
     public void InitBar()
     {
+        ClearSelection();
+        ClearGeneratedMachineButtons();
         Canvas.ForceUpdateCanvases();
 
         RectTransform parentRect = machineBarPanel.GetComponent<RectTransform>();
@@ -88,15 +103,15 @@ public class MachineBarUIManager : MonoBehaviour
             horizontalLayout.childForceExpandHeight = false;
         }
 
-        foreach (var machine in FactoryRegistry.Instance.Machines.Values)
-        {
-            // Skip machines that shouldn't be displayed in panel
-            if (!machine.displayInPanel)
-            {
-                continue;
-            }
+        CreditsManager creditsManager = GetCreditsManager();
+        int availableCredits = creditsManager != null ? creditsManager.GetCredits() : 0;
 
+        // Every buildable machine is visible. MachineButton renders licensed/locked state directly
+        // from content and registry data, with no machine-specific UI conditions.
+        foreach (var machine in FactoryRegistry.Instance.GetPanelMachines())
+        {
             GameObject buttonObj = Instantiate(machineButtonPrefab, machineBarPanel);
+            generatedMachineButtons.Add(buttonObj);
             RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
             buttonRect.sizeDelta = new Vector2(targetSize, targetSize);
 
@@ -117,10 +132,6 @@ public class MachineBarUIManager : MonoBehaviour
             {
                 DestroyImmediate(aspectFitter);
             }
-
-            var machineButton = buttonObj.GetComponent<MachineButton>();
-            machineButton.Init(machine);
-            machineButton.OnButtonClicked += OnMachinePanelClicked;
 
             var machineRenderer = buttonObj.GetComponent<MachineRenderer>();
             if (machineRenderer != null)
@@ -159,13 +170,96 @@ public class MachineBarUIManager : MonoBehaviour
             {
                 GameLogger.LogWarning(LoggingManager.LogCategory.UI, "MachineRenderer not found on prefab for machine '{machine.id}'", ComponentId);
             }
+
+            // MachineRenderer.Setup rebuilds the button's visual children. Initialize the button
+            // afterward so its license overlay survives that renderer cleanup and remains topmost.
+            var machineButton = buttonObj.GetComponent<MachineButton>();
+            machineButton.Init(machine, FactoryRegistry.Instance.IsMachineUnlocked(machine.id), availableCredits);
+            machineButton.OnButtonClicked += OnMachinePanelClicked;
+            machineButton.OnUnlockRequested += OnMachineUnlockRequested;
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
     }
 
+    private void OnMachineUnlocked(string machineId, string unlockSource)
+    {
+        pendingUnlockMachineId = null;
+        InitBar();
+    }
+
+    private void OnMachineUnlockStateReloaded()
+    {
+        pendingUnlockMachineId = null;
+        InitBar();
+    }
+
+    private void OnMachineUnlockRequested(MachineDef machineDef, GameObject buttonObj)
+    {
+        if (machineDef == null || buttonObj == null)
+            return;
+
+        MachineButton machineButton = buttonObj.GetComponent<MachineButton>();
+        if (pendingUnlockMachineId != machineDef.id)
+        {
+            ClearUnlockConfirmation();
+            pendingUnlockMachineId = machineDef.id;
+            machineButton.SetUnlockConfirmation(true);
+            return;
+        }
+
+        pendingUnlockMachineId = null;
+        CreditsManager creditsManager = GetCreditsManager();
+        if (!FactoryRegistry.Instance.TryPurchaseMachineLicense(machineDef.id, creditsManager, out string error))
+        {
+            machineButton.ShowLicenseError(error);
+            return;
+        }
+
+        GameLogger.Log(LoggingManager.LogCategory.Economy,
+            $"Licensed {machineDef.type} for {machineDef.unlockCost} credits. " +
+            $"Construction costs {machineDef.cost} credits.", ComponentId);
+    }
+
+    private void ClearUnlockConfirmation()
+    {
+        pendingUnlockMachineId = null;
+        CreditsManager creditsManager = GetCreditsManager();
+        int availableCredits = creditsManager != null ? creditsManager.GetCredits() : 0;
+        foreach (GameObject buttonObject in generatedMachineButtons)
+        {
+            if (buttonObject == null)
+                continue;
+            MachineButton machineButton = buttonObject.GetComponent<MachineButton>();
+            if (machineButton == null)
+                continue;
+            MachineDef machine = machineButton.GetMachineDef();
+            machineButton.RefreshLicenseState(
+                FactoryRegistry.Instance.IsMachineUnlocked(machine.id), availableCredits);
+        }
+    }
+
+    private void ClearGeneratedMachineButtons()
+    {
+        foreach (GameObject button in generatedMachineButtons)
+        {
+            if (button == null)
+                continue;
+            button.SetActive(false);
+            if (Application.isPlaying)
+                Destroy(button);
+            else
+                DestroyImmediate(button);
+        }
+        generatedMachineButtons.Clear();
+    }
+
     private void OnMachinePanelClicked(MachineDef machineDef, GameObject buttonObj)
     {
+        ClearUnlockConfirmation();
+
+        if (!FactoryRegistry.Instance.IsMachineUnlocked(machineDef?.id))
+            return;
 
         // If the same machine is clicked again, clear selection
         if (selectedMachine == machineDef)
@@ -241,6 +335,7 @@ public class MachineBarUIManager : MonoBehaviour
 
     public void ClearSelection()
     {
+        ClearUnlockConfirmation();
         ClearSelectionHighlight();
         selectedMachine = null;
         selectedButtonObj = null;
@@ -262,43 +357,31 @@ public class MachineBarUIManager : MonoBehaviour
     /// </summary>
     public void UpdateAffordability()
     {
-        if (GameManager.Instance == null)
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "GameManager.Instance is null, cannot update machine affordability", ComponentId);
+        CreditsManager creditsManager = GetCreditsManager();
+        if (creditsManager == null)
             return;
-        }
+        int availableCredits = creditsManager.GetCredits();
 
-        // Find all machine buttons in the panel
-        MachineButton[] machineButtons = managePanel.GetComponentsInChildren<MachineButton>();
-
-        foreach (var machineButton in machineButtons)
+        foreach (GameObject buttonObject in generatedMachineButtons)
         {
-            var button = machineButton.GetComponent<Button>();
-            var machineDef = machineButton.GetMachineDef(); // We'll need to add this method to MachineButton
-
-            if (button != null && machineDef != null)
-            {
-                bool canAfford = GameManager.Instance.CanAfford(machineDef.cost);
-
-                // Enable/disable the button based on affordability
-                button.interactable = canAfford;
-
-                // Visual feedback for unaffordable machines
-                var canvasGroup = machineButton.GetComponent<CanvasGroup>();
-                if (canvasGroup == null)
-                {
-                    canvasGroup = machineButton.gameObject.AddComponent<CanvasGroup>();
-                }
-
-                // Reduce opacity for unaffordable machines
-                canvasGroup.alpha = canAfford ? 1.0f : 0.5f;
-
-                // Log affordability status
-                if (!canAfford)
-                {
-                }
-            }
+            if (buttonObject == null)
+                continue;
+            MachineButton machineButton = buttonObject.GetComponent<MachineButton>();
+            MachineDef machine = machineButton?.GetMachineDef();
+            if (machine == null)
+                continue;
+            machineButton.RefreshLicenseState(
+                FactoryRegistry.Instance.IsMachineUnlocked(machine.id), availableCredits);
+            if (pendingUnlockMachineId == machine.id)
+                machineButton.SetUnlockConfirmation(true);
         }
+    }
+
+    private static CreditsManager GetCreditsManager()
+    {
+        return GameManager.Instance != null && GameManager.Instance.creditsManager != null
+            ? GameManager.Instance.creditsManager
+            : FindAnyObjectByType<CreditsManager>();
     }
 
     public void OnEditModeToggled()

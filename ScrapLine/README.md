@@ -231,6 +231,10 @@ Game saves are schema-versioned, migrated, written through a validated temporary
 by one recoverable backup. Autosave and platform lifecycle behavior are documented in
 [`SAVE_SYSTEM.md`](SAVE_SYSTEM.md).
 
+Permanent machine licenses are data-driven and credit-funded. Locked machines remain visible with
+license and construction prices, while gameplay placement APIs independently enforce ownership. See
+[`MACHINE_UNLOCKS.md`](MACHINE_UNLOCKS.md).
+
 ### UI Setup
 The CreditsUI system requires proper Unity setup:
 1. Create a TextMeshPro text element in your UI

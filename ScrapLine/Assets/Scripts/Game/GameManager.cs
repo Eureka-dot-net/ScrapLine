@@ -173,6 +173,7 @@ public class GameManager : MonoBehaviour
     private void StartNewGame()
     {
         _gameData = GameData.CreateNewGame();
+        FactoryRegistry.Instance.LoadFromGameData(_gameData);
         creditsManager.InitializeNewGame();
         gridManager.CreateDefaultGrid();
     }

@@ -19,11 +19,17 @@ a valid backup is used and repaired automatically. An ordinary primary load does
 so it also does not rotate an identical primary over the previous backup generation. Rewrites happen
 only after migration or backup recovery.
 
+Candidate selection includes machine-unlock semantic validation as well as structural JSON validation.
+An unknown machine in the primary therefore falls through to a valid backup, and the semantic-invalid
+primary is quarantined rather than rotated over that good backup during repair.
+
 ## Migrations
 
 Unversioned saves are schema 0. `GameSaveMigrations` upgrades them to schema 1 by normalizing optional
-collections and per-cell configuration without recreating grids, machines, items, credits, queues, or
-unlocks. Migrations are idempotent.
+collections and per-cell configuration, then to schema 2 by normalizing machine unlock state. Schema 2
+adds the three starter capabilities and preserves access to machines already placed by older sandbox
+saves. Grids, machines, items, credits, queues, upgrades, and existing unlocks are retained. Migrations
+are idempotent.
 
 For a future schema change:
 
