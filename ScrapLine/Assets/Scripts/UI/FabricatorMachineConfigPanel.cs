@@ -41,7 +41,17 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
     protected override void LoadCurrentConfiguration()
     {
         selectedRecipeId = currentData?.selectedRecipeId ?? "";
-        
+        if (!string.IsNullOrWhiteSpace(selectedRecipeId) &&
+            !FactoryRegistry.Instance.TryGetRecipeForMachine(
+                selectedRecipeId, currentData?.machineDefId, out _, out string error))
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                $"Clearing invalid saved Fabricator recipe '{selectedRecipeId}'. {error} Select a recipe again.",
+                ComponentId);
+            selectedRecipeId = "";
+            if (currentData != null)
+                currentData.selectedRecipeId = null;
+        }
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Loaded fabricator config: Recipe='{selectedRecipeId}'", ComponentId);
     }
 
@@ -89,7 +99,7 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
     /// <param name="recipe">Selected recipe (null for "None")</param>
     private void OnRecipeSelected(RecipeDef recipe)
     {
-        selectedRecipeId = RecipeSelectionPanel.GetRecipeId(recipe);
+        selectedRecipeId = recipe?.id ?? "";
         
         GameLogger.Log(LoggingManager.LogCategory.UI, $"Selected recipe: '{selectedRecipeId}'", ComponentId);
 
@@ -113,7 +123,8 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
 
         if (string.IsNullOrEmpty(selectedRecipeId))
         {
-
+            if (buttonText != null)
+                buttonText.text = "Select Recipe";
 
             if (buttonImage != null && emptySelectionSprite != null)
             {
@@ -124,7 +135,7 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
         else
         {
             // Recipe selected - show recipe output info
-            RecipeDef selectedRecipe = RecipeSelectionPanel.GetRecipeById(selectedRecipeId);
+            RecipeDef selectedRecipe = FactoryRegistry.Instance.GetRecipeById(selectedRecipeId);
             
             if (selectedRecipe != null && selectedRecipe.outputItems != null && selectedRecipe.outputItems.Count > 0)
             {
@@ -182,7 +193,7 @@ public class FabricatorMachineConfigPanel : BaseConfigPanel<CellData, string>
         }
 
         // Recipe selected - show ingredients
-        RecipeDef selectedRecipe = RecipeSelectionPanel.GetRecipeById(selectedRecipeId);
+        RecipeDef selectedRecipe = FactoryRegistry.Instance.GetRecipeById(selectedRecipeId);
         if (selectedRecipe != null)
         {
             ingredientDisplay.DisplayRecipe(selectedRecipe);

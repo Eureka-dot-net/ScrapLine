@@ -22,7 +22,7 @@ public class FabricatorMachineDemo : MonoBehaviour
         // 1. Create mock data as it would exist in the game
         var cellData = CreateMockFabricatorCell();
         var machineDef = CreateMockFabricatorMachineDef();
-        var mockRegistry = CreateMockFactoryRegistry();
+        FactoryRegistry.Instance.GetRecipeById("fabricate_reinforced_aluminum_plate");
         
         // 2. Create fabricator machine
         var fabricator = new FabricatorMachine(cellData, machineDef);
@@ -32,7 +32,7 @@ public class FabricatorMachineDemo : MonoBehaviour
         Debug.Log($"Can process items: {fabricator.GetType().GetMethod("GetNextProcessableWaitingItem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null}");
         
         // 4. Configure fabricator with a recipe (simulate user selection)
-        cellData.selectedRecipeId = "fabricator_aluminumPlate:1,granulatedPlastic:2_reinforcedAluminumPlate:1";
+        cellData.selectedRecipeId = "fabricate_reinforced_aluminum_plate";
         Debug.Log($"Step 2: Recipe selected: {cellData.selectedRecipeId}");
         
         // 5. Add items to waiting queue (simulate items arriving)
@@ -81,43 +81,4 @@ public class FabricatorMachineDemo : MonoBehaviour
         };
     }
 
-    private FactoryRegistry CreateMockFactoryRegistry()
-    {
-        // In real game, this would be populated from JSON files
-        var registry = FactoryRegistry.Instance;
-        
-        // Add mock recipe if not already present
-        var mockRecipe = new RecipeDef
-        {
-            machineId = "fabricator",
-            inputItems = new List<RecipeItemDef>
-            {
-                new RecipeItemDef { item = "aluminumPlate", count = 1 },
-                new RecipeItemDef { item = "granulatedPlastic", count = 2 }
-            },
-            outputItems = new List<RecipeItemDef>
-            {
-                new RecipeItemDef { item = "reinforcedAluminumPlate", count = 1 }
-            },
-            processMultiplier = 3
-        };
-        
-        // Only add if not already present (avoid duplicates)
-        bool recipeExists = false;
-        foreach (var existing in registry.Recipes)
-        {
-            if (existing.machineId == "fabricator")
-            {
-                recipeExists = true;
-                break;
-            }
-        }
-        
-        if (!recipeExists)
-        {
-            registry.Recipes.Add(mockRecipe);
-        }
-        
-        return registry;
-    }
 }

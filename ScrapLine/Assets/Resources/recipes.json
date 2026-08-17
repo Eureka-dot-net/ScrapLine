@@ -1,5 +1,6 @@
 [
   {
+    "id": "shred_can",
     "machineId": "shredder",
     "inputItems": [
       { "item": "can", "count": 1 }
@@ -10,6 +11,7 @@
     "processMultiplier": 1
   },
   {
+    "id": "granulate_plastic_bottle",
     "machineId": "granulator",
     "inputItems": [
       { "item": "plasticBottle", "count": 1 }
@@ -20,6 +22,7 @@
     "processMultiplier": 1
   },
   {
+    "id": "press_aluminum_plate",
     "machineId": "plate_press",
     "inputItems": [
       { "item": "shreddedAluminum", "count": 1 }
@@ -30,6 +33,7 @@
     "processMultiplier": 1
   },
   {
+    "id": "fabricate_reinforced_aluminum_plate",
     "machineId": "fabricator",
     "inputItems": [
       { "item": "aluminumPlate", "count": 1 },

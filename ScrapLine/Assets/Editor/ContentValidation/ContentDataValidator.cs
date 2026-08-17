@@ -211,6 +211,7 @@ namespace ScrapLine.Editor.ContentValidation
         {
             HashSet<string> machineIds = IdSet(machines.Select(machine => machine?.id));
             HashSet<string> itemIds = IdSet(items.Select(item => item?.id));
+            ValidateUniqueIds(recipes.Select(recipe => recipe?.id), RecipesFile, result);
 
             for (int index = 0; index < recipes.Count; index++)
             {
@@ -222,6 +223,7 @@ namespace ScrapLine.Editor.ContentValidation
                     continue;
                 }
 
+                Require(recipe.id, "id", RecipesFile, id, result);
                 Require(recipe.machineId, "machineId", RecipesFile, id, result);
                 if (!string.IsNullOrWhiteSpace(recipe.machineId) && !machineIds.Contains(recipe.machineId))
                     result.Add(RecipesFile, id, $"machineId references unknown machine '{recipe.machineId}'.");
@@ -499,10 +501,7 @@ namespace ScrapLine.Editor.ContentValidation
 
         private static string RecipeId(RecipeData recipe, int index)
         {
-            string inputs = recipe.inputItems == null
-                ? "no inputs"
-                : string.Join("+", recipe.inputItems.Where(item => item != null).Select(item => item.item));
-            return $"{recipe.machineId ?? "missing machine"}:{inputs} (index {index})";
+            return RecordId(recipe.id, index);
         }
 
         private static void Require(
@@ -576,6 +575,7 @@ namespace ScrapLine.Editor.ContentValidation
         [Serializable]
         private sealed class RecipeData
         {
+            public string id;
             public string machineId;
             public List<RecipeItemData> inputItems;
             public List<RecipeItemData> outputItems;

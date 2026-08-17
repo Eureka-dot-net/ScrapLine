@@ -49,6 +49,7 @@ public class RecipeItemDef {
 
 [System.Serializable]
 public class RecipeDef {
+    public string id;
     public string machineId;
     public List<RecipeItemDef> inputItems;
     public List<RecipeItemDef> outputItems;

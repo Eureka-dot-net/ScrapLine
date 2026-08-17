@@ -14,7 +14,7 @@ namespace ScrapLine.Tests.EditMode
             "\"gridPlacement\":[\"grid\"],\"displayInPanel\":true,\"unlockedByDefault\":true,\"cost\":1," +
             "\"spawnableItems\":[\"ore\"],\"className\":\"ProcessorMachine\"}]}";
         private const string ValidRecipes =
-            "[{\"machineId\":\"processor\",\"inputItems\":[{\"item\":\"ore\",\"count\":1}]," +
+            "[{\"id\":\"refine_ore\",\"machineId\":\"processor\",\"inputItems\":[{\"item\":\"ore\",\"count\":1}]," +
             "\"outputItems\":[{\"item\":\"refinedOre\",\"count\":1}],\"processMultiplier\":1}]";
         private const string ValidWasteCrates =
             "{\"wasteCrates\":[{\"id\":\"ore_crate\",\"displayName\":\"Ore Crate\",\"sprite\":\"crate\"," +
@@ -58,11 +58,34 @@ namespace ScrapLine.Tests.EditMode
                 error.File == ContentDataValidator.MachinesFile && error.Id == "processor" &&
                 error.Message.Contains("missing_spawn_item")), Is.True);
             Assert.That(result.Errors.Any(error =>
-                error.File == ContentDataValidator.RecipesFile && error.Id.Contains("missing_machine") &&
+                error.File == ContentDataValidator.RecipesFile && error.Id == "refine_ore" &&
                 error.Message.Contains("unknown machine")), Is.True);
             Assert.That(result.Errors.Any(error =>
-                error.File == ContentDataValidator.RecipesFile && error.Id.Contains("missing_machine") &&
+                error.File == ContentDataValidator.RecipesFile && error.Id == "refine_ore" &&
                 error.Message.Contains("missing_input")), Is.True);
+        }
+
+        [Test]
+        public void MissingBlankAndDuplicateRecipeIdsAreRejectedWithRecipeContext()
+        {
+            string missing = ValidRecipes.Replace("\"id\":\"refine_ore\",", string.Empty);
+            ContentValidationResult missingResult = Validate(recipes: missing);
+            Assert.That(missingResult.Errors.Any(error =>
+                error.File == ContentDataValidator.RecipesFile && error.Id == "index 0" &&
+                error.Message.Contains("id is required")), Is.True);
+
+            string blank = ValidRecipes.Replace("\"refine_ore\"", "\"   \"");
+            ContentValidationResult blankResult = Validate(recipes: blank);
+            Assert.That(blankResult.Errors.Any(error =>
+                error.File == ContentDataValidator.RecipesFile && error.Id == "index 0" &&
+                error.Message.Contains("id is required")), Is.True);
+
+            string duplicate = "[" + ValidRecipes.Substring(1, ValidRecipes.Length - 2) + "," +
+                               ValidRecipes.Substring(1, ValidRecipes.Length - 2) + "]";
+            ContentValidationResult duplicateResult = Validate(recipes: duplicate);
+            Assert.That(duplicateResult.Errors.Any(error =>
+                error.File == ContentDataValidator.RecipesFile && error.Id == "refine_ore" &&
+                error.Message.Contains("unique")), Is.True);
         }
 
         [Test]

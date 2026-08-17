@@ -20,6 +20,7 @@ public class FabricatorMachine : ProcessorMachine
     {
         // Fabricator machines can be configured to select specific recipes
         CanConfigure = true;
+        RecoverInvalidSavedSelection();
     }
 
     /// <summary>
@@ -54,15 +55,6 @@ public class FabricatorMachine : ProcessorMachine
         else
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, "FabricatorMachineConfigPanel not found in scene. Please add the UI component to configure fabricator machines.", ComponentId);
-
-            // Fallback: Set a default configuration for testing if there are any fabricator recipes
-            var fabricatorRecipes = FactoryRegistry.Instance.GetRecipesForMachine(cellData.machineDefId);
-            if (fabricatorRecipes.Count > 0)
-            {
-                var defaultRecipe = fabricatorRecipes[0];
-                cellData.selectedRecipeId = GetRecipeId(defaultRecipe);
-                GameLogger.LogFabricator($"[FABRICATOR] Applied default recipe for testing: {defaultRecipe.outputItems[0].item}", ComponentId);
-            }
         }
     }
 
@@ -71,16 +63,28 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private void OnConfigurationConfirmed(string selectedRecipeId)
     {
-        GameLogger.LogFabricator($"[FABRICATOR] Recipe selected: {selectedRecipeId}", ComponentId);
-        
-        // The configuration UI already updates cellData.selectedRecipeId, but let's be explicit
-        cellData.selectedRecipeId = selectedRecipeId;
+        if (string.IsNullOrWhiteSpace(selectedRecipeId))
+        {
+            cellData.selectedRecipeId = null;
+        }
+        else if (FactoryRegistry.Instance.TryGetRecipeForMachine(
+                     selectedRecipeId, cellData.machineDefId, out _, out string error))
+        {
+            cellData.selectedRecipeId = selectedRecipeId;
+        }
+        else
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator,
+                $"[FABRICATOR] Rejected recipe selection '{selectedRecipeId}'. {error}", ComponentId);
+            cellData.selectedRecipeId = null;
+        }
+        GameLogger.LogFabricator($"[FABRICATOR] Recipe selected: {cellData.selectedRecipeId}", ComponentId);
         GameManager.Instance?.RequestAutosave();
         
         // Refresh the visual configuration indicators
         RefreshConfigurationVisuals();
         
-        if (string.IsNullOrEmpty(selectedRecipeId))
+        if (string.IsNullOrEmpty(cellData.selectedRecipeId))
         {
             GameLogger.LogFabricator("[FABRICATOR] Recipe cleared - machine will not process items", ComponentId);
         }
@@ -208,28 +212,37 @@ public class FabricatorMachine : ProcessorMachine
     /// </summary>
     private RecipeDef GetSelectedRecipe()
     {
-        if (string.IsNullOrEmpty(cellData.selectedRecipeId)) return null;
-        
-        foreach (var recipe in FactoryRegistry.Instance.Recipes)
-        {
-            if (GetRecipeId(recipe) == cellData.selectedRecipeId)
-            {
-                return recipe;
-            }
-        }
-        
-        GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator, $"[FABRICATOR] Could not find recipe with ID: {cellData.selectedRecipeId}", ComponentId);
+        if (string.IsNullOrEmpty(cellData.selectedRecipeId))
+            return null;
+        if (FactoryRegistry.Instance.TryGetRecipeForMachine(
+                cellData.selectedRecipeId, cellData.machineDefId, out RecipeDef recipe, out _))
+            return recipe;
         return null;
     }
 
-    /// <summary>
-    /// Generate a unique ID for a recipe based on its inputs and outputs
-    /// </summary>
-    private string GetRecipeId(RecipeDef recipe)
+    private void RecoverInvalidSavedSelection()
     {
-        string inputs = string.Join(",", recipe.inputItems.ConvertAll(i => i.item + ":" + i.count));
-        string outputs = string.Join(",", recipe.outputItems.ConvertAll(o => o.item + ":" + o.count));
-        return $"{recipe.machineId}_{inputs}_{outputs}";
+        if (string.IsNullOrWhiteSpace(cellData.selectedRecipeId))
+            return;
+        if (FactoryRegistry.Instance.TryGetRecipeForMachine(
+                cellData.selectedRecipeId, cellData.machineDefId, out _, out _))
+            return;
+
+        string invalidId = cellData.selectedRecipeId;
+        cellData.selectedRecipeId = null;
+        if (cellData.machineState == MachineState.Processing || cellData.machineState == MachineState.Receiving)
+            cellData.machineState = MachineState.Idle;
+        foreach (ItemData item in cellData.items)
+        {
+            if (item.state != ItemState.Processing)
+                continue;
+            item.state = ItemState.Idle;
+            item.processingStartTime = 0f;
+            item.processingDuration = 0f;
+        }
+        GameLogger.LogWarning(LoggingManager.LogCategory.Fabricator,
+            $"[FABRICATOR] Cleared unknown saved recipe '{invalidId}' at ({cellData.x}, {cellData.y}). " +
+            "The machine is unconfigured; select a recipe again. Existing items were preserved.", ComponentId);
     }
 
     /// <summary>

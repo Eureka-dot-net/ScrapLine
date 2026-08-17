@@ -232,8 +232,13 @@ by one recoverable backup. Autosave and platform lifecycle behavior are document
 [`SAVE_SYSTEM.md`](SAVE_SYSTEM.md).
 
 Permanent machine licenses are data-driven and credit-funded. Locked machines remain visible with
-license and construction prices, while gameplay placement APIs independently enforce ownership. See
+their license price; licensed cards show construction price, while gameplay placement APIs
+independently enforce ownership. See
 [`MACHINE_UNLOCKS.md`](MACHINE_UNLOCKS.md).
+
+Recipes use stable authored IDs that survive balance changes. Fabricator configuration resolves those
+IDs through the registry and safely rejects obsolete selections. See
+[`RECIPE_IDENTITIES.md`](RECIPE_IDENTITIES.md).
 
 ### UI Setup
 The CreditsUI system requires proper Unity setup:

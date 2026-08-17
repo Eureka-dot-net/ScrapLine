@@ -16,7 +16,10 @@ public class FactoryRegistry
 
     // --- Data Members ---
     public Dictionary<string, MachineDef> Machines = new();
-    public List<RecipeDef> Recipes = new();
+    private List<RecipeDef> recipes = new();
+    private readonly Dictionary<string, RecipeDef> recipesById = new(StringComparer.Ordinal);
+    private readonly HashSet<string> ambiguousRecipeIds = new(StringComparer.Ordinal);
+    public IReadOnlyList<RecipeDef> Recipes => recipes.AsReadOnly();
     public Dictionary<string, ItemDef> Items = new();
     public Dictionary<string, WasteCrateDef> WasteCrates = new();
 
@@ -36,7 +39,7 @@ public class FactoryRegistry
     public bool IsLoaded()
     {
         // This is a simple check; you might want more robust logic
-        return Machines.Count > 0 && Recipes.Count > 0 && Items.Count > 0 && WasteCrates.Count > 0;
+        return Machines.Count > 0 && recipes.Count > 0 && Items.Count > 0 && WasteCrates.Count > 0;
     }
 
     // --- Methods ---
@@ -62,13 +65,14 @@ public class FactoryRegistry
         // Load Recipes - handle direct array format
         try
         {
-            Recipes = JsonUtility.FromJson<RecipeListWrapper>("{\"recipes\":" + recipesJson + "}").recipes ?? new List<RecipeDef>();
+            recipes = JsonUtility.FromJson<RecipeListWrapper>("{\"recipes\":" + recipesJson + "}").recipes ?? new List<RecipeDef>();
         }
         catch
         {
             GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "Failed to load recipes from JSON, using empty list", ComponentId);
-            Recipes = new List<RecipeDef>();
+            recipes = new List<RecipeDef>();
         }
+        RebuildRecipeIndex();
 
         // Load Items
         var itemsWrapper = JsonUtility.FromJson<ItemListWrapper>(itemsJson);
@@ -141,7 +145,7 @@ public class FactoryRegistry
 
     public RecipeDef GetRecipe(string machineId, string inputItemId)
     {
-        foreach (var recipe in Recipes)
+        foreach (var recipe in recipes)
         {
             if (recipe.machineId == machineId)
             {
@@ -156,13 +160,60 @@ public class FactoryRegistry
         return null;
     }
 
+    /// <summary>Resolve one authored recipe ID. Blank, unknown, and duplicate IDs return null.</summary>
+    public RecipeDef GetRecipeById(string recipeId)
+    {
+        if (string.IsNullOrWhiteSpace(recipeId) || ambiguousRecipeIds.Contains(recipeId))
+            return null;
+        recipesById.TryGetValue(recipeId, out RecipeDef recipe);
+        return recipe;
+    }
+
+    public bool TryGetRecipeForMachine(string recipeId, string machineId, out RecipeDef recipe, out string error)
+    {
+        recipe = GetRecipeById(recipeId);
+        if (recipe == null)
+        {
+            error = $"Unknown or ambiguous recipe ID '{recipeId ?? "<null>"}'.";
+            return false;
+        }
+        if (!string.Equals(recipe.machineId, machineId, StringComparison.Ordinal))
+        {
+            error = $"Recipe '{recipeId}' belongs to machine '{recipe.machineId}', not '{machineId}'.";
+            recipe = null;
+            return false;
+        }
+        error = null;
+        return true;
+    }
+
+    private void RebuildRecipeIndex()
+    {
+        recipesById.Clear();
+        ambiguousRecipeIds.Clear();
+        foreach (RecipeDef recipe in recipes)
+        {
+            if (recipe == null || string.IsNullOrWhiteSpace(recipe.id) || ambiguousRecipeIds.Contains(recipe.id))
+                continue;
+            if (recipesById.ContainsKey(recipe.id))
+            {
+                recipesById.Remove(recipe.id);
+                ambiguousRecipeIds.Add(recipe.id);
+                GameLogger.LogError(LoggingManager.LogCategory.Debug,
+                    $"Duplicate recipe ID '{recipe.id}' is ambiguous and cannot be resolved.", ComponentId);
+                continue;
+            }
+            recipesById.Add(recipe.id, recipe);
+        }
+    }
+
     /// <summary>
     /// Get all recipes for a specific machine that produce a specific output item
     /// </summary>
     public List<RecipeDef> GetRecipesByOutput(string machineId, string outputItemId)
     {
         var matchingRecipes = new List<RecipeDef>();
-        foreach (var recipe in Recipes)
+        foreach (var recipe in recipes)
         {
             if (recipe.machineId == machineId)
             {
@@ -185,7 +236,7 @@ public class FactoryRegistry
     public List<RecipeDef> GetRecipesForMachine(string machineId)
     {
         var machineRecipes = new List<RecipeDef>();
-        foreach (var recipe in Recipes)
+        foreach (var recipe in recipes)
         {
             if (recipe.machineId == machineId)
             {
