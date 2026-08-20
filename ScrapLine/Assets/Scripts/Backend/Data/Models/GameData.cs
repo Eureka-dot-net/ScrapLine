@@ -86,8 +86,8 @@ public class CellData
     public BaseMachine machine; // Runtime-only machine object that handles behavior
     public string selectedRecipeId; // Player's configuration choice for this machine
     public SortingMachineConfig sortingConfig = new SortingMachineConfig(); // Configuration for sorting machines
-    public string requiredCrateId = "starter_crate"; // Spawner crate filter; empty string accepts no crate type
     public WasteCrateInstance wasteCrate; // WasteCrate assigned to spawner machines
+    public List<string> wasteDeliveryQueue = new List<string>(); // Unopened deliveries owned by this spawner
 }
 
 [System.Serializable]
@@ -115,15 +115,14 @@ public class GameData
     public List<GridData> grids = new List<GridData>();
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public int credits = 0; // Credits (money) system for purchasing machines
-    public int wasteQueueLimit = 3; // How many crates can be queued (upgradeable in future)
-    public List<string> wasteQueue = new List<string>(); // Queue of waste crate IDs waiting to be used
+    public bool starterDeliveryAvailable = true;
 
     public static GameData CreateNewGame()
     {
         return new GameData
         {
             userMachineProgress = MachineUnlockState.CreateCleanSaveProgress(),
-            wasteQueue = new List<string> { "starter_crate" }
+            starterDeliveryAvailable = true
         };
     }
 }

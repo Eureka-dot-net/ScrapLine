@@ -34,12 +34,12 @@ namespace ScrapLine.Tests.EditMode
             object storage = CreateStorage();
 
             Assert.That(Field<int>(data, "schemaVersion"), Is.EqualTo(CurrentSchemaVersion));
-            Assert.That((IList)GetField(data, "wasteQueue"), Is.EqualTo(new[] { "starter_crate" }));
+            Assert.That(Field<bool>(data, "starterDeliveryAvailable"), Is.True);
             Assert.That(TrySave(storage, data, out string saveError), Is.True, saveError);
             Assert.That(File.Exists(PathProperty(storage, "PrimaryPath")), Is.True);
             Assert.That(File.Exists(PathProperty(storage, "BackupPath")), Is.True);
             Assert.That(TryLoad(storage, out object loaded, out _, out string loadError), Is.True, loadError);
-            Assert.That((IList)GetField(loaded, "wasteQueue"), Is.EqualTo(new[] { "starter_crate" }));
+            Assert.That(Field<bool>(loaded, "starterDeliveryAvailable"), Is.True);
         }
 
         [Test]
@@ -53,7 +53,6 @@ namespace ScrapLine.Tests.EditMode
             Assert.That(fromBackup, Is.False);
             Assert.That(Field<int>(data, "schemaVersion"), Is.EqualTo(CurrentSchemaVersion));
             Assert.That(Field<int>(data, "credits"), Is.EqualTo(321));
-            Assert.That((IList)GetField(data, "wasteQueue"), Is.EqualTo(new[] { "plastic_bale" }));
 
             IList grids = (IList)GetField(data, "grids");
             IList cells = (IList)GetField(grids[0], "cells");
@@ -80,12 +79,11 @@ namespace ScrapLine.Tests.EditMode
             Assert.That(TryLoad(storage, out object data, out _, out string error), Is.True, error);
 
             Assert.That(GetField(data, "userMachineProgress"), Is.Not.Null);
-            Assert.That(GetField(data, "wasteQueue"), Is.Not.Null);
             object cell = ((IList)GetField(((IList)GetField(data, "grids"))[0], "cells"))[0];
             Assert.That(GetField(cell, "items"), Is.Not.Null);
             Assert.That(GetField(cell, "waitingItems"), Is.Not.Null);
             Assert.That(GetField(cell, "sortingConfig"), Is.Not.Null);
-            Assert.That(Field<string>(cell, "requiredCrateId"), Is.EqualTo("starter_crate"));
+            Assert.That(GetField(cell, "wasteDeliveryQueue"), Is.Not.Null);
         }
 
         [Test]
@@ -450,7 +448,7 @@ namespace ScrapLine.Tests.EditMode
             (int)ProductionType("GameSaveMigrations").GetField("CurrentSchemaVersion").GetRawConstantValue();
 
         private const string LegacyFactoryJson =
-            "{\"credits\":321,\"wasteQueueLimit\":3,\"wasteQueue\":[\"plastic_bale\"]," +
+            "{\"credits\":321," +
             "\"userMachineProgress\":[{\"machineId\":\"fabricator\",\"unlocked\":true,\"upgradeLevel\":2}]," +
             "\"grids\":[{\"width\":1,\"height\":1,\"cells\":[{\"x\":0,\"y\":0," +
             "\"machineDefId\":\"fabricator\",\"selectedRecipeId\":\"fabricator_recipe\"," +
@@ -460,7 +458,7 @@ namespace ScrapLine.Tests.EditMode
 
         private static string VersionedFactoryJson(int credits)
         {
-            return $"{{\"schemaVersion\":1,\"credits\":{credits},\"wasteQueueLimit\":3,\"wasteQueue\":[]," +
+            return $"{{\"schemaVersion\":1,\"credits\":{credits}," +
                    "\"userMachineProgress\":[],\"grids\":[{\"width\":1,\"height\":1,\"cells\":[{" +
                    "\"x\":0,\"y\":0,\"machineDefId\":\"blank\",\"items\":[],\"waitingItems\":[]," +
                    "\"sortingConfig\":{}}]}]}";
@@ -471,8 +469,8 @@ namespace ScrapLine.Tests.EditMode
             string anchor = anchored
                 ? "\"hasRuntimeClockAnchor\":true,\"savedAtRuntimeTime\":1000,"
                 : "\"hasRuntimeClockAnchor\":false,\"savedAtRuntimeTime\":0,";
-            return "{\"schemaVersion\":1," + anchor + "\"credits\":50,\"wasteQueueLimit\":3," +
-                   "\"wasteQueue\":[],\"userMachineProgress\":[],\"grids\":[{\"width\":2,\"height\":1," +
+            return "{\"schemaVersion\":1," + anchor + "\"credits\":50," +
+                   "\"userMachineProgress\":[],\"grids\":[{\"width\":2,\"height\":1," +
                    "\"cells\":[{\"x\":0,\"y\":0,\"machineDefId\":\"conveyor\",\"sortingConfig\":{}," +
                    "\"items\":[{\"id\":\"move-1\",\"itemType\":\"can\",\"state\":1," +
                    "\"moveStartTime\":999.5,\"moveProgress\":0.5},{\"id\":\"wait-1\"," +

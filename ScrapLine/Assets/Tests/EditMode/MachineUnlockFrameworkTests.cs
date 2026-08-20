@@ -147,7 +147,7 @@ namespace ScrapLine.Tests.EditMode
         public void SchemaOneMigrationAddsStarterLicensesAndRecoversPlacedMachineIdempotently()
         {
             object data = JsonUtility.FromJson(
-                "{\"schemaVersion\":1,\"credits\":100,\"wasteQueueLimit\":3,\"wasteQueue\":[]," +
+                "{\"schemaVersion\":1,\"credits\":100," +
                 "\"userMachineProgress\":[],\"grids\":[{\"width\":1,\"height\":1,\"cells\":[{" +
                 "\"x\":0,\"y\":0,\"cellType\":1,\"cellRole\":0,\"machineDefId\":\"sorter\"," +
                 "\"items\":[],\"waitingItems\":[],\"sortingConfig\":{}}]}]}",
@@ -366,7 +366,7 @@ namespace ScrapLine.Tests.EditMode
         private static object ParseOneCellGameData()
         {
             return JsonUtility.FromJson(
-                "{\"schemaVersion\":2,\"credits\":1000,\"wasteQueueLimit\":3,\"wasteQueue\":[]," +
+                "{\"schemaVersion\":2,\"credits\":1000," +
                 "\"userMachineProgress\":[{\"machineId\":\"conveyor\",\"unlocked\":true}," +
                 "{\"machineId\":\"seller\",\"unlocked\":true},{\"machineId\":\"spawner\",\"unlocked\":true}]," +
                 "\"grids\":[{\"width\":1,\"height\":1,\"cells\":[{\"x\":0,\"y\":0," +

@@ -5,14 +5,16 @@ session, not permanent live-service balance.
 
 ## Opening budget
 
-A new game starts with **250 credits** and one free **Can Bale**. A functional raw-selling line costs
-150 credits: one Spawner (50), five Conveyors (50), and one Seller (50). The remaining 100 credits are
-the mistake buffer or the exact cost of the first Shredder.
+A new game starts with **280 credits**; the first placed Spawner receives one free **Can Bale**. A functional raw-selling line costs
+150 credits: one Spawner (50), five Conveyors (50), and one Seller (50). The remaining 130 credits are
+the mistake buffer and still cover the exact cost of the first Shredder.
 
 ## Pricing rules
 
 - Paid waste bales cost **80% of their raw contents' sale value**. Raw selling therefore remains
   profitable, but only at a 20% gross margin on contents value.
+- Each Spawner owns a FIFO delivery queue with room for three unopened bales. Orders cannot be
+  consumed by another Spawner.
 - Every recipe's output sale value must be greater than its inputs' sale value. EditMode validation
   enforces both this rule and the waste-bale formula.
 - Machine prices gate the production tiers: Conveyor 10, Spawner 50, Seller 50, Shredder 100,

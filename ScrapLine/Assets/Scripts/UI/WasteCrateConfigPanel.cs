@@ -5,8 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// Configuration panel for waste crate purchasing - combines queue display and purchase grid.
-/// This panel is different from other config panels as it's a direct purchase interface.
+/// Scrap delivery shop for the spawner that opened it.
 /// 
 /// CHANGES FROM PREVIOUS VERSION:
 /// - Combines queue display and crate selection in a single panel
@@ -63,6 +62,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
     /// Callback when panel is closed
     /// </summary>
     private System.Action onPanelClosed;
+    private SpawnerMachine targetSpawner;
 
     void Start()
     {
@@ -80,58 +80,28 @@ public class WasteCrateConfigPanel : MonoBehaviour
         
         GameLogger.LogUI("WasteCrateConfigPanel initialized", ComponentId);
         
-        // Auto-open panel if waste queue is empty on game start
-        //StartCoroutine(CheckAndAutoOpenPanel());
-    }
-    
-    /// <summary>
-    /// Check if the waste queue is empty and auto-open the panel if needed
-    /// </summary>
-    private IEnumerator CheckAndAutoOpenPanel()
-    {
-        // Wait a frame to ensure GameManager is fully initialized
-        yield return new WaitForEndOfFrame();
-        
-        // Check if waste queue is empty
-        if (GameManager.Instance?.gameData != null)
-        {
-            var wasteQueue = GameManager.Instance.gameData.wasteQueue;
-            if (wasteQueue == null || wasteQueue.Count == 0)
-            {
-                GameLogger.LogUI("Waste queue is empty - auto-opening purchase panel", ComponentId);
-                ShowPanel();
-            }
-        }
     }
 
-    /// <summary>
-    /// Show the waste crate configuration panel
-    /// </summary>
-    /// <param name="onClosed">Optional callback when panel is closed</param>
-    public void ShowPanel(System.Action onClosed = null)
+    public void ShowPanelForSpawner(SpawnerMachine spawner, System.Action onClosed = null)
     {
+        if (spawner == null)
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.UI,
+                "Cannot open Scrap Delivery without a target spawner.", ComponentId);
+            return;
+        }
+        targetSpawner = spawner;
         onPanelClosed = onClosed;
-        
-        // Register with panel manager
+
         var panelManager = FindAnyObjectByType<UIPanelManager>();
         if (panelManager != null)
-        {
             panelManager.RegisterOpenPanel(this);
-        }
-        
-        // Show main panel first so layout can be calculated
         if (mainPanel != null)
-        {
             mainPanel.SetActive(true);
-        }
-        
-        // Update queue display
+
         UpdateQueueDisplay();
-        
-        // Populate purchase grid after panel is shown and layout calculated
         StartCoroutine(PopulatePurchaseGridDelayed());
-        
-        GameLogger.LogUI("Waste crate config panel shown", ComponentId);
+        GameLogger.LogUI("Waste crate purchase panel shown for selected spawner", ComponentId);
     }
     
     /// <summary>
@@ -166,6 +136,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         // Call close callback
         onPanelClosed?.Invoke();
         onPanelClosed = null;
+        targetSpawner = null;
         
         GameLogger.LogUI("Waste crate config panel hidden", ComponentId);
     }
@@ -185,7 +156,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
         if (wasteSupplyManager != null)
         {
-            var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
+            var queueStatus = wasteSupplyManager.GetQueueStatus(targetSpawner);
             queuePanel.UpdateQueueDisplay(queueStatus.queuedCrateIds);
         }
         else
@@ -319,7 +290,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
             if (wasteSupplyManager != null)
             {
                 bool canAfford = wasteSupplyManager.CanAffordWasteCrate(crate.id);
-                var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
+                var queueStatus = wasteSupplyManager.GetQueueStatus(targetSpawner);
                 bool queueHasSpace = queueStatus.canAddToQueue;
                 int queueCount = queueStatus.queuedCrateIds?.Count ?? 0;
                 
@@ -465,7 +436,7 @@ public class WasteCrateConfigPanel : MonoBehaviour
         
         GameLogger.LogUI($"WasteSupplyManager found, attempting to purchase {crate.displayName} (ID: {crate.id})", ComponentId);
         
-        bool success = wasteSupplyManager.PurchaseWasteCrate(crate.id);
+        bool success = wasteSupplyManager.PurchaseWasteCrate(crate.id, targetSpawner);
         
         GameLogger.LogUI($"Purchase result: success={success}", ComponentId);
         

@@ -56,10 +56,6 @@ public static class GameSaveMigrations
     {
         data.grids ??= new List<GridData>();
         data.userMachineProgress ??= new List<UserMachineProgress>();
-        data.wasteQueue ??= new List<string>();
-        if (data.wasteQueueLimit <= 0)
-            data.wasteQueueLimit = 3;
-
         foreach (GridData grid in data.grids)
         {
             if (grid == null)
@@ -72,7 +68,7 @@ public static class GameSaveMigrations
                 cell.items ??= new List<ItemData>();
                 cell.waitingItems ??= new List<ItemData>();
                 cell.sortingConfig ??= new SortingMachineConfig();
-                cell.requiredCrateId ??= "starter_crate";
+                cell.wasteDeliveryQueue ??= new List<string>();
                 if (string.IsNullOrWhiteSpace(cell.machineDefId) && cell.cellType == UICell.CellType.Blank)
                 {
                     cell.machineDefId = cell.cellRole == UICell.CellRole.Top

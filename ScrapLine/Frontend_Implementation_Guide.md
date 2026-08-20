@@ -326,12 +326,12 @@ For uniform transitions, configure:
 4. Confirm → Machine configuration updated
 5. Cancel → No changes applied
 
-**Waste Crate:**
-1. Click spawner → Config panel opens with waste crate info + Buy button
-2. Current crate info displays correctly (name, fullness, queue status)
-3. Click Buy button → Waste crate selection panel opens
-4. Select crate → Immediate purchase attempt
-5. Panel updates with new crate info if purchase successful
+**Spawner Scrap Delivery:**
+1. Click a Spawner → Its operational panel shows current scrap and its private queue
+2. Click Order Scrap → Scrap Delivery opens for that Spawner
+3. Select a bale → It is purchased and appended to that Spawner's FIFO queue
+4. The next delivery activates automatically when the current bale is exhausted
+5. Closing Scrap Delivery returns to the same Spawner panel
 
 ### Validate Uniform Appearance
 

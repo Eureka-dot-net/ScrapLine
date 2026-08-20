@@ -246,10 +246,8 @@ public sealed class GameSaveStorage
             return Invalid($"schema version {data.schemaVersion} was not migrated.", out error);
         if (data.credits < 0)
             return Invalid("credits cannot be negative.", out error);
-        if (data.grids == null || data.userMachineProgress == null || data.wasteQueue == null)
+        if (data.grids == null || data.userMachineProgress == null)
             return Invalid("required save collections are missing.", out error);
-        if (data.wasteQueueLimit <= 0 || data.wasteQueue.Count > data.wasteQueueLimit)
-            return Invalid("waste queue capacity is invalid.", out error);
 
         HashSet<string> itemIds = new HashSet<string>(StringComparer.Ordinal);
         List<string> waitingItemIds = new List<string>();
@@ -270,8 +268,11 @@ public sealed class GameSaveStorage
                     return Invalid($"grid {gridIndex} contains an out-of-range cell.", out error);
                 if (!coordinates.Add($"{cell.x}:{cell.y}"))
                     return Invalid($"grid {gridIndex} contains duplicate cell coordinates.", out error);
-                if (cell.items == null || cell.waitingItems == null || cell.sortingConfig == null)
+                if (cell.items == null || cell.waitingItems == null || cell.sortingConfig == null ||
+                    cell.wasteDeliveryQueue == null)
                     return Invalid($"grid {gridIndex} cell {cell.x}:{cell.y} has missing state.", out error);
+                if (cell.wasteDeliveryQueue.Count > SpawnerMachine.DeliveryQueueCapacity)
+                    return Invalid($"grid {gridIndex} cell {cell.x}:{cell.y} has an invalid waste delivery queue.", out error);
                 foreach (ItemData item in cell.items)
                 {
                     if (item == null || string.IsNullOrWhiteSpace(item.id) || !itemIds.Add(item.id))

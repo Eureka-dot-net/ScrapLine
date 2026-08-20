@@ -144,6 +144,8 @@ public class UIPanelManager : MonoBehaviour
 
         var hideMethod = panel.GetType().GetMethod("HideConfiguration",
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        hideMethod ??= panel.GetType().GetMethod("HidePanel",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         
         if (hideMethod != null)
         {

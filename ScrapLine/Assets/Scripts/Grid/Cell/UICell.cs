@@ -215,13 +215,15 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
                     machineDefId = cellData.machineDefId,
                     machineState = cellData.machineState,
                     selectedRecipeId = cellData.selectedRecipeId,
-                    requiredCrateId = cellData.requiredCrateId,
                     sortingConfig = cellData.sortingConfig != null ? new SortingMachineConfig 
                     {
                         leftItemType = cellData.sortingConfig.leftItemType,
                         rightItemType = cellData.sortingConfig.rightItemType
                     } : null,
-                    wasteCrate = cellData.wasteCrate
+                    wasteCrate = cellData.wasteCrate,
+                    wasteDeliveryQueue = cellData.wasteDeliveryQueue != null
+                        ? new List<string>(cellData.wasteDeliveryQueue)
+                        : new List<string>()
                     // Note: items and waitingItems are not copied as they represent current state
                     // machine object will be recreated
                 };
@@ -346,6 +348,7 @@ public class UICell : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDr
         else
         {
             // Dropped outside grid - machine is deleted (no need to restore)
+            GameManager.Instance.wasteSupplyManager?.RefundQueuedDeliveries(draggedCellData);
             GameManager.Instance.RefundMachineWithId(draggedMachineDefId);
         }
 

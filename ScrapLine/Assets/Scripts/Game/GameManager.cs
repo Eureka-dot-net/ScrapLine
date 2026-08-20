@@ -385,6 +385,7 @@ public class GameManager : MonoBehaviour
     public void ResetGrid()
     {
         gridManager.ClearGrid();
+        _gameData.starterDeliveryAvailable = true;
         creditsManager.InitializeNewGame();
         RequestAutosave();
     }

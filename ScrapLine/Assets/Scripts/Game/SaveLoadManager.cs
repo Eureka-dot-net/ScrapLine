@@ -93,7 +93,7 @@ public class SaveLoadManager : MonoBehaviour
         autosavePending = false;
         consecutiveAutosaveFailures = 0;
         GameLogger.LogSaveLoad(
-            $"Game saved at schema {data.schemaVersion}. Queue items: {data.wasteQueue.Count}", ComponentId);
+            $"Game saved at schema {data.schemaVersion}.", ComponentId);
         return true;
     }
 
@@ -151,8 +151,7 @@ public class SaveLoadManager : MonoBehaviour
         }
 
         GameLogger.LogSaveLoad(
-            $"Game loaded at schema {data.schemaVersion}. Queue items: {data.wasteQueue.Count}, " +
-            $"queue limit: {data.wasteQueueLimit}", ComponentId);
+            $"Game loaded at schema {data.schemaVersion}.", ComponentId);
         return true;
     }
 

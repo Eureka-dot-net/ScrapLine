@@ -47,13 +47,12 @@ namespace ScrapLine.Tests.EditMode
                 int startingCredits = GetIntField(creditsManager, "startingCredits");
                 object gameData = gameDataType.GetMethod("CreateNewGame", BindingFlags.Public | BindingFlags.Static)
                     .Invoke(null, null);
-                IList wasteQueue = (IList)gameDataType.GetField("wasteQueue").GetValue(gameData);
 
-                Assert.That(startingCredits, Is.EqualTo(250));
+                Assert.That(startingCredits, Is.EqualTo(280));
                 Assert.That(starterLineCost, Is.EqualTo(150));
-                Assert.That(startingCredits - starterLineCost, Is.EqualTo(100),
+                Assert.That(startingCredits - starterLineCost, Is.EqualTo(130),
                     "The opening budget must retain the documented mistake buffer.");
-                Assert.That(wasteQueue, Is.EqualTo(new[] { "starter_crate" }));
+                Assert.That((bool)gameDataType.GetField("starterDeliveryAvailable").GetValue(gameData), Is.True);
             }
             finally
             {
@@ -61,7 +60,7 @@ namespace ScrapLine.Tests.EditMode
             }
 
             string scene = File.ReadAllText(Path.Combine(Application.dataPath, "Scenes/MobileGridScene.unity"));
-            StringAssert.Contains("startingCredits: 250", scene,
+            StringAssert.Contains("startingCredits: 280", scene,
                 "MobileGridScene must agree with the CreditsManager code default.");
         }
 

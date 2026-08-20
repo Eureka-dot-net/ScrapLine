@@ -198,9 +198,9 @@ Modify JSON files in `Assets/Resources/` to adjust:
 ScrapLine features a complete economic gameplay system:
 
 ### Starting Economy
-- **New Game**: Begin with 250 credits and one free can bale
+- **New Game**: Begin with 280 credits; the first placed Spawner receives one free Can Bale
 - **Minimum Factory**: 1 Spawner (50) + 5 Conveyors (50) + 1 Seller (50) = 150 credits
-- **Mistake Buffer**: 100 credits remain, enough to add a Shredder or recover from a placement mistake
+- **Mistake Buffer**: 130 credits remain, enough to add a Shredder or recover from a placement mistake
 
 ### Machine Costs
 - **Conveyor Belt**: 10 credits
@@ -220,7 +220,7 @@ ScrapLine features a complete economic gameplay system:
 
 ### Strategic Gameplay
 1. Build basic production line with starting credits
-2. Sell the free can bale raw for early liquidity, or process it for a larger return
+2. Place a Spawner to receive the free Can Bale, then sell it raw or process it for a larger return
 3. Invest in a shredder to turn 2-credit cans into 6-credit shredded aluminum
 4. Expand factory with additional machines
 5. Optimize for maximum credits per minute

@@ -1,203 +1,49 @@
-# Waste Crate System Implementation Summary
+# Spawner Scrap Delivery System
 
-> This is a historical implementation record. Current crate contents, prices, and economy rules are
-> defined in `BALANCE_BASELINE.md` and `Assets/Resources/wastecrates.json`.
+## Player flow
 
-## Overview
-Successfully implemented a comprehensive waste crate system for ScrapLine that includes 4 different waste crates, a queue system, UI components, and full integration with the existing game systems.
+- A spawner has no scrap-type configuration or filter.
+- Selecting a spawner shows its active bale and upcoming deliveries.
+- **Order Scrap** opens the delivery shop for that specific spawner.
+- An order is paid for immediately and belongs only to the selected spawner.
+- Each spawner can hold one active bale and three unopened deliveries.
+- Mixed bale types are allowed and activate in first-in, first-out order.
+- The first spawner placed in a new factory receives one free Can Bale.
 
-## Features Implemented
+Moving a spawner preserves its active bale and delivery queue. Deleting a spawner fully refunds its
+unopened deliveries; any partially consumed active bale is discarded without a refund.
 
-### 1. Four Waste Bales (original implementation values below are superseded)
+## Data ownership
 
-**Cost Formula**: 50% of total item sell value (e.g., Starter = (50×5 + 50×5) × 0.5 = 250)
+Delivery state is stored on the spawner's `CellData`:
 
-### 2. Queue System
-- Configurable queue limit (currently 1, saved to user data for future upgrades)
-- Automatic queue processing when current crate empties
-- Queue status tracking for UI display
-- Full save/load support for queue state
-
-### 3. UI System
-- **Click-to-Open**: Clicking spawner machines opens waste crate menu
-- **Current Crate Display**: Shows name, fullness bar, and item count
-- **Queue Status**: Shows queued crates and capacity  
-- **Buy Menu**: Lists all 4 waste crates with costs and purchase buttons
-- **Smart Buy Button**: Disables when queue is full or insufficient credits
-
-### 4. Integration Points
-- **GameManager**: Purchase validation, credit deduction, queue management
-- **SpawnerMachine**: Queue processing, crate switching, item tracking
-- **SaveLoadManager**: Persistence of queue data and settings
-- **MachineManager**: Click handling for spawner interactions
-- **FactoryRegistry**: Waste crate definitions and cost calculations
-
-## Technical Implementation
-
-### Data Model Changes
 ```csharp
-// WasteCrateDef - Added cost and sprite fields
-public class WasteCrateDef {
-    public string id;
-    public string displayName;
-    public string sprite;        // NEW: For UI display
-    public List<WasteCrateItemDef> items;
-    public int cost;            // NEW: Purchase cost
-}
-
-// GameData - Added queue fields  
-public class GameData
-{
-    public int credits = 0;
-    public int wasteQueueLimit = 1;           // NEW: Queue capacity
-    public List<string> wasteQueue = new List<string>(); // NEW: Queued crates
-}
-
-// WasteCrateQueueStatus - NEW: For UI communication
-public class WasteCrateQueueStatus
-{
-    public string currentCrateId;
-    public List<string> queuedCrateIds;
-    public int maxQueueSize;
-    public bool canAddToQueue;
-}
+public WasteCrateData wasteCrate;
+public List<string> wasteDeliveryQueue;
 ```
 
-### Key Methods Added
-```csharp
-// GameManager
-public bool PurchaseWasteCrate(string crateId, int spawnerX, int spawnerY)
-public WasteCrateQueueStatus GetSpawnerQueueStatus(int spawnerX, int spawnerY)
+`GameData.starterDeliveryAvailable` records whether the one-time starter delivery is still available.
+There is intentionally no factory-wide scrap queue and no required-crate configuration.
 
-// SpawnerMachine
-public bool TryAddToQueue(string crateId)
-public WasteCrateQueueStatus GetQueueStatus()
-private bool CheckAndMoveFromQueue()
-public static int CalculateWasteCrateCost(WasteCrateDef crateDef)
+## Runtime responsibilities
 
-// FactoryRegistry
-public List<WasteCrateDef> GetAllWasteCrates()
+- `SpawnerMachine` activates deliveries and emits items from the active bale.
+- `WasteSupplyManager` validates targeted orders, charges credits, grants the starter bale, and refunds
+  unopened deliveries when a spawner is deleted.
+- `SpawnerConfigPanel` is an operational status panel with an **Order Scrap** action.
+- `WasteCrateConfigPanel` is the shop and always requires a target spawner.
+- The normal save system persists the active bale, each spawner's queue, and starter-delivery state.
 
-// MachineManager
-private void ShowSpawnerWasteCrateMenu(int spawnerX, int spawnerY)
-```
+Crate definitions and prices live in `Assets/Resources/wastecrates.json`. The authoritative starting
+economy and current crate catalog are documented in `BALANCE_BASELINE.md`.
 
-## JSON Configuration Files
+## Verification checklist
 
-### wastecrates.json (Updated)
-```json
-{
-  "wasteCrates": [
-    {
-      "id": "starter_crate",
-      "displayName": "Starter Waste Crate", 
-      "sprite": "waste_1",
-      "cost": 250,
-      "items": [
-        { "itemType": "can", "count": 50 },
-        { "itemType": "plasticBottle", "count": 50 }
-      ]
-    },
-    // ... 3 more crates with increasing value
-  ]
-}
-```
-
-## Testing & Validation
-
-### Unity Validation
-- ✅ All code compiles successfully in the Unity project
-- ⚠️ Recreate the retired sandbox coverage as Unity EditMode/PlayMode tests
-- ✅ Data structure and JSON syntax were validated during implementation
-
-### Test Coverage
-- Data model functionality (WasteCrateDef, GameData, WasteCrateQueueStatus)
-- Cost calculation algorithms (50% of item value)
-- Queue management basics
-- Component integration patterns
-
-## File Changes Summary
-
-### Modified Files
-1. `Assets/Scripts/Backend/Data/Models/FactoryDefinitions.cs` - Added cost/sprite fields
-2. `Assets/Scripts/Backend/Data/Models/GameData.cs` - Added queue fields
-3. `Assets/Scripts/Backend/MachineTypes/SpawnerMachine.cs` - Added queue logic
-4. `Assets/Scripts/Game/GameManager.cs` - Added purchase methods
-5. `Assets/Scripts/Game/SaveLoadManager.cs` - Added queue persistence
-6. `Assets/Scripts/Game/MachineManager.cs` - Added spawner click handling
-7. `Assets/Scripts/Backend/Data/FactoryRegistry.cs` - Added GetAllWasteCrates
-8. `Assets/Resources/wastecrates.json` - Added 3 new crates with costs
-
-### New Files
-1. `Assets/Scripts/UI/WasteCrateUI.cs` - Complete UI system (311 lines)
-
-## Usage Instructions
-
-### For Developers
-1. **Adding New Crates**: Add to `wastecrates.json` with proper cost calculation
-2. **Modifying Queue Limit**: Change `GameData.wasteQueueLimit` (saves to user data)
-3. **UI Customization**: Modify `WasteCrateUI.cs` and wire to Unity prefabs
-4. **Testing**: Run the waste-crate EditMode and PlayMode tests in Unity Test Runner
-
-### For Players
-1. **Open Menu**: Click on any spawner machine
-2. **View Status**: See current crate fullness and queue status  
-3. **Purchase Crates**: Click "Buy Crate" to see purchase options
-4. **Queue Management**: Purchase crates add to queue (max 1 initially)
-5. **Automatic Processing**: Queue items move to current when crate empties
-
-## Integration with Unity
-
-**DETAILED INSTRUCTIONS**: See `UNITY_FRONTEND_INTEGRATION.md` for complete step-by-step Unity setup guide.
-
-### Quick Reference - Required UI Elements
-- `WasteCratePanel` - Main menu container
-- `CurrentCratePanel` - Current crate info display  
-- `PurchasePanel` - Purchase options grid
-- `PurchaseOptionPrefab` - Individual crate option button
-- Progress bars, text components for status display
-
-### Sprite Assets Required
-- `waste_1.png` - Starter crate sprite
-- `waste_2.png` - Medium crate sprite  
-- `waste_3.png` - Large crate sprite
-- `waste_4.png` - Premium crate sprite
-
-### Key Integration Points
-1. Assign `WasteCrateUI` component to scene
-2. Wire UI prefab references in inspector
-3. Connect `MachineManager.wasteCrateUI` to the UI component
-4. Test spawner click → menu opens functionality
-
-## Future Enhancements
-
-### Immediate Opportunities
-- Queue limit upgrades (increase `wasteQueueLimit`)
-- Additional crate types with different item compositions
-- Visual improvements (animations, better UI layout)
-- Tutorial system for new mechanics
-
-### Advanced Features
-- Crate rarity system (common/rare/legendary)
-- Special event crates with unique items
-- Bulk purchase discounts
-- Crate preview system showing exact contents
-
-## Validation Status
-
-### ✅ Completed
-- All core functionality implemented
-- Unity compilation verified
-- Sandbox tests retired; equivalent Unity tests should be added
-- JSON files validated
-- Save/load integration complete
-- UI system fully designed
-
-### 🔄 Ready for Unity
-- UI prefab creation and wiring
-- Scene integration and testing
-- Player experience validation
-- Performance optimization
-- Visual polish and animations
-
-The waste crate system is **complete and ready for Unity integration**. All logic, data structures, and UI components are implemented and tested. The next step is creating Unity prefabs and scene setup to bring the system to life visually.
+- Orders appear only on the selected spawner.
+- A newly placed first spawner receives the free Can Bale exactly once.
+- Later spawners begin empty until scrap is ordered.
+- Three unopened deliveries are accepted; a fourth is rejected.
+- Mixed deliveries activate in purchase order.
+- Save/load preserves active contents and queue order.
+- Moving preserves deliveries.
+- Deleting refunds unopened deliveries but not the active bale.

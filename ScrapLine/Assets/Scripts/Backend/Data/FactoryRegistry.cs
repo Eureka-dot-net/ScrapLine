@@ -130,6 +130,9 @@ public class FactoryRegistry
     
     public WasteCrateDef GetWasteCrate(string wasteCrateId)
     {
+        if (string.IsNullOrWhiteSpace(wasteCrateId))
+            return null;
+
         WasteCrates.TryGetValue(wasteCrateId, out var wc);
         return wc;
     }

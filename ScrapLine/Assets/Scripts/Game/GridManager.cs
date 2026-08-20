@@ -196,8 +196,8 @@ public class GridManager : MonoBehaviour
             cell.waitingItems.Clear();
             cell.selectedRecipeId = null;
             cell.sortingConfig = new SortingMachineConfig();
-            cell.requiredCrateId = "starter_crate";
             cell.wasteCrate = null;
+            cell.wasteDeliveryQueue = new List<string>();
             cell.machine = MachineFactory.CreateMachine(cell);
         }
 

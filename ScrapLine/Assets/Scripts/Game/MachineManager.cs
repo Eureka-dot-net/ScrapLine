@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using static UICell;
 
 /// <summary>
@@ -179,6 +180,10 @@ public class MachineManager : MonoBehaviour
         cellData.machineDefId = null;
         cellData.direction = Direction.Up;
         cellData.machine = null;
+        cellData.selectedRecipeId = null;
+        cellData.sortingConfig = new SortingMachineConfig();
+        cellData.wasteCrate = null;
+        cellData.wasteDeliveryQueue = new List<string>();
 
         // Update visuals to show cell as blank
         if (activeGridManager != null)
@@ -300,8 +305,8 @@ public class MachineManager : MonoBehaviour
         targetCellData.machine = sourceCellData.machine;
         targetCellData.selectedRecipeId = sourceCellData.selectedRecipeId;
         targetCellData.sortingConfig = sourceCellData.sortingConfig;
-        targetCellData.requiredCrateId = sourceCellData.requiredCrateId;
         targetCellData.wasteCrate = sourceCellData.wasteCrate;
+        targetCellData.wasteDeliveryQueue = sourceCellData.wasteDeliveryQueue;
 
         // Update machine's position reference if it exists
         // if (targetCellData.machine != null)
@@ -317,8 +322,8 @@ public class MachineManager : MonoBehaviour
         sourceCellData.machine = null;
         sourceCellData.selectedRecipeId = null;
         sourceCellData.sortingConfig = new SortingMachineConfig();
-        sourceCellData.requiredCrateId = "starter_crate";
         sourceCellData.wasteCrate = null;
+        sourceCellData.wasteDeliveryQueue = new List<string>();
 
         // Update visuals for both cells
         if (activeGridManager != null)
@@ -374,8 +379,8 @@ public class MachineManager : MonoBehaviour
         // Preserve configuration data
         targetCellData.selectedRecipeId = machineData.selectedRecipeId;
         targetCellData.sortingConfig = machineData.sortingConfig;
-        targetCellData.requiredCrateId = machineData.requiredCrateId;
         targetCellData.wasteCrate = machineData.wasteCrate;
+        targetCellData.wasteDeliveryQueue = machineData.wasteDeliveryQueue ?? new List<string>();
         
         // Update position to target location
         targetCellData.x = x;
@@ -466,6 +471,8 @@ public class MachineManager : MonoBehaviour
             return;
         }
 
+        GameManager.Instance?.wasteSupplyManager?.RefundQueuedDeliveries(cellData);
+
         // Clean up machine object if it exists
         if (cellData.machine != null)
         {
@@ -480,8 +487,8 @@ public class MachineManager : MonoBehaviour
         cellData.direction = Direction.Up;
         cellData.selectedRecipeId = null;
         cellData.sortingConfig = new SortingMachineConfig();
-        cellData.requiredCrateId = "starter_crate";
         cellData.wasteCrate = null;
+        cellData.wasteDeliveryQueue = new List<string>();
 
         // Update visuals
         if (activeGridManager != null)
@@ -552,6 +559,10 @@ public class MachineManager : MonoBehaviour
         if (cellData.machine == null)
         {
             GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Failed to create machine object for {machineDef.id}", ComponentId);
+        }
+        else if (cellData.machine is SpawnerMachine spawner)
+        {
+            GameManager.Instance?.wasteSupplyManager?.TryDeliverStarterCrate(spawner);
         }
 
         if (activeGridManager != null)

@@ -1,398 +1,314 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
 
 /// <summary>
-/// Configuration panel for spawner machines using Plan A base classes.
-/// Handles waste crate type selection and configuration for spawner filtering.
-/// 
-/// UNITY SETUP REQUIRED:
-/// 1. Create main UI Panel GameObject with this component
-/// 2. Assign configPanel, confirmButton, cancelButton (from BaseConfigPanel)
-/// 3. Assign currentCrateButton (button that will display crate icon - must have Image component on it or child)
-/// 4. Assign emptySelectionSprite and emptySelectionColor for when no crate is selected
-/// 5. Assign currentCrateProgressBar (vertical Slider for showing crate fullness)
-/// 6. Create WasteCrateSelectionPanel and assign wasteCrateSelectionPanel reference
-/// 7. Create WasteCrateQueuePanel and assign queuePanel reference
-/// 8. Optionally assign wasteCrateConfigPanel (or it will be found at runtime)
-/// 9. Set panels inactive by default (activated when configuration needed)
+/// Operational panel for a spawner: current scrap, upcoming deliveries, and ordering.
 /// </summary>
 public class SpawnerConfigPanel : BaseConfigPanel<CellData, string>
 {
-    [Header("Spawner Configuration")]
-    [Tooltip("Button showing current crate icon - clicking opens waste crate selection")]
+    [Header("Spawner Delivery Panel")]
     public Button currentCrateButton;
-    
-    [Tooltip("Sprite to show when no crate is selected")]
     public Sprite emptySelectionSprite;
-    
-    [Tooltip("Color to use when no crate is selected")]
     public Color emptySelectionColor = Color.gray;
-    
-    [Tooltip("Vertical progress bar showing current crate fullness")]
     public Slider currentCrateProgressBar;
-    
-    [Tooltip("Waste crate selection panel component")]
-    public WasteCrateSelectionPanel wasteCrateSelectionPanel;
-    
-    [Tooltip("Queue panel showing top 3 queued waste crates")]
+    public TextMeshProUGUI currentCrateLabel;
     public WasteCrateQueuePanel queuePanel;
-    
-    [Tooltip("Waste crate config panel for purchasing")]
     public WasteCrateConfigPanel wasteCrateConfigPanel;
 
-    // State
-    private string selectedRequiredCrateId = "";
     private SpawnerMachine currentSpawnerMachine;
-    private Image currentCrateIconImage; // Cached reference to Image within button
+    private Image currentCrateIconImage;
+    private TextMeshProUGUI confirmText;
+    private TextMeshProUGUI cancelText;
+    private string originalConfirmText;
+    private string originalCancelText;
+    private TextMeshProUGUI currentCrateStatusText;
+    private string displayedCrateId;
+    private bool currentCrateIconInitialized;
+    private float nextStatusRefreshTime;
 
     protected override void SetupCustomButtonListeners()
     {
-        // Setup current crate button to open selection panel
         if (currentCrateButton != null)
         {
-            currentCrateButton.onClick.AddListener(OnSelectCrateTypeClicked);
-        }
-        
-        // Setup queue panel click to open purchase panel
-        if (queuePanel != null)
-        {
-            queuePanel.OnQueueClicked += OnQueuePanelClicked;
-        }
+            currentCrateButton.enabled = false;
+            currentCrateButton.navigation = new Navigation { mode = Navigation.Mode.None };
+            currentCrateButton.transition = Selectable.Transition.None;
+            if (currentCrateButton.targetGraphic != null)
+                currentCrateButton.targetGraphic.raycastTarget = false;
 
-        // Setup selection panel callback
-        if (wasteCrateSelectionPanel != null)
-        {
-            wasteCrateSelectionPanel.OnCrateSelected += OnCrateTypeSelected;
+            LayoutElement layout = currentCrateButton.GetComponent<LayoutElement>() ??
+                                   currentCrateButton.gameObject.AddComponent<LayoutElement>();
+            // Sprite images advertise their native pixel width to layout groups. Override it so the
+            // high-resolution bale art cannot consume the entire Queue/Current row.
+            layout.minWidth = 0f;
+            layout.preferredWidth = 0f;
+            layout.flexibleWidth = 3f;
+            layout.minHeight = 0f;
+            layout.preferredHeight = 0f;
+
+            RectTransform row = currentCrateButton.transform.parent as RectTransform;
+            if (row != null)
+                LayoutRebuilder.MarkLayoutForRebuild(row);
         }
+        if (currentCrateProgressBar != null)
+        {
+            currentCrateProgressBar.interactable = false;
+            currentCrateProgressBar.navigation = new Navigation { mode = Navigation.Mode.None };
+            currentCrateProgressBar.transition = Selectable.Transition.None;
+            if (currentCrateProgressBar.handleRect != null)
+                currentCrateProgressBar.handleRect.gameObject.SetActive(false);
+            StyleProgressBar();
+        }
+        CreateCurrentCrateStatus();
+        if (queuePanel != null)
+            queuePanel.OnQueueClicked += OnQueuePanelClicked;
+    }
+
+    private void Update()
+    {
+        if (currentSpawnerMachine == null || configPanel == null || !configPanel.activeInHierarchy ||
+            Time.unscaledTime < nextStatusRefreshTime)
+            return;
+
+        nextStatusRefreshTime = Time.unscaledTime + 0.25f;
+        UpdateCurrentCrateIcon();
+        UpdateCrateProgressBar();
     }
 
     protected override void LoadCurrentConfiguration()
     {
-        if (currentData?.machine is SpawnerMachine spawner)
-        {
-            currentSpawnerMachine = spawner;
-            selectedRequiredCrateId = spawner.RequiredCrateId ?? "starter_crate";
-            GameLogger.LogUI($"Loaded spawner config: RequiredCrateId = '{selectedRequiredCrateId}'", ComponentId);
-        }
-        else
-        {
-            selectedRequiredCrateId = "starter_crate";
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "No SpawnerMachine found in cell data", ComponentId);
-        }
+        currentSpawnerMachine = currentData?.machine as SpawnerMachine;
+        if (currentSpawnerMachine == null)
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                "No SpawnerMachine found in cell data.", ComponentId);
     }
 
     protected override void UpdateUIFromCurrentState()
     {
-        // Get the Image component within the current crate button
-        if (currentCrateIconImage == null && currentCrateButton != null)
-        {
-            currentCrateIconImage = currentCrateButton.GetComponent<Image>();
-            if (currentCrateIconImage == null)
-            {
-                currentCrateIconImage = currentCrateButton.GetComponentInChildren<Image>();
-            }
-            
-            if (currentCrateIconImage == null)
-            {
-                GameLogger.LogError(LoggingManager.LogCategory.UI, "Current crate button has no Image component!", ComponentId);
-            }
-        }
-        
-        // Update crate icon
-        if (currentCrateIconImage != null)
-        {
-            if (!string.IsNullOrEmpty(selectedRequiredCrateId))
-            {
-                var crateDef = FactoryRegistry.Instance?.GetWasteCrate(selectedRequiredCrateId);
-                if (crateDef != null && !string.IsNullOrEmpty(crateDef.sprite))
-                {
-                    // Try to load sprite from Resources
-                    var sprite = Resources.Load<Sprite>($"Sprites/Waste/{crateDef.sprite}");
-                    if (sprite != null)
-                    {
-                        currentCrateIconImage.sprite = sprite;
-                        currentCrateIconImage.color = Color.white; // Configured crate uses white color
-                        currentCrateIconImage.gameObject.SetActive(true);
-                    }
-                    else
-                    {
-                        GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not load sprite '{crateDef.sprite}' for crate", ComponentId);
-                        // Fall back to empty state
-                        SetEmptySelectionState();
-                    }
-                }
-                else
-                {
-                    // Fall back to empty state
-                    SetEmptySelectionState();
-                }
-            }
-            else
-            {
-                // No selection - use empty state
-                SetEmptySelectionState();
-            }
-        }
-
-        // Update current crate progress bar
+        UpdateCurrentCrateIcon();
         UpdateCrateProgressBar();
-        
-        // Update queue panel display
         UpdateQueuePanelDisplay();
-    }
-    
-    /// <summary>
-    /// Set the current crate icon to empty selection state
-    /// </summary>
-    private void SetEmptySelectionState()
-    {
-        if (currentCrateIconImage != null)
-        {
-            if (emptySelectionSprite != null)
-            {
-                currentCrateIconImage.sprite = emptySelectionSprite;
-                currentCrateIconImage.color = emptySelectionColor;
-                currentCrateIconImage.gameObject.SetActive(true);
-            }
-            else
-            {
-                // If no empty sprite is set, hide the image
-                currentCrateIconImage.gameObject.SetActive(false);
-            }
-        }
     }
 
     protected override string GetCurrentSelection()
     {
-        return selectedRequiredCrateId;
+        return null;
     }
 
     protected override void UpdateDataWithSelection(string selection)
     {
-        if (currentSpawnerMachine != null)
-        {
-            // Allow empty string to clear the filter
-            string previousCrateId = currentSpawnerMachine.RequiredCrateId;
-            currentSpawnerMachine.RequiredCrateId = string.IsNullOrEmpty(selection) ? "" : selection;
-            
-            // Update the local state to trigger UI refresh
-            selectedRequiredCrateId = currentSpawnerMachine.RequiredCrateId;
-            
-            if (string.IsNullOrEmpty(selection))
-            {
-                GameLogger.LogMachine($"Cleared spawner crate type filter", ComponentId);
-            }
-            else
-            {
-                GameLogger.LogMachine($"Updated spawner required crate type to '{selection}'", ComponentId);
-            }
-            
-            // If the required crate type changed, handle the current waste crate
-            if (previousCrateId != currentSpawnerMachine.RequiredCrateId)
-            {
-                HandleCrateTypeChange(previousCrateId);
-            }
-        }
-    }
-    
-    /// <summary>
-    /// Handle when the required crate type changes - return incompatible crate to queue
-    /// </summary>
-    /// <param name="previousCrateId">The previous required crate ID</param>
-    private void HandleCrateTypeChange(string previousCrateId)
-    {
-        if (currentSpawnerMachine == null || currentData == null) return;
-        
-        var gridData = GameManager.Instance?.GetCurrentGrid();
-        var cellData = gridData?.cells?.Find(c => c.x == currentData.x && c.y == currentData.y);
-        
-        if (cellData?.wasteCrate != null && !string.IsNullOrEmpty(cellData.wasteCrate.wasteCrateDefId))
-        {
-            string currentCrateId = cellData.wasteCrate.wasteCrateDefId;
-            
-            // Return crate to queue if:
-            // 1. Configuration was cleared (RequiredCrateId is empty) - return current crate
-            // 2. New required type doesn't match current crate - return current crate
-            bool shouldReturnCrate = string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId) || 
-                                     currentCrateId != currentSpawnerMachine.RequiredCrateId;
-            
-            if (shouldReturnCrate)
-            {
-                // Return the current crate to the global queue
-                var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
-                if (wasteSupplyManager != null)
-                {
-                    wasteSupplyManager.ReturnCrateToQueue(currentCrateId);
-                    GameLogger.LogMachine($"Returned incompatible crate '{currentCrateId}' to queue (new filter: '{currentSpawnerMachine.RequiredCrateId}')", ComponentId);
-                    
-                    // Clear the spawner's current crate
-                    cellData.wasteCrate = null;
-                    
-                    // Try to get a matching crate from queue ONLY if we're setting a specific filter
-                    // Don't try to refill when clearing the filter (empty RequiredCrateId)
-                    if (currentSpawnerMachine != null && !string.IsNullOrEmpty(currentSpawnerMachine.RequiredCrateId))
-                    {
-                        // Use reflection to call TryRefillFromGlobalQueue
-                        var spawnerType = currentSpawnerMachine.GetType();
-                        var refillMethod = spawnerType.GetMethod("TryRefillFromGlobalQueue");
-                        if (refillMethod != null)
-                        {
-                            refillMethod.Invoke(currentSpawnerMachine, null);
-                        }
-                    }
-                }
-                else
-                {
-                    GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteSupplyManager not found - cannot return crate to queue", ComponentId);
-                }
-            }
-        }
+        // Spawners no longer have a configurable scrap filter.
     }
 
     protected override void HideSelectionPanels()
     {
-        if (wasteCrateSelectionPanel != null)
-            wasteCrateSelectionPanel.HidePanel();
     }
 
-    /// <summary>
-    /// Called when the "Select Crate Type" button is clicked
-    /// </summary>
-    private void OnSelectCrateTypeClicked()
+    protected override void OnConfigurationShown()
     {
-        if (wasteCrateSelectionPanel != null)
+        ConfigureActionButtons();
+        displayedCrateId = null;
+        currentCrateIconInitialized = false;
+        nextStatusRefreshTime = 0f;
+        if (currentCrateLabel != null)
+            currentCrateLabel.text = "Current";
+    }
+
+    protected override void OnConfigurationHidden()
+    {
+        RestoreActionButtons();
+        currentSpawnerMachine = null;
+        displayedCrateId = null;
+        currentCrateIconInitialized = false;
+    }
+
+    protected override void OnConfigurationConfirmed(string selection)
+    {
+        OpenOrderShop(false);
+    }
+
+    private void UpdateCurrentCrateIcon()
+    {
+        if (currentCrateButton == null)
+            return;
+
+        currentCrateIconImage ??= currentCrateButton.GetComponent<Image>() ??
+                                  currentCrateButton.GetComponentInChildren<Image>(true);
+        if (currentCrateIconImage == null)
+            return;
+
+        string crateId = currentSpawnerMachine != null && currentSpawnerMachine.HasItemsInWasteCrate()
+            ? currentData?.wasteCrate?.wasteCrateDefId
+            : null;
+        WasteCrateDef crateDef = string.IsNullOrEmpty(crateId)
+            ? null
+            : FactoryRegistry.Instance?.GetWasteCrate(crateId);
+        if (currentCrateIconInitialized && crateId == displayedCrateId)
+            return;
+
+        currentCrateIconInitialized = true;
+        displayedCrateId = crateId;
+        Sprite sprite = crateDef == null || string.IsNullOrEmpty(crateDef.sprite)
+            ? null
+            : Resources.Load<Sprite>($"Sprites/Waste/{crateDef.sprite}");
+
+        if (sprite != null)
         {
-            var allCrates = FactoryRegistry.Instance?.GetAllWasteCrates() ?? new List<WasteCrateDef>();
-            wasteCrateSelectionPanel.ShowCrateSelection(allCrates, selectedRequiredCrateId);
+            currentCrateIconImage.sprite = sprite;
+            currentCrateIconImage.color = Color.white;
+            currentCrateIconImage.preserveAspect = true;
+            currentCrateIconImage.enabled = true;
         }
         else
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteCrateSelectionPanel not assigned", ComponentId);
+            currentCrateIconImage.sprite = null;
+            currentCrateIconImage.enabled = false;
         }
     }
 
-    /// <summary>
-    /// Called when a crate type is selected from the selection panel
-    /// </summary>
-    /// <param name="selectedCrateId">ID of the selected crate</param>
-    private void OnCrateTypeSelected(string selectedCrateId)
-    {
-        // Allow empty string for "No Filter" option
-        selectedRequiredCrateId = selectedCrateId ?? "";
-        UpdateUIFromCurrentState();
-        
-        if (string.IsNullOrEmpty(selectedCrateId))
-        {
-            GameLogger.LogUI($"Cleared crate type filter", ComponentId);
-        }
-        else
-        {
-            GameLogger.LogUI($"Selected crate type: '{selectedCrateId}'", ComponentId);
-        }
-    }
-
-    /// <summary>
-    /// Called when the queue panel is clicked
-    /// </summary>
-    private void OnQueuePanelClicked()
-    {
-        HideConfiguration();
-        
-        // Find and show the waste crate config panel (purchase interface)
-        if (wasteCrateConfigPanel != null)
-        {
-            wasteCrateConfigPanel.ShowPanel(); // No callback needed - panel shows queue and purchase grid
-        }
-        else
-        {
-            // Fallback to finding the panel if not assigned
-            var purchasePanel = FindAnyObjectByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
-            if (purchasePanel != null)
-            {
-                purchasePanel.ShowPanel();
-            }
-            else
-            {
-                GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteCrateConfigPanel not found for purchase navigation", ComponentId);
-            }
-        }
-    }
-    
-    /// <summary>
-    /// Update the current crate progress bar based on spawner's current crate
-    /// </summary>
     private void UpdateCrateProgressBar()
     {
-        if (currentCrateProgressBar == null || currentSpawnerMachine == null)
+        if (currentCrateProgressBar == null)
             return;
-            
-        try
-        {
-            // Use reflection to get spawner methods (since we can't directly reference SpawnerMachine)
-            var spawnerType = currentSpawnerMachine.GetType();
-            var getTotalItemsMethod = spawnerType.GetMethod("GetTotalItemsInWasteCrate");
-            var getInitialTotalMethod = spawnerType.GetMethod("GetInitialWasteCrateTotal");
-            
-            if (getTotalItemsMethod != null && getInitialTotalMethod != null)
-            {
-                int currentItems = (int)getTotalItemsMethod.Invoke(currentSpawnerMachine, null);
-                int initialItems = (int)getInitialTotalMethod.Invoke(currentSpawnerMachine, null);
-                
-                // Update progress bar (fills from top to bottom for vertical bar)
-                float fillPercent = initialItems > 0 ? (float)currentItems / initialItems : 0f;
-                currentCrateProgressBar.value = fillPercent;
-                currentCrateProgressBar.gameObject.SetActive(true);
-            }
-            else
-            {
-                currentCrateProgressBar.gameObject.SetActive(false);
-            }
-        }
-        catch (System.Exception e)
-        {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, $"Could not update crate progress bar: {e.Message}", ComponentId);
-            currentCrateProgressBar.gameObject.SetActive(false);
-        }
+
+        int currentItems = currentSpawnerMachine?.GetTotalItemsInWasteCrate() ?? 0;
+        int initialItems = currentSpawnerMachine?.GetInitialWasteCrateTotal() ?? 0;
+        float fill = initialItems > 0 ? (float)currentItems / initialItems : 0f;
+        currentCrateProgressBar.value = fill;
+        currentCrateProgressBar.gameObject.SetActive(true);
+
+        if (currentCrateStatusText == null)
+            return;
+
+        string crateId = currentData?.wasteCrate?.wasteCrateDefId;
+        WasteCrateDef crateDef = currentItems > 0 && !string.IsNullOrEmpty(crateId)
+            ? FactoryRegistry.Instance?.GetWasteCrate(crateId)
+            : null;
+        currentCrateStatusText.text = crateDef == null
+            ? "Empty"
+            : $"{GetCompactCrateName(crateDef.displayName)}\n<size=80%>{currentItems} / {initialItems}</size>";
     }
-    
-    /// <summary>
-    /// Update the queue panel display with current queue data
-    /// </summary>
+
     private void UpdateQueuePanelDisplay()
     {
         if (queuePanel == null)
             return;
-            
-        // Ensure panel is always visible (users need to click it to purchase)
+
         queuePanel.ShowPanel();
-            
-        // Get global queue status from WasteSupplyManager
-        var wasteSupplyManager = GameManager.Instance?.wasteSupplyManager;
-        if (wasteSupplyManager != null)
+        List<string> deliveries = currentSpawnerMachine?.GetDeliveryQueueStatus().queuedCrateIds ??
+                                  new List<string>();
+        queuePanel.UpdateQueueDisplay(deliveries);
+    }
+
+    private void OnQueuePanelClicked()
+    {
+        OpenOrderShop(true);
+    }
+
+    private void OpenOrderShop(bool hideSpawnerPanel)
+    {
+        SpawnerMachine selectedSpawner = currentSpawnerMachine;
+        if (selectedSpawner == null)
+            return;
+
+        if (hideSpawnerPanel)
+            HideConfiguration();
+
+        WasteCrateConfigPanel shop = wasteCrateConfigPanel ??
+            FindAnyObjectByType<WasteCrateConfigPanel>(FindObjectsInactive.Include);
+        if (shop == null)
         {
-            var queueStatus = wasteSupplyManager.GetGlobalQueueStatus();
-            queuePanel.UpdateQueueDisplay(queueStatus.queuedCrateIds);
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                "Scrap delivery shop not found.", ComponentId);
+            return;
         }
-        else
+
+        shop.ShowPanelForSpawner(selectedSpawner, selectedSpawner.OnConfigured);
+    }
+
+    private void ConfigureActionButtons()
+    {
+        confirmText = confirmButton?.GetComponentInChildren<TextMeshProUGUI>(true);
+        cancelText = cancelButton?.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (confirmText != null)
         {
-            GameLogger.LogWarning(LoggingManager.LogCategory.UI, "WasteSupplyManager not found - showing empty queue", ComponentId);
-            // Show empty queue but keep panel visible so users can purchase
-            queuePanel.UpdateQueueDisplay(new List<string>());
+            originalConfirmText = confirmText.text;
+            confirmText.text = "Order";
+        }
+        if (cancelText != null)
+        {
+            originalCancelText = cancelText.text;
+            cancelText.text = "Close";
         }
     }
 
-    /// <summary>
-    /// Show configuration for a specific spawner
-    /// </summary>
-    /// <param name="cellData">The spawner cell data</param>
-    /// <param name="onConfirmed">Callback when configuration is confirmed</param>
+    private void RestoreActionButtons()
+    {
+        if (confirmText != null && originalConfirmText != null)
+            confirmText.text = originalConfirmText;
+        if (cancelText != null && originalCancelText != null)
+            cancelText.text = originalCancelText;
+    }
+
+    private void CreateCurrentCrateStatus()
+    {
+        if (currentCrateButton == null || currentCrateStatusText != null)
+            return;
+
+        GameObject status = new GameObject("CurrentScrapStatus", typeof(RectTransform),
+            typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        status.transform.SetParent(currentCrateButton.transform, false);
+        RectTransform statusRect = status.GetComponent<RectTransform>();
+        statusRect.anchorMin = new Vector2(0.03f, 0.03f);
+        statusRect.anchorMax = new Vector2(0.97f, 0.28f);
+        statusRect.offsetMin = Vector2.zero;
+        statusRect.offsetMax = Vector2.zero;
+
+        currentCrateStatusText = status.GetComponent<TextMeshProUGUI>();
+        if (currentCrateLabel != null)
+            currentCrateStatusText.font = currentCrateLabel.font;
+        currentCrateStatusText.alignment = TextAlignmentOptions.Center;
+        currentCrateStatusText.enableAutoSizing = true;
+        currentCrateStatusText.fontSizeMin = 14f;
+        currentCrateStatusText.fontSizeMax = 20f;
+        currentCrateStatusText.color = new Color(1f, 0.82f, 0.48f, 1f);
+        currentCrateStatusText.raycastTarget = false;
+        currentCrateStatusText.text = "Empty";
+    }
+
+    private void StyleProgressBar()
+    {
+        Image background = currentCrateProgressBar.transform.Find("Background")?.GetComponent<Image>();
+        if (background != null)
+        {
+            background.color = new Color(0.137f, 0.157f, 0.196f, 1f);
+            background.raycastTarget = false;
+        }
+
+        Image fill = currentCrateProgressBar.fillRect?.GetComponent<Image>();
+        if (fill != null)
+        {
+            fill.color = new Color(1f, 0.6f, 0f, 1f);
+            fill.raycastTarget = false;
+        }
+    }
+
+    private static string GetCompactCrateName(string displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+            return "Scrap";
+
+        const string baleSuffix = " Bale";
+        return displayName.EndsWith(baleSuffix, System.StringComparison.OrdinalIgnoreCase)
+            ? displayName.Substring(0, displayName.Length - baleSuffix.Length)
+            : displayName;
+    }
+
     public new void ShowConfiguration(CellData cellData, System.Action<string> onConfirmed)
     {
         base.ShowConfiguration(cellData, onConfirmed);
-        
-        // Update queue panel when showing configuration
         UpdateQueuePanelDisplay();
     }
 }
