@@ -74,6 +74,7 @@
             ],
             "maxNumber": -1,
             "displayInPanel": true,
+            "buildMenuOrder": 0,
             "unlockedByDefault": true,
             "unlockCost": 0,
             "cost": 10,
@@ -120,6 +121,7 @@
                 }
             ],
             "displayInPanel": true,
+            "buildMenuOrder": 1,
             "unlockedByDefault": true,
             "unlockCost": 0,
             "cost": 50,
@@ -143,6 +145,7 @@
             ],
             "maxNumber": 1,
             "displayInPanel": true,
+            "buildMenuOrder": 2,
             "unlockedByDefault": true,
             "unlockCost": 0,
             "cost": 50,

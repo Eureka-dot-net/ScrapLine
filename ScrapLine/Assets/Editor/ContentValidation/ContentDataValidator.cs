@@ -126,6 +126,7 @@ namespace ScrapLine.Editor.ContentValidation
         private static void ValidateMachines(IReadOnlyList<MachineData> machines, ContentValidationResult result)
         {
             ValidateUniqueIds(machines.Select(machine => machine?.id), MachinesFile, result);
+            Dictionary<int, string> orderedMachines = new Dictionary<int, string>();
             for (int index = 0; index < machines.Count; index++)
             {
                 MachineData machine = machines[index];
@@ -139,6 +140,24 @@ namespace ScrapLine.Editor.ContentValidation
                 Require(machine.id, "id", MachinesFile, id, result);
                 Require(machine.type, "type", MachinesFile, id, result);
                 Require(machine.className, "className", MachinesFile, id, result);
+
+                if (machine.buildMenuOrder < -1)
+                    result.Add(MachinesFile, id, "buildMenuOrder must be -1 or a non-negative value.");
+                else if (!machine.displayInPanel && machine.buildMenuOrder >= 0)
+                    result.Add(MachinesFile, id, "hidden machines cannot define buildMenuOrder.");
+                else if (machine.buildMenuOrder >= 0)
+                {
+                    if (orderedMachines.TryGetValue(machine.buildMenuOrder, out string existingId))
+                    {
+                        result.Add(MachinesFile, id,
+                            $"buildMenuOrder {machine.buildMenuOrder} is already used by '{existingId}'.");
+                    }
+                    else
+                    {
+                        orderedMachines.Add(machine.buildMenuOrder, id);
+                    }
+                }
+
                 if (machine.gridPlacement == null || machine.gridPlacement.Count == 0 ||
                     machine.gridPlacement.Any(string.IsNullOrWhiteSpace))
                     result.Add(MachinesFile, id, "gridPlacement must contain at least one non-empty value.");
@@ -550,6 +569,7 @@ namespace ScrapLine.Editor.ContentValidation
             public List<UpgradeMaxNumberData> upgradeMaxNumbers;
             public List<string> gridPlacement;
             public bool displayInPanel = true;
+            public int buildMenuOrder = -1;
             public bool unlockedByDefault;
             public int unlockCost;
             public int cost;

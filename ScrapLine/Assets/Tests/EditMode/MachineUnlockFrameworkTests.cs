@@ -36,8 +36,8 @@ namespace ScrapLine.Tests.EditMode
                 Is.EqualTo(new[] { "conveyor", "seller", "spawner" }));
             Assert.That(PanelMachineIds(), Is.EqualTo(new[]
             {
-                "conveyor", "fabricator", "granulator", "plate_press",
-                "seller", "shredder", "sorter", "spawner"
+                "conveyor", "spawner", "seller", "shredder",
+                "granulator", "sorter", "plate_press", "fabricator"
             }));
 
             Assert.That(MachineInt("shredder", "unlockCost"), Is.EqualTo(100));
@@ -45,6 +45,18 @@ namespace ScrapLine.Tests.EditMode
             Assert.That(MachineInt("sorter", "unlockCost"), Is.EqualTo(150));
             Assert.That(MachineInt("plate_press", "unlockCost"), Is.EqualTo(300));
             Assert.That(MachineInt("fabricator", "unlockCost"), Is.EqualTo(600));
+        }
+
+        [Test]
+        public void UnlockedMachinesMoveAheadOfLockedMachinesAfterPinnedStarterTools()
+        {
+            Assert.That(TryGrant("plate_press", "test", out string error), Is.True, error);
+
+            Assert.That(PanelMachineIds(), Is.EqualTo(new[]
+            {
+                "conveyor", "spawner", "seller", "plate_press",
+                "shredder", "granulator", "sorter", "fabricator"
+            }));
         }
 
         [Test]

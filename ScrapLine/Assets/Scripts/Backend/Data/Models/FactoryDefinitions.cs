@@ -33,6 +33,7 @@ public class MachineDef
     public List<string> gridPlacement;     // e.g., ["any"], ["bottom"]
     public int maxNumber;
     public bool displayInPanel = true;     // whether to show in machine selection panel
+    public int buildMenuOrder = -1;        // non-negative values pin machines before automatically sorted entries
     public bool unlockedByDefault;         // clean-save placement capability
     public int unlockCost;                 // one-time permanent license price; zero only for defaults
     public int cost = 0;                   // Credits cost to place this machine
