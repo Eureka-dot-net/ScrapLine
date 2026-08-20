@@ -369,8 +369,6 @@ public class FactoryRegistry
             .Where(machine => machine.displayInPanel)
             .OrderBy(machine => machine.buildMenuOrder >= 0 ? 0 : 1)
             .ThenBy(machine => machine.buildMenuOrder >= 0 ? machine.buildMenuOrder : int.MaxValue)
-            .ThenBy(machine => IsMachineUnlocked(machine.id) ? 0 : 1)
-            .ThenBy(machine => IsMachineUnlocked(machine.id) ? machine.cost : machine.unlockCost)
             .ThenBy(machine => machine.id, StringComparer.Ordinal)
             .ToList();
     }

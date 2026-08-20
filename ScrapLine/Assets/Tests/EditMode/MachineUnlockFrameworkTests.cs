@@ -48,14 +48,14 @@ namespace ScrapLine.Tests.EditMode
         }
 
         [Test]
-        public void UnlockedMachinesMoveAheadOfLockedMachinesAfterPinnedStarterTools()
+        public void UnlockingMachineDoesNotReorderBuildMenu()
         {
             Assert.That(TryGrant("plate_press", "test", out string error), Is.True, error);
 
             Assert.That(PanelMachineIds(), Is.EqualTo(new[]
             {
-                "conveyor", "spawner", "seller", "plate_press",
-                "shredder", "granulator", "sorter", "fabricator"
+                "conveyor", "spawner", "seller", "shredder",
+                "granulator", "sorter", "plate_press", "fabricator"
             }));
         }
 

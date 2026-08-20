@@ -187,6 +187,7 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "displayInPanel": true,
+            "buildMenuOrder": 3,
             "unlockedByDefault": false,
             "unlockCost": 100,
             "cost": 100,
@@ -226,6 +227,7 @@
             "maxNumber": -1,
             "upgradeMaxNumbers": [],
             "displayInPanel": true,
+            "buildMenuOrder": 5,
             "unlockedByDefault": false,
             "unlockCost": 150,
             "cost": 150,
@@ -247,6 +249,7 @@
                 "grid"
             ],
             "displayInPanel": true,
+            "buildMenuOrder": 6,
             "unlockedByDefault": false,
             "unlockCost": 300,
             "cost": 250,
@@ -268,6 +271,7 @@
                 "grid"
             ],
             "displayInPanel": true,
+            "buildMenuOrder": 4,
             "unlockedByDefault": false,
             "unlockCost": 125,
             "cost": 125,
@@ -290,6 +294,7 @@
                 "grid"
             ],
             "displayInPanel": true,
+            "buildMenuOrder": 7,
             "unlockedByDefault": false,
             "unlockCost": 600,
             "cost": 500,
