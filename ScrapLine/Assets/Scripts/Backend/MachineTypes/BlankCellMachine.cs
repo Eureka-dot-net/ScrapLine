@@ -36,7 +36,8 @@ public class BlankCellMachine : BaseMachine
             if (item.state == ItemState.Idle)
             {
                 // Use the time since the item was last moved or created
-                float timeOnCell = Time.time - (item.moveStartTime != 0f ? item.moveStartTime + 1f : Time.time);
+                float timeOnCell = SimulationClock.Time -
+                    (item.moveStartTime != 0f ? item.moveStartTime + 1f : SimulationClock.Time);
                 
                 if (timeOnCell >= itemTimeoutDuration)
                 {

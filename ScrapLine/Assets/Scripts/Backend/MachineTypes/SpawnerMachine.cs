@@ -21,7 +21,7 @@ public class SpawnerMachine : BaseMachine
     {
         // Set spawn interval from machine definition
         spawnInterval = machineDef.baseProcessTime;
-        lastSpawnTime = Time.time;
+        lastSpawnTime = SimulationClock.Time;
         
         // Enable configuration for this machine type
         CanConfigure = true;
@@ -59,12 +59,12 @@ public class SpawnerMachine : BaseMachine
             TryActivateNextDelivery();
         
         // Check if it's time to spawn and if the cell is empty and waste crate has items
-        if (Time.time - lastSpawnTime >= spawnInterval && cellData.items.Count == 0 && HasItemsInWasteCrate())
+        if (SimulationClock.Time - lastSpawnTime >= spawnInterval && cellData.items.Count == 0 && HasItemsInWasteCrate())
         {
             GameLogger.NotifyStateChange(ComponentId); // State change for spawning
             GameLogger.LogSpawning($"Spawn conditions met - triggering spawn", ComponentId);
             SpawnItem();
-            lastSpawnTime = Time.time;
+            lastSpawnTime = SimulationClock.Time;
             
             // Check if icon changed after spawning and update visuals using new refresh system
             RefreshConfigurationVisuals();
@@ -73,7 +73,7 @@ public class SpawnerMachine : BaseMachine
         // Debug logging (only if enabled to avoid spam)
         else if (GameLogger.IsCategoryEnabled(LoggingManager.LogCategory.Spawning))
         {
-            float timeUntilNext = spawnInterval - (Time.time - lastSpawnTime);
+            float timeUntilNext = spawnInterval - (SimulationClock.Time - lastSpawnTime);
             if (timeUntilNext > 0)
             {
                 // Don't spam - only log occasionally when close to spawn time
@@ -250,7 +250,7 @@ public class SpawnerMachine : BaseMachine
         TryStartMove(newItem);
         
         // Update spawn timing
-        lastSpawnTime = Time.time;
+        lastSpawnTime = SimulationClock.Time;
         GameLogger.LogSpawning($"Spawn complete, next spawn in {spawnInterval}s", ComponentId);
     }
     
@@ -425,7 +425,7 @@ public class SpawnerMachine : BaseMachine
             return -1f; // No progress when can't spawn
         }
 
-        float timeSinceLastSpawn = Time.time - lastSpawnTime;
+        float timeSinceLastSpawn = SimulationClock.Time - lastSpawnTime;
         float progress = timeSinceLastSpawn / spawnInterval;
 
         

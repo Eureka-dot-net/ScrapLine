@@ -79,7 +79,7 @@ public class SaveLoadManager : MonoBehaviour
         data.grids = gridManager.GetActiveGrids();
         data.credits = creditsManager.GetCredits();
         data.hasRuntimeClockAnchor = true;
-        data.savedAtRuntimeTime = Time.time;
+        data.savedAtRuntimeTime = SimulationClock.Time;
         FactoryRegistry.Instance.SaveToGameData(data);
 
         EnsureStorage();
@@ -115,7 +115,7 @@ public class SaveLoadManager : MonoBehaviour
             ? GameManager.Instance.itemMovementManager.itemMoveSpeed
             : 1f;
         if (!GameSaveRuntimeRehydrator.TryPrepareForResume(
-                data, Time.time, itemMoveSpeed, out string rehydrationError))
+                data, SimulationClock.Time, itemMoveSpeed, out string rehydrationError))
         {
             GameLogger.LogError(LoggingManager.LogCategory.SaveLoad,
                 $"Failed to restore runtime save state: {rehydrationError}", ComponentId);

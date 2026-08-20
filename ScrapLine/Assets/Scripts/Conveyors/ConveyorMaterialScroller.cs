@@ -8,6 +8,9 @@ public class ConveyorMaterialScroller : MonoBehaviour
 
     void Update()
     {
+        if (SimulationClock.IsPaused)
+            return;
+
         Vector2 offset = conveyorMaterial.GetTextureOffset("_MainTex");
         offset += Vector2.down * scrollSpeed * Time.deltaTime;
         conveyorMaterial.SetTextureOffset("_MainTex", offset);

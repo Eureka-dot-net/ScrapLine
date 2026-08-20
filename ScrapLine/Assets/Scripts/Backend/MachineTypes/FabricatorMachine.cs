@@ -416,7 +416,7 @@ public class FabricatorMachine : ProcessorMachine
         {
             if (item.state == ItemState.Processing)
             {
-                float processingElapsed = Time.time - item.processingStartTime;
+                float processingElapsed = SimulationClock.Time - item.processingStartTime;
                 if (processingElapsed >= item.processingDuration)
                 {
                     GameLogger.LogFabricator($"[FABRICATOR] Processing complete for {item.itemType}", ComponentId);
@@ -556,7 +556,7 @@ public class FabricatorMachine : ProcessorMachine
             x = cellData.x,
             y = cellData.y,
             state = ItemState.Processing,
-            processingStartTime = Time.time,
+            processingStartTime = SimulationClock.Time,
             processingDuration = recipe.processTime
         };
         

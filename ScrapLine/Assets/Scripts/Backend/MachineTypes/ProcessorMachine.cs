@@ -118,7 +118,7 @@ public class ProcessorMachine : BaseMachine
             
             if (item.state == ItemState.Waiting)
             {
-                float timeWaiting = Time.time - item.waitingStartTime;
+                float timeWaiting = SimulationClock.Time - item.waitingStartTime;
                 
                 if (timeWaiting >= waitingTimeout)
                 {
@@ -165,7 +165,7 @@ public class ProcessorMachine : BaseMachine
             item.state = ItemState.Processing;
             item.x = cellData.x;
             item.y = cellData.y;
-            item.processingStartTime = Time.time;
+            item.processingStartTime = SimulationClock.Time;
             item.processingDuration = recipe.processTime;
             
             cellData.machineState = MachineState.Processing;
@@ -195,7 +195,7 @@ public class ProcessorMachine : BaseMachine
         {
             if (item.state == ItemState.Processing)
             {
-                float processingElapsed = Time.time - item.processingStartTime;
+                float processingElapsed = SimulationClock.Time - item.processingStartTime;
                 if (processingElapsed >= item.processingDuration)
                 {
                     CompleteProcessing(item);
@@ -346,7 +346,7 @@ public class ProcessorMachine : BaseMachine
         {
             if (item.state == ItemState.Processing)
             {
-                float processingElapsed = Time.time - item.processingStartTime;
+                float processingElapsed = SimulationClock.Time - item.processingStartTime;
                 float progress = processingElapsed / item.processingDuration;
                 
                 return Mathf.Clamp01(progress);

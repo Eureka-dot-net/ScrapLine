@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -56,6 +58,12 @@ public class GameManager : MonoBehaviour
     
     // Configuration panel management to ensure only one panel is open at a time
     private MonoBehaviour currentOpenConfigPanel;
+
+    private bool isSimulationPaused;
+    private Button pauseButton;
+    private TMP_Text pauseButtonLabel;
+
+    public bool IsSimulationPaused => isSimulationPaused;
     
     /// <summary>
     /// Get the component ID for logging purposes
@@ -87,6 +95,7 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+        SimulationClock.Reset();
         DontDestroyOnLoad(gameObject);
     }
 
@@ -94,6 +103,16 @@ public class GameManager : MonoBehaviour
     {
         InitializeManagers();
         InitializeGame();
+        CreatePauseButton();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance != this)
+            return;
+
+        SimulationClock.Reset();
+        Instance = null;
     }
 
     /// <summary>
@@ -188,6 +207,9 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (isSimulationPaused)
+            return;
+
         GridData gridData = GetCurrentGrid();
         if (gridData == null) return;
 
@@ -202,6 +224,72 @@ public class GameManager : MonoBehaviour
 
         // Process item movement
         itemMovementManager.ProcessItemMovement();
+    }
+
+    /// <summary>
+    /// Pauses or resumes factory simulation without disabling UI interaction.
+    /// The factory clock is stopped so rendering and UI remain active while in-progress
+    /// movement and processing resume from exactly the same point.
+    /// </summary>
+    public void ToggleSimulationPause()
+    {
+        SetSimulationPaused(!isSimulationPaused);
+    }
+
+    public void SetSimulationPaused(bool paused)
+    {
+        if (isSimulationPaused == paused)
+            return;
+
+        isSimulationPaused = paused;
+        SimulationClock.SetPaused(paused);
+        UpdatePauseButtonLabel();
+    }
+
+    private void CreatePauseButton()
+    {
+        GameObject saveButtonObject = GameObject.Find("SaveButton");
+        if (saveButtonObject == null || saveButtonObject.transform.parent == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                "Could not create the temporary pause button because SaveButton was not found.", ComponentId);
+            return;
+        }
+
+        GameObject pauseButtonObject = Instantiate(
+            saveButtonObject, saveButtonObject.transform.parent, false);
+        pauseButtonObject.name = "PauseButton";
+        pauseButtonObject.transform.SetSiblingIndex(saveButtonObject.transform.GetSiblingIndex());
+
+        RectTransform saveRect = saveButtonObject.GetComponent<RectTransform>();
+        RectTransform pauseRect = pauseButtonObject.GetComponent<RectTransform>();
+        if (saveRect != null && pauseRect != null)
+        {
+            const float pauseButtonWidth = 125f;
+            const float buttonGap = 10f;
+            float horizontalOffset = (saveRect.sizeDelta.x + pauseButtonWidth) * 0.5f + buttonGap;
+            pauseRect.anchoredPosition = saveRect.anchoredPosition - new Vector2(horizontalOffset, 0f);
+            pauseRect.sizeDelta = new Vector2(pauseButtonWidth, saveRect.sizeDelta.y);
+        }
+
+        pauseButton = pauseButtonObject.GetComponent<Button>();
+        pauseButtonLabel = pauseButtonObject.GetComponentInChildren<TMP_Text>(true);
+        if (pauseButton == null)
+        {
+            Destroy(pauseButtonObject);
+            return;
+        }
+
+        // Replace the cloned Clear action with the simulation pause action.
+        pauseButton.onClick = new Button.ButtonClickedEvent();
+        pauseButton.onClick.AddListener(ToggleSimulationPause);
+        UpdatePauseButtonLabel();
+    }
+
+    private void UpdatePauseButtonLabel()
+    {
+        if (pauseButtonLabel != null)
+            pauseButtonLabel.text = isSimulationPaused ? "Resume" : "Pause";
     }
 
     #region Public API Methods (Backward Compatibility)
@@ -581,4 +669,45 @@ public class GameManager : MonoBehaviour
     public UIPanelManager GetUIPanelManager() => uiPanelManager;
 
     #endregion
+}
+
+/// <summary>
+/// Factory-only clock that can pause without stopping Unity rendering or UI input.
+/// </summary>
+public static class SimulationClock
+{
+    private static float accumulatedPausedTime;
+    private static float pauseStartedAtUnityTime;
+    private static float frozenTime;
+
+    public static bool IsPaused { get; private set; }
+
+    public static float Time => IsPaused
+        ? frozenTime
+        : UnityEngine.Time.time - accumulatedPausedTime;
+
+    public static void SetPaused(bool paused)
+    {
+        if (IsPaused == paused)
+            return;
+
+        if (paused)
+        {
+            frozenTime = UnityEngine.Time.time - accumulatedPausedTime;
+            pauseStartedAtUnityTime = UnityEngine.Time.time;
+            IsPaused = true;
+            return;
+        }
+
+        accumulatedPausedTime += Mathf.Max(0f, UnityEngine.Time.time - pauseStartedAtUnityTime);
+        IsPaused = false;
+    }
+
+    public static void Reset()
+    {
+        IsPaused = false;
+        accumulatedPausedTime = 0f;
+        pauseStartedAtUnityTime = 0f;
+        frozenTime = 0f;
+    }
 }

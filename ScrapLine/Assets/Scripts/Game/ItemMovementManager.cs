@@ -88,7 +88,7 @@ public class ItemMovementManager : MonoBehaviour
     /// <param name="sourceCell">The source cell of the movement</param>
     private void ProcessMovingItem(ItemData item, CellData sourceCell)
     {
-        float timeSinceStart = Time.time - item.moveStartTime;
+        float timeSinceStart = SimulationClock.Time - item.moveStartTime;
         item.moveProgress = timeSinceStart * itemMoveSpeed;
 
         CellData targetCell = gridManager.GetCellData(item.targetX, item.targetY);
@@ -101,7 +101,7 @@ public class ItemMovementManager : MonoBehaviour
                 item.state = ItemState.Waiting;
                 item.moveProgress = 0.5f; // Lock progress
                 item.isHalfway = true; // Set the flag for the second phase
-                item.waitingStartTime = Time.time; // Set the waiting start time for timeout tracking
+                item.waitingStartTime = SimulationClock.Time; // Set the waiting start time for timeout tracking
                 (targetCell.machine as ProcessorMachine).AddToWaitingQueue(item);
             }
         }

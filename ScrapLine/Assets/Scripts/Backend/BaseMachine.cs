@@ -185,7 +185,7 @@ public abstract class BaseMachine
         item.sourceY = cellData.y;
         item.targetX = nextX;
         item.targetY = nextY;
-        item.moveStartTime = Time.time;
+        item.moveStartTime = SimulationClock.Time;
         
         string directionInfo = overrideDirection.HasValue ? $" (direction override: {moveDirection})" : "";
 
