@@ -81,9 +81,10 @@ public class SaveLoadManager : MonoBehaviour
         data.hasRuntimeClockAnchor = true;
         data.savedAtRuntimeTime = SimulationClock.Time;
         FactoryRegistry.Instance.SaveToGameData(data);
+        GameManager.Instance.progressionManager?.SaveToGameData(data);
 
         EnsureStorage();
-        if (!storage.TrySave(data, ValidateMachineUnlockCandidate, out string error))
+        if (!storage.TrySave(data, ValidateSaveCandidate, out string error))
         {
             GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, $"Failed to save game: {error}", ComponentId);
             ScheduleAutosaveRetry();
@@ -101,7 +102,7 @@ public class SaveLoadManager : MonoBehaviour
     {
         EnsureStorage();
         if (!storage.TryLoad(
-                ValidateMachineUnlockCandidate,
+                ValidateSaveCandidate,
                 out GameData data,
                 out bool loadedFromBackup,
                 out bool migrationApplied,
@@ -129,6 +130,14 @@ public class SaveLoadManager : MonoBehaviour
             return false;
         }
 
+        if (GameManager.Instance.progressionManager != null &&
+            !GameManager.Instance.progressionManager.LoadFromGameData(data, out string progressionError))
+        {
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad,
+                $"Failed to restore objective state: {progressionError}", ComponentId);
+            return false;
+        }
+
         GameManager.Instance.gameData = data;
         gridManager.SetActiveGrids(data.grids);
         creditsManager.SetCredits(data.credits, false);
@@ -143,7 +152,7 @@ public class SaveLoadManager : MonoBehaviour
         // Preserve the previous backup during ordinary loads. Only migrations and backup recovery
         // require an immediate rewrite of the primary generation.
         if ((loadedFromBackup || migrationApplied) &&
-            !storage.TrySave(data, ValidateMachineUnlockCandidate, out string rewriteError))
+            !storage.TrySave(data, ValidateSaveCandidate, out string rewriteError))
         {
             GameLogger.LogError(LoggingManager.LogCategory.SaveLoad,
                 $"Game loaded, but the migrated/primary save could not be written: {rewriteError}", ComponentId);
@@ -155,11 +164,12 @@ public class SaveLoadManager : MonoBehaviour
         return true;
     }
 
-    private static string ValidateMachineUnlockCandidate(GameData data)
+    private static string ValidateSaveCandidate(GameData data)
     {
-        return FactoryRegistry.Instance.ValidateMachineProgress(data, out string error)
-            ? null
-            : error;
+        if (!FactoryRegistry.Instance.ValidateMachineProgress(data, out string error))
+            return error;
+        ProgressionManager progression = GameManager.Instance?.progressionManager;
+        return progression == null ? null : progression.ValidateSaveCandidate(data);
     }
 
     public IEnumerator InitializeMachinesFromSave()

@@ -213,6 +213,7 @@ public class ProcessorMachine : BaseMachine
         RecipeDef recipe = GetRecipeForItem(item.itemType);
         if (recipe != null)
         {
+            int outputCount = 0;
             // Remove input item
             cellData.items.Remove(item);
             
@@ -225,6 +226,7 @@ public class ProcessorMachine : BaseMachine
             // Create output items according to recipe
             foreach (var outputItem in recipe.outputItems)
             {
+                outputCount += outputItem.count;
                 for (int i = 0; i < outputItem.count; i++)
                 {
                     // Create new output item
@@ -253,6 +255,8 @@ public class ProcessorMachine : BaseMachine
                     TryStartMove(newItem);
                 }
             }
+
+            GameplayDomainEvents.PublishRecipeCompleted(item.id, recipe.id, outputCount);
         }
         else
         {

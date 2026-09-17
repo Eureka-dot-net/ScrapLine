@@ -107,6 +107,16 @@ public class UserMachineProgress
 }
 
 [System.Serializable]
+public class ObjectiveProgressData
+{
+    public string objectiveId;
+    public int progress;
+    public bool completed;
+    public bool rewardClaimed;
+    public List<string> processedEventIds = new List<string>();
+}
+
+[System.Serializable]
 public class GameData
 {
     public int schemaVersion = GameSaveMigrations.CurrentSchemaVersion;
@@ -114,6 +124,7 @@ public class GameData
     public float savedAtRuntimeTime;
     public List<GridData> grids = new List<GridData>();
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
+    public List<ObjectiveProgressData> objectiveProgress = new List<ObjectiveProgressData>();
     public int credits = 0; // Credits (money) system for purchasing machines
     public bool starterDeliveryAvailable = true;
 

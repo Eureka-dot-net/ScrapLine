@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 /// <summary>
 /// Orchestrates the complete grid expansion workflow.
@@ -187,7 +188,7 @@ public class GridExpansionOrchestrator : MonoBehaviour
         }
 
         // Start expansion process
-        StartCoroutine(ExecuteRowExpansion(rowIndex));
+        StartCoroutine(ExecuteRowExpansion(rowIndex, cost));
     }
 
     /// <summary>
@@ -208,7 +209,7 @@ public class GridExpansionOrchestrator : MonoBehaviour
         }
 
         // Start expansion process
-        StartCoroutine(ExecuteColumnExpansion(colIndex));
+        StartCoroutine(ExecuteColumnExpansion(colIndex, cost));
     }
 
     /// <summary>
@@ -229,7 +230,7 @@ public class GridExpansionOrchestrator : MonoBehaviour
         }
 
         // Start expansion process
-        StartCoroutine(ExecuteEdgeColumnExpansion(edge));
+        StartCoroutine(ExecuteEdgeColumnExpansion(edge, cost));
     }
 
     /// <summary>
@@ -246,7 +247,7 @@ public class GridExpansionOrchestrator : MonoBehaviour
     /// <summary>
     /// Execute row expansion with animation
     /// </summary>
-    private IEnumerator ExecuteRowExpansion(int rowIndex)
+    private IEnumerator ExecuteRowExpansion(int rowIndex, int cost)
     {
         if (enableOrchestrationLogs)
             GameLogger.LogGrid($"Executing row expansion at index {rowIndex}", ComponentId);
@@ -254,9 +255,16 @@ public class GridExpansionOrchestrator : MonoBehaviour
         GridData gridData = gridManager?.GetCurrentGrid();
         if (gridData == null) yield break;
 
+        int priorWidth = gridData.width;
+        int priorHeight = gridData.height;
+
         // Mutate data
         if (!gridExpansionService.InsertRow(gridData, rowIndex))
             yield break;
+
+        GameplayDomainEvents.PublishGridExpanded(
+            $"grid-expanded:{Guid.NewGuid():N}", "row", priorWidth, priorHeight,
+            gridData.width, gridData.height, cost);
 
         // Refresh UI grid
         if (uiGridManager != null)
@@ -277,7 +285,7 @@ public class GridExpansionOrchestrator : MonoBehaviour
     /// <summary>
     /// Execute column expansion with animation
     /// </summary>
-    private IEnumerator ExecuteColumnExpansion(int colIndex)
+    private IEnumerator ExecuteColumnExpansion(int colIndex, int cost)
     {
         if (enableOrchestrationLogs)
             GameLogger.LogGrid($"Executing column expansion at index {colIndex}", ComponentId);
@@ -285,9 +293,16 @@ public class GridExpansionOrchestrator : MonoBehaviour
         GridData gridData = gridManager?.GetCurrentGrid();
         if (gridData == null) yield break;
 
+        int priorWidth = gridData.width;
+        int priorHeight = gridData.height;
+
         // Mutate data
         if (!gridExpansionService.InsertColumn(gridData, colIndex))
             yield break;
+
+        GameplayDomainEvents.PublishGridExpanded(
+            $"grid-expanded:{Guid.NewGuid():N}", "column", priorWidth, priorHeight,
+            gridData.width, gridData.height, cost);
 
         // Refresh UI grid
         if (uiGridManager != null)
@@ -308,7 +323,7 @@ public class GridExpansionOrchestrator : MonoBehaviour
     /// <summary>
     /// Execute edge column expansion with animation
     /// </summary>
-    private IEnumerator ExecuteEdgeColumnExpansion(GridExpansionService.Edge edge)
+    private IEnumerator ExecuteEdgeColumnExpansion(GridExpansionService.Edge edge, int cost)
     {
         if (enableOrchestrationLogs)
             GameLogger.LogGrid($"Executing edge column expansion at {edge}", ComponentId);
@@ -316,10 +331,17 @@ public class GridExpansionOrchestrator : MonoBehaviour
         GridData gridData = gridManager?.GetCurrentGrid();
         if (gridData == null) yield break;
 
+        int priorWidth = gridData.width;
+        int priorHeight = gridData.height;
+
         // Mutate data
         int insertedIndex = edge == GridExpansionService.Edge.Left ? 0 : gridData.width;
         if (!gridExpansionService.InsertColumnAtEdge(gridData, edge))
             yield break;
+
+        GameplayDomainEvents.PublishGridExpanded(
+            $"grid-expanded:{Guid.NewGuid():N}", "edge_column", priorWidth, priorHeight,
+            gridData.width, gridData.height, cost);
 
         // Refresh UI grid
         if (uiGridManager != null)

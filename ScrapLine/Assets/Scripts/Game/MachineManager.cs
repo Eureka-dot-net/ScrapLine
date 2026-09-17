@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Collections.Generic;
 using static UICell;
 
@@ -560,9 +561,13 @@ public class MachineManager : MonoBehaviour
         {
             GameLogger.LogError(LoggingManager.LogCategory.Machine, $"Failed to create machine object for {machineDef.id}", ComponentId);
         }
-        else if (cellData.machine is SpawnerMachine spawner)
+        else
         {
-            GameManager.Instance?.wasteSupplyManager?.TryDeliverStarterCrate(spawner);
+            GameplayDomainEvents.PublishMachinePlaced(
+                $"machine-placed:{Guid.NewGuid():N}", machineDef.id);
+
+            if (cellData.machine is SpawnerMachine spawner)
+                GameManager.Instance?.wasteSupplyManager?.TryDeliverStarterCrate(spawner);
         }
 
         if (activeGridManager != null)

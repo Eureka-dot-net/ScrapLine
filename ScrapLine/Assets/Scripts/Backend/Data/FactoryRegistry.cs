@@ -316,6 +316,7 @@ public class FactoryRegistry
             progress.unlocked = true;
 
         error = null;
+        GameplayDomainEvents.PublishMachineLicense(machineId, unlockSource);
         MachineUnlocked?.Invoke(machineId, unlockSource);
         GameManager.Instance?.RequestAutosave();
         return true;

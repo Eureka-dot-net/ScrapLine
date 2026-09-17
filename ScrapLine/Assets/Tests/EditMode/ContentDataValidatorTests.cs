@@ -19,6 +19,11 @@ namespace ScrapLine.Tests.EditMode
         private const string ValidWasteCrates =
             "{\"wasteCrates\":[{\"id\":\"ore_crate\",\"displayName\":\"Ore Crate\",\"sprite\":\"crate\"," +
             "\"cost\":40,\"items\":[{\"itemType\":\"ore\",\"count\":25}]}]}";
+        private const string ValidObjectives =
+            "{\"objectives\":[{\"id\":\"place_processor\",\"title\":\"Place it\"," +
+            "\"description\":\"Place a processor.\",\"type\":\"machine_placed\"," +
+            "\"targetId\":\"processor\",\"targetValue\":1," +
+            "\"reward\":{\"type\":\"credits\",\"amount\":10}}]}";
 
         [Test]
         public void ValidDefinitionsPass()
@@ -116,6 +121,56 @@ namespace ScrapLine.Tests.EditMode
         }
 
         [Test]
+        public void InvalidObjectiveReferencesAndValuesAreRejected()
+        {
+            string objectives = ValidObjectives
+                .Replace("\"processor\",\"targetValue\":1", "\"missing_machine\",\"targetValue\":0")
+                .Replace("\"amount\":10", "\"amount\":0");
+
+            ContentValidationResult result = Validate(objectives: objectives);
+
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.ObjectivesFile &&
+                                                    error.Id == "place_processor" &&
+                                                    error.Message.Contains("targetValue")), Is.True);
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.ObjectivesFile &&
+                                                    error.Message.Contains("missing_machine")), Is.True);
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.ObjectivesFile &&
+                                                    error.Message.Contains("reward.amount")), Is.True);
+        }
+
+        [Test]
+        public void DuplicateAndCyclicObjectivesAreRejected()
+        {
+            const string objectives =
+                "{\"objectives\":[" +
+                "{\"id\":\"cycle\",\"title\":\"One\",\"description\":\"One\",\"type\":\"machine_placed\"," +
+                "\"targetId\":\"processor\",\"targetValue\":1,\"prerequisiteObjectiveId\":\"cycle\"," +
+                "\"reward\":{\"type\":\"credits\",\"amount\":1}}," +
+                "{\"id\":\"cycle\",\"title\":\"Two\",\"description\":\"Two\",\"type\":\"machine_placed\"," +
+                "\"targetId\":\"processor\",\"targetValue\":1,\"reward\":{\"type\":\"credits\",\"amount\":1}}]}";
+
+            ContentValidationResult result = Validate(objectives: objectives);
+
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.ObjectivesFile &&
+                                                    error.Message.Contains("unique")), Is.True);
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.ObjectivesFile &&
+                                                    error.Message.Contains("cycle")), Is.True);
+        }
+
+        [Test]
+        public void ObjectiveMachineLicenseRewardMustReferenceMachine()
+        {
+            string objectives = ValidObjectives.Replace(
+                "{\"type\":\"credits\",\"amount\":10}",
+                "{\"type\":\"machine_license\",\"targetId\":\"missing\"}");
+
+            ContentValidationResult result = Validate(objectives: objectives);
+
+            Assert.That(result.Errors.Any(error => error.File == ContentDataValidator.ObjectivesFile &&
+                                                    error.Message.Contains("missing")), Is.True);
+        }
+
+        [Test]
         public void UnprofitableRecipeReportsInputAndOutputValues()
         {
             string recipes = ValidRecipes.Replace("refinedOre", "ore");
@@ -196,9 +251,11 @@ namespace ScrapLine.Tests.EditMode
             string items = ValidItems,
             string machines = ValidMachines,
             string recipes = ValidRecipes,
-            string wasteCrates = ValidWasteCrates)
+            string wasteCrates = ValidWasteCrates,
+            string objectives = ValidObjectives)
         {
-            return ContentDataValidator.Validate(new ContentDataSources(items, machines, recipes, wasteCrates));
+            return ContentDataValidator.Validate(
+                new ContentDataSources(items, machines, recipes, wasteCrates, objectives));
         }
     }
 }

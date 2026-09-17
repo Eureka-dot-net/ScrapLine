@@ -180,6 +180,25 @@ public class MachineBarUIManager : MonoBehaviour
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
+
+        // Newly-generated buttons can leave the strip scrolled past its left edge
+        // (or Unity may otherwise leave the ScrollRect at a stale position). Reset
+        // to the leftmost position so the first machine (the Spawner) is visible
+        // without the player needing to scroll, e.g. right after game launch.
+        ResetBuildBarScroll();
+    }
+
+    private void ResetBuildBarScroll()
+    {
+        if (buildPanel == null)
+            return;
+
+        ScrollRect scrollRect = buildPanel.GetComponent<ScrollRect>();
+        if (scrollRect == null)
+            return;
+
+        Canvas.ForceUpdateCanvases();
+        scrollRect.horizontalNormalizedPosition = 0f;
     }
 
     private void OnMachineUnlocked(string machineId, string unlockSource)

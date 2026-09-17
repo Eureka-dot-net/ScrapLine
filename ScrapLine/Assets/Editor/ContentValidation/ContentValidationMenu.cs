@@ -13,7 +13,7 @@ namespace ScrapLine.Editor.ContentValidation
             ContentValidationResult result = ContentDataValidator.ValidateProject();
             if (result.IsValid)
             {
-                Debug.Log("CONTENT_DATA_VALIDATION_PASSED: items.json, machines.json, recipes.json, and wastecrates.json are valid.");
+                Debug.Log("CONTENT_DATA_VALIDATION_PASSED: items.json, machines.json, recipes.json, wastecrates.json, and objectives.json are valid.");
                 return;
             }
 

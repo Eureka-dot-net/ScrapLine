@@ -246,7 +246,7 @@ public sealed class GameSaveStorage
             return Invalid($"schema version {data.schemaVersion} was not migrated.", out error);
         if (data.credits < 0)
             return Invalid("credits cannot be negative.", out error);
-        if (data.grids == null || data.userMachineProgress == null)
+        if (data.grids == null || data.userMachineProgress == null || data.objectiveProgress == null)
             return Invalid("required save collections are missing.", out error);
 
         HashSet<string> itemIds = new HashSet<string>(StringComparer.Ordinal);

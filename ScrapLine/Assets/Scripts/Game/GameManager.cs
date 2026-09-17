@@ -37,6 +37,9 @@ public class GameManager : MonoBehaviour
     [Tooltip("UI panel visibility and lifecycle management")]
     public UIPanelManager uiPanelManager;
 
+    [Tooltip("Advisory objective progress and reward authority")]
+    public ProgressionManager progressionManager;
+
 
     [Header("Timing")]
     [Tooltip("Interval for spawner machines")]
@@ -104,6 +107,7 @@ public class GameManager : MonoBehaviour
         InitializeManagers();
         InitializeGame();
         CreatePauseButton();
+        ObjectivePanelUI.Create(progressionManager);
     }
 
     private void OnDestroy()
@@ -142,6 +146,9 @@ public class GameManager : MonoBehaviour
         if (uiPanelManager == null)
             uiPanelManager = GetComponent<UIPanelManager>() ?? gameObject.AddComponent<UIPanelManager>();
 
+        if (progressionManager == null)
+            progressionManager = GetComponent<ProgressionManager>() ?? gameObject.AddComponent<ProgressionManager>();
+
         // Find the UI grid manager
         if (activeGridManager == null)
             activeGridManager = FindAnyObjectByType<UIGridManager>();
@@ -151,6 +158,7 @@ public class GameManager : MonoBehaviour
 
         // Initialize other managers
         creditsManager.Initialize(resourceManager.GetCreditsUI(), resourceManager.GetMachineBarManager());
+        progressionManager.Initialize(creditsManager);
         gridManager.Initialize(activeGridManager);
         saveLoadManager.Initialize(gridManager, creditsManager);
         machineManager.Initialize(creditsManager, gridManager, activeGridManager);
@@ -193,6 +201,8 @@ public class GameManager : MonoBehaviour
     {
         _gameData = GameData.CreateNewGame();
         FactoryRegistry.Instance.LoadFromGameData(_gameData);
+        if (!progressionManager.ResetForNewGame(_gameData, out string progressionError))
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, progressionError, ComponentId);
         creditsManager.InitializeNewGame();
         gridManager.CreateDefaultGrid();
     }
@@ -460,6 +470,8 @@ public class GameManager : MonoBehaviour
 
         _gameData = GameData.CreateNewGame();
         FactoryRegistry.Instance.LoadFromGameData(_gameData);
+        if (!progressionManager.ResetForNewGame(_gameData, out string progressionError))
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, progressionError, ComponentId);
         creditsManager.InitializeNewGame();
         gridManager.SetActiveGrids(new List<GridData>());
         gridManager.CreateDefaultGrid();
@@ -474,7 +486,19 @@ public class GameManager : MonoBehaviour
     {
         gridManager.ClearGrid();
         _gameData.starterDeliveryAvailable = true;
+
+        // A grid reset is meant to return the player to a fresh start, so purchased/granted
+        // machine licenses are revoked along with the grid and objective progress. Without this,
+        // a machine-license objective (e.g. "License the Shredder") would reset to incomplete
+        // while the license itself remained owned and un-repurchasable, permanently stranding it.
+        // Licenses must be reset before progression so objective state reconciles against the
+        // now-locked machines rather than the licenses the player still held a moment ago.
+        _gameData.userMachineProgress = MachineUnlockState.CreateCleanSaveProgress();
+        FactoryRegistry.Instance.LoadFromGameData(_gameData);
+
         creditsManager.InitializeNewGame();
+        if (!progressionManager.ResetForNewGame(_gameData, out string progressionError))
+            GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, progressionError, ComponentId);
         RequestAutosave();
     }
 

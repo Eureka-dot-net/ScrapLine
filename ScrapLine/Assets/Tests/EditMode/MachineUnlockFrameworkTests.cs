@@ -177,6 +177,21 @@ namespace ScrapLine.Tests.EditMode
         }
 
         [Test]
+        public void ReloadingCleanSaveProgressRevokesPreviouslyGrantedLicenses()
+        {
+            // GameManager.ResetGrid revokes purchased/granted licenses on a grid reset by
+            // reloading a fresh save's clean machine progress. This locks in that exact
+            // primitive: a license granted mid-game must not survive it.
+            Assert.That(TryGrant("shredder", "test_grant", out string grantError), Is.True, grantError);
+            Assert.That(IsUnlocked("shredder"), Is.True);
+
+            Assert.That(TryLoadProgress(NewGameData(), out string reloadError), Is.True, reloadError);
+
+            Assert.That(IsUnlocked("shredder"), Is.False);
+            Assert.That(UnlockedMachineIds(), Is.EqualTo(new[] { "conveyor", "seller", "spawner" }));
+        }
+
+        [Test]
         public void InvalidMachineIdCannotChargeOrGrant()
         {
             using (CreditHarness credits = new CreditHarness(500))

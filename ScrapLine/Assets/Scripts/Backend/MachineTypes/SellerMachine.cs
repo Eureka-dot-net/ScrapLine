@@ -46,6 +46,8 @@ public class SellerMachine : BaseMachine
         {
             GameManager.Instance.AddCredits(sellValue);
         }
+
+        GameplayDomainEvents.PublishItemSold(item.id, item.itemType, 1, sellValue, "seller");
         
         // Remove item from cell
         cellData.items.Remove(item);

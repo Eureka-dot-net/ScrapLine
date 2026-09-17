@@ -443,8 +443,10 @@ public class FabricatorMachine : ProcessorMachine
         RecipeDef selectedRecipe = GetSelectedRecipe();
         if (selectedRecipe != null)
         {
+            int outputCount = 0;
             foreach (var outputItem in selectedRecipe.outputItems)
             {
+                outputCount += outputItem.count;
                 for (int i = 0; i < outputItem.count; i++)
                 {
                     ItemData newItem = new ItemData
@@ -475,6 +477,9 @@ public class FabricatorMachine : ProcessorMachine
                     TryStartMove(newItem);
                 }
             }
+
+            GameplayDomainEvents.PublishRecipeCompleted(
+                processingItem.id, selectedRecipe.id, outputCount);
         }
         
         // Reset machine state to Idle so it can start the next recipe cycle

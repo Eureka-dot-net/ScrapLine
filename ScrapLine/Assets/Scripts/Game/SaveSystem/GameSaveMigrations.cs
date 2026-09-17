@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// </summary>
 public static class GameSaveMigrations
 {
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 3;
 
     public static GameData Migrate(GameData data)
     {
@@ -28,6 +28,9 @@ public static class GameSaveMigrations
                     break;
                 case 1:
                     MigrateVersion1ToVersion2(data);
+                    break;
+                case 2:
+                    MigrateVersion2ToVersion3(data);
                     break;
                 default:
                     throw new InvalidOperationException($"No migration exists for schema version {data.schemaVersion}.");
@@ -52,10 +55,22 @@ public static class GameSaveMigrations
         data.schemaVersion = 2;
     }
 
+    private static void MigrateVersion2ToVersion3(GameData data)
+    {
+        data.objectiveProgress ??= new List<ObjectiveProgressData>();
+        data.schemaVersion = 3;
+    }
+
     private static void NormalizeOptionalFields(GameData data)
     {
         data.grids ??= new List<GridData>();
         data.userMachineProgress ??= new List<UserMachineProgress>();
+        data.objectiveProgress ??= new List<ObjectiveProgressData>();
+        foreach (ObjectiveProgressData objective in data.objectiveProgress)
+        {
+            if (objective != null)
+                objective.processedEventIds ??= new List<string>();
+        }
         foreach (GridData grid in data.grids)
         {
             if (grid == null)

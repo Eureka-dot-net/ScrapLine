@@ -1,0 +1,165 @@
+{
+  "objectives": [
+    {
+      "id": "place_first_spawner",
+      "title": "Start a scrap line",
+      "description": "Place a Spawner on the bottom row.",
+      "type": "machine_placed",
+      "targetId": "spawner",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 20
+      },
+      "recommendedNextCapability": "Add a Seller so raw scrap always has a recovery route.",
+      "presentation": {
+        "sortOrder": 10,
+        "accent": "starter"
+      }
+    },
+    {
+      "id": "place_first_seller",
+      "title": "Create a recovery route",
+      "description": "Place a Seller on the top row.",
+      "type": "machine_placed",
+      "targetId": "seller",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 20
+      },
+      "prerequisiteObjectiveId": "place_first_spawner",
+      "recommendedNextCapability": "Place conveyor belts to connect the Spawner to the Seller.",
+      "presentation": {
+        "sortOrder": 20,
+        "accent": "starter"
+      }
+    },
+    {
+      "id": "connect_spawner_to_seller",
+      "title": "Connect the line",
+      "description": "Place at least 5 conveyor belts to link the Spawner to the Seller.",
+      "type": "machine_placed",
+      "targetId": "conveyor",
+      "targetValue": 5,
+      "reward": {
+        "type": "credits",
+        "amount": 30
+      },
+      "prerequisiteObjectiveId": "place_first_seller",
+      "recommendedNextCapability": "Sell a few cans once scrap can reach the Seller.",
+      "presentation": {
+        "sortOrder": 25,
+        "accent": "starter"
+      }
+    },
+    {
+      "id": "sell_five_cans",
+      "title": "Prove the raw-selling line",
+      "description": "Sell 5 cans. Raw selling remains useful at every stage.",
+      "type": "item_sold_count",
+      "targetId": "can",
+      "targetValue": 5,
+      "reward": {
+        "type": "credits",
+        "amount": 50
+      },
+      "prerequisiteObjectiveId": "connect_spawner_to_seller",
+      "recommendedNextCapability": "Consider licensing a Shredder for higher-value material.",
+      "presentation": {
+        "sortOrder": 30,
+        "accent": "economy"
+      }
+    },
+    {
+      "id": "license_shredder",
+      "title": "Choose a processing route",
+      "description": "Purchase or receive a Shredder license.",
+      "type": "machine_license",
+      "targetId": "shredder",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 40
+      },
+      "prerequisiteObjectiveId": "sell_five_cans",
+      "recommendedNextCapability": "Place the Shredder when it fits your factory plan.",
+      "presentation": {
+        "sortOrder": 40,
+        "accent": "processing"
+      }
+    },
+    {
+      "id": "place_shredder",
+      "title": "Add processing",
+      "description": "Place one Shredder in the factory grid.",
+      "type": "machine_placed",
+      "targetId": "shredder",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 40
+      },
+      "prerequisiteObjectiveId": "license_shredder",
+      "recommendedNextCapability": "Route a can through the Shredder.",
+      "presentation": {
+        "sortOrder": 50,
+        "accent": "processing"
+      }
+    },
+    {
+      "id": "shred_first_can",
+      "title": "Produce processed material",
+      "description": "Complete the Shred Can recipe once.",
+      "type": "recipe_completed",
+      "targetId": "shred_can",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 50
+      },
+      "prerequisiteObjectiveId": "place_shredder",
+      "recommendedNextCapability": "Sell the shredded aluminum to realize its increased value.",
+      "presentation": {
+        "sortOrder": 60,
+        "accent": "processing"
+      }
+    },
+    {
+      "id": "sell_processed_aluminum",
+      "title": "Realize the processing gain",
+      "description": "Sell 1 shredded aluminum.",
+      "type": "item_sold_count",
+      "targetId": "shreddedAluminum",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 75
+      },
+      "prerequisiteObjectiveId": "shred_first_can",
+      "recommendedNextCapability": "Expand the grid or explore the complementary plastic branch.",
+      "presentation": {
+        "sortOrder": 70,
+        "accent": "economy"
+      }
+    },
+    {
+      "id": "expand_factory_once",
+      "title": "Make room for strategy",
+      "description": "Purchase any grid expansion when you want more space.",
+      "type": "grid_expanded",
+      "targetId": "any",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 100
+      },
+      "prerequisiteObjectiveId": "sell_processed_aluminum",
+      "recommendedNextCapability": "Continue with aluminum or branch into plastic processing.",
+      "presentation": {
+        "sortOrder": 80,
+        "accent": "expansion"
+      }
+    }
+  ]
+}

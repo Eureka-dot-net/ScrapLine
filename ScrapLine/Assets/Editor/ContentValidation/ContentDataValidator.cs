@@ -8,18 +8,25 @@ namespace ScrapLine.Editor.ContentValidation
 {
     public sealed class ContentDataSources
     {
-        public ContentDataSources(string items, string machines, string recipes, string wasteCrates)
+        public ContentDataSources(
+            string items,
+            string machines,
+            string recipes,
+            string wasteCrates,
+            string objectives)
         {
             Items = items;
             Machines = machines;
             Recipes = recipes;
             WasteCrates = wasteCrates;
+            Objectives = objectives;
         }
 
         public string Items { get; }
         public string Machines { get; }
         public string Recipes { get; }
         public string WasteCrates { get; }
+        public string Objectives { get; }
     }
 
     public sealed class ContentValidationError
@@ -61,6 +68,7 @@ namespace ScrapLine.Editor.ContentValidation
         public const string MachinesFile = "Assets/Resources/machines.json";
         public const string RecipesFile = "Assets/Resources/recipes.json";
         public const string WasteCratesFile = "Assets/Resources/wastecrates.json";
+        public const string ObjectivesFile = "Assets/Resources/objectives.json";
 
         public static ContentValidationResult ValidateProject()
         {
@@ -69,7 +77,8 @@ namespace ScrapLine.Editor.ContentValidation
                 ReadProjectFile(assetsPath, "Resources/items.json"),
                 ReadProjectFile(assetsPath, "Resources/machines.json"),
                 ReadProjectFile(assetsPath, "Resources/recipes.json"),
-                ReadProjectFile(assetsPath, "Resources/wastecrates.json")));
+                ReadProjectFile(assetsPath, "Resources/wastecrates.json"),
+                ReadProjectFile(assetsPath, "Resources/objectives.json")));
         }
 
         public static ContentValidationResult Validate(ContentDataSources sources)
@@ -82,16 +91,19 @@ namespace ScrapLine.Editor.ContentValidation
             MachineList machines = Parse<MachineList>(sources.Machines, MachinesFile, result);
             RecipeList recipes = Parse<RecipeList>(WrapArray("recipes", sources.Recipes), RecipesFile, result);
             WasteCrateList wasteCrates = Parse<WasteCrateList>(sources.WasteCrates, WasteCratesFile, result);
+            ObjectiveList objectives = Parse<ObjectiveList>(sources.Objectives, ObjectivesFile, result);
 
             RequireCollection(items?.items, "items", ItemsFile, items != null, result);
             RequireCollection(machines?.machines, "machines", MachinesFile, machines != null, result);
             RequireCollection(recipes?.recipes, "recipes", RecipesFile, recipes != null, result);
             RequireCollection(wasteCrates?.wasteCrates, "wasteCrates", WasteCratesFile, wasteCrates != null, result);
+            RequireCollection(objectives?.objectives, "objectives", ObjectivesFile, objectives != null, result);
 
             List<ItemData> itemData = items?.items ?? new List<ItemData>();
             List<MachineData> machineData = machines?.machines ?? new List<MachineData>();
             List<RecipeData> recipeData = recipes?.recipes ?? new List<RecipeData>();
             List<WasteCrateData> wasteCrateData = wasteCrates?.wasteCrates ?? new List<WasteCrateData>();
+            List<ObjectiveData> objectiveData = objectives?.objectives ?? new List<ObjectiveData>();
 
             ValidateItems(itemData, result);
             ValidateMachines(machineData, result);
@@ -100,7 +112,138 @@ namespace ScrapLine.Editor.ContentValidation
             ValidateWasteCrates(wasteCrateData, itemData, result);
             ValidateRecipeEconomy(recipeData, itemData, result);
             ValidateWasteCrateEconomy(wasteCrateData, itemData, result);
+            ValidateObjectives(objectiveData, machineData, recipeData, itemData, wasteCrateData, result);
             return result;
+        }
+
+        private static void ValidateObjectives(
+            IReadOnlyList<ObjectiveData> objectives,
+            IReadOnlyList<MachineData> machines,
+            IReadOnlyList<RecipeData> recipes,
+            IReadOnlyList<ItemData> items,
+            IReadOnlyList<WasteCrateData> wasteCrates,
+            ContentValidationResult result)
+        {
+            ValidateUniqueIds(objectives.Select(objective => objective?.id), ObjectivesFile, result);
+            HashSet<string> objectiveIds = IdSet(objectives.Select(objective => objective?.id));
+            HashSet<string> machineIds = IdSet(machines.Select(machine => machine?.id));
+            HashSet<string> recipeIds = IdSet(recipes.Select(recipe => recipe?.id));
+            HashSet<string> itemIds = IdSet(items.Select(item => item?.id));
+            HashSet<string> crateIds = IdSet(wasteCrates.Select(crate => crate?.id));
+            Dictionary<string, string> prerequisites = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            for (int index = 0; index < objectives.Count; index++)
+            {
+                ObjectiveData objective = objectives[index];
+                string id = RecordId(objective?.id, index);
+                if (objective == null)
+                {
+                    result.Add(ObjectivesFile, id, "objective definition is null.");
+                    continue;
+                }
+
+                Require(objective.id, "id", ObjectivesFile, id, result);
+                Require(objective.title, "title", ObjectivesFile, id, result);
+                Require(objective.description, "description", ObjectivesFile, id, result);
+                Require(objective.type, "type", ObjectivesFile, id, result);
+                Require(objective.targetId, "targetId", ObjectivesFile, id, result);
+                Positive(objective.targetValue, "targetValue", ObjectivesFile, id, result);
+
+                bool supported = ObjectiveTypeNames.Contains(objective.type);
+                if (!string.IsNullOrWhiteSpace(objective.type) && !supported)
+                    result.Add(ObjectivesFile, id, $"unsupported objective type '{objective.type}'.");
+                else if (supported && !string.IsNullOrWhiteSpace(objective.targetId))
+                    ValidateObjectiveTarget(objective, id, machineIds, recipeIds, itemIds, crateIds, result);
+
+                ValidateObjectiveReward(objective.reward, id, machineIds, result);
+                if (!string.IsNullOrWhiteSpace(objective.prerequisiteObjectiveId))
+                {
+                    prerequisites[objective.id ?? id] = objective.prerequisiteObjectiveId;
+                    if (!objectiveIds.Contains(objective.prerequisiteObjectiveId))
+                    {
+                        result.Add(ObjectivesFile, id,
+                            $"prerequisiteObjectiveId references unknown objective '{objective.prerequisiteObjectiveId}'.");
+                    }
+                }
+            }
+
+            foreach (string start in prerequisites.Keys)
+            {
+                HashSet<string> visited = new HashSet<string>(StringComparer.Ordinal);
+                string current = start;
+                while (prerequisites.TryGetValue(current, out string next))
+                {
+                    if (!visited.Add(current))
+                    {
+                        result.Add(ObjectivesFile, start, "prerequisiteObjectiveId forms a cycle.");
+                        break;
+                    }
+                    current = next;
+                }
+            }
+        }
+
+        private static readonly HashSet<string> ObjectiveTypeNames = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "item_sold_count", "item_sold_value", "machine_placed", "machine_license",
+            "recipe_completed", "scrap_delivery_ordered", "grid_expanded"
+        };
+
+        private static void ValidateObjectiveTarget(
+            ObjectiveData objective,
+            string id,
+            HashSet<string> machineIds,
+            HashSet<string> recipeIds,
+            HashSet<string> itemIds,
+            HashSet<string> crateIds,
+            ContentValidationResult result)
+        {
+            bool valid = objective.type switch
+            {
+                "machine_placed" or "machine_license" => machineIds.Contains(objective.targetId),
+                "item_sold_count" or "item_sold_value" => itemIds.Contains(objective.targetId),
+                "recipe_completed" => recipeIds.Contains(objective.targetId),
+                "scrap_delivery_ordered" => crateIds.Contains(objective.targetId),
+                "grid_expanded" => GridExpansionTargetNames.Contains(objective.targetId),
+                _ => true
+            };
+            if (!valid)
+                result.Add(ObjectivesFile, id,
+                    $"targetId references unknown or unsupported target '{objective.targetId}'.");
+        }
+
+        private static readonly HashSet<string> GridExpansionTargetNames =
+            new HashSet<string>(StringComparer.Ordinal) { "any", "row", "column", "edge_column" };
+
+        private static void ValidateObjectiveReward(
+            ObjectiveRewardData reward,
+            string id,
+            HashSet<string> machineIds,
+            ContentValidationResult result)
+        {
+            if (reward == null)
+            {
+                result.Add(ObjectivesFile, id, "reward is required.");
+                return;
+            }
+            if (reward.type == "credits")
+            {
+                Positive(reward.amount, "reward.amount", ObjectivesFile, id, result);
+                if (!string.IsNullOrWhiteSpace(reward.targetId))
+                    result.Add(ObjectivesFile, id, "credit rewards must not define reward.targetId.");
+            }
+            else if (reward.type == "machine_license")
+            {
+                if (reward.amount != 0)
+                    result.Add(ObjectivesFile, id, "machine-license rewards must have reward.amount zero.");
+                if (string.IsNullOrWhiteSpace(reward.targetId) || !machineIds.Contains(reward.targetId))
+                    result.Add(ObjectivesFile, id,
+                        $"reward.targetId references unknown machine '{reward.targetId ?? "<null>"}'.");
+            }
+            else
+            {
+                result.Add(ObjectivesFile, id, $"unsupported reward type '{reward.type ?? "<null>"}'.");
+            }
         }
 
         private static void ValidateItems(IReadOnlyList<ItemData> items, ContentValidationResult result)
@@ -624,6 +767,28 @@ namespace ScrapLine.Editor.ContentValidation
         {
             public string itemType;
             public int count;
+        }
+
+        [Serializable]
+        private sealed class ObjectiveList { public List<ObjectiveData> objectives; }
+        [Serializable]
+        private sealed class ObjectiveData
+        {
+            public string id;
+            public string title;
+            public string description;
+            public string type;
+            public string targetId;
+            public int targetValue;
+            public ObjectiveRewardData reward;
+            public string prerequisiteObjectiveId;
+        }
+        [Serializable]
+        private sealed class ObjectiveRewardData
+        {
+            public string type;
+            public int amount;
+            public string targetId;
         }
     }
 }

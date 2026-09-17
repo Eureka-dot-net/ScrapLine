@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -51,6 +52,9 @@ public class WasteSupplyManager : MonoBehaviour
             return false;
         }
 
+        GameplayDomainEvents.PublishScrapDelivery(
+            $"scrap-delivery:{Guid.NewGuid():N}", crateId, "credit_purchase");
+
         GameManager.Instance?.RequestAutosave();
         GameLogger.LogEconomy(
             $"Ordered '{crateDef.displayName}' for {crateCost} credits for the selected spawner.", ComponentId);
@@ -67,6 +71,8 @@ public class WasteSupplyManager : MonoBehaviour
             return false;
 
         data.starterDeliveryAvailable = false;
+        GameplayDomainEvents.PublishScrapDelivery(
+            "scrap-delivery:starter", "starter_crate", "starter_delivery");
         GameManager.Instance?.RequestAutosave();
         GameLogger.LogEconomy("Delivered the free starter Can Bale to the first spawner.", ComponentId);
         return true;
