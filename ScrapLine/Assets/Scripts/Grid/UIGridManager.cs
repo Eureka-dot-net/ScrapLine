@@ -340,6 +340,42 @@ public class UIGridManager : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Highlights every already-placed machine matching the given definition ID, using the same
+    /// slot/border/building highlight as <see cref="HighlightConfigurableMachines"/>. Used to
+    /// point at an existing machine an objective wants the player to interact with next (e.g.
+    /// the Spawner, when the recommended objective is buying its first scrap delivery) rather
+    /// than a placement target.
+    /// </summary>
+    public void HighlightMachinesOfType(string machineDefId)
+    {
+        if (cellScripts == null || gridData == null || string.IsNullOrWhiteSpace(machineDefId))
+            return;
+
+        ClearHighlights(); // Clear any existing highlights
+
+        for (int y = 0; y < gridData.height; y++)
+        {
+            for (int x = 0; x < gridData.width; x++)
+            {
+                CellData cellData = GetCellData(x, y);
+                if (cellData == null || cellData.cellType != CellType.Machine ||
+                    cellData.machineDefId != machineDefId)
+                    continue;
+
+                HighlightSlot(x, y, true);
+
+                UICell cell = GetCell(x, y);
+                MachineRenderer renderer = cell != null ? cell.GetComponentInChildren<MachineRenderer>() : null;
+                if (renderer != null)
+                {
+                    renderer.HighlightBorder(true);
+                    renderer.HighlightBuilding(true);
+                }
+            }
+        }
+    }
+
     private void HighlightSlot(int x, int y, bool highlight)
     {
         if (bordersContainer == null) return;

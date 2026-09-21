@@ -40,8 +40,8 @@ non-interactive fullness meter.
 ## Hands-on test
 
 1. Start a new game with 280 credits and place a spawner.
-2. Confirm it receives the one-time free Can Bale.
-3. Open it and order two different bale types.
+2. Confirm it begins empty, then purchase a Can Bale for it.
+3. Order a second, different bale type.
 4. Confirm only that spawner shows the deliveries, in purchase order.
 5. Place another spawner and confirm it starts empty.
 6. Move the first spawner and confirm its active bale and queue remain attached.

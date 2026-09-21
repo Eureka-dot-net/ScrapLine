@@ -61,23 +61,6 @@ public class WasteSupplyManager : MonoBehaviour
         return true;
     }
 
-    public bool TryDeliverStarterCrate(SpawnerMachine targetSpawner)
-    {
-        GameData data = GameManager.Instance?.gameData;
-        if (targetSpawner == null || data == null || !data.starterDeliveryAvailable)
-            return false;
-
-        if (!targetSpawner.TryEnqueueDelivery("starter_crate"))
-            return false;
-
-        data.starterDeliveryAvailable = false;
-        GameplayDomainEvents.PublishScrapDelivery(
-            "scrap-delivery:starter", "starter_crate", "starter_delivery");
-        GameManager.Instance?.RequestAutosave();
-        GameLogger.LogEconomy("Delivered the free starter Can Bale to the first spawner.", ComponentId);
-        return true;
-    }
-
     public int RefundQueuedDeliveries(CellData cellData)
     {
         if (cellData?.wasteDeliveryQueue == null || cellData.wasteDeliveryQueue.Count == 0)

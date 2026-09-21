@@ -485,7 +485,6 @@ public class GameManager : MonoBehaviour
     public void ResetGrid()
     {
         gridManager.ClearGrid();
-        _gameData.starterDeliveryAvailable = true;
 
         // A grid reset is meant to return the player to a fresh start, so purchased/granted
         // machine licenses are revoked along with the grid and objective progress. Without this,

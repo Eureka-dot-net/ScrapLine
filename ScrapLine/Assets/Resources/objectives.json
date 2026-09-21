@@ -47,9 +47,27 @@
         "amount": 30
       },
       "prerequisiteObjectiveId": "place_first_seller",
-      "recommendedNextCapability": "Sell a few cans once scrap can reach the Seller.",
+      "recommendedNextCapability": "Buy a Can Bale for the Spawner so scrap starts flowing.",
       "presentation": {
         "sortOrder": 25,
+        "accent": "starter"
+      }
+    },
+    {
+      "id": "buy_first_scrap_delivery",
+      "title": "Keep the line fed",
+      "description": "Buy a Can Bale for the Spawner so scrap starts flowing.",
+      "type": "scrap_delivery_ordered",
+      "targetId": "starter_crate",
+      "targetValue": 1,
+      "reward": {
+        "type": "credits",
+        "amount": 20
+      },
+      "prerequisiteObjectiveId": "connect_spawner_to_seller",
+      "recommendedNextCapability": "Sell a few cans once scrap can reach the Seller.",
+      "presentation": {
+        "sortOrder": 27,
         "accent": "starter"
       }
     },
@@ -64,7 +82,7 @@
         "type": "credits",
         "amount": 50
       },
-      "prerequisiteObjectiveId": "connect_spawner_to_seller",
+      "prerequisiteObjectiveId": "buy_first_scrap_delivery",
       "recommendedNextCapability": "Consider licensing a Shredder for higher-value material.",
       "presentation": {
         "sortOrder": 30,

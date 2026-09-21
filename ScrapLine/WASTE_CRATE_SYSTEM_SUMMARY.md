@@ -8,7 +8,7 @@
 - An order is paid for immediately and belongs only to the selected spawner.
 - Each spawner can hold one active bale and three unopened deliveries.
 - Mixed bale types are allowed and activate in first-in, first-out order.
-- The first spawner placed in a new factory receives one free Can Bale.
+- New spawners begin empty; the player deliberately purchases their first delivery.
 
 Moving a spawner preserves its active bale and delivery queue. Deleting a spawner fully refunds its
 unopened deliveries; any partially consumed active bale is discarded without a refund.
@@ -22,17 +22,16 @@ public WasteCrateData wasteCrate;
 public List<string> wasteDeliveryQueue;
 ```
 
-`GameData.starterDeliveryAvailable` records whether the one-time starter delivery is still available.
 There is intentionally no factory-wide scrap queue and no required-crate configuration.
 
 ## Runtime responsibilities
 
 - `SpawnerMachine` activates deliveries and emits items from the active bale.
-- `WasteSupplyManager` validates targeted orders, charges credits, grants the starter bale, and refunds
+- `WasteSupplyManager` validates targeted orders, charges credits, and refunds
   unopened deliveries when a spawner is deleted.
 - `SpawnerConfigPanel` is an operational status panel with an **Order Scrap** action.
 - `WasteCrateConfigPanel` is the shop and always requires a target spawner.
-- The normal save system persists the active bale, each spawner's queue, and starter-delivery state.
+- The normal save system persists the active bale and each spawner's queue.
 
 Crate definitions and prices live in `Assets/Resources/wastecrates.json`. The authoritative starting
 economy and current crate catalog are documented in `BALANCE_BASELINE.md`.
@@ -40,8 +39,8 @@ economy and current crate catalog are documented in `BALANCE_BASELINE.md`.
 ## Verification checklist
 
 - Orders appear only on the selected spawner.
-- A newly placed first spawner receives the free Can Bale exactly once.
-- Later spawners begin empty until scrap is ordered.
+- Every newly placed spawner begins empty until scrap is ordered.
+- Purchasing a Can Bale for the first spawner charges credits and adds it to that spawner only.
 - Three unopened deliveries are accepted; a fourth is rejected.
 - Mixed deliveries activate in purchase order.
 - Save/load preserves active contents and queue order.

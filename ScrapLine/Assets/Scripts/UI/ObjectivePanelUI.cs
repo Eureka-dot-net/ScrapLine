@@ -72,6 +72,7 @@ public sealed class ObjectivePanelUI : MonoBehaviour
     private string displayedObjectiveId;
     private bool isCollapsed;
     private bool rewardReady;
+    private MachineBarUIManager machineBarManager;
 
     public void Bind(ProgressionManager manager)
     {
@@ -112,6 +113,7 @@ public sealed class ObjectivePanelUI : MonoBehaviour
     private void OnDestroy()
     {
         Unsubscribe();
+        UpdateGuidance(null);
     }
 
     private void Unsubscribe()
@@ -177,6 +179,7 @@ public sealed class ObjectivePanelUI : MonoBehaviour
         if (definition == null)
         {
             displayedObjectiveId = null;
+            UpdateGuidance(null);
             SetText(objectiveTitleText, "All objectives complete");
             SetText(detailsText, "Keep building the factory your way — nothing here was ever required.");
             SetText(recommendationText, string.Empty);
@@ -187,6 +190,12 @@ public sealed class ObjectivePanelUI : MonoBehaviour
         }
 
         displayedObjectiveId = definition.id;
+        // Re-asserted on every refresh, not just when the recommendation changes: this is what
+        // gives a delayed/failed push (e.g. the grid or build bar not being ready yet at first
+        // bind) more chances to catch up, at negligible cost -- SetPlacementGuidance and
+        // SetExistingMachineGuidance only ever touch the grid while nothing is manually
+        // selected, so this never fights a player's own in-progress build-bar selection.
+        UpdateGuidance(definition);
         ObjectiveStateSnapshot state = progressionManager.GetObjectiveState(definition.id);
         int progress = state?.Progress ?? 0;
         int target = Mathf.Max(1, definition.targetValue);
@@ -218,6 +227,40 @@ public sealed class ObjectivePanelUI : MonoBehaviour
             claimButton.gameObject.SetActive(ready);
         if (rewardBadge != null)
             rewardBadge.SetActive(ready && isCollapsed);
+    }
+
+    /// <summary>
+    /// Points the grid at whatever the current recommended objective wants the player to do
+    /// next, when that's something a highlight can meaningfully show: place a specific machine
+    /// type, or interact with one already on the grid (currently just the Spawner, for buying
+    /// scrap). Objectives without a sensible grid target (selling, recipes, licensing, grid
+    /// expansion) clear guidance instead -- their "Suggested next" text is the only cue.
+    /// </summary>
+    private void UpdateGuidance(ObjectiveDefinition definition)
+    {
+        MachineBarUIManager machineBar = ResolveMachineBar();
+        if (machineBar == null)
+            return;
+
+        if (definition != null && definition.type == ObjectiveTypes.MachinePlaced)
+        {
+            machineBar.SetPlacementGuidance(FactoryRegistry.Instance?.GetMachine(definition.targetId));
+        }
+        else if (definition != null && definition.type == ObjectiveTypes.ScrapDelivery)
+        {
+            machineBar.SetExistingMachineGuidance(MachineUnlockState.SpawnerId);
+        }
+        else
+        {
+            machineBar.SetPlacementGuidance(null);
+        }
+    }
+
+    private MachineBarUIManager ResolveMachineBar()
+    {
+        if (machineBarManager == null)
+            machineBarManager = FindAnyObjectByType<MachineBarUIManager>();
+        return machineBarManager;
     }
 
     private void ClaimDisplayedReward()

@@ -565,9 +565,6 @@ public class MachineManager : MonoBehaviour
         {
             GameplayDomainEvents.PublishMachinePlaced(
                 $"machine-placed:{Guid.NewGuid():N}", machineDef.id);
-
-            if (cellData.machine is SpawnerMachine spawner)
-                GameManager.Instance?.wasteSupplyManager?.TryDeliverStarterCrate(spawner);
         }
 
         if (activeGridManager != null)

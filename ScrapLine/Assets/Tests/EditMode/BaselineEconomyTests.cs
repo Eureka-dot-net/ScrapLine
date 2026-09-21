@@ -30,7 +30,7 @@ namespace ScrapLine.Tests.EditMode
         }
 
         [Test]
-        public void NewGameCanAffordStarterLineAndReceivesFreeCanBale()
+        public void NewGameCanAffordStarterLineAndTheFirstScrapDelivery()
         {
             object registry = LoadProductionRegistry();
             IDictionary machines = GetDictionary(registry, "Machines");
@@ -38,21 +38,27 @@ namespace ScrapLine.Tests.EditMode
                                   GetIntField(machines["seller"], "cost") +
                                   (5 * GetIntField(machines["conveyor"], "cost"));
 
+            // There is no free starter Can Bale anymore: the player must be able to afford one
+            // (via the "buy_first_scrap_delivery" objective) with whatever is left after
+            // building the starter line.
+            IDictionary crates = GetDictionary(registry, "WasteCrates");
+            int starterCrateCost = GetIntField(crates["starter_crate"], "cost");
+
             Type creditsType = Type.GetType("CreditsManager, Assembly-CSharp", true);
-            Type gameDataType = Type.GetType("GameData, Assembly-CSharp", true);
             GameObject gameObject = new GameObject("BaselineEconomyTests");
             try
             {
                 Component creditsManager = gameObject.AddComponent(creditsType);
                 int startingCredits = GetIntField(creditsManager, "startingCredits");
-                object gameData = gameDataType.GetMethod("CreateNewGame", BindingFlags.Public | BindingFlags.Static)
-                    .Invoke(null, null);
 
                 Assert.That(startingCredits, Is.EqualTo(280));
                 Assert.That(starterLineCost, Is.EqualTo(150));
                 Assert.That(startingCredits - starterLineCost, Is.EqualTo(130),
                     "The opening budget must retain the documented mistake buffer.");
-                Assert.That((bool)gameDataType.GetField("starterDeliveryAvailable").GetValue(gameData), Is.True);
+                Assert.That(starterCrateCost, Is.EqualTo(40));
+                Assert.That(startingCredits - starterLineCost - starterCrateCost, Is.EqualTo(90),
+                    "The leftover budget after the starter line must still cover the first scrap " +
+                    "delivery with a mistake buffer of its own.");
             }
             finally
             {

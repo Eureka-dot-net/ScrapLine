@@ -26,7 +26,7 @@ namespace ScrapLine.Tests.EditMode
         }
 
         [Test]
-        public void NewGameUsesCurrentSchemaAndStarterSupply()
+        public void NewGameUsesCurrentSchemaVersionAndRoundTripsThroughSaveLoad()
         {
             Type gameDataType = ProductionType("GameData");
             object data = gameDataType.GetMethod("CreateNewGame", BindingFlags.Public | BindingFlags.Static)
@@ -34,12 +34,11 @@ namespace ScrapLine.Tests.EditMode
             object storage = CreateStorage();
 
             Assert.That(Field<int>(data, "schemaVersion"), Is.EqualTo(CurrentSchemaVersion));
-            Assert.That(Field<bool>(data, "starterDeliveryAvailable"), Is.True);
             Assert.That(TrySave(storage, data, out string saveError), Is.True, saveError);
             Assert.That(File.Exists(PathProperty(storage, "PrimaryPath")), Is.True);
             Assert.That(File.Exists(PathProperty(storage, "BackupPath")), Is.True);
             Assert.That(TryLoad(storage, out object loaded, out _, out string loadError), Is.True, loadError);
-            Assert.That(Field<bool>(loaded, "starterDeliveryAvailable"), Is.True);
+            Assert.That(Field<int>(loaded, "schemaVersion"), Is.EqualTo(CurrentSchemaVersion));
         }
 
         [Test]

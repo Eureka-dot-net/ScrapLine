@@ -126,14 +126,12 @@ public class GameData
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public List<ObjectiveProgressData> objectiveProgress = new List<ObjectiveProgressData>();
     public int credits = 0; // Credits (money) system for purchasing machines
-    public bool starterDeliveryAvailable = true;
 
     public static GameData CreateNewGame()
     {
         return new GameData
         {
-            userMachineProgress = MachineUnlockState.CreateCleanSaveProgress(),
-            starterDeliveryAvailable = true
+            userMachineProgress = MachineUnlockState.CreateCleanSaveProgress()
         };
     }
 }
