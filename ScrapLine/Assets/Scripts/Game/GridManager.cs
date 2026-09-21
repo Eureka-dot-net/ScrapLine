@@ -206,6 +206,31 @@ public class GridManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Sum of the placement cost (<see cref="MachineDef.cost"/>) of every real machine currently
+    /// on the given grid -- what <see cref="GameManager.ClearBoard"/> refunds a percentage of.
+    /// Blank cells (unplaced grid squares, including the top/bottom border cells) contribute
+    /// nothing. Static and takes the grid data explicitly, rather than reading
+    /// <see cref="activeGrids"/>, so it can be exercised without a live GridManager instance.
+    /// </summary>
+    public static int CalculateBoardPlacementCost(GridData gridData)
+    {
+        if (gridData == null)
+            return 0;
+
+        int totalCost = 0;
+        foreach (var cell in gridData.cells)
+        {
+            if (cell.cellType != CellType.Machine)
+                continue;
+
+            MachineDef machineDef = FactoryRegistry.Instance.GetMachine(cell.machineDefId);
+            if (machineDef != null)
+                totalCost += machineDef.cost;
+        }
+        return totalCost;
+    }
+
+    /// <summary>
     /// Initialize the UI grid with the current grid data
     /// </summary>
     public void InitializeUIGrid()

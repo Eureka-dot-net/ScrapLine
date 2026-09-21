@@ -154,9 +154,20 @@ Unity -batchmode -quit -projectPath ./ScrapLine \
 
 3. **Save/Load System**
    - Build complex factory layout
-   - Save game state
-   - Restart application
-   - Load save and verify everything restored
+   - Restart the application (the game autosaves on meaningful changes -- there are no manual
+     Save/Load buttons in the UI)
+   - Verify everything restored on relaunch
+
+4. **Clear vs. Reset**
+   - Build a small factory layout, note the credits spent on it
+   - Tap **Clear** and confirm the second-tap prompt: the board empties, licenses/objective
+     progress are untouched, unopened scrap deliveries are refunded in full, and credits increase
+     by a partial refund of what was spent on the removed machines (never more than was actually
+     spent)
+   - Tap **Reset** and confirm its second-tap prompt: the board empties, purchased/granted
+     machine licenses are revoked, objective progress and grid expansions reset, and credits
+     return to the starting balance
+   - Restart the application after each and verify the resulting state persisted
 
 ### Automated Testing
 ```bash

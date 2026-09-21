@@ -66,6 +66,16 @@ public class GameManager : MonoBehaviour
     private Button pauseButton;
     private TMP_Text pauseButtonLabel;
 
+    // Clear/Reset destructive-action confirmation. Both buttons require a second tap within
+    // DestructiveConfirmationTimeoutSeconds -- see CreateClearAndResetButtons.
+    private const float DestructiveConfirmationTimeoutSeconds = 3f;
+    private Button resetButton;
+    private TMP_Text resetButtonLabel;
+    private bool resetAwaitingConfirmation;
+    private Button clearButton;
+    private TMP_Text clearButtonLabel;
+    private bool clearAwaitingConfirmation;
+
     public bool IsSimulationPaused => isSimulationPaused;
     
     /// <summary>
@@ -107,6 +117,8 @@ public class GameManager : MonoBehaviour
         InitializeManagers();
         InitializeGame();
         CreatePauseButton();
+        CreateClearAndResetButtons();
+        HideManualSaveLoadButtons();
         ObjectivePanelUI.Create(progressionManager);
     }
 
@@ -300,6 +312,178 @@ public class GameManager : MonoBehaviour
     {
         if (pauseButtonLabel != null)
             pauseButtonLabel.text = isSimulationPaused ? "Resume" : "Pause";
+    }
+
+    /// <summary>
+    /// The scene originally shipped a single "Clear" button (Assets/Scenes/MobileGridScene.unity,
+    /// GameObject "ClearButton") that was later temporarily relabeled "Reset" while it did the
+    /// reset behavior. This splits that into two explicit, clearly labeled actions -- a board
+    /// Clear with refunds and a true new-game Reset -- by cloning
+    /// the existing button (the same technique CreatePauseButton uses on SaveButton) so the new
+    /// button automatically matches its visual style. No scene file changes are involved: both
+    /// buttons' onClick listeners are replaced here, exactly like CreatePauseButton replaces the
+    /// cloned Pause button's listener.
+    /// </summary>
+    private void CreateClearAndResetButtons()
+    {
+        GameObject resetButtonObject = GameObject.Find("ClearButton");
+        if (resetButtonObject == null || resetButtonObject.transform.parent == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                "Could not set up the Clear/Reset buttons because ClearButton was not found.", ComponentId);
+            return;
+        }
+
+        resetButton = resetButtonObject.GetComponent<Button>();
+        resetButtonLabel = resetButtonObject.GetComponentInChildren<TMP_Text>(true);
+        if (resetButton == null)
+            return;
+
+        RectTransform resetRect = resetButtonObject.GetComponent<RectTransform>();
+
+        GameObject clearButtonObject = Instantiate(
+            resetButtonObject, resetButtonObject.transform.parent, false);
+        clearButtonObject.name = "ClearBoardButton";
+        clearButtonObject.transform.SetSiblingIndex(resetButtonObject.transform.GetSiblingIndex());
+
+        // Sits directly left of Reset (the two destructive actions read as a pair), leaving the
+        // now-hidden Save/Load buttons' old space as a visibly larger gap between Pause and Clear.
+        RectTransform clearRect = clearButtonObject.GetComponent<RectTransform>();
+        if (resetRect != null && clearRect != null)
+        {
+            const float clearButtonWidth = 150f;
+            const float buttonGap = 10f;
+            float horizontalOffset = (resetRect.sizeDelta.x + clearButtonWidth) * 0.5f + buttonGap;
+            clearRect.anchoredPosition = resetRect.anchoredPosition - new Vector2(horizontalOffset, 0f);
+            clearRect.sizeDelta = new Vector2(clearButtonWidth, resetRect.sizeDelta.y);
+        }
+
+        clearButton = clearButtonObject.GetComponent<Button>();
+        clearButtonLabel = clearButtonObject.GetComponentInChildren<TMP_Text>(true);
+        if (clearButton == null)
+        {
+            Destroy(clearButtonObject);
+            clearButton = null;
+            clearButtonLabel = null;
+        }
+
+        // Both buttons still carry whatever onClick was serialized in the scene (ResetGrid,
+        // copied onto the clone too) -- replace with the confirm-then-act handlers below.
+        resetButton.onClick = new Button.ButtonClickedEvent();
+        resetButton.onClick.AddListener(OnResetButtonClicked);
+
+        if (clearButton != null)
+        {
+            clearButton.onClick = new Button.ButtonClickedEvent();
+            clearButton.onClick.AddListener(OnClearButtonClicked);
+        }
+
+        // Auto-size both labels so "Confirm Clear?" / "Confirm Reset?" never overflow the
+        // button's fixed 24pt layout the way the plain "Clear"/"Reset" text was authored for.
+        ConfigureAutoSizedButtonLabel(resetButtonLabel);
+        ConfigureAutoSizedButtonLabel(clearButtonLabel);
+
+        UpdateResetButtonLabel();
+        UpdateClearButtonLabel();
+    }
+
+    private static void ConfigureAutoSizedButtonLabel(TMP_Text label)
+    {
+        if (label == null)
+            return;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 14f;
+        label.fontSizeMax = 24f;
+    }
+
+    /// <summary>
+    /// Board Clear and full Reset both require a second, explicit tap before anything
+    /// destructive happens -- arming one cancels a pending confirmation on the other, so a
+    /// second stray tap can never land on the wrong button. An unconfirmed tap auto-cancels
+    /// after DestructiveConfirmationTimeoutSeconds rather than leaving the button silently
+    /// armed indefinitely.
+    /// </summary>
+    private void OnResetButtonClicked()
+    {
+        if (resetAwaitingConfirmation)
+        {
+            CancelResetConfirmation();
+            ResetGame();
+            return;
+        }
+
+        CancelClearConfirmation();
+        resetAwaitingConfirmation = true;
+        UpdateResetButtonLabel();
+        CancelInvoke(nameof(CancelResetConfirmation));
+        Invoke(nameof(CancelResetConfirmation), DestructiveConfirmationTimeoutSeconds);
+    }
+
+    private void CancelResetConfirmation()
+    {
+        if (!resetAwaitingConfirmation)
+            return;
+        resetAwaitingConfirmation = false;
+        CancelInvoke(nameof(CancelResetConfirmation));
+        UpdateResetButtonLabel();
+    }
+
+    private void UpdateResetButtonLabel()
+    {
+        if (resetButtonLabel != null)
+            resetButtonLabel.text = resetAwaitingConfirmation ? "Confirm Reset?" : "Reset";
+    }
+
+    private void OnClearButtonClicked()
+    {
+        if (clearAwaitingConfirmation)
+        {
+            CancelClearConfirmation();
+            ClearBoard();
+            return;
+        }
+
+        CancelResetConfirmation();
+        clearAwaitingConfirmation = true;
+        UpdateClearButtonLabel();
+        CancelInvoke(nameof(CancelClearConfirmation));
+        Invoke(nameof(CancelClearConfirmation), DestructiveConfirmationTimeoutSeconds);
+    }
+
+    private void CancelClearConfirmation()
+    {
+        if (!clearAwaitingConfirmation)
+            return;
+        clearAwaitingConfirmation = false;
+        CancelInvoke(nameof(CancelClearConfirmation));
+        UpdateClearButtonLabel();
+    }
+
+    private void UpdateClearButtonLabel()
+    {
+        if (clearButtonLabel != null)
+            clearButtonLabel.text = clearAwaitingConfirmation ? "Confirm Clear?" : "Clear";
+    }
+
+    /// <summary>
+    /// The manual Save/Load buttons are redundant now that the game autosaves
+    /// (RequestAutosave, called after every board-changing action) and autoloads whatever save
+    /// exists on launch (InitializeGame). Hiding rather than destroying them keeps their
+    /// GameObjects around in case something else still expects to find them, and keeps this a
+    /// pure runtime change -- no scene file edits. Must run after CreatePauseButton, which
+    /// still needs SaveButton active to clone from.
+    /// </summary>
+    private void HideManualSaveLoadButtons()
+    {
+        SetButtonActive("SaveButton", false);
+        SetButtonActive("LoadButton", false);
+    }
+
+    private static void SetButtonActive(string objectName, bool active)
+    {
+        GameObject buttonObject = GameObject.Find(objectName);
+        if (buttonObject != null)
+            buttonObject.SetActive(active);
     }
 
     #region Public API Methods (Backward Compatibility)
@@ -499,6 +683,35 @@ public class GameManager : MonoBehaviour
         if (!progressionManager.ResetForNewGame(_gameData, out string progressionError))
             GameLogger.LogError(LoggingManager.LogCategory.SaveLoad, progressionError, ComponentId);
         RequestAutosave();
+    }
+
+    /// <summary>
+    /// Removes everything currently on the board and refunds unopened scrap deliveries in full,
+    /// plus the placement cost of any real machines that were there at the same partial
+    /// rate as pulling a single machine off the grid (<see cref="CreditsManager.RefundMachine"/>)
+    /// -- so clearing the board never pays out more than what dragging each machine off
+    /// individually would have. Unlike <see cref="ResetGame"/>, this never touches
+    /// purchased/granted machine licenses, objective progress, or the starting-credit balance:
+    /// it only clears board contents and refunds what was spent building them.
+    /// </summary>
+    /// <returns>The number of credits refunded.</returns>
+    public int ClearBoard()
+    {
+        GridData grid = gridManager.GetCurrentGrid();
+        int totalPlacementCost = GridManager.CalculateBoardPlacementCost(grid);
+        int deliveryRefund = 0;
+
+        if (wasteSupplyManager != null && grid != null)
+        {
+            foreach (CellData cell in grid.cells)
+                deliveryRefund += wasteSupplyManager.RefundQueuedDeliveries(cell);
+        }
+
+        gridManager.ClearGrid();
+
+        int machineRefund = totalPlacementCost > 0 ? creditsManager.RefundMachine(totalPlacementCost) : 0;
+        RequestAutosave();
+        return deliveryRefund + machineRefund;
     }
 
     /// <summary>

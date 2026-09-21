@@ -3,6 +3,7 @@ using System.Collections;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace ScrapLine.Tests.EditMode
 {
@@ -167,6 +168,61 @@ namespace ScrapLine.Tests.EditMode
             finally
             {
                 UnityEngine.Object.DestroyImmediate(owner);
+            }
+        }
+
+        [Test]
+        public void ClearingBoardRefundsMachinesAndUnopenedDeliveries()
+        {
+            GameObject owner = new GameObject("ClearBoardRefundTest");
+            Type gameManagerType = ProductionType("GameManager");
+            FieldInfo instanceField = gameManagerType.GetField("<Instance>k__BackingField",
+                BindingFlags.NonPublic | BindingFlags.Static);
+            try
+            {
+                Component gameManager = owner.AddComponent(gameManagerType);
+                Component credits = owner.AddComponent(ProductionType("CreditsManager"));
+                Component grid = owner.AddComponent(ProductionType("GridManager"));
+                Component uiGrid = owner.AddComponent(ProductionType("UIGridManager"));
+                Component supply = owner.AddComponent(ProductionType("WasteSupplyManager"));
+
+                credits.GetType().GetMethod("SetCredits", new[] { typeof(int), typeof(bool) })
+                    .Invoke(credits, new object[] { 0, false });
+                grid.GetType().GetMethod("Initialize").Invoke(grid, new[] { uiGrid });
+                SetField(supply, "creditsManager", credits);
+
+                object cell = CreateSpawnerCell(0);
+                SetField(cell, "cellType", Enum.ToObject(ProductionType("UICell+CellType"), 1));
+                ((IList)GetField(cell, "wasteDeliveryQueue")).Add("starter_crate");
+                ((IList)GetField(cell, "wasteDeliveryQueue")).Add("plastic_bale");
+
+                object gridData = Activator.CreateInstance(ProductionType("GridData"));
+                SetField(gridData, "width", 1);
+                SetField(gridData, "height", 1);
+                ((IList)GetField(gridData, "cells")).Add(cell);
+                IList grids = (IList)Activator.CreateInstance(typeof(System.Collections.Generic.List<>).MakeGenericType(
+                    ProductionType("GridData")));
+                grids.Add(gridData);
+                grid.GetType().GetMethod("SetActiveGrids").Invoke(grid, new object[] { grids });
+
+                SetField(gameManager, "creditsManager", credits);
+                SetField(gameManager, "gridManager", grid);
+                SetField(gameManager, "wasteSupplyManager", supply);
+
+                LogAssert.Expect(LogType.Error,
+                    "[Grid] UIGridManager is not initialized. Cannot update visuals.");
+                int refund = Invoke<int>(gameManager, "ClearBoard");
+
+                Assert.That(refund, Is.EqualTo(120),
+                    "A 50-credit spawner refunds 40 credits, plus both unopened 40-credit deliveries.");
+                Assert.That(credits.GetType().GetMethod("GetCredits").Invoke(credits, null), Is.EqualTo(120));
+                Assert.That(GetField(cell, "machineDefId"), Is.EqualTo("blank"));
+                Assert.That((IList)GetField(cell, "wasteDeliveryQueue"), Is.Empty);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(owner);
+                instanceField.SetValue(null, null);
             }
         }
 
