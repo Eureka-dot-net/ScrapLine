@@ -110,7 +110,7 @@
     {
       "id": "place_shredder",
       "title": "Add processing",
-      "description": "Place one Shredder in the factory grid.",
+      "description": "Place one Shredder in the factory grid.\nNo room? Drag a conveyor off the grid.",
       "type": "machine_placed",
       "targetId": "shredder",
       "targetValue": 1,
