@@ -65,6 +65,9 @@ public class GameManager : MonoBehaviour
     private bool isSimulationPaused;
     private Button pauseButton;
     private TMP_Text pauseButtonLabel;
+    private Image pauseButtonIcon;
+    private Sprite pauseIconSprite;
+    private Sprite playIconSprite;
 
     // Clear/Reset destructive-action confirmation. Both buttons require a second tap within
     // DestructiveConfirmationTimeoutSeconds -- see CreateClearAndResetButtons.
@@ -305,11 +308,58 @@ public class GameManager : MonoBehaviour
         // Replace the cloned Clear action with the simulation pause action.
         pauseButton.onClick = new Button.ButtonClickedEvent();
         pauseButton.onClick.AddListener(ToggleSimulationPause);
+        CreatePauseButtonIcon(pauseButtonObject, pauseRect);
         UpdatePauseButtonLabel();
+    }
+
+    /// <summary>
+    /// Adds the pause/play icon (orange #FFA500, Assets/Resources/Sprites/UI/PausePlay/) as a
+    /// child Image on top of the cloned button, and hides its inherited text label -- the icon
+    /// replaces the old "Pause"/"Resume" text rather than sitting alongside it. Falls back to
+    /// the text label (leaving it active) if the sprites aren't present, so a missing asset
+    /// degrades gracefully instead of leaving the button blank.
+    /// </summary>
+    private void CreatePauseButtonIcon(GameObject buttonObject, RectTransform buttonRect)
+    {
+        Sprite pauseSprite = Resources.Load<Sprite>("Sprites/UI/PausePlay/pause");
+        Sprite playSprite = Resources.Load<Sprite>("Sprites/UI/PausePlay/play");
+        if (pauseSprite == null || playSprite == null)
+        {
+            GameLogger.LogWarning(LoggingManager.LogCategory.UI,
+                "Pause/Play icon sprites not found under Resources/Sprites/UI/PausePlay -- " +
+                "falling back to the text label.", ComponentId);
+            return;
+        }
+
+        pauseIconSprite = pauseSprite;
+        playIconSprite = playSprite;
+
+        if (pauseButtonLabel != null)
+            pauseButtonLabel.gameObject.SetActive(false);
+
+        GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        iconObject.transform.SetParent(buttonObject.transform, false);
+        RectTransform iconRect = (RectTransform)iconObject.transform;
+        iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+        iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+        iconRect.pivot = new Vector2(0.5f, 0.5f);
+        float iconSize = (buttonRect != null ? Mathf.Min(buttonRect.sizeDelta.x, buttonRect.sizeDelta.y) : 60f) * 0.55f;
+        iconRect.sizeDelta = new Vector2(iconSize, iconSize);
+        iconRect.anchoredPosition = Vector2.zero;
+
+        pauseButtonIcon = iconObject.GetComponent<Image>();
+        pauseButtonIcon.preserveAspect = true;
+        pauseButtonIcon.raycastTarget = false;
     }
 
     private void UpdatePauseButtonLabel()
     {
+        if (pauseButtonIcon != null && pauseIconSprite != null && playIconSprite != null)
+        {
+            pauseButtonIcon.sprite = isSimulationPaused ? playIconSprite : pauseIconSprite;
+            return;
+        }
+
         if (pauseButtonLabel != null)
             pauseButtonLabel.text = isSimulationPaused ? "Resume" : "Pause";
     }
