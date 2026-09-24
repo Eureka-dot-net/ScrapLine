@@ -71,6 +71,20 @@ public class ResourceManager : MonoBehaviour
                 GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "wastecrates.json resource not found - WasteCrates will be disabled", ComponentId);
         }
 
+        TextAsset factorySitesAsset = Resources.Load<TextAsset>(FactorySiteConfiguration.ResourceName);
+        if (factorySitesAsset != null)
+        {
+            FactorySiteConfiguration.LoadFromJson(factorySitesAsset.text);
+        }
+        else
+        {
+            // Built-in defaults keep a single 5x7 site available, so a missing plan degrades rather
+            // than blocking startup.
+            FactorySiteConfiguration.ResetToDefaults();
+            if (enableResourceLogs)
+                GameLogger.LogWarning(LoggingManager.LogCategory.Debug, "factorysites.json resource not found - using default factory site plan", ComponentId);
+        }
+
         FactoryRegistry.Instance.LoadFromJson(machinesJson, recipesJson, itemsJson, wastecratesJson, colorConfig);
     }
 

@@ -9,11 +9,23 @@ using static UICell;
 public class GridManager : MonoBehaviour
 {
     [Header("Grid Configuration")]
-    [Tooltip("Default grid width for new games")]
-    public int defaultGridWidth = 5;
-    
-    [Tooltip("Default grid height for new games")]
-    public int defaultGridHeight = 7;
+    [Tooltip("Overrides the width from factorysites.json when greater than zero")]
+    public int defaultGridWidth = 0;
+
+    [Tooltip("Overrides the height from factorysites.json when greater than zero")]
+    public int defaultGridHeight = 0;
+
+    /// <summary>
+    /// Starting width for a new site. The factory site plan owns this so the site count and the
+    /// starting/maximum size stay in one configurable place; the Inspector fields above remain as a
+    /// per-scene override for debugging.
+    /// </summary>
+    public int StartingGridWidth =>
+        defaultGridWidth > 0 ? defaultGridWidth : FactorySiteConfiguration.InitialWidth;
+
+    /// <summary>Starting height for a new site. See <see cref="StartingGridWidth"/>.</summary>
+    public int StartingGridHeight =>
+        defaultGridHeight > 0 ? defaultGridHeight : FactorySiteConfiguration.InitialHeight;
     
     [Header("Debug")]
     [Tooltip("Enable debug logs for grid operations")]
@@ -43,11 +55,17 @@ public class GridManager : MonoBehaviour
     /// <returns>The created grid data</returns>
     public GridData CreateDefaultGrid()
     {
-        GameLogger.LogGrid($"Creating default grid {defaultGridWidth}x{defaultGridHeight}", ComponentId);
-        
+        int width = StartingGridWidth;
+        int height = StartingGridHeight;
+        GameLogger.LogGrid($"Creating default grid {width}x{height}", ComponentId);
+
         GridData defaultGrid = new GridData();
-        defaultGrid.width = defaultGridWidth;
-        defaultGrid.height = defaultGridHeight;
+        defaultGrid.factoryId = FactorySiteConfiguration.DefaultFactoryId;
+        defaultGrid.siteIndex = 0;
+        defaultGrid.displayName = FactorySiteConfiguration.FindSite(FactorySiteConfiguration.DefaultFactoryId)?.displayName
+            ?? FactorySiteConfiguration.DefaultFactoryId;
+        defaultGrid.width = width;
+        defaultGrid.height = height;
 
         for (int y = 0; y < defaultGrid.height; y++)
         {

@@ -40,6 +40,11 @@ For a future schema change:
 
 Saves from a newer unsupported schema are rejected rather than partially loaded.
 
+Schema 3 adds objective progress. Schema 4 adds the long-term state reserved for the offline clock,
+factory sites, shared warehouse, ship blueprint, lifetime statistics, and first-completion result.
+See [Save schema](../SAVE_SCHEMA.md) for ownership, configurable site limits, normalization rules,
+and migration coverage.
+
 ## Runtime restoration
 
 Items are persisted with stable IDs. After JSON deserialization, processor waiting queues are rebound

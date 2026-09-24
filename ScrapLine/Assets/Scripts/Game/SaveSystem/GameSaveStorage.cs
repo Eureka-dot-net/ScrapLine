@@ -248,14 +248,21 @@ public sealed class GameSaveStorage
             return Invalid("credits cannot be negative.", out error);
         if (data.grids == null || data.userMachineProgress == null || data.objectiveProgress == null)
             return Invalid("required save collections are missing.", out error);
+        if (!TryValidateSchema4State(data, out error))
+            return false;
 
         HashSet<string> itemIds = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<string> factoryIds = new HashSet<string>(StringComparer.Ordinal);
         List<string> waitingItemIds = new List<string>();
         for (int gridIndex = 0; gridIndex < data.grids.Count; gridIndex++)
         {
             GridData grid = data.grids[gridIndex];
             if (grid == null || grid.width <= 0 || grid.height <= 0 || grid.cells == null)
                 return Invalid($"grid {gridIndex} is invalid.", out error);
+            if (string.IsNullOrWhiteSpace(grid.factoryId))
+                return Invalid($"grid {gridIndex} has no factory ID.", out error);
+            if (!factoryIds.Add(grid.factoryId))
+                return Invalid($"factory ID '{grid.factoryId}' is used by more than one grid.", out error);
             if (grid.cells.Count != grid.width * grid.height)
                 return Invalid($"grid {gridIndex} cell count does not match its dimensions.", out error);
 
@@ -293,6 +300,99 @@ public sealed class GameSaveStorage
                 return Invalid($"waiting item '{waitingItemId}' has no matching cell item.", out error);
         }
 
+        error = null;
+        return true;
+    }
+
+    /// <summary>
+    /// Structural checks for the state introduced by schema 4. Normalization repairs everything it
+    /// safely can (see GameSaveMigrations), so these assertions only fire on externally damaged
+    /// saves: identity collisions, which cannot be merged without guessing, and quantities that
+    /// normalization should already have clamped.
+    /// </summary>
+    private static bool TryValidateSchema4State(GameData data, out string error)
+    {
+        if (data.warehouse == null || data.shipBlueprint == null || data.lifetimeStats == null ||
+            data.launchResult == null)
+            return Invalid("schema 4 state objects are missing.", out error);
+
+        if (data.savedAtUtcTicks < 0 || data.savedAtUtcTicks > SaveStateLimits.MaxUtcTicks ||
+            data.highWaterUtcTicks < 0 || data.highWaterUtcTicks > SaveStateLimits.MaxUtcTicks)
+            return Invalid("wall-clock anchors are outside the representable range.", out error);
+        if (data.highWaterUtcTicks < data.savedAtUtcTicks)
+            return Invalid("the wall-clock high-water mark precedes the saved-at time.", out error);
+
+        if (data.warehouse.slots == null)
+            return Invalid("warehouse slots are missing.", out error);
+        HashSet<string> warehouseItems = new HashSet<string>(StringComparer.Ordinal);
+        foreach (WarehouseSlot slot in data.warehouse.slots)
+        {
+            if (slot == null || string.IsNullOrWhiteSpace(slot.itemId))
+                return Invalid("warehouse contains an unnamed slot.", out error);
+            if (!warehouseItems.Add(slot.itemId))
+                return Invalid($"warehouse has more than one slot for '{slot.itemId}'.", out error);
+            if (slot.count < 0)
+                return Invalid($"warehouse slot '{slot.itemId}' has a negative count.", out error);
+        }
+
+        if (data.shipBlueprint.modules == null)
+            return Invalid("ship blueprint modules are missing.", out error);
+        HashSet<string> moduleIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (ShipModuleProgress module in data.shipBlueprint.modules)
+        {
+            if (module == null || string.IsNullOrWhiteSpace(module.moduleId))
+                return Invalid("ship blueprint contains an unnamed module.", out error);
+            if (!moduleIds.Add(module.moduleId))
+                return Invalid($"ship module '{module.moduleId}' appears more than once.", out error);
+            if (module.contributions == null)
+                return Invalid($"ship module '{module.moduleId}' has no contribution list.", out error);
+            HashSet<string> componentIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (ShipComponentContribution contribution in module.contributions)
+            {
+                if (contribution == null || string.IsNullOrWhiteSpace(contribution.itemId))
+                    return Invalid($"ship module '{module.moduleId}' has an unnamed contribution.", out error);
+                if (!componentIds.Add(contribution.itemId))
+                    return Invalid(
+                        $"ship module '{module.moduleId}' contributes '{contribution.itemId}' more than once.",
+                        out error);
+                if (contribution.contributed < 0)
+                    return Invalid(
+                        $"ship module '{module.moduleId}' has a negative contribution for '{contribution.itemId}'.",
+                        out error);
+            }
+        }
+
+        if (!TryValidateCounters(data.lifetimeStats.counters, "lifetime statistics", out error))
+            return false;
+        if (data.lifetimeStats.totalPlaySeconds < 0)
+            return Invalid("lifetime play time cannot be negative.", out error);
+
+        if (!TryValidateCounters(data.launchResult.statsSnapshot, "launch result", out error))
+            return false;
+        if (!data.launchResult.recorded && data.launchResult.completedUtcTicks != 0)
+            return Invalid("an unrecorded launch result carries a completion time.", out error);
+        if (data.launchResult.totalPlaySeconds < 0 || data.launchResult.creditsAtCompletion < 0 ||
+            data.launchResult.factoriesOwned < 0)
+            return Invalid("the launch result contains a negative quantity.", out error);
+
+        error = null;
+        return true;
+    }
+
+    private static bool TryValidateCounters(List<LifetimeCounter> counters, string owner, out string error)
+    {
+        if (counters == null)
+            return Invalid($"{owner} counters are missing.", out error);
+        HashSet<string> ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (LifetimeCounter counter in counters)
+        {
+            if (counter == null || string.IsNullOrWhiteSpace(counter.id))
+                return Invalid($"{owner} contains an unnamed counter.", out error);
+            if (!ids.Add(counter.id))
+                return Invalid($"{owner} counter '{counter.id}' appears more than once.", out error);
+            if (counter.value < 0)
+                return Invalid($"{owner} counter '{counter.id}' is negative.", out error);
+        }
         error = null;
         return true;
     }

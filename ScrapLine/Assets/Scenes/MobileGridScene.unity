@@ -5647,8 +5647,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02ea2f23e2ba48549965777867a11f6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  defaultGridWidth: 5
-  defaultGridHeight: 7
+  defaultGridWidth: 0
+  defaultGridHeight: 0
   enableGridLogs: 1
 --- !u!1 &767273233
 GameObject:

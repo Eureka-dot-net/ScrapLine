@@ -1,0 +1,13 @@
+{
+  "maxSiteCount": 4,
+  "initialWidth": 5,
+  "initialHeight": 7,
+  "maxWidth": 8,
+  "maxHeight": 10,
+  "sites": [
+    { "id": "factory_primary", "displayName": "Salvage Yard", "unlockedByDefault": true },
+    { "id": "factory_second", "displayName": "Plastics Plant", "unlockedByDefault": false },
+    { "id": "factory_third", "displayName": "Plate Works", "unlockedByDefault": false },
+    { "id": "factory_fourth", "displayName": "Assembly Hall", "unlockedByDefault": false }
+  ]
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -66,6 +67,30 @@ public class SaveLoadManager : MonoBehaviour
         autosaveAtRealtime = Time.realtimeSinceStartup + Mathf.Max(0.1f, autosaveDelaySeconds);
     }
 
+    /// <summary>
+    /// Records when this save was written in UTC, and advances the monotonic high-water mark.
+    ///
+    /// The runtime anchor above rebases in-flight item timers across a load; it cannot measure
+    /// offline time because Unity's clock restarts at zero each launch. These wall-clock anchors
+    /// exist for that. The high-water mark only ever moves forward, so a device clock wound
+    /// backwards produces no elapsed time rather than a windfall. Offline rewards themselves are
+    /// out of scope here - this only persists the anchors they will read.
+    /// </summary>
+    private static void StampWallClockAnchors(GameData data)
+    {
+        long nowUtcTicks = DateTime.UtcNow.Ticks;
+        // A save made while the device clock is behind the last trusted reading must not move
+        // the saved-at anchor backwards. Otherwise a later clock correction could award the
+        // same elapsed interval again.
+        long trustedTicks = Math.Max(nowUtcTicks, data.highWaterUtcTicks);
+        data.savedAtUtcTicks = trustedTicks;
+        data.highWaterUtcTicks = trustedTicks;
+        data.hasUtcClockAnchor = true;
+
+        if (data.lifetimeStats != null && data.lifetimeStats.firstPlayedUtcTicks == 0)
+            data.lifetimeStats.firstPlayedUtcTicks = trustedTicks;
+    }
+
     public bool SaveGame()
     {
         if (gridManager == null || creditsManager == null || GameManager.Instance == null)
@@ -80,6 +105,7 @@ public class SaveLoadManager : MonoBehaviour
         data.credits = creditsManager.GetCredits();
         data.hasRuntimeClockAnchor = true;
         data.savedAtRuntimeTime = SimulationClock.Time;
+        StampWallClockAnchors(data);
         FactoryRegistry.Instance.SaveToGameData(data);
         GameManager.Instance.progressionManager?.SaveToGameData(data);
 

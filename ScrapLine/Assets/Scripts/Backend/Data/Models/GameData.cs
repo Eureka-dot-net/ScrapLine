@@ -90,9 +90,31 @@ public class CellData
     public List<string> wasteDeliveryQueue = new List<string>(); // Unopened deliveries owned by this spawner
 }
 
+/// <summary>
+/// One factory site: its stable identity plus the grid it occupies.
+///
+/// Ownership: a GridData is PER-FACTORY state. Credits, machine licences, the warehouse, the ship
+/// blueprint and lifetime statistics are global and live on <see cref="GameData"/>.
+///
+/// A site exists as soon as a GridData carrying its ID is present; there is no separate "owned"
+/// flag. The planned site list, the starting size and the maximum size are configuration, in
+/// Resources/factorysites.json - see <see cref="FactorySiteConfiguration"/>.
+/// </summary>
 [System.Serializable]
 public class GridData
 {
+    /// <summary>
+    /// Stable site identity. Assigned exactly once by the schema 3 to 4 migration for pre-existing
+    /// saves (always <see cref="FactorySiteConfiguration.DefaultFactoryId"/>) and never reassigned.
+    /// </summary>
+    public string factoryId;
+
+    /// <summary>Player-facing name; defaults from the site plan and may later be renamed.</summary>
+    public string displayName;
+
+    /// <summary>Zero-based position in the configured site plan.</summary>
+    public int siteIndex;
+
     public int width;
     public int height;
     public List<CellData> cells = new List<CellData>();
@@ -116,16 +138,60 @@ public class ObjectiveProgressData
     public List<string> processedEventIds = new List<string>();
 }
 
+/// <summary>
+/// The whole persisted game.
+///
+/// Ownership model:
+///   GLOBAL  - credits, userMachineProgress (machine licences), objectiveProgress, warehouse,
+///             shipBlueprint, lifetimeStats, launchResult, and both clock anchors.
+///   PER-FACTORY - every entry in <see cref="grids"/>, including its cells, placed machines,
+///             queued scrap and machine configuration.
+///
+/// Machine licences and credits are deliberately global: buying a licence unlocks that machine at
+/// every site, and there is one shared balance.
+/// </summary>
 [System.Serializable]
 public class GameData
 {
     public int schemaVersion = GameSaveMigrations.CurrentSchemaVersion;
+
+    // --- Session clock (runtime) --------------------------------------------------------------
+    // Unity's Time.time restarts at zero each launch. These anchors rebase in-flight item timers
+    // across a load and are required by the live simulation; they are NOT usable for offline time.
     public bool hasRuntimeClockAnchor;
     public float savedAtRuntimeTime;
+
+    // --- Wall clock (offline) -----------------------------------------------------------------
+    /// <summary>
+    /// Trusted UTC save anchor. Normally the time of the write; held at the previous high-water
+    /// mark when the device clock has moved backwards. Zero until the first v4 save.
+    /// </summary>
+    public long savedAtUtcTicks;
+
+    /// <summary>
+    /// Highest UTC value ever observed by this save. Offline progress is measured forward from
+    /// <see cref="savedAtUtcTicks"/> but never credited when the device clock reads below this
+    /// high-water mark, so winding the clock back cannot manufacture elapsed time.
+    /// </summary>
+    public long highWaterUtcTicks;
+
+    /// <summary>
+    /// False until wall-clock anchors have been established once. A save resumed without an anchor
+    /// grants no offline progress; the next write establishes the anchor for future resumes.
+    /// </summary>
+    public bool hasUtcClockAnchor;
+
+    // --- Per-factory state --------------------------------------------------------------------
     public List<GridData> grids = new List<GridData>();
+
+    // --- Global state -------------------------------------------------------------------------
     public List<UserMachineProgress> userMachineProgress = new List<UserMachineProgress>();
     public List<ObjectiveProgressData> objectiveProgress = new List<ObjectiveProgressData>();
     public int credits = 0; // Credits (money) system for purchasing machines
+    public WarehouseData warehouse = new WarehouseData();
+    public ShipBlueprintData shipBlueprint = new ShipBlueprintData();
+    public LifetimeStatsData lifetimeStats = new LifetimeStatsData();
+    public LaunchResultData launchResult = new LaunchResultData();
 
     public static GameData CreateNewGame()
     {
